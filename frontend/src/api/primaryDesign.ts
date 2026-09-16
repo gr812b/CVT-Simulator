@@ -200,6 +200,11 @@ export interface HistoryCertifiedRampPath {
   ramp_tangent_deg: number[];
   roller_center: { x_m: number[]; r_m: number[] };
   ramp_surface: { x_m: number[]; r_m: number[] };
+  capability: {
+    arm_force_per_omega2: number[];
+    tip_force_per_omega2_per_kg: number[];
+    max_tip_total_force_per_omega2: number[];
+  };
   history: {
     max_contact_root_count: number;
     multiple_root_shift_count: number;
@@ -210,6 +215,7 @@ export interface HistoryCertifiedRampPath {
 }
 
 export interface PrimaryPathDomainAnalysis {
+  domain_id: string;
   architecture: FixedPivotArchitecture;
   zones: PackagingZone[];
   validity: { valid: boolean; findings: ArchitectureFinding[] };
@@ -232,11 +238,110 @@ export interface PrimaryPathDomainAnalysis {
     selection_rule: string;
   };
   representative_paths: HistoryCertifiedRampPath[];
+  domain_projection: {
+    meaning: string;
+    ramp_surface_points: {
+      x_m: number[];
+      r_m: number[];
+      station: number[];
+      q_deg: number[];
+      ramp_tangent_deg: number[];
+    };
+    visual_radius_m: number;
+    point_count: number;
+  };
+  capability: {
+    definition: string;
+    units: {
+      arm_force_per_omega2: string;
+      tip_force_per_omega2_per_kg: string;
+      max_tip_total_force_per_omega2: string;
+    };
+    max_tip_mass_per_flyweight_kg: number;
+    stations: Array<{
+      station: number;
+      shift_m: number;
+      shift_fraction: number;
+      active_state_count: number;
+      arm_force_per_omega2_min: number | null;
+      arm_force_per_omega2_max: number | null;
+      tip_force_per_omega2_per_kg_min: number | null;
+      tip_force_per_omega2_per_kg_max: number | null;
+      max_tip_total_force_per_omega2_min: number | null;
+      max_tip_total_force_per_omega2_max: number | null;
+    }>;
+  };
   deferred_checks: string[];
   numerics: {
     edge_audit_sample_count: number;
     history_trace_sample_count: number;
   };
+}
+
+
+export interface ForceRequirement {
+  id: string;
+  shift_m: number;
+  force_N: number;
+  shaft_speed_rad_s: number;
+  tolerance_N: number;
+}
+
+export interface ConditionedRampSolution extends HistoryCertifiedRampPath {
+  solution: {
+    tip_mass_min_kg: number;
+    tip_mass_max_kg: number;
+    example_tip_mass_kg: number;
+    force_N: {
+      shaft_speed_rad_s: number;
+      values: number[];
+    };
+  };
+}
+
+export interface ConditionedPathDomainAnalysis {
+  domain_id: string;
+  validity: { valid: boolean; findings: Array<Record<string, unknown>> };
+  requirements: Array<ForceRequirement & { individually_attainable: boolean }>;
+  mass: {
+    maximum_tip_mass_per_flyweight_kg: number;
+    mass_sample_count: number;
+    mass_resolution_kg: number;
+    surviving_mass_min_kg: number | null;
+    surviving_mass_max_kg: number | null;
+  };
+  graph: {
+    viable_layer_edge_counts: number[];
+    viable_node_counts: number[];
+    station_projection: PathDomainStationProjection[];
+  };
+  domain_projection: PrimaryPathDomainAnalysis['domain_projection'];
+  force_capability: {
+    reference_shaft_speed_rad_s: number;
+    full: AbsoluteForceCapability;
+    conditioned: AbsoluteForceCapability;
+  };
+  representative_solutions: ConditionedRampSolution[];
+  summary: {
+    requirement_count: number;
+    jointly_feasible: boolean;
+    conditioned_domain_point_count: number;
+    representative_solution_count: number;
+  };
+}
+
+export interface AbsoluteForceCapability {
+  shaft_speed_rad_s: number;
+  max_tip_mass_per_flyweight_kg: number;
+  stations: Array<{
+    station: number;
+    shift_m: number;
+    active_state_count: number;
+    force_min_N: number | null;
+    force_max_N: number | null;
+    mass_min_kg: number | null;
+    mass_max_kg: number | null;
+  }>;
 }
 
 const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
@@ -321,5 +426,23 @@ export function analyzePrimaryPathDomain(
   return request<PrimaryPathDomainAnalysis>('/architecture/path-domain', {
     method: 'POST',
     body: JSON.stringify({ architecture, zones, ...options }),
+  });
+}
+
+
+export function conditionPrimaryPathDomain(
+  domainId: string,
+  requirements: ForceRequirement[],
+  maxTipMassPerFlyweightKg: number,
+  options: Partial<{ mass_sample_count: number; representative_solution_count: number; reference_shaft_speed_rad_s: number }> = {},
+): Promise<ConditionedPathDomainAnalysis> {
+  return request<ConditionedPathDomainAnalysis>('/architecture/path-domain/condition', {
+    method: 'POST',
+    body: JSON.stringify({
+      domain_id: domainId,
+      requirements,
+      max_tip_mass_per_flyweight_kg: maxTipMassPerFlyweightKg,
+      ...options,
+    }),
   });
 }

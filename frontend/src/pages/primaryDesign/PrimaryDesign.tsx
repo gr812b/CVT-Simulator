@@ -20,6 +20,8 @@ import { ArchitectureScene } from './ArchitectureScene';
 import { ForceChart } from './ForceChart';
 import { MechanismScene } from './MechanismScene';
 import { RampFamilyExplorer } from './RampFamilyExplorer';
+import { CapabilityExplorer } from './CapabilityExplorer';
+import { RequirementsExplorer } from './RequirementsExplorer';
 import styles from './PrimaryDesign.module.scss';
 
 const MM = 1000;
@@ -27,7 +29,7 @@ const G = 1000;
 const RPM_PER_RAD_S = 60 / (2 * Math.PI);
 const RAD_S_PER_RPM = 2 * Math.PI / 60;
 
-type DesignMode = 'architecture' | 'concrete';
+type DesignMode = 'architecture' | 'requirements' | 'concrete';
 
 function interpolateNullable(
   axis: number[],
@@ -82,8 +84,8 @@ export const PrimaryDesign = () => {
   const [response, setResponse] = useState<ConcreteDesignResponse | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [selectedRepresentativeIndex, setSelectedRepresentativeIndex] = useState(0);
-  const [showLocalWorkspace, setShowLocalWorkspace] = useState(true);
-  const [showRepresentativeFamily, setShowRepresentativeFamily] = useState(true);
+  const [comparisonBaseline, setComparisonBaseline] = useState<PrimaryPathDomainAnalysis | null>(null);
+  const [showPhase2Workspace, setShowPhase2Workspace] = useState(false);
   const [shiftM, setShiftM] = useState(0);
   const [architectureDirty, setArchitectureDirty] = useState(false);
   const [pathDomainDirty, setPathDomainDirty] = useState(true);
@@ -122,7 +124,7 @@ export const PrimaryDesign = () => {
         shift_station_count: 9,
         q_sample_count: 61,
         alpha_sample_count: 7,
-        representative_path_count: 16,
+        representative_path_count: 8,
         edge_audit_sample_count: 65,
         history_trace_sample_count: 65,
       });
@@ -252,12 +254,20 @@ export const PrimaryDesign = () => {
           <h1>Fixed-Pivot Primary Design</h1>
           <p>Architecture packaging, exact roller contact, flyweight force, and structural-load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Path-domain exploration · Phase 3.3</div>
+        <div className={styles.phaseBadge}>Force-conditioned design domain · Phase 3.5</div>
       </header>
 
       <div className={styles.modeTabs}>
         <button type="button" className={mode === 'architecture' ? styles.modeTabActive : styles.modeTab} onClick={() => setMode('architecture')}>
           Architecture
+        </button>
+        <button
+          type="button"
+          className={mode === 'requirements' ? styles.modeTabActive : styles.modeTab}
+          disabled={!pathDomain || pathDomainDirty}
+          onClick={() => setMode('requirements')}
+        >
+          Requirements
         </button>
         <button type="button" className={mode === 'concrete' ? styles.modeTabActive : styles.modeTab} onClick={() => setMode('concrete')}>
           Concrete design
@@ -278,18 +288,29 @@ export const PrimaryDesign = () => {
           pathDomainLoading={pathDomainLoading}
           selectedZoneId={selectedZoneId}
           selectedRepresentativeIndex={selectedRepresentativeIndex}
-          showLocalWorkspace={showLocalWorkspace}
-          showRepresentativeFamily={showRepresentativeFamily}
+          comparisonBaseline={comparisonBaseline}
+          showPhase2Workspace={showPhase2Workspace}
           onArchitectureChange={updateArchitecture}
           onZonesChange={updateZones}
           onZoneChange={updateZone}
           onSelectedZoneChange={setSelectedZoneId}
           onSelectedRepresentativeIndexChange={setSelectedRepresentativeIndex}
-          onShowLocalWorkspaceChange={setShowLocalWorkspace}
-          onShowRepresentativeFamilyChange={setShowRepresentativeFamily}
+          onComparisonBaselineChange={setComparisonBaseline}
+          onShowPhase2WorkspaceChange={setShowPhase2Workspace}
           onAnalyze={() => void analyzeArchitecture(architecture, zones)}
           onAnalyzePathDomain={() => void analyzePathDomain(architecture, zones)}
+          onContinueToRequirements={() => setMode('requirements')}
         />
+      ) : mode === 'requirements' && pathDomain ? (
+        <main className={styles.requirementsPage}>
+          <section className={styles.card}>
+            <div className={styles.cardTitleRow}>
+              <h2>Force-conditioned ramp + mass design</h2>
+              <span>full capability stays visible underneath</span>
+            </div>
+            <RequirementsExplorer architecture={architecture} domain={pathDomain} />
+          </section>
+        </main>
       ) : (
         <ConcreteMode
           architecture={architecture}
@@ -324,17 +345,18 @@ function ArchitectureMode({
   pathDomainLoading,
   selectedZoneId,
   selectedRepresentativeIndex,
-  showLocalWorkspace,
-  showRepresentativeFamily,
+  comparisonBaseline,
+  showPhase2Workspace,
   onArchitectureChange,
   onZonesChange,
   onZoneChange,
   onSelectedZoneChange,
   onSelectedRepresentativeIndexChange,
-  onShowLocalWorkspaceChange,
-  onShowRepresentativeFamilyChange,
+  onComparisonBaselineChange,
+  onShowPhase2WorkspaceChange,
   onAnalyze,
   onAnalyzePathDomain,
+  onContinueToRequirements,
 }: {
   architecture: FixedPivotArchitecture;
   zones: PackagingZone[];
@@ -346,17 +368,18 @@ function ArchitectureMode({
   pathDomainLoading: boolean;
   selectedZoneId: string | null;
   selectedRepresentativeIndex: number;
-  showLocalWorkspace: boolean;
-  showRepresentativeFamily: boolean;
+  comparisonBaseline: PrimaryPathDomainAnalysis | null;
+  showPhase2Workspace: boolean;
   onArchitectureChange: (patch: Partial<FixedPivotArchitecture>) => void;
   onZonesChange: (zones: PackagingZone[]) => void;
   onZoneChange: (zoneId: string, patch: Partial<PackagingZone>) => void;
   onSelectedZoneChange: (zoneId: string | null) => void;
   onSelectedRepresentativeIndexChange: (value: number) => void;
-  onShowLocalWorkspaceChange: (value: boolean) => void;
-  onShowRepresentativeFamilyChange: (value: boolean) => void;
+  onComparisonBaselineChange: (value: PrimaryPathDomainAnalysis | null) => void;
+  onShowPhase2WorkspaceChange: (value: boolean) => void;
   onAnalyze: () => void;
   onAnalyzePathDomain: () => void;
+  onContinueToRequirements: () => void;
 }) {
   const selectedPath = pathDomain?.representative_paths[selectedRepresentativeIndex] ?? null;
   const selectedQRange = selectedPath ? minmax(selectedPath.q_deg) : null;
@@ -433,7 +456,16 @@ function ArchitectureMode({
           <button type="button" className={styles.primaryButton} disabled={pathDomainLoading} onClick={onAnalyzePathDomain}>
             {pathDomainLoading ? 'Analyzing ramp paths…' : 'Analyze ramp domain'}
           </button>
-          <p className={styles.helpText}>This is the first exact-valid ramp-family exploration layer. It shows representative complete paths that survive the local graph plus the Phase-3.2 history checks, rather than only the Phase-2 local geometric workspace.</p>
+          <p className={styles.helpText}>This is the complete-path viability layer. The first architecture view uses the graph-projected physical ramp domain rather than drawing example ramps; the actual history-certified ramp shapes stay in the Ramp Explorer below.</p>
+          {pathDomain && (
+            <div className={styles.domainControlBlock}>
+              <label className={styles.checkboxRow}>
+                <input type="checkbox" checked={showPhase2Workspace} onChange={(event) => onShowPhase2WorkspaceChange(event.target.checked)} />
+                <span>Show Phase-2 local geometric superset behind the domain</span>
+              </label>
+              <p className={styles.helpText}>Future: a dedicated comparison mode will pin architecture A and compare its physical/force domain against architecture B without cluttering the normal design flow.</p>
+            </div>
+          )}
           {pathDomain && (
             <>
               <div className={styles.archMetrics}>
@@ -454,16 +486,6 @@ function ArchitectureMode({
                       ))}
                     </select>
                   </label>
-                  <div className={styles.checkboxStack}>
-                    <label className={styles.checkboxRow}>
-                      <input type="checkbox" checked={showLocalWorkspace} onChange={(event) => onShowLocalWorkspaceChange(event.target.checked)} />
-                      <span>Show Phase-2 local workspace underneath</span>
-                    </label>
-                    <label className={styles.checkboxRow}>
-                      <input type="checkbox" checked={showRepresentativeFamily} onChange={(event) => onShowRepresentativeFamilyChange(event.target.checked)} />
-                      <span>Show all representative ramps</span>
-                    </label>
-                  </div>
                 </>
               )}
               {selectedPath && (
@@ -474,6 +496,7 @@ function ArchitectureMode({
                   <Readout label="Multi-root shifts" value={String(selectedPath.history.multiple_root_shift_count)} />
                 </div>
               )}
+              <button type="button" className={styles.primaryButton} onClick={onContinueToRequirements}>Continue to force requirements →</button>
             </>
           )}
         </section>
@@ -485,11 +508,10 @@ function ArchitectureMode({
             architecture={architecture}
             analysis={analysis}
             pathDomain={pathDomain}
-            selectedRepresentativePathIndex={selectedRepresentativeIndex}
-            showLocalWorkspace={showLocalWorkspace}
-            showRepresentativeFamily={showRepresentativeFamily}
+            comparisonBaseline={null}
+            showLocalWorkspace={showPhase2Workspace}
             zones={zones}
-            stale={dirty}
+            stale={dirty || pathDomainDirty}
             selectedZoneId={selectedZoneId}
             onArchitectureChange={onArchitectureChange}
             onZonesChange={onZonesChange}
@@ -510,12 +532,12 @@ function ArchitectureMode({
                 <Metric label="Angle range" value={`${analysis.limits.q_min_deg.toFixed(0)}° → ${analysis.limits.q_max_deg.toFixed(0)}°`} />
                 <Metric label="Travel" value={`${(architecture.required_travel_m * MM).toFixed(2)} mm`} />
               </div>
-              <p className={styles.helpText}>Gold is the purely geometric one-sided finite-roller ramp-surface opportunity region. Green is what remains after ramp packaging zones. When the path-domain explorer is turned on, the exact-valid representative ramps are shown on top of this as a stronger subset.</p>
+              <p className={styles.helpText}>{pathDomain ? pathDomain.domain_projection.meaning : 'Gold is the purely geometric one-sided finite-roller ramp-surface opportunity region. Green is what remains after ramp packaging zones. Analyze the ramp domain to replace that local superset with the stronger complete-path-viable physical projection.'}</p>
               <div className={styles.legendRow}>
                 <span><i className={styles.legendReach} />roller-centre workspace</span>
-                <span><i className={styles.legendRamp} />potential ramp surface</span>
-                <span><i className={styles.legendAdmissible} />packaging-feasible ramp surface</span>
-                <span><i className={styles.legendBlocked} />packaging-restricted pose</span>
+                {pathDomain ? <span><i className={styles.legendDomain} />current complete-path-viable physical ramp states</span> : <span><i className={styles.legendAdmissible} />Phase-2 packaging-feasible ramp surface</span>}
+                {comparisonBaseline && <span><i className={styles.legendBaselineDomain} />pinned baseline physical domain</span>}
+                {showPhase2Workspace && <span><i className={styles.legendRamp} />Phase-2 local geometric superset</span>}
               </div>
             </>
           ) : <div className={styles.loading}>Analyze the architecture to build its reach and packaging workspace.</div>}
@@ -534,10 +556,21 @@ function ArchitectureMode({
 
         {pathDomain && (
           <section className={styles.card}>
+            <CapabilityExplorer
+              current={pathDomain}
+              baseline={null}
+              selectedRepresentativeIndex={selectedRepresentativeIndex}
+            />
+          </section>
+        )}
+
+        {pathDomain && (
+          <section className={styles.card}>
             <div className={styles.cardTitleRow}>
               <h2>Path-domain state view</h2>
-              <span>Derived q(x) view · secondary diagnostic</span>
+              <span>Kinematic viability · not a force plot</span>
             </div>
+            <p className={styles.helpText}>This view is mass- and RPM-independent, but it is not itself clamping force. It shows which flyweight angles can participate in at least one complete active path at each shift station. The pale excluded regions are angles inside the nominal -30° to 90° architecture range that the current path domain cannot actually use on a complete locally viable path. The normalized force-capability view above converts that same viable state set through q′(x) and the fixed-pivot mass geometry, so it is the better view for comparing arm length or other architecture changes.</p>
             <PathDomainPlot analysis={pathDomain} selectedRepresentativeIndex={selectedRepresentativeIndex} />
           </section>
         )}
@@ -568,6 +601,7 @@ function ArchitectureMode({
                 })}
               </div>
             )}
+            <p className={styles.helpText}><strong>Planned workflows:</strong> reference-design force targets, architecture comparison mode, and a constrained freeform physical Ramp Builder. The Ramp Builder will use this domain as guidance but validate the complete edited curve rather than assuming any arbitrary curve through the green projection is valid.</p>
             <ul className={styles.deferredList}>
               {pathDomain.deferred_checks.map((item, index) => <li key={index}>{item}</li>)}
             </ul>
@@ -741,16 +775,38 @@ function PathDomainPlot({
   const yScale = (qDeg: number) => padTop + (qMax - qDeg) / (qMax - qMin) * innerHeight;
   const guideTicks = [-30, 0, 30, 60, 90];
 
+  const viableProjection = analysis.graph.station_projection.filter(
+    (station) => station.active_q_min_deg !== null && station.active_q_max_deg !== null,
+  );
+
   const corridor = (() => {
-    const valid = analysis.graph.station_projection.filter((station) => station.active_q_min_deg !== null && station.active_q_max_deg !== null);
-    if (valid.length < 2) return '';
-    const xs = valid.map((station) => xScale((station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m));
-    const top = valid.map((station, index) => `${index === 0 ? 'M' : 'L'} ${xs[index]} ${yScale(station.active_q_max_deg as number)}`);
-    const bottom = valid.slice().reverse().map((station, reverseIndex) => {
-      const index = valid.length - 1 - reverseIndex;
+    if (viableProjection.length < 2) return '';
+    const xs = viableProjection.map((station) => xScale((station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m));
+    const top = viableProjection.map((station, index) => `${index === 0 ? 'M' : 'L'} ${xs[index]} ${yScale(station.active_q_max_deg as number)}`);
+    const bottom = viableProjection.slice().reverse().map((station, reverseIndex) => {
+      const index = viableProjection.length - 1 - reverseIndex;
       return `L ${xs[index]} ${yScale(station.active_q_min_deg as number)}`;
     });
     return [...top, ...bottom, 'Z'].join(' ');
+  })();
+
+  const upperExcluded = (() => {
+    if (viableProjection.length < 2) return '';
+    const xs = viableProjection.map((station) => xScale((station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m));
+    const top = [`M ${xs[0]} ${yScale(qMax)}`, `L ${xs[xs.length - 1]} ${yScale(qMax)}`];
+    const boundary = viableProjection.slice().reverse().map((station, reverseIndex) => {
+      const index = viableProjection.length - 1 - reverseIndex;
+      return `L ${xs[index]} ${yScale(station.active_q_max_deg as number)}`;
+    });
+    return [...top, ...boundary, 'Z'].join(' ');
+  })();
+
+  const lowerExcluded = (() => {
+    if (viableProjection.length < 2) return '';
+    const xs = viableProjection.map((station) => xScale((station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m));
+    const boundary = viableProjection.map((station, index) => `${index === 0 ? 'M' : 'L'} ${xs[index]} ${yScale(station.active_q_min_deg as number)}`);
+    const bottom = [`L ${xs[xs.length - 1]} ${yScale(qMin)}`, `L ${xs[0]} ${yScale(qMin)}`, 'Z'];
+    return [...boundary, ...bottom].join(' ');
   })();
 
   const stationCountPath = (() => {
@@ -785,6 +841,8 @@ function PathDomainPlot({
             </g>
           );
         })}
+        {upperExcluded && <path d={upperExcluded} className={styles.domainExcluded} />}
+        {lowerExcluded && <path d={lowerExcluded} className={styles.domainExcluded} />}
         {corridor && <path d={corridor} className={styles.domainCorridor} />}
         <path d={stationCountPath} className={styles.domainStationCount} />
         {analysis.representative_paths.map((path, index) => {
@@ -802,7 +860,8 @@ function PathDomainPlot({
         <text x={18} y={padTop + 10} className={styles.domainAxisTitle}>q(x)</text>
       </svg>
       <div className={styles.domainLegend}>
-        <span><i className={styles.domainLegendCorridor} />stationwise active-q corridor</span>
+        <span><i className={styles.domainLegendCorridor} />complete-path kinematic corridor</span>
+        <span><i className={styles.domainLegendExcluded} />nominal q range not usable by that corridor</span>
         <span><i className={styles.domainLegendFamily} />representative valid ramps</span>
         <span><i className={styles.domainLegendSelected} />selected representative ramp</span>
         <span><i className={styles.domainLegendTrace} />history-selected branch trace</span>

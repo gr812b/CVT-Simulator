@@ -24,7 +24,7 @@ can be tested quickly and independently.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import atan2, cos, degrees, hypot, isfinite, pi, sin
+from math import atan2, ceil, cos, degrees, floor, hypot, isfinite, pi, sin
 from typing import Iterable
 
 import numpy as np
@@ -152,18 +152,48 @@ class PiecewiseRampPath:
         return self.segments[min(max(lo, 0), len(self.segments) - 1)]
 
 
-def analyze_path_domain(
+
+@dataclass(slots=True)
+class CompiledPathDomain:
+    """Reusable graph/history object for Phase-3.5 requirement conditioning."""
+
+    architecture: ArchitectureDesign
+    zones: tuple[PackagingZone, ...]
+    states: tuple[PathState, ...]
+    templates: tuple[EdgeTemplate, ...]
+    viable_edges: tuple[tuple[LayerEdge, ...], ...]
+    viable_nodes: tuple[frozenset[int], ...]
+    shift_station_count: int
+    q_sample_count: int
+    alpha_sample_count: int
+    edge_audit_sample_count: int
+    history_trace_sample_count: int
+    representative_state_paths: tuple[tuple[int, ...], ...]
+    representative_documents: tuple[dict[str, object], ...]
+    document: dict[str, object]
+
+
+@dataclass(frozen=True, slots=True)
+class ForceRequirement:
+    id: str
+    shift_m: float
+    force_N: float
+    shaft_speed_rad_s: float
+    tolerance_N: float
+
+
+def compile_path_domain(
     architecture: ArchitectureDesign,
     zones: tuple[PackagingZone, ...],
     *,
     shift_station_count: int = 9,
     q_sample_count: int = 61,
     alpha_sample_count: int = 7,
-    representative_path_count: int = 5,
+    representative_path_count: int = 8,
     edge_audit_sample_count: int = 65,
     history_trace_sample_count: int = 65,
-) -> dict[str, object]:
-    """Build the Phase-3.1 viability graph and Phase-3.2 certified path atlas."""
+) -> CompiledPathDomain:
+    """Compile the reusable path graph and a bounded history-certified atlas."""
 
     _validate_inputs(
         architecture,
@@ -213,21 +243,25 @@ def analyze_path_domain(
                 )
         layers.append(layer_edges)
 
-    viable_edges, viable_nodes = _forward_backward_viability(
+    viable_edges_list, viable_nodes_list = _forward_backward_viability(
         layers,
         len(states),
         shift_station_count,
     )
 
+    # Keep the history atlas intentionally bounded.  The graph is the domain;
+    # representatives are only examples for inspection and should never be
+    # allowed to turn atlas generation into the dominant cost.
     candidate_paths = _extract_candidate_paths(
-        viable_edges,
-        viable_nodes,
+        viable_edges_list,
+        viable_nodes_list,
         states,
         shift_station_count,
-        max_candidates=max(48, 12 * representative_path_count),
+        max_candidates=max(32, 8 * representative_path_count),
     )
 
     certified_paths: list[dict[str, object]] = []
+    certified_state_paths: list[tuple[int, ...]] = []
     rejected_history: list[dict[str, object]] = []
     seen_signatures: set[tuple[int, ...]] = set()
     for state_path in candidate_paths:
@@ -263,6 +297,7 @@ def analyze_path_domain(
             )
             continue
 
+        certified_state_paths.append(signature)
         certified_paths.append(
             _path_document(
                 ramp_path,
@@ -275,24 +310,35 @@ def analyze_path_domain(
             break
 
     station_projection = _station_projection(
-        viable_nodes,
+        viable_nodes_list,
+        states,
+        shift_station_count,
+    )
+    domain_projection = _physical_domain_projection(
+        architecture,
+        viable_nodes_list,
+        states,
+        shift_station_count,
+        q_sample_count=q_sample_count,
+        alpha_sample_count=alpha_sample_count,
+    )
+    capability = _capability_projection(
+        architecture,
+        viable_nodes_list,
         states,
         shift_station_count,
     )
 
-    return {
+    document = {
         "validity": {
-            "valid": bool(certified_paths),
+            "valid": bool(viable_nodes_list and viable_nodes_list[0]),
             "findings": []
-            if certified_paths
+            if viable_nodes_list and viable_nodes_list[0]
             else [
                 {
                     "severity": "error",
-                    "code": "NO_HISTORY_CERTIFIED_PATH",
-                    "message": (
-                        "The local viability graph contains no representative "
-                        "complete path that also passes the Phase-3.2 history checks."
-                    ),
+                    "code": "NO_COMPLETE_PATH",
+                    "message": "The local viability graph contains no complete start-to-finish path.",
                 }
             ],
         },
@@ -303,8 +349,8 @@ def analyze_path_domain(
             "state_count": len(states),
             "local_transition_template_count": len(templates),
             "layer_edge_counts": [len(items) for items in layers],
-            "viable_layer_edge_counts": [len(items) for items in viable_edges],
-            "viable_node_counts": [len(items) for items in viable_nodes],
+            "viable_layer_edge_counts": [len(items) for items in viable_edges_list],
+            "viable_node_counts": [len(items) for items in viable_nodes_list],
             "station_projection": station_projection,
         },
         "history": {
@@ -320,9 +366,14 @@ def analyze_path_domain(
             ),
         },
         "representative_paths": certified_paths,
+        "domain_projection": domain_projection,
+        "capability": capability,
         "deferred_checks": [
             "exact CINDER certification of the final manufacturing spline",
             "C3/C4 manufacturing-spline reconstruction and round-trip certification",
+            "future architecture-comparison mode",
+            "future reference-design target import",
+            "future freeform physical ramp builder",
         ],
         "numerics": {
             "edge_audit_sample_count": edge_audit_sample_count,
@@ -330,6 +381,616 @@ def analyze_path_domain(
         },
     }
 
+    return CompiledPathDomain(
+        architecture=architecture,
+        zones=zones,
+        states=states,
+        templates=tuple(templates),
+        viable_edges=tuple(tuple(row) for row in viable_edges_list),
+        viable_nodes=tuple(frozenset(row) for row in viable_nodes_list),
+        shift_station_count=shift_station_count,
+        q_sample_count=q_sample_count,
+        alpha_sample_count=alpha_sample_count,
+        edge_audit_sample_count=edge_audit_sample_count,
+        history_trace_sample_count=history_trace_sample_count,
+        representative_state_paths=tuple(certified_state_paths),
+        representative_documents=tuple(certified_paths),
+        document=document,
+    )
+
+
+def analyze_path_domain(
+    architecture: ArchitectureDesign,
+    zones: tuple[PackagingZone, ...],
+    *,
+    shift_station_count: int = 9,
+    q_sample_count: int = 61,
+    alpha_sample_count: int = 7,
+    representative_path_count: int = 8,
+    edge_audit_sample_count: int = 65,
+    history_trace_sample_count: int = 65,
+) -> dict[str, object]:
+    """Build the Phase-3 graph/history document without exposing cache internals."""
+
+    return compile_path_domain(
+        architecture,
+        zones,
+        shift_station_count=shift_station_count,
+        q_sample_count=q_sample_count,
+        alpha_sample_count=alpha_sample_count,
+        representative_path_count=representative_path_count,
+        edge_audit_sample_count=edge_audit_sample_count,
+        history_trace_sample_count=history_trace_sample_count,
+    ).document
+
+
+def condition_path_domain(
+    compiled: CompiledPathDomain,
+    requirements: tuple[ForceRequirement, ...],
+    *,
+    max_tip_mass_per_flyweight_kg: float,
+    mass_sample_count: int = 1025,
+    representative_solution_count: int = 8,
+    reference_shaft_speed_rad_s: float | None = None,
+) -> dict[str, object]:
+    """Condition the complete path graph on force requirements and one shared mass.
+
+    The discrete graph is augmented with a compact mass lattice.  Each edge carries
+    a bitset of tip masses that satisfy every force requirement located on that
+    edge. Forward/backward propagation intersects those bitsets, so a state remains
+    highlighted only when the *same constant physical tip mass* can arrive there
+    and continue to full travel while satisfying all requirements.
+
+    Representative path solutions are refined analytically in continuous mass,
+    so reported example masses are not quantized to the lattice.
+    """
+
+    architecture = compiled.architecture
+    if max_tip_mass_per_flyweight_kg < 0.0:
+        raise ValueError("maximum tip mass must be non-negative")
+    if max_tip_mass_per_flyweight_kg > architecture.max_tip_mass_per_flyweight_kg + 1.0e-12:
+        raise ValueError("maximum tip mass cannot exceed the architecture limit")
+    if mass_sample_count < 65:
+        raise ValueError("mass_sample_count must be at least 65")
+    if representative_solution_count < 1:
+        raise ValueError("representative_solution_count must be positive")
+
+    if reference_shaft_speed_rad_s is not None and reference_shaft_speed_rad_s <= 0.0:
+        raise ValueError("reference shaft speed must be positive")
+    display_speed = reference_shaft_speed_rad_s or _reference_speed(requirements)
+
+    travel = architecture.required_travel_m
+    for requirement in requirements:
+        if requirement.shift_m < -1.0e-12 or requirement.shift_m > travel + 1.0e-12:
+            raise ValueError("force requirement shift lies outside the required travel")
+        if requirement.force_N < 0.0 or requirement.tolerance_N < 0.0:
+            raise ValueError("force requirements and tolerances must be non-negative")
+        if requirement.shaft_speed_rad_s <= 0.0:
+            raise ValueError("force requirements require a positive shaft speed")
+
+    station_count = compiled.shift_station_count
+    layer_count = station_count - 1
+    dx = travel / layer_count
+    all_mask = (1 << mass_sample_count) - 1
+    mass_step = (
+        max_tip_mass_per_flyweight_kg / (mass_sample_count - 1)
+        if mass_sample_count > 1
+        else 0.0
+    )
+
+    requirements_by_layer: list[list[ForceRequirement]] = [[] for _ in range(layer_count)]
+    for requirement in requirements:
+        x = min(max(requirement.shift_m, 0.0), travel)
+        layer = min(layer_count - 1, int(x / dx))
+        requirements_by_layer[layer].append(requirement)
+
+    edge_masks: list[list[int]] = []
+    individual_status: dict[str, bool] = {requirement.id: False for requirement in requirements}
+    for layer_index, layer_edges in enumerate(compiled.viable_edges):
+        masks: list[int] = []
+        x0 = layer_index * dx
+        for edge in layer_edges:
+            template = compiled.templates[edge.template_index]
+            segment = PathSegment(
+                x0_m=x0,
+                x1_m=x0 + dx,
+                q0_rad=template.q0_rad,
+                q1_rad=template.q1_rad,
+                m0_rad_per_m=template.m0_rad_per_m,
+                m1_rad_per_m=template.m1_rad_per_m,
+            )
+            mask = all_mask
+            for requirement in requirements_by_layer[layer_index]:
+                requirement_mask = _requirement_mass_mask(
+                    architecture,
+                    segment,
+                    requirement,
+                    max_tip_mass_per_flyweight_kg,
+                    mass_sample_count,
+                )
+                # Individual attainability is deliberately evaluated independently
+                # from the cumulative mask.  An impossible earlier point on the same
+                # graph layer must not make a later, individually feasible point look
+                # impossible as well.
+                if requirement_mask:
+                    individual_status[requirement.id] = True
+                mask &= requirement_mask
+            masks.append(mask)
+        edge_masks.append(masks)
+
+    forward: list[dict[int, int]] = [dict() for _ in range(station_count)]
+    backward: list[dict[int, int]] = [dict() for _ in range(station_count)]
+    for state_index in compiled.viable_nodes[0]:
+        forward[0][state_index] = all_mask
+    for layer_index, layer_edges in enumerate(compiled.viable_edges):
+        next_map = forward[layer_index + 1]
+        for edge_index, edge in enumerate(layer_edges):
+            start_mask = forward[layer_index].get(edge.start_state, 0)
+            mask = start_mask & edge_masks[layer_index][edge_index]
+            if mask:
+                next_map[edge.end_state] = next_map.get(edge.end_state, 0) | mask
+
+    for state_index in compiled.viable_nodes[-1]:
+        backward[-1][state_index] = all_mask
+    for layer_index in range(layer_count - 1, -1, -1):
+        current_map = backward[layer_index]
+        for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
+            end_mask = backward[layer_index + 1].get(edge.end_state, 0)
+            mask = end_mask & edge_masks[layer_index][edge_index]
+            if mask:
+                current_map[edge.start_state] = current_map.get(edge.start_state, 0) | mask
+
+    node_masks: list[dict[int, int]] = []
+    conditioned_nodes: list[set[int]] = []
+    for station in range(station_count):
+        row: dict[int, int] = {}
+        nodes: set[int] = set()
+        for state_index in compiled.viable_nodes[station]:
+            mask = forward[station].get(state_index, 0) & backward[station].get(state_index, 0)
+            if mask:
+                row[state_index] = mask
+                nodes.add(state_index)
+        node_masks.append(row)
+        conditioned_nodes.append(nodes)
+
+    conditioned_edges: list[list[LayerEdge]] = []
+    conditioned_edge_masks: list[list[int]] = []
+    for layer_index, layer_edges in enumerate(compiled.viable_edges):
+        row: list[LayerEdge] = []
+        mask_row: list[int] = []
+        for edge_index, edge in enumerate(layer_edges):
+            mask = (
+                forward[layer_index].get(edge.start_state, 0)
+                & edge_masks[layer_index][edge_index]
+                & backward[layer_index + 1].get(edge.end_state, 0)
+            )
+            mask_row.append(mask)
+            if mask:
+                row.append(edge)
+        conditioned_edges.append(row)
+        conditioned_edge_masks.append(mask_row)
+
+    # The user places force requirements continuously through shift, so draw a
+    # denser envelope from the actual viable edge segments rather than merely
+    # connecting station extrema.  Backend requirement acceptance still uses the
+    # exact Hermite segment at the requested x.
+    full_force_capability = _edge_force_projection(
+        compiled,
+        max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+        shaft_speed_rad_s=display_speed,
+        edge_mass_masks=None,
+        mass_sample_count=mass_sample_count,
+        samples_per_layer=9,
+    )
+    conditioned_force_capability = _edge_force_projection(
+        compiled,
+        max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+        shaft_speed_rad_s=display_speed,
+        edge_mass_masks=conditioned_edge_masks,
+        mass_sample_count=mass_sample_count,
+        samples_per_layer=9,
+    )
+
+    projection = _physical_domain_projection(
+        architecture,
+        conditioned_nodes,
+        compiled.states,
+        station_count,
+        q_sample_count=compiled.q_sample_count,
+        alpha_sample_count=compiled.alpha_sample_count,
+    )
+    projection["meaning"] = (
+        "Physical projection of complete graph states that remain reachable and "
+        "co-reachable while carrying at least one common tip mass satisfying all "
+        "current force requirements."
+    )
+
+    representative_solutions: list[dict[str, object]] = []
+    for state_path, path_document in zip(
+        compiled.representative_state_paths,
+        compiled.representative_documents,
+        strict=True,
+    ):
+        ramp_path = _path_from_state_indices(
+            architecture,
+            compiled.states,
+            list(state_path),
+            station_count,
+        )
+        interval = _continuous_path_mass_interval(
+            ramp_path,
+            requirements,
+            max_tip_mass_per_flyweight_kg,
+        )
+        if interval is None:
+            continue
+        mass_min, mass_max = interval
+        example_mass = 0.5 * (mass_min + mass_max)
+        sample_force = _path_absolute_force_document(
+            path_document,
+            example_mass,
+            requirements,
+            display_speed,
+        )
+        representative_solutions.append(
+            {
+                **path_document,
+                "solution": {
+                    "tip_mass_min_kg": mass_min,
+                    "tip_mass_max_kg": mass_max,
+                    "example_tip_mass_kg": example_mass,
+                    "force_N": sample_force,
+                },
+            }
+        )
+        if len(representative_solutions) >= representative_solution_count:
+            break
+
+    jointly_feasible = bool(conditioned_nodes and conditioned_nodes[0])
+    impossible_ids = [identifier for identifier, possible in individual_status.items() if not possible]
+    findings: list[dict[str, object]] = []
+    if impossible_ids:
+        findings.append(
+            {
+                "severity": "error",
+                "code": "INDIVIDUAL_REQUIREMENT_OUTSIDE_CAPABILITY",
+                "message": "One or more force points are outside the architecture capability for the allowed mass range.",
+                "requirement_ids": impossible_ids,
+            }
+        )
+    elif requirements and not jointly_feasible:
+        findings.append(
+            {
+                "severity": "error",
+                "code": "REQUIREMENTS_JOINTLY_INCOMPATIBLE",
+                "message": (
+                    "Every force point is individually attainable, but no complete ramp "
+                    "with one constant tip mass can satisfy all points together."
+                ),
+            }
+        )
+
+    station_projection = _station_projection(conditioned_nodes, compiled.states, station_count)
+    mass_values_seen: list[float] = []
+    for row in node_masks:
+        for mask in row.values():
+            if mask:
+                mass_values_seen.extend(
+                    [
+                        _mass_from_index(_first_set_bit(mask), max_tip_mass_per_flyweight_kg, mass_sample_count),
+                        _mass_from_index(mask.bit_length() - 1, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                    ]
+                )
+
+    return {
+        "validity": {
+            "valid": jointly_feasible and not impossible_ids,
+            "findings": findings,
+        },
+        "requirements": [
+            {
+                "id": requirement.id,
+                "shift_m": requirement.shift_m,
+                "force_N": requirement.force_N,
+                "shaft_speed_rad_s": requirement.shaft_speed_rad_s,
+                "tolerance_N": requirement.tolerance_N,
+                "individually_attainable": individual_status[requirement.id],
+            }
+            for requirement in requirements
+        ],
+        "mass": {
+            "maximum_tip_mass_per_flyweight_kg": max_tip_mass_per_flyweight_kg,
+            "mass_sample_count": mass_sample_count,
+            "mass_resolution_kg": mass_step,
+            "surviving_mass_min_kg": min(mass_values_seen) if mass_values_seen else None,
+            "surviving_mass_max_kg": max(mass_values_seen) if mass_values_seen else None,
+        },
+        "graph": {
+            "viable_layer_edge_counts": [len(row) for row in conditioned_edges],
+            "viable_node_counts": [len(row) for row in conditioned_nodes],
+            "station_projection": station_projection,
+        },
+        "domain_projection": projection,
+        "force_capability": {
+            "reference_shaft_speed_rad_s": display_speed,
+            "full": full_force_capability,
+            "conditioned": conditioned_force_capability,
+        },
+        "representative_solutions": representative_solutions,
+        "summary": {
+            "requirement_count": len(requirements),
+            "jointly_feasible": jointly_feasible,
+            "conditioned_domain_point_count": projection["point_count"],
+            "representative_solution_count": len(representative_solutions),
+        },
+    }
+
+
+def _reference_speed(requirements: tuple[ForceRequirement, ...]) -> float:
+    if requirements:
+        return requirements[-1].shaft_speed_rad_s
+    return 3800.0 * 2.0 * pi / 60.0
+
+
+def _requirement_mass_mask(
+    architecture: ArchitectureDesign,
+    segment: PathSegment,
+    requirement: ForceRequirement,
+    max_mass_kg: float,
+    mass_sample_count: int,
+) -> int:
+    """Return a compact bitset of mass lattice points satisfying one force point."""
+
+    q, dq, _ddq = _hermite_q_derivatives(segment, requirement.shift_m)
+    arm_gain, tip_gain, _ = _normalized_force_gain(architecture, q, dq)
+    omega2 = requirement.shaft_speed_rad_s ** 2
+    target_low = requirement.force_N - requirement.tolerance_N
+    target_high = requirement.force_N + requirement.tolerance_N
+    base = omega2 * arm_gain
+    slope = omega2 * tip_gain
+
+    if abs(slope) <= 1.0e-14:
+        if target_low - 1.0e-9 <= base <= target_high + 1.0e-9:
+            return (1 << mass_sample_count) - 1
+        return 0
+
+    a = (target_low - base) / slope
+    b = (target_high - base) / slope
+    mass_low, mass_high = sorted((a, b))
+    mass_low = max(0.0, mass_low)
+    mass_high = min(max_mass_kg, mass_high)
+    if mass_high < mass_low - 1.0e-12:
+        return 0
+    if max_mass_kg <= 1.0e-15:
+        return 1 if mass_low <= 1.0e-12 <= mass_high + 1.0e-12 else 0
+
+    scale = (mass_sample_count - 1) / max_mass_kg
+    first = max(0, min(mass_sample_count - 1, int(ceil(mass_low * scale - 1.0e-10))))
+    last = max(0, min(mass_sample_count - 1, int(floor(mass_high * scale + 1.0e-10))))
+    if last < first:
+        return 0
+    width = last - first + 1
+    return ((1 << width) - 1) << first
+
+
+def _continuous_path_mass_interval(
+    path: PiecewiseRampPath,
+    requirements: tuple[ForceRequirement, ...],
+    max_mass_kg: float,
+) -> tuple[float, float] | None:
+    low = 0.0
+    high = max_mass_kg
+    for requirement in requirements:
+        row = path.evaluate(requirement.shift_m)
+        arm_gain, tip_gain, _ = _normalized_force_gain(
+            path.architecture,
+            row["q_rad"],
+            row["dq_dx_rad_per_m"],
+        )
+        omega2 = requirement.shaft_speed_rad_s ** 2
+        target_low = requirement.force_N - requirement.tolerance_N
+        target_high = requirement.force_N + requirement.tolerance_N
+        base = omega2 * arm_gain
+        slope = omega2 * tip_gain
+        if abs(slope) <= 1.0e-14:
+            if target_low - 1.0e-9 <= base <= target_high + 1.0e-9:
+                continue
+            return None
+        a = (target_low - base) / slope
+        b = (target_high - base) / slope
+        req_low, req_high = sorted((a, b))
+        low = max(low, req_low)
+        high = min(high, req_high)
+        if high < low - 1.0e-12:
+            return None
+    low = max(0.0, low)
+    high = min(max_mass_kg, high)
+    if high < low - 1.0e-12:
+        return None
+    return low, high
+
+
+def _path_absolute_force_document(
+    path_document: dict[str, object],
+    mass_kg: float,
+    requirements: tuple[ForceRequirement, ...],
+    reference_shaft_speed_rad_s: float | None = None,
+) -> dict[str, list[float] | float]:
+    capability = path_document["capability"]
+    assert isinstance(capability, dict)
+    arm = capability["arm_force_per_omega2"]
+    tip = capability["tip_force_per_omega2_per_kg"]
+    assert isinstance(arm, list) and isinstance(tip, list)
+    omega = reference_shaft_speed_rad_s or _reference_speed(requirements)
+    omega2 = omega * omega
+    return {
+        "shaft_speed_rad_s": omega,
+        "values": [omega2 * (float(a) + mass_kg * float(t)) for a, t in zip(arm, tip, strict=True)],
+    }
+
+
+def _edge_force_projection(
+    compiled: CompiledPathDomain,
+    *,
+    max_tip_mass_per_flyweight_kg: float,
+    shaft_speed_rad_s: float,
+    edge_mass_masks: list[list[int]] | None,
+    mass_sample_count: int,
+    samples_per_layer: int,
+) -> dict[str, object]:
+    architecture = compiled.architecture
+    layer_count = compiled.shift_station_count - 1
+    dx = architecture.required_travel_m / layer_count
+    omega2 = shaft_speed_rad_s * shaft_speed_rad_s
+    samples: list[dict[str, object]] = []
+
+    for layer_index, layer_edges in enumerate(compiled.viable_edges):
+        fractions = np.linspace(0.0, 1.0, max(2, samples_per_layer))
+        if layer_index > 0:
+            fractions = fractions[1:]
+        x0 = layer_index * dx
+        for fraction_raw in fractions:
+            fraction = float(fraction_raw)
+            shift_m = x0 + fraction * dx
+            force_values: list[float] = []
+            mass_low_values: list[float] = []
+            mass_high_values: list[float] = []
+            active_count = 0
+            for edge_index, edge in enumerate(layer_edges):
+                mask = (
+                    (1 << mass_sample_count) - 1
+                    if edge_mass_masks is None
+                    else edge_mass_masks[layer_index][edge_index]
+                )
+                if not mask:
+                    continue
+                template = compiled.templates[edge.template_index]
+                segment = PathSegment(
+                    x0_m=x0,
+                    x1_m=x0 + dx,
+                    q0_rad=template.q0_rad,
+                    q1_rad=template.q1_rad,
+                    m0_rad_per_m=template.m0_rad_per_m,
+                    m1_rad_per_m=template.m1_rad_per_m,
+                )
+                q, dq, _ddq = _hermite_q_derivatives(segment, shift_m)
+                if dq <= 1.0e-8:
+                    continue
+                arm_gain, tip_gain, _ = _normalized_force_gain(architecture, q, dq)
+                if edge_mass_masks is None:
+                    low_mass = 0.0
+                    high_mass = max_tip_mass_per_flyweight_kg
+                else:
+                    low_mass = _mass_from_index(
+                        _first_set_bit(mask),
+                        max_tip_mass_per_flyweight_kg,
+                        mass_sample_count,
+                    )
+                    high_mass = _mass_from_index(
+                        mask.bit_length() - 1,
+                        max_tip_mass_per_flyweight_kg,
+                        mass_sample_count,
+                    )
+                a = omega2 * (arm_gain + low_mass * tip_gain)
+                b = omega2 * (arm_gain + high_mass * tip_gain)
+                force_values.extend((a, b))
+                mass_low_values.append(low_mass)
+                mass_high_values.append(high_mass)
+                active_count += 1
+            samples.append(
+                {
+                    "station": len(samples),
+                    "shift_m": shift_m,
+                    "active_state_count": active_count,
+                    "force_min_N": min(force_values) if force_values else None,
+                    "force_max_N": max(force_values) if force_values else None,
+                    "mass_min_kg": min(mass_low_values) if mass_low_values else None,
+                    "mass_max_kg": max(mass_high_values) if mass_high_values else None,
+                }
+            )
+
+    return {
+        "shaft_speed_rad_s": shaft_speed_rad_s,
+        "max_tip_mass_per_flyweight_kg": max_tip_mass_per_flyweight_kg,
+        "stations": samples,
+    }
+
+
+def _absolute_force_projection(
+    architecture: ArchitectureDesign,
+    viable_nodes: list[set[int]],
+    states: tuple[PathState, ...],
+    station_count: int,
+    *,
+    max_tip_mass_per_flyweight_kg: float,
+    shaft_speed_rad_s: float,
+    node_masks: list[dict[int, int]] | None,
+    mass_sample_count: int,
+) -> dict[str, object]:
+    omega2 = shaft_speed_rad_s * shaft_speed_rad_s
+    stations: list[dict[str, object]] = []
+    for station in range(station_count):
+        values: list[float] = []
+        mass_min_values: list[float] = []
+        mass_max_values: list[float] = []
+        for state_index in viable_nodes[station]:
+            state = states[state_index]
+            if state.dq_dx_rad_per_m <= 1.0e-8:
+                continue
+            arm_gain, tip_gain, _ = _normalized_force_gain(
+                architecture,
+                state.q_rad,
+                state.dq_dx_rad_per_m,
+            )
+            if node_masks is None:
+                low_mass = 0.0
+                high_mass = max_tip_mass_per_flyweight_kg
+            else:
+                mask = node_masks[station].get(state_index, 0)
+                if not mask:
+                    continue
+                low_mass = _mass_from_index(
+                    _first_set_bit(mask),
+                    max_tip_mass_per_flyweight_kg,
+                    mass_sample_count,
+                )
+                high_mass = _mass_from_index(
+                    mask.bit_length() - 1,
+                    max_tip_mass_per_flyweight_kg,
+                    mass_sample_count,
+                )
+            a = omega2 * (arm_gain + low_mass * tip_gain)
+            b = omega2 * (arm_gain + high_mass * tip_gain)
+            values.extend((a, b))
+            mass_min_values.append(low_mass)
+            mass_max_values.append(high_mass)
+        shift = station / max(1, station_count - 1) * architecture.required_travel_m
+        stations.append(
+            {
+                "station": station,
+                "shift_m": shift,
+                "active_state_count": len(values) // 2,
+                "force_min_N": min(values) if values else None,
+                "force_max_N": max(values) if values else None,
+                "mass_min_kg": min(mass_min_values) if mass_min_values else None,
+                "mass_max_kg": max(mass_max_values) if mass_max_values else None,
+            }
+        )
+    return {
+        "shaft_speed_rad_s": shaft_speed_rad_s,
+        "max_tip_mass_per_flyweight_kg": max_tip_mass_per_flyweight_kg,
+        "stations": stations,
+    }
+
+
+def _first_set_bit(mask: int) -> int:
+    return (mask & -mask).bit_length() - 1
+
+
+def _mass_from_index(index: int, max_mass_kg: float, count: int) -> float:
+    if count <= 1:
+        return 0.0
+    return max_mass_kg * index / (count - 1)
 
 def certify_path_history(
     path: PiecewiseRampPath,
@@ -1202,6 +1863,7 @@ def _path_document(
             "x_m": [float(v) for v in data["contact_x_m"]],
             "r_m": [float(v) for v in data["contact_r_m"]],
         },
+        "capability": _path_capability_document(path.architecture, data),
         "history": {
             "max_contact_root_count": certification.max_contact_root_count,
             "multiple_root_shift_count": certification.multiple_root_shift_count,
@@ -1209,6 +1871,218 @@ def _path_document(
             "trace_parameter_m": list(certification.branch_trace_parameter_m),
             "trace_q_deg": [degrees(v) for v in certification.branch_trace_q_rad],
         },
+    }
+
+
+def _normalized_force_gain(
+    architecture: ArchitectureDesign,
+    q_rad: float,
+    dq_dx_rad_per_m: float,
+) -> tuple[float, float, float]:
+    """Return quasi-static flyweight closing-force gains normalized by omega^2.
+
+    The fixed-pivot mass model used by CINDER is a uniform arm plus an end mass.
+    With shaft-axis radial coordinate ``r = P + s sin(q)``, the arm and end-mass
+    shaft inertias are linear in their masses.  Therefore
+
+        F_c / omega^2 = 0.5 * dJ/dx
+                      = 0.5 * (dJ/dq) * dq/dx.
+
+    The returned tuple is:
+      1. the contribution of the configured arm/body mass [N/(rad/s)^2],
+      2. the gain per kilogram of tip mass [N/(rad/s)^2/kg], and
+      3. the total gain at the architecture's configured max tip mass.
+
+    Radians are dimensionless, so the first and third quantities are also kg*m
+    and the per-tip-mass quantity is also metres.  The force-oriented units are
+    kept in the API because they make the later operating-point conversion
+    explicit.
+    """
+
+    q = float(q_rad)
+    dq = float(dq_dx_rad_per_m)
+    count = float(architecture.number_of_flyweights)
+    pivot_radius = architecture.pivot_radius_m
+    length = architecture.arm_length_m
+    arm_mass = architecture.arm_mass_per_flyweight_kg
+
+    sin_q = sin(q)
+    cos_q = cos(q)
+    d_j_d_q_arm = count * arm_mass * (
+        pivot_radius * length * cos_q
+        + (2.0 / 3.0) * length * length * sin_q * cos_q
+    )
+    d_j_d_q_tip_per_kg = count * (
+        2.0 * length * cos_q * (pivot_radius + length * sin_q)
+    )
+    arm_gain = 0.5 * d_j_d_q_arm * dq
+    tip_gain_per_kg = 0.5 * d_j_d_q_tip_per_kg * dq
+    max_tip_total_gain = (
+        arm_gain
+        + architecture.max_tip_mass_per_flyweight_kg * tip_gain_per_kg
+    )
+    return arm_gain, tip_gain_per_kg, max_tip_total_gain
+
+
+def _capability_projection(
+    architecture: ArchitectureDesign,
+    viable_nodes: list[set[int]],
+    states: tuple[PathState, ...],
+    station_count: int,
+) -> dict[str, object]:
+    stations: list[dict[str, float | int | None]] = []
+    for station in range(station_count):
+        shift_m = (
+            station / max(1, station_count - 1)
+            * architecture.required_travel_m
+        )
+        active_states = [
+            states[index]
+            for index in viable_nodes[station]
+            if states[index].dq_dx_rad_per_m > 1.0e-8
+        ]
+        gains = [
+            _normalized_force_gain(
+                architecture, state.q_rad, state.dq_dx_rad_per_m
+            )
+            for state in active_states
+        ]
+
+        def extrema(component: int) -> tuple[float | None, float | None]:
+            values = [row[component] for row in gains if isfinite(row[component])]
+            if not values:
+                return None, None
+            return min(values), max(values)
+
+        arm_min, arm_max = extrema(0)
+        tip_min, tip_max = extrema(1)
+        total_min, total_max = extrema(2)
+        stations.append(
+            {
+                "station": station,
+                "shift_m": shift_m,
+                "shift_fraction": station / max(1, station_count - 1),
+                "active_state_count": len(active_states),
+                "arm_force_per_omega2_min": arm_min,
+                "arm_force_per_omega2_max": arm_max,
+                "tip_force_per_omega2_per_kg_min": tip_min,
+                "tip_force_per_omega2_per_kg_max": tip_max,
+                "max_tip_total_force_per_omega2_min": total_min,
+                "max_tip_total_force_per_omega2_max": total_max,
+            }
+        )
+
+    return {
+        "definition": (
+            "Quasi-static centrifugal closing-force gain normalized by shaft-speed squared. "
+            "The station envelopes use complete-path-viable active graph states; they are "
+            "stronger than the Phase-2 local geometry but are not a claim that the pointwise "
+            "upper or lower boundary is one single manufacturable ramp."
+        ),
+        "units": {
+            "arm_force_per_omega2": "N/(rad/s)^2",
+            "tip_force_per_omega2_per_kg": "N/(rad/s)^2/kg",
+            "max_tip_total_force_per_omega2": "N/(rad/s)^2",
+        },
+        "max_tip_mass_per_flyweight_kg": architecture.max_tip_mass_per_flyweight_kg,
+        "stations": stations,
+    }
+
+
+def _path_capability_document(
+    architecture: ArchitectureDesign,
+    sampled_path: dict[str, np.ndarray],
+) -> dict[str, list[float]]:
+    arm: list[float] = []
+    tip: list[float] = []
+    total: list[float] = []
+    for q_raw, dq_raw in zip(
+        sampled_path["q_rad"],
+        sampled_path["dq_dx_rad_per_m"],
+        strict=True,
+    ):
+        gains = _normalized_force_gain(architecture, float(q_raw), float(dq_raw))
+        arm.append(gains[0])
+        tip.append(gains[1])
+        total.append(gains[2])
+    return {
+        "arm_force_per_omega2": arm,
+        "tip_force_per_omega2_per_kg": tip,
+        "max_tip_total_force_per_omega2": total,
+    }
+
+
+def _physical_domain_projection(
+    architecture: ArchitectureDesign,
+    viable_nodes: list[set[int]],
+    states: tuple[PathState, ...],
+    station_count: int,
+    *,
+    q_sample_count: int,
+    alpha_sample_count: int,
+) -> dict[str, object]:
+    """Project complete-path-viable graph states into physical ramp space.
+
+    This deliberately returns a point cloud rather than a filled polygon.  The
+    frontend renders each graph state as a small translucent disc, producing a
+    visually continuous green region without claiming that arbitrary points
+    between graph states have themselves been history-certified.
+    """
+
+    x_values: list[float] = []
+    r_values: list[float] = []
+    station_values: list[int] = []
+    q_values: list[float] = []
+    tangent_values: list[float] = []
+
+    for station in range(station_count):
+        shift_m = (
+            station / max(1, station_count - 1)
+            * architecture.required_travel_m
+        )
+        for index in sorted(viable_nodes[station]):
+            state = states[index]
+            geometry = _geometry_from_q(
+                architecture,
+                shift_m,
+                state.q_rad,
+                state.dq_dx_rad_per_m,
+                0.0,
+            )
+            cx = geometry["contact_x_m"]
+            cr = geometry["contact_r_m"]
+            if not (isfinite(cx) and isfinite(cr)):
+                continue
+            x_values.append(cx)
+            r_values.append(cr)
+            station_values.append(station)
+            q_values.append(degrees(state.q_rad))
+            tangent_values.append(geometry["ramp_tangent_deg"])
+
+    q_step = (Q_MAX_RAD - Q_MIN_RAD) / max(1, q_sample_count - 1)
+    alpha_step = np.deg2rad(80.0) / max(1, alpha_sample_count - 1)
+    visual_radius = 0.45 * hypot(
+        architecture.arm_length_m * q_step,
+        architecture.roller_radius_m * alpha_step,
+    )
+    visual_radius = min(1.25e-3, max(0.25e-3, visual_radius))
+
+    return {
+        "meaning": (
+            "Discretized physical ramp-surface projection of graph states that are both "
+            "forward reachable and backward co-reachable on at least one complete locally "
+            "valid path. The green rendering is a visualization of this point cloud; exact "
+            "history certification still belongs to complete extracted paths."
+        ),
+        "ramp_surface_points": {
+            "x_m": x_values,
+            "r_m": r_values,
+            "station": station_values,
+            "q_deg": q_values,
+            "ramp_tangent_deg": tangent_values,
+        },
+        "visual_radius_m": visual_radius,
+        "point_count": len(x_values),
     }
 
 

@@ -15,7 +15,12 @@ from .cinder_adapter import (
     evaluate_response,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
-from .path_domain import analyze_path_domain
+from .path_domain import (
+    CompiledPathDomain,
+    ForceRequirement,
+    compile_path_domain,
+    condition_path_domain,
+)
 
 INCH = 0.0254
 MM = 1.0e-3
@@ -36,6 +41,12 @@ class PrimaryDesignError(ValueError):
 
 
 @dataclass(frozen=True, slots=True)
+class CachedPathDomain:
+    domain_id: str
+    compiled: CompiledPathDomain
+
+
+@dataclass(frozen=True, slots=True)
 class CachedConcreteAnalysis:
     analysis_id: str
     geometry: GeometryAnalysis
@@ -47,6 +58,8 @@ class FixedPivotPrimaryDesignService:
     def __init__(self, *, max_cached_analyses: int = 32) -> None:
         self._max_cached_analyses = max_cached_analyses
         self._cache: OrderedDict[str, CachedConcreteAnalysis] = OrderedDict()
+        self._domain_cache: OrderedDict[str, CachedPathDomain] = OrderedDict()
+        self._max_cached_domains = max(4, max_cached_analyses // 4)
         self._lock = RLock()
 
     def defaults(self) -> dict[str, object]:
@@ -126,14 +139,14 @@ class FixedPivotPrimaryDesignService:
         shift_station_count: int = 9,
         q_sample_count: int = 61,
         alpha_sample_count: int = 7,
-        representative_path_count: int = 5,
+        representative_path_count: int = 8,
         edge_audit_sample_count: int = 65,
         history_trace_sample_count: int = 65,
     ) -> dict[str, object]:
-        """Build the local viability graph and history-certified ramp atlas."""
+        """Build and cache the reusable local/history path domain."""
 
         try:
-            domain = analyze_path_domain(
+            compiled = compile_path_domain(
                 architecture,
                 zones,
                 shift_station_count=shift_station_count,
@@ -149,10 +162,45 @@ class FixedPivotPrimaryDesignService:
                 str(error),
             ) from error
 
+        domain_id = uuid4().hex
+        self._store_domain(CachedPathDomain(domain_id=domain_id, compiled=compiled))
         return {
+            "domain_id": domain_id,
             "architecture": _architecture_document(architecture),
             "zones": [_zone_document(zone) for zone in zones],
-            **domain,
+            **compiled.document,
+        }
+
+    def condition_path_domain(
+        self,
+        *,
+        domain_id: str,
+        requirements: tuple[ForceRequirement, ...],
+        max_tip_mass_per_flyweight_kg: float,
+        mass_sample_count: int = 1025,
+        representative_solution_count: int = 8,
+        reference_shaft_speed_rad_s: float | None = None,
+    ) -> dict[str, object]:
+        """Condition a cached path graph on force points and one shared tip mass."""
+
+        cached = self._get_domain(domain_id)
+        try:
+            result = condition_path_domain(
+                cached.compiled,
+                requirements,
+                max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+                mass_sample_count=mass_sample_count,
+                representative_solution_count=representative_solution_count,
+                reference_shaft_speed_rad_s=reference_shaft_speed_rad_s,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_FORCE_REQUIREMENTS",
+                str(error),
+            ) from error
+        return {
+            "domain_id": domain_id,
+            **result,
         }
 
     def analyze_concrete(
@@ -308,6 +356,24 @@ class FixedPivotPrimaryDesignService:
                 "fields": fields,
             },
         }
+
+    def _store_domain(self, cached: CachedPathDomain) -> None:
+        with self._lock:
+            self._domain_cache[cached.domain_id] = cached
+            self._domain_cache.move_to_end(cached.domain_id)
+            while len(self._domain_cache) > self._max_cached_domains:
+                self._domain_cache.popitem(last=False)
+
+    def _get_domain(self, domain_id: str) -> CachedPathDomain:
+        with self._lock:
+            cached = self._domain_cache.get(domain_id)
+            if cached is None:
+                raise PrimaryDesignError(
+                    "DOMAIN_EXPIRED",
+                    "The ramp-path domain is unavailable or has expired; analyze the architecture domain again.",
+                )
+            self._domain_cache.move_to_end(domain_id)
+            return cached
 
     def _store(self, cached: CachedConcreteAnalysis) -> None:
         with self._lock:

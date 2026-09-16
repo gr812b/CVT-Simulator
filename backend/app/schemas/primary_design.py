@@ -83,6 +83,23 @@ class FixedPivotPathDomainRequest(ApiModel):
     history_trace_sample_count: int = Field(default=65, ge=33, le=2049)
 
 
+class ForceRequirementRequest(ApiModel):
+    id: str = Field(min_length=1, max_length=80)
+    shift_m: float = Field(ge=0.0)
+    force_N: float = Field(ge=0.0)
+    shaft_speed_rad_s: float = Field(gt=0.0)
+    tolerance_N: float = Field(default=0.0, ge=0.0)
+
+
+class FixedPivotPathDomainConditionRequest(ApiModel):
+    domain_id: str = Field(min_length=1)
+    requirements: list[ForceRequirementRequest] = Field(default_factory=list, max_length=32)
+    max_tip_mass_per_flyweight_kg: float = Field(ge=0.0)
+    mass_sample_count: int = Field(default=1025, ge=65, le=4097)
+    representative_solution_count: int = Field(default=8, ge=1, le=24)
+    reference_shaft_speed_rad_s: float | None = Field(default=None, gt=0.0)
+
+
 class FixedPivotConcreteAnalyzeRequest(ApiModel):
     architecture: FixedPivotArchitectureRequest
     ramp: FixedPivotRampRequest
@@ -118,14 +135,29 @@ class FixedPivotArchitectureAnalysisResponse(ApiModel):
 
 
 class FixedPivotPathDomainResponse(ApiModel):
+    domain_id: str
     architecture: dict[str, Any]
     zones: list[dict[str, Any]]
     validity: dict[str, Any]
     graph: dict[str, Any]
     history: dict[str, Any]
     representative_paths: list[dict[str, Any]]
+    domain_projection: dict[str, Any]
+    capability: dict[str, Any]
     deferred_checks: list[str]
     numerics: dict[str, Any]
+
+
+class FixedPivotPathDomainConditionResponse(ApiModel):
+    domain_id: str
+    validity: dict[str, Any]
+    requirements: list[dict[str, Any]]
+    mass: dict[str, Any]
+    graph: dict[str, Any]
+    domain_projection: dict[str, Any]
+    force_capability: dict[str, Any]
+    representative_solutions: list[dict[str, Any]]
+    summary: dict[str, Any]
 
 
 class FixedPivotConcreteAnalysisResponse(ApiModel):

@@ -6,12 +6,14 @@ requested by the application.
 """
 
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
+from .path_domain import ForceRequirement
 
 __all__ = [
     "ArchitectureDesign",
     "OperatingCondition",
     "PackagingZone",
     "RampDesign",
+    "ForceRequirement",
     "FixedPivotPrimaryDesignService",
     "PrimaryDesignError",
 ]

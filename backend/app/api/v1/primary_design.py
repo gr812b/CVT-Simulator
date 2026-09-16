@@ -9,6 +9,7 @@ from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem
 from app.engineering.fixed_pivot_primary import (
     ArchitectureDesign,
+    ForceRequirement,
     OperatingCondition,
     PackagingZone,
     PrimaryDesignError,
@@ -24,6 +25,8 @@ from app.schemas.primary_design import (
     FixedPivotOperatingResponse,
     FixedPivotPathDomainRequest,
     FixedPivotPathDomainResponse,
+    FixedPivotPathDomainConditionRequest,
+    FixedPivotPathDomainConditionResponse,
 )
 
 router = APIRouter(
@@ -97,6 +100,33 @@ def analyze_path_domain(
     except PrimaryDesignError as error:
         raise ApiProblem(422, error.code.lower(), str(error), error.details) from error
     return FixedPivotPathDomainResponse(**result)
+
+
+@router.post(
+    "/architecture/path-domain/condition",
+    response_model=FixedPivotPathDomainConditionResponse,
+)
+def condition_path_domain(
+    request: FixedPivotPathDomainConditionRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotPathDomainConditionResponse:
+    requirements = tuple(
+        ForceRequirement(**requirement.model_dump())
+        for requirement in request.requirements
+    )
+    try:
+        result = container.primary_design.condition_path_domain(
+            domain_id=request.domain_id,
+            requirements=requirements,
+            max_tip_mass_per_flyweight_kg=request.max_tip_mass_per_flyweight_kg,
+            mass_sample_count=request.mass_sample_count,
+            representative_solution_count=request.representative_solution_count,
+            reference_shaft_speed_rad_s=request.reference_shaft_speed_rad_s,
+        )
+    except PrimaryDesignError as error:
+        status = 404 if error.code == "DOMAIN_EXPIRED" else 422
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
+    return FixedPivotPathDomainConditionResponse(**result)
 
 
 @router.post("/concrete/analyze", response_model=FixedPivotConcreteAnalysisResponse)

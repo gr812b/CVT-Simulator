@@ -262,3 +262,252 @@ def test_local_edge_acceptance_survives_independent_dense_audit() -> None:
         assert np.min(values[:, 1]) > 0.0
         assert np.min(values[:, 2]) > 0.0
         assert np.min(values[:, 3]) >= -1.0e-5
+
+
+def test_domain_projection_and_normalized_force_capability_are_returned() -> None:
+    result = domain.analyze_path_domain(
+        _architecture(),
+        (),
+        shift_station_count=7,
+        q_sample_count=21,
+        alpha_sample_count=5,
+        representative_path_count=3,
+        edge_audit_sample_count=65,
+        history_trace_sample_count=65,
+    )
+
+    projection = result["domain_projection"]
+    assert projection["point_count"] > 0
+    points = projection["ramp_surface_points"]
+    assert len(points["x_m"]) == projection["point_count"]
+    assert len(points["r_m"]) == projection["point_count"]
+    assert projection["visual_radius_m"] > 0.0
+
+    capability = result["capability"]
+    assert len(capability["stations"]) == 7
+    active_stations = [row for row in capability["stations"] if row["active_state_count"] > 0]
+    assert active_stations
+    for row in active_stations:
+        assert row["tip_force_per_omega2_per_kg_max"] is not None
+        assert row["tip_force_per_omega2_per_kg_max"] >= 0.0
+        assert row["max_tip_total_force_per_omega2_max"] is not None
+        assert row["max_tip_total_force_per_omega2_max"] >= 0.0
+
+    for path in result["representative_paths"]:
+        assert len(path["capability"]["tip_force_per_omega2_per_kg"]) == len(path["shift_m"])
+        assert len(path["capability"]["arm_force_per_omega2"]) == len(path["shift_m"])
+
+
+def test_normalized_force_gain_matches_finite_difference_of_mass_model() -> None:
+    architecture = _architecture()
+    q = radians(22.0)
+    dq_dx = 31.0
+    arm_gain, tip_gain_per_kg, total_gain = domain._normalized_force_gain(
+        architecture, q, dq_dx
+    )
+
+    count = architecture.number_of_flyweights
+    pivot = architecture.pivot_radius_m
+    length = architecture.arm_length_m
+    arm_mass = architecture.arm_mass_per_flyweight_kg
+
+    def shaft_inertia(angle: float, tip_mass: float) -> float:
+        # Uniform arm integrated along its length plus a point end mass.
+        s = np.sin(angle)
+        arm = arm_mass * (
+            pivot * pivot
+            + pivot * length * s
+            + (length * length / 3.0) * s * s
+        )
+        tip = tip_mass * (pivot + length * s) ** 2
+        return count * (arm + tip)
+
+    eps = 1.0e-7
+    d_j_d_q_arm = (shaft_inertia(q + eps, 0.0) - shaft_inertia(q - eps, 0.0)) / (2.0 * eps)
+    d_j_d_q_with_unit_tip = (
+        shaft_inertia(q + eps, 1.0) - shaft_inertia(q - eps, 1.0)
+    ) / (2.0 * eps)
+    expected_arm = 0.5 * d_j_d_q_arm * dq_dx
+    expected_tip_per_kg = 0.5 * (d_j_d_q_with_unit_tip - d_j_d_q_arm) * dq_dx
+
+    assert np.isclose(arm_gain, expected_arm, rtol=2.0e-7, atol=1.0e-12)
+    assert np.isclose(tip_gain_per_kg, expected_tip_per_kg, rtol=2.0e-7, atol=1.0e-12)
+    assert np.isclose(
+        total_gain,
+        arm_gain + architecture.max_tip_mass_per_flyweight_kg * tip_gain_per_kg,
+        rtol=1.0e-12,
+        atol=1.0e-12,
+    )
+
+
+def _small_compiled_domain() -> domain.CompiledPathDomain:
+    return domain.compile_path_domain(
+        _architecture(),
+        (),
+        shift_station_count=5,
+        q_sample_count=17,
+        alpha_sample_count=5,
+        representative_path_count=4,
+        edge_audit_sample_count=65,
+        history_trace_sample_count=65,
+    )
+
+
+def _force_on_path(
+    path: domain.PiecewiseRampPath,
+    shift_m: float,
+    tip_mass_kg: float,
+    shaft_speed_rad_s: float,
+) -> float:
+    row = path.evaluate(shift_m)
+    arm, tip, _ = domain._normalized_force_gain(
+        path.architecture,
+        row["q_rad"],
+        row["dq_dx_rad_per_m"],
+    )
+    return shaft_speed_rad_s ** 2 * (arm + tip_mass_kg * tip)
+
+
+def test_force_conditioning_without_requirements_retains_complete_domain() -> None:
+    compiled = _small_compiled_domain()
+    result = domain.condition_path_domain(
+        compiled,
+        (),
+        max_tip_mass_per_flyweight_kg=0.300,
+        mass_sample_count=257,
+    )
+    assert result["validity"]["valid"] is True
+    assert result["summary"]["requirement_count"] == 0
+    assert result["graph"]["viable_node_counts"] == [len(row) for row in compiled.viable_nodes]
+    assert result["mass"]["surviving_mass_min_kg"] == 0.0
+    assert np.isclose(result["mass"]["surviving_mass_max_kg"], 0.300)
+
+
+def test_one_force_point_returns_ramp_plus_mass_solutions() -> None:
+    compiled = _small_compiled_domain()
+    state_path = compiled.representative_state_paths[0]
+    path = domain._path_from_state_indices(
+        compiled.architecture,
+        compiled.states,
+        list(state_path),
+        compiled.shift_station_count,
+    )
+    omega = 3600.0 * 2.0 * np.pi / 60.0
+    mass = 0.180
+    shift = 0.45 * compiled.architecture.required_travel_m
+    force = _force_on_path(path, shift, mass, omega)
+    requirement = domain.ForceRequirement("p1", shift, force, omega, 2.0)
+    result = domain.condition_path_domain(
+        compiled,
+        (requirement,),
+        max_tip_mass_per_flyweight_kg=0.300,
+        mass_sample_count=513,
+    )
+    assert result["validity"]["valid"] is True
+    assert result["requirements"][0]["individually_attainable"] is True
+    assert result["representative_solutions"]
+    solution = result["representative_solutions"][0]["solution"]
+    assert solution["tip_mass_min_kg"] <= mass <= solution["tip_mass_max_kg"]
+
+
+def test_two_points_from_one_ramp_and_one_mass_remain_jointly_feasible() -> None:
+    compiled = _small_compiled_domain()
+    state_path = compiled.representative_state_paths[0]
+    path = domain._path_from_state_indices(
+        compiled.architecture,
+        compiled.states,
+        list(state_path),
+        compiled.shift_station_count,
+    )
+    omega = 3800.0 * 2.0 * np.pi / 60.0
+    mass = 0.220
+    shifts = [0.25, 0.72]
+    requirements = tuple(
+        domain.ForceRequirement(
+            f"p{index}",
+            fraction * compiled.architecture.required_travel_m,
+            _force_on_path(path, fraction * compiled.architecture.required_travel_m, mass, omega),
+            omega,
+            3.0,
+        )
+        for index, fraction in enumerate(shifts)
+    )
+    result = domain.condition_path_domain(
+        compiled,
+        requirements,
+        max_tip_mass_per_flyweight_kg=0.300,
+        mass_sample_count=513,
+    )
+    assert result["validity"]["valid"] is True
+    assert result["summary"]["jointly_feasible"] is True
+    assert result["representative_solutions"]
+    intervals = [entry["solution"] for entry in result["representative_solutions"]]
+    assert any(item["tip_mass_min_kg"] <= mass <= item["tip_mass_max_kg"] for item in intervals)
+
+
+def test_individually_attainable_points_can_be_jointly_incompatible() -> None:
+    compiled = _small_compiled_domain()
+    omega = 3800.0 * 2.0 * np.pi / 60.0
+    # Search deterministic station-envelope extrema until a pair is found whose
+    # individual constraints are possible but whose shared-mass path set is empty.
+    full = domain.condition_path_domain(
+        compiled,
+        (),
+        max_tip_mass_per_flyweight_kg=0.300,
+        mass_sample_count=257,
+    )
+    stations = full["force_capability"]["full"]["stations"]
+    found = None
+    active = [row for row in stations[1:-1] if row["force_min_N"] is not None]
+    for left in active:
+        for right in active:
+            if right["station"] <= left["station"]:
+                continue
+            candidates = [
+                (left["force_min_N"], right["force_max_N"]),
+                (left["force_max_N"], right["force_min_N"]),
+            ]
+            for f1, f2 in candidates:
+                reqs = (
+                    domain.ForceRequirement("a", left["shift_m"], float(f1), omega, 1.0),
+                    domain.ForceRequirement("b", right["shift_m"], float(f2), omega, 1.0),
+                )
+                result = domain.condition_path_domain(
+                    compiled,
+                    reqs,
+                    max_tip_mass_per_flyweight_kg=0.300,
+                    mass_sample_count=257,
+                )
+                if all(row["individually_attainable"] for row in result["requirements"]) and not result["summary"]["jointly_feasible"]:
+                    found = result
+                    break
+            if found is not None:
+                break
+        if found is not None:
+            break
+    assert found is not None
+    assert found["validity"]["valid"] is False
+    assert found["validity"]["findings"][0]["code"] == "REQUIREMENTS_JOINTLY_INCOMPATIBLE"
+
+
+def test_force_point_outside_full_capability_is_rejected() -> None:
+    compiled = _small_compiled_domain()
+    omega = 3800.0 * 2.0 * np.pi / 60.0
+    shift = 0.5 * compiled.architecture.required_travel_m
+    full = domain.condition_path_domain(
+        compiled,
+        (),
+        max_tip_mass_per_flyweight_kg=0.250,
+        mass_sample_count=257,
+    )
+    middle = full["force_capability"]["full"]["stations"][2]
+    impossible = float(middle["force_max_N"]) + 1000.0
+    result = domain.condition_path_domain(
+        compiled,
+        (domain.ForceRequirement("outside", shift, impossible, omega, 1.0),),
+        max_tip_mass_per_flyweight_kg=0.250,
+        mass_sample_count=257,
+    )
+    assert result["validity"]["valid"] is False
+    assert result["requirements"][0]["individually_attainable"] is False
+    assert result["validity"]["findings"][0]["code"] == "INDIVIDUAL_REQUIREMENT_OUTSIDE_CAPABILITY"

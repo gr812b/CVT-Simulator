@@ -811,3 +811,286 @@
   .rampMechanismReadouts { grid-template-columns: repeat(2, 1fr); }
   .rampFamilyHeader { flex-direction: column; }
 }
+
+/* Phase 3.4 domain projection and architecture capability comparison */
+.domainViablePoint {
+  fill: rgba(101, 226, 154, 0.115);
+  stroke: rgba(130, 238, 177, 0.15);
+  stroke-width: 0.35;
+}
+.legendDomain { background: rgba(103, 225, 155, 0.82); }
+.domainControlBlock {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+.baselineButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.capabilityExplorer {
+  display: grid;
+  gap: 12px;
+}
+.capabilityHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  > div { display: grid; gap: 4px; }
+  strong { font-size: 14px; }
+  span { color: rgba(237,243,247,0.50); font-size: 11px; line-height: 1.45; }
+}
+.capabilityPlot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.capabilityCurrentBand {
+  fill: rgba(103, 225, 155, 0.16);
+  stroke: rgba(120, 235, 171, 0.70);
+  stroke-width: 1.8;
+}
+.capabilityBaselineBand {
+  fill: rgba(129, 163, 218, 0.09);
+  stroke: rgba(151, 187, 243, 0.58);
+  stroke-width: 1.5;
+  stroke-dasharray: 7 5;
+}
+.capabilityRepresentativeCurve {
+  fill: none;
+  stroke: rgba(237,243,247,0.28);
+  stroke-width: 1.3;
+}
+.capabilitySelectedCurve {
+  fill: none;
+  stroke: rgba(137,224,255,0.98);
+  stroke-width: 2.8;
+}
+.capabilitySelectedLabel {
+  fill: rgba(137,224,255,0.88);
+  font-size: 11px;
+}
+.capabilityLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: rgba(237,243,247,0.49);
+  font-size: 11px;
+  span { display: inline-flex; align-items: center; gap: 6px; }
+  i { width: 18px; height: 4px; border-radius: 999px; display: inline-block; }
+}
+.capabilityLegendCurrent { background: rgba(103,225,155,0.80); }
+.capabilityLegendBaseline { background: rgba(151,187,243,0.68); }
+.capabilityLegendPaths { background: rgba(237,243,247,0.35); }
+.capabilityLegendSelected { background: rgba(137,224,255,0.98); }
+.capabilityComparisonGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  .metric em {
+    font-style: normal;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+}
+.capabilityGain { color: #92e0b2; }
+.capabilityLoss { color: #ffaaa0; }
+
+@media (max-width: 1000px) {
+  .capabilityComparisonGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .capabilityHeader { align-items: stretch; flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .capabilityComparisonGrid { grid-template-columns: 1fr; }
+}
+.domainBaselinePoint {
+  fill: rgba(139, 176, 235, 0.070);
+  stroke: rgba(158, 193, 247, 0.10);
+  stroke-width: 0.3;
+}
+.legendBaselineDomain { background: rgba(151,187,243,0.68); }
+
+/* Phase 3.5 force-conditioned ramp + mass domain */
+.modeTab:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.requirementsPage {
+  max-width: 1540px;
+  margin: 0 auto;
+}
+.requirementsExplorer {
+  display: grid;
+  gap: 18px;
+}
+.requirementControlBar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 220px)) minmax(160px, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+.requirementField {
+  display: grid;
+  gap: 5px;
+  > span { color: rgba(237,243,247,0.58); font-size: 11px; }
+  > div { position: relative; }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 76px 9px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: #0d1319;
+    color: inherit;
+  }
+  em {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-style: normal;
+    font-size: 10px;
+    color: rgba(237,243,247,0.42);
+    pointer-events: none;
+  }
+}
+.requirementControlActions {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+.requirementError, .requirementFinding {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(236,91,91,0.28);
+  background: rgba(236,91,91,0.08);
+  color: #ffb1b1;
+  font-size: 12px;
+}
+.requirementFinding { display: grid; gap: 4px; }
+.requirementPairedViews {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+.requirementPanel {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+.requirementForceCanvas, .requirementRampCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  touch-action: none;
+}
+.requirementForceCanvas { cursor: crosshair; }
+.requirementCanvasBackground { fill: var(--primary-design-canvas, #0d1319); }
+.requirementGrid {
+  stroke: rgba(237,243,247,0.065);
+  stroke-width: 1;
+}
+.requirementTick {
+  fill: rgba(237,243,247,0.46);
+  font-size: 10px;
+}
+.requirementAxisTitle {
+  fill: rgba(237,243,247,0.66);
+  font-size: 11px;
+}
+.requirementFullBand {
+  fill: rgba(151, 171, 184, 0.13);
+  stroke: rgba(183, 201, 211, 0.32);
+  stroke-width: 1.5;
+}
+.requirementConditionedBand {
+  fill: rgba(91, 205, 139, 0.24);
+  stroke: rgba(116, 224, 164, 0.82);
+  stroke-width: 2;
+}
+.requirementSolutionCurve {
+  fill: none;
+  stroke: rgba(231, 247, 255, 0.42);
+  stroke-width: 1.5;
+}
+.requirementPoint {
+  fill: #ffd07a;
+  stroke: #0d1319;
+  stroke-width: 2.2;
+  cursor: grab;
+}
+.requirementPoint:active { cursor: grabbing; }
+.requirementTolerance {
+  stroke: rgba(255,208,122,0.75);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.requirementLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: rgba(237,243,247,0.48);
+  font-size: 10px;
+  span { display: inline-flex; align-items: center; gap: 5px; }
+  i { width: 18px; height: 4px; display: inline-block; border-radius: 999px; }
+}
+.requirementLegendFull { background: rgba(183,201,211,0.52); }
+.requirementLegendConditioned { background: rgba(116,224,164,0.92); }
+.requirementLegendCurve { background: rgba(231,247,255,0.56); }
+.requirementLegendRampFull { background: rgba(151,171,184,0.52); }
+.requirementLegendRampConditioned { background: rgba(116,224,164,0.92); }
+.requirementRampFullPoint { fill: rgba(151,171,184,0.12); }
+.requirementRampConditionedPoint { fill: rgba(110,224,166,0.45); }
+.requirementRampSolutionCurve {
+  fill: none;
+  stroke: rgba(231,247,255,0.72);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.requirementSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.requirementSummary {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(255,255,255,0.055);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.025);
+  span { color: rgba(237,243,247,0.46); font-size: 10px; }
+  strong { font-size: 13px; font-variant-numeric: tabular-nums; }
+}
+.requirementGood { color: #91e0b2; }
+.requirementSolutions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.requirementSolutionCard {
+  display: grid;
+  gap: 3px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(137,224,255,0.12);
+  background: rgba(137,224,255,0.035);
+  strong { font-size: 12px; }
+  span { color: rgba(237,243,247,0.53); font-size: 10px; }
+}
+
+@media (max-width: 1100px) {
+  .requirementPairedViews { grid-template-columns: 1fr; }
+  .requirementControlBar { grid-template-columns: repeat(2, 1fr); }
+  .requirementSummaryGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .requirementControlBar { grid-template-columns: 1fr; }
+  .requirementSummaryGrid { grid-template-columns: 1fr; }
+}
