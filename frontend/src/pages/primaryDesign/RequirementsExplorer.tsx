@@ -32,7 +32,7 @@ export function RequirementsExplorer({
 }) {
   const [rpm, setRpm] = useState(3800);
   const [maxMassKg, setMaxMassKg] = useState(Math.min(0.300, architecture.max_tip_mass_per_flyweight_kg));
-  const [toleranceN, setToleranceN] = useState(5);
+  const [toleranceN, setToleranceN] = useState(50);
   const [requirements, setRequirements] = useState<ForceRequirement[]>([]);
   const [conditioned, setConditioned] = useState<ConditionedPathDomainAnalysis | null>(null);
   const [conditioningLoading, setConditioningLoading] = useState(false);
@@ -76,7 +76,7 @@ export function RequirementsExplorer({
       const result = await requestCondition(nextRequirements, nextRpm, nextMaxMassKg, 0);
       const impossibleIds = new Set(
         result.requirements
-          .filter((requirement) => !requirement.individually_attainable)
+          .filter((requirement) => !requirement.individually_attainable && !requirement.id.startsWith('guide-'))
           .map((requirement) => requirement.id),
       );
       if (impossibleIds.size > 0) {
@@ -88,13 +88,13 @@ export function RequirementsExplorer({
           // rediscover the previous answer.
           setRequirements(committedRequirementsRef.current);
           setConditioned(committedConditionedRef.current);
-          setError('That force point is outside the actual attainable force set at this shift, so the previous domain was kept.');
+          setError('That hard lock is outside the actual attainable force set at this shift, so the previous profile was kept.');
           return;
         }
 
         const cleaned = nextRequirements.filter((requirement) => !impossibleIds.has(requirement.id));
         setRequirements(cleaned);
-        setError('One or more force points became unattainable and were removed.');
+        setError('One or more hard locks became unattainable and were removed; soft profile guides were kept.');
         const cleanedResult = await requestCondition(cleaned, nextRpm, nextMaxMassKg, 0);
         if (serial === requestSerial.current) {
           setConditioned(cleanedResult);
@@ -148,6 +148,15 @@ export function RequirementsExplorer({
 
   const fullCapability = conditioned?.force_capability.full ?? null;
   const conditionedCapability = conditioned?.force_capability.conditioned ?? null;
+  const profileGuides = useMemo(() => requirements.filter(isProfileGuide), [requirements]);
+  const hardLocks = useMemo(() => requirements.filter((item) => !isProfileGuide(item)), [requirements]);
+  const targetProfile = useMemo(() => buildTargetProfile(profileGuides, 129), [profileGuides]);
+  const profileSummary = conditioned?.summary as ConditionedPathDomainAnalysis['summary'] & {
+    profile_guide_count?: number;
+    hard_lock_count?: number;
+    best_profile_rms_error_N?: number | null;
+    best_profile_max_error_N?: number | null;
+  } | undefined;
   const previewOnly = Boolean(
     conditioned &&
     (conditioned.summary as ConditionedPathDomainAnalysis['summary'] & { representative_solutions_preview_only?: boolean })
@@ -206,7 +215,7 @@ export function RequirementsExplorer({
     const value = eventToRequirement(event);
     if (!value?.insideCapability) return;
     const requirement: ForceRequirement = {
-      id: `force-${Date.now().toString(36)}-${requirements.length}`,
+      id: `guide-${Date.now().toString(36)}-${requirements.length}`,
       shift_m: value.shiftM,
       force_N: value.forceN,
       shaft_speed_rad_s: rpm * RAD_S_PER_RPM,
@@ -271,6 +280,22 @@ export function RequirementsExplorer({
     setYRange(constrainYRange(next, autoSpan));
   };
 
+  const deleteRequirement = (id: string) => {
+    const next = requirements.filter((item) => item.id !== id);
+    setRequirements(next);
+    void solve(next, rpm, maxMassKg, false);
+  };
+
+  const setPointMode = (id: string, mode: 'guide' | 'hard') => {
+    const next = requirements.map((item) => {
+      if (item.id !== id) return item;
+      const suffix = item.id.replace(/^(guide|hard)-/, '');
+      return { ...item, id: `${mode}-${suffix}` };
+    });
+    setRequirements(next);
+    void solve(next, rpm, maxMassKg, false);
+  };
+
   const clearRequirements = () => {
     setRequirements([]);
     void solve([]);
@@ -285,7 +310,7 @@ export function RequirementsExplorer({
     setSolutionsLoading(true);
     setError(null);
     try {
-      const result = await requestCondition(requirements, rpm, maxMassKg, 8);
+      const result = await requestCondition(requirements, rpm, maxMassKg, 12);
       setConditioned(result);
       if (result.representative_solutions.length > 0) {
         setView('solutions');
@@ -311,11 +336,11 @@ export function RequirementsExplorer({
           <div><input type="number" value={maxMassKg * G} min={0} max={architecture.max_tip_mass_per_flyweight_kg * G} step={5} onChange={(event) => updateMaxMass(Number(event.target.value))} /><em>g / flyweight</em></div>
         </label>
         <label className={styles.requirementField}>
-          <span>New-point tolerance</span>
+          <span>Guide corridor / lock tolerance</span>
           <div><input type="number" value={toleranceN} min={0} step={1} onChange={(event) => setToleranceN(Math.max(0, Number(event.target.value)))} /><em>N</em></div>
         </label>
         <div className={styles.requirementControlActions}>
-          <button type="button" className={styles.toolButton} disabled={requirements.length === 0 || conditioningLoading} onClick={clearRequirements}>Clear force points</button>
+          <button type="button" className={styles.toolButton} disabled={requirements.length === 0 || conditioningLoading} onClick={clearRequirements}>Clear profile</button>
           {conditioningLoading && <span className={styles.dirty}>updating domain…</span>}
         </div>
       </div>
@@ -326,10 +351,10 @@ export function RequirementsExplorer({
         <section className={styles.requirementPanel}>
           <div className={styles.rampFamilyHeader}>
             <div>
-              <strong>Force requirements</strong>
-              <span>Click inside an attainable force region. The plot preserves real force-space gaps instead of filling them with one min/max envelope.</span>
+              <strong>Target force profile</strong>
+              <span>Click to sketch desired behavior. New points are soft profile handles by default; lock only the points that must be met within tolerance.</span>
             </div>
-            <span>{requirements.length} point{requirements.length === 1 ? '' : 's'}</span>
+            <span>{requirements.filter((item) => isProfileGuide(item)).length} guide{requirements.filter((item) => isProfileGuide(item)).length === 1 ? '' : 's'} · {requirements.filter((item) => !isProfileGuide(item)).length} lock{requirements.filter((item) => !isProfileGuide(item)).length === 1 ? '' : 's'}</span>
           </div>
           <div className={styles.requirementControlActions} style={{ justifyContent: 'space-between' }}>
             <span className={styles.helpText} style={{ margin: 0 }}>
@@ -356,7 +381,13 @@ export function RequirementsExplorer({
               <rect width={WIDTH} height={HEIGHT} rx="12" className={styles.requirementCanvasBackground} />
               <ForceGrid plot={plot} travelM={architecture.required_travel_m} />
               <CapabilitySlices capability={fullCapability} plot={plot} className={styles.requirementFullBand} />
-              {conditionedCapability && <CapabilitySlices capability={conditionedCapability} plot={plot} className={styles.requirementConditionedBand} discrete={capabilityProjectionKind(conditionedCapability) === 'graph_stations'} />}
+              {conditionedCapability && hardLocks.length > 0 && <CapabilitySlices capability={conditionedCapability} plot={plot} className={styles.requirementConditionedBand} discrete={capabilityProjectionKind(conditionedCapability) === 'graph_stations'} />}
+              {targetProfile && targetProfile.shiftM.length > 1 && (
+                <>
+                  <path d={profileBandPath(targetProfile, plot)} style={{ fill: 'rgba(255, 208, 122, 0.10)', stroke: 'none', pointerEvents: 'none' }} />
+                  <path d={curvePath(targetProfile.shiftM, targetProfile.forceN, plot)} style={{ fill: 'none', stroke: 'rgba(255, 208, 122, 0.95)', strokeWidth: 2.6, pointerEvents: 'none' }} />
+                </>
+              )}
               {conditioned?.representative_solutions.map((solution, index) => (
                 <path
                   key={`preview-force-${index}`}
@@ -370,8 +401,9 @@ export function RequirementsExplorer({
                   <circle
                     cx={plot.x(requirement.shift_m)}
                     cy={plot.y(requirement.force_N)}
-                    r="7"
+                    r={isProfileGuide(requirement) ? 7 : 8}
                     className={styles.requirementPoint}
+                    style={isProfileGuide(requirement) ? undefined : { fill: '#ff9f9f', strokeWidth: 3 }}
                     onPointerDown={(event) => beginDrag(event, requirement.id)}
                   />
                 </g>
@@ -382,9 +414,9 @@ export function RequirementsExplorer({
           ) : <div className={styles.loading}>Building force capability…</div>}
           <div className={styles.requirementLegend}>
             <span><i className={styles.requirementLegendFull} />full architecture capability</span>
-            <span><i className={styles.requirementLegendConditioned} />surviving ramp + mass domain</span>
+            <span><i className={styles.requirementLegendConditioned} />hard-lock constrained domain</span>
             {conditioned && conditioned.representative_solutions.length > 0 && (
-              <span><i className={styles.requirementLegendCurve} />{previewOnly ? 'complete-path previews' : 'history-certified ramps'}</span>
+              <span><i className={styles.requirementLegendCurve} />{previewOnly ? 'best-fit complete-path previews' : 'ranked certified ramps'}</span>
             )}
           </div>
         </section>
@@ -393,29 +425,53 @@ export function RequirementsExplorer({
           <div className={styles.rampFamilyHeader}>
             <div>
               <strong>Physical ramp consequence</strong>
-              <span>The faded cloud is the complete architecture path domain. Highlighted states survive the force filter; overlaid curves show example complete paths through that surviving graph.</span>
+              <span>Soft guides rank complete ramps without deleting the design space. Only explicit hard locks narrow the physical domain; overlaid curves are the current best whole-profile matches.</span>
             </div>
             <span>{conditioned?.summary.conditioned_domain_point_count ?? 0} states</span>
           </div>
-          <RampDomainPair full={domain} conditioned={conditioned} />
+          <RampDomainPair full={domain} conditioned={conditioned} showConditionedDomain={hardLocks.length > 0} />
           <div className={styles.requirementLegend}>
             <span><i className={styles.requirementLegendRampFull} />full physical path domain</span>
-            <span><i className={styles.requirementLegendRampConditioned} />requirement-conditioned domain</span>
+            {hardLocks.length > 0 && <span><i className={styles.requirementLegendRampConditioned} />hard-lock constrained domain</span>}
             {conditioned && conditioned.representative_solutions.length > 0 && (
-              <span><i className={styles.requirementLegendCurve} />{previewOnly ? 'complete-path previews' : 'history-certified ramps'}</span>
+              <span><i className={styles.requirementLegendCurve} />{previewOnly ? 'best-fit complete-path previews' : 'ranked certified ramps'}</span>
             )}
           </div>
         </section>
       </div>
 
       <div className={styles.requirementSummaryGrid}>
-        <Summary label="Joint solution" value={conditioned ? (conditioned.summary.jointly_feasible ? 'available' : 'none') : '—'} kind={conditioned?.summary.jointly_feasible ? 'good' : 'neutral'} />
-        <Summary label="Surviving mass range" value={conditioned?.mass.surviving_mass_min_kg == null ? '—' : `${(conditioned.mass.surviving_mass_min_kg * G).toFixed(1)}–${((conditioned.mass.surviving_mass_max_kg ?? 0) * G).toFixed(1)} g`} />
-        <Summary label="Surviving path states" value={String(conditioned?.summary.conditioned_domain_point_count ?? 0)} />
-        <Summary label="Mass lattice resolution" value={conditioned ? `${(conditioned.mass.mass_resolution_kg * G).toFixed(2)} g` : '—'} />
+        <Summary label="Hard locks" value={hardLocks.length === 0 ? 'none' : (conditioned?.summary.jointly_feasible ? `${hardLocks.length} feasible` : 'incompatible')} kind={conditioned?.summary.jointly_feasible ? 'good' : 'neutral'} />
+        <Summary label="Best preview RMS" value={profileSummary?.best_profile_rms_error_N == null ? '—' : `${profileSummary.best_profile_rms_error_N.toFixed(1)} N`} />
+        <Summary label="Best max deviation" value={profileSummary?.best_profile_max_error_N == null ? '—' : `${profileSummary.best_profile_max_error_N.toFixed(1)} N`} />
+        <Summary label="Available mass range" value={conditioned?.mass.surviving_mass_min_kg == null ? '—' : `${(conditioned.mass.surviving_mass_min_kg * G).toFixed(1)}–${((conditioned.mass.surviving_mass_max_kg ?? 0) * G).toFixed(1)} g`} />
       </div>
 
-      {conditioned && !conditioned.validity.valid && conditioned.validity.findings.length > 0 && (
+      {requirements.length > 0 && (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div className={styles.rampFamilyHeader}>
+            <div>
+              <strong>Profile handles</strong>
+              <span>Guide = desired behavior used for whole-curve ranking. Lock = exact physical constraint within the shown tolerance.</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {requirements.map((requirement, index) => (
+              <div key={requirement.id} className={styles.requirementSolutionCard} style={{ minWidth: 190 }}>
+                <strong>{isProfileGuide(requirement) ? `Guide ${index + 1}` : `Hard lock ${index + 1}`}</strong>
+                <span>{(requirement.shift_m * 1000).toFixed(2)} mm · {requirement.force_N.toFixed(0)} N · ±{requirement.tolerance_N.toFixed(0)} N</span>
+                <div style={{ display: 'flex', gap: 6, marginTop: 5 }}>
+                  <button type="button" className={isProfileGuide(requirement) ? styles.toolActive : styles.toolButton} disabled={conditioningLoading} onClick={() => setPointMode(requirement.id, 'guide')}>Guide</button>
+                  <button type="button" className={!isProfileGuide(requirement) ? styles.toolActive : styles.toolButton} disabled={conditioningLoading} onClick={() => setPointMode(requirement.id, 'hard')}>Lock</button>
+                  <button type="button" className={styles.toolButton} disabled={conditioningLoading} onClick={() => deleteRequirement(requirement.id)}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {conditioned && conditioned.validity.findings.length > 0 && (
         <div className={styles.requirementFinding}>
           {conditioned.validity.findings.map((finding, index) => <span key={index}>{String(finding.message ?? finding.code ?? 'Requirements are incompatible.')}</span>)}
         </div>
@@ -424,12 +480,12 @@ export function RequirementsExplorer({
       {conditioned?.summary.jointly_feasible && requirements.length > 0 && (
         <div className={styles.requirementControlActions}>
           <button type="button" className={styles.primaryButton} disabled={solutionsLoading || conditioningLoading} onClick={() => void openSolutions()}>
-            {solutionsLoading ? 'Extracting representative ramps…' : 'Inspect surviving ramps →'}
+            {solutionsLoading ? 'Searching best-fit ramps…' : 'Find best-fit ramps →'}
           </button>
         </div>
       )}
 
-      <p className={styles.helpText}>Force-point edits filter the graph and immediately extract a few cheap complete-path previews, so you can see the kinds of ramps that pass through the selected behavior. Those preview paths are not yet nonlocally history-certified; opening Solutions replaces them with the certified inspection set.</p>
+      <p className={styles.helpText}>Profile handles are a behavioral sketch, not binary filters. The backend builds a shape-preserving target curve through the guides and searches complete ramp paths for minimum force error over the whole covered shift range with one constant tip mass. Hard locks remain available when a point genuinely must be met. Preview ramps skip nonlocal history certification for responsiveness; the Solutions search certifies and ranks the final gallery.</p>
     </div>
   );
 }
@@ -441,12 +497,14 @@ function Summary({ label, value, kind = 'neutral' }: { label: string; value: str
 function RampDomainPair({
   full,
   conditioned,
+  showConditionedDomain,
 }: {
   full: PrimaryPathDomainAnalysis;
   conditioned: ConditionedPathDomainAnalysis | null;
+  showConditionedDomain: boolean;
 }) {
   const fullPoints = full.domain_projection.ramp_surface_points;
-  const conditionedPoints = conditioned?.domain_projection.ramp_surface_points ?? null;
+  const conditionedPoints = showConditionedDomain ? (conditioned?.domain_projection.ramp_surface_points ?? null) : null;
   const bounds = useMemo(() => {
     const xs = fullPoints.x_m;
     const rs = fullPoints.r_m;
@@ -651,6 +709,100 @@ function sampleIndices(length: number, maximum: number): number[] {
   }
   if (result[result.length - 1] !== length - 1) result.push(length - 1);
   return result;
+}
+
+
+function isProfileGuide(requirement: ForceRequirement): boolean {
+  return requirement.id.startsWith('guide-');
+}
+
+type TargetProfile = { shiftM: number[]; forceN: number[]; toleranceN: number[] };
+
+function buildTargetProfile(guides: ForceRequirement[], count: number): TargetProfile | null {
+  if (guides.length === 0) return null;
+  const sorted = [...guides].sort((a, b) => a.shift_m - b.shift_m);
+  const unique: ForceRequirement[] = [];
+  for (const item of sorted) {
+    const previous = unique[unique.length - 1];
+    if (previous && Math.abs(previous.shift_m - item.shift_m) < 1e-9) {
+      previous.force_N = 0.5 * (previous.force_N + item.force_N);
+      previous.tolerance_N = 0.5 * (previous.tolerance_N + item.tolerance_N);
+    } else {
+      unique.push({ ...item });
+    }
+  }
+  if (unique.length === 1) {
+    return { shiftM: [unique[0].shift_m], forceN: [unique[0].force_N], toleranceN: [unique[0].tolerance_N] };
+  }
+  const xs = unique.map((item) => item.shift_m);
+  const ys = unique.map((item) => item.force_N);
+  const ts = unique.map((item) => Math.max(1, item.tolerance_N));
+  const ySlopes = pchipSlopes(xs, ys);
+  const tSlopes = pchipSlopes(xs, ts);
+  const shiftM = Array.from({ length: Math.max(3, count) }, (_, index) => xs[0] + index / (Math.max(3, count) - 1) * (xs[xs.length - 1] - xs[0]));
+  return {
+    shiftM,
+    forceN: shiftM.map((x) => pchipValue(xs, ys, ySlopes, x)),
+    toleranceN: shiftM.map((x) => Math.max(1, pchipValue(xs, ts, tSlopes, x))),
+  };
+}
+
+function pchipSlopes(xs: number[], ys: number[]): number[] {
+  const n = xs.length;
+  if (n === 2) {
+    const d = (ys[1] - ys[0]) / Math.max(1e-12, xs[1] - xs[0]);
+    return [d, d];
+  }
+  const h = Array.from({ length: n - 1 }, (_, i) => Math.max(1e-12, xs[i + 1] - xs[i]));
+  const delta = Array.from({ length: n - 1 }, (_, i) => (ys[i + 1] - ys[i]) / h[i]);
+  const m = Array(n).fill(0) as number[];
+  for (let i = 1; i < n - 1; i += 1) {
+    if (delta[i - 1] === 0 || delta[i] === 0 || Math.sign(delta[i - 1]) !== Math.sign(delta[i])) {
+      m[i] = 0;
+    } else {
+      const w1 = 2 * h[i] + h[i - 1];
+      const w2 = h[i] + 2 * h[i - 1];
+      m[i] = (w1 + w2) / (w1 / delta[i - 1] + w2 / delta[i]);
+    }
+  }
+  const endpoint = (h0: number, h1: number, d0: number, d1: number) => {
+    let value = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1);
+    if (Math.sign(value) !== Math.sign(d0)) value = 0;
+    else if (Math.sign(d0) !== Math.sign(d1) && Math.abs(value) > Math.abs(3 * d0)) value = 3 * d0;
+    return value;
+  };
+  m[0] = endpoint(h[0], h[1], delta[0], delta[1]);
+  m[n - 1] = endpoint(h[n - 2], h[n - 3], delta[n - 2], delta[n - 3]);
+  return m;
+}
+
+function pchipValue(xs: number[], ys: number[], slopes: number[], x: number): number {
+  if (x <= xs[0]) return ys[0];
+  if (x >= xs[xs.length - 1]) return ys[ys.length - 1];
+  let lo = 0;
+  let hi = xs.length - 1;
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (xs[mid] <= x) lo = mid;
+    else hi = mid;
+  }
+  const h = Math.max(1e-12, xs[hi] - xs[lo]);
+  const t = (x - xs[lo]) / h;
+  const h00 = 2 * t ** 3 - 3 * t ** 2 + 1;
+  const h10 = t ** 3 - 2 * t ** 2 + t;
+  const h01 = -2 * t ** 3 + 3 * t ** 2;
+  const h11 = t ** 3 - t ** 2;
+  return h00 * ys[lo] + h10 * h * slopes[lo] + h01 * ys[hi] + h11 * h * slopes[hi];
+}
+
+function profileBandPath(profile: TargetProfile, plot: ForcePlot): string {
+  if (profile.shiftM.length < 2) return '';
+  const top = profile.shiftM.map((shift, index) => `${index === 0 ? 'M' : 'L'} ${plot.x(shift)} ${plot.y(profile.forceN[index] + profile.toleranceN[index])}`);
+  const bottom = profile.shiftM.slice().reverse().map((shift, reverseIndex) => {
+    const index = profile.shiftM.length - 1 - reverseIndex;
+    return `L ${plot.x(shift)} ${plot.y(profile.forceN[index] - profile.toleranceN[index])}`;
+  });
+  return [...top, ...bottom, 'Z'].join(' ');
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -17,6 +17,7 @@ from __future__ import annotations
 from math import degrees, isfinite, pi
 
 import numpy as np
+from scipy.interpolate import PchipInterpolator
 
 # Projection caches are process-local and keyed by the cached domain object.
 # They keep the interactive Requirements page from re-evaluating every Hermite
@@ -55,6 +56,14 @@ def refresh_compiled_domain_views(
 ) -> None:
     """Replace biased atlas/projection views while leaving graph physics untouched."""
 
+    numerics = compiled.document.get("numerics")
+    if isinstance(numerics, dict):
+        if (
+            numerics.get("refined_views_representative_count") == representative_count
+            and numerics.get("capability_samples_per_layer") == capability_samples_per_layer
+        ):
+            return
+
     state_paths = _candidate_state_paths(
         compiled,
         edge_masks=None,
@@ -72,8 +81,22 @@ def refresh_compiled_domain_views(
     selected_documents: list[dict[str, object]] = []
     rejected = 0
 
+    # Reuse history-certified documents already attached to this graph before
+    # certifying any fresh candidate. This is especially valuable after a
+    # packaging edit, where many base-architecture ramps survive unchanged.
+    for signature in _diverse_path_order(compiled, list(existing)):
+        document = existing[signature]
+        selected_paths.append(signature)
+        selected_documents.append(document)
+        if len(selected_documents) >= representative_count:
+            break
+
     for state_path in _diverse_path_order(compiled, state_paths):
+        if len(selected_documents) >= representative_count:
+            break
         signature = tuple(state_path)
+        if signature in selected_paths:
+            continue
         document = existing.get(signature)
         if document is None:
             ramp_path = _path_from_state_indices(
@@ -127,6 +150,7 @@ def refresh_compiled_domain_views(
     numerics = compiled.document.get("numerics")
     if isinstance(numerics, dict):
         numerics["capability_samples_per_layer"] = capability_samples_per_layer
+        numerics["refined_views_representative_count"] = representative_count
 
 
 def condition_path_domain_refined(
@@ -139,7 +163,14 @@ def condition_path_domain_refined(
     reference_shaft_speed_rad_s: float | None = None,
     force_samples_per_layer: int = 9,
 ) -> dict[str, object]:
-    """Condition the graph while preserving force-set topology and solution paths."""
+    """Condition hard locks and search soft profile guides over complete paths.
+
+    Requirements whose id begins with ``guide-`` are profile handles: they shape
+    the desired force curve but do not remove physically valid graph states.
+    Every other requirement remains a hard force lock for backwards
+    compatibility.  This distinction lets the UI express desired behaviour
+    without turning every sketch point into a brittle equality constraint.
+    """
 
     architecture = compiled.architecture
     if max_tip_mass_per_flyweight_kg < 0.0:
@@ -163,11 +194,11 @@ def condition_path_domain_refined(
         if requirement.shaft_speed_rad_s <= 0.0:
             raise ValueError("force requirements require a positive shaft speed")
 
-    # No force points means no graph conditioning at all: every viable edge and
-    # every mass in [0, max] survives. Returning directly avoids two complete
-    # forward/backward passes over a large graph just to rediscover that fact.
+    guide_requirements = tuple(requirement for requirement in requirements if _is_profile_guide(requirement))
+    hard_requirements = tuple(requirement for requirement in requirements if not _is_profile_guide(requirement))
+
     if not requirements:
-        return _unrestricted_condition_result(
+        result = _unrestricted_condition_result(
             compiled,
             max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
             mass_sample_count=mass_sample_count,
@@ -175,6 +206,15 @@ def condition_path_domain_refined(
             display_speed=display_speed,
             force_samples_per_layer=force_samples_per_layer,
         )
+        summary = result.get("summary")
+        if isinstance(summary, dict):
+            summary.update({
+                "profile_guide_count": 0,
+                "hard_lock_count": 0,
+                "best_profile_rms_error_N": None,
+                "best_profile_max_error_N": None,
+            })
+        return result
 
     station_count = compiled.shift_station_count
     layer_count = station_count - 1
@@ -182,14 +222,28 @@ def condition_path_domain_refined(
     all_mask = (1 << mass_sample_count) - 1
     mass_step = max_tip_mass_per_flyweight_kg / (mass_sample_count - 1)
 
-    requirements_by_layer: list[list[ForceRequirement]] = [[] for _ in range(layer_count)]
+    # Individual attainability is useful feedback for both guide and hard points,
+    # but only hard points participate in the graph mask.
+    individual_status: dict[str, bool] = {}
     for requirement in requirements:
+        x = min(max(requirement.shift_m, 0.0), travel)
+        layer = min(layer_count - 1, int(x / dx))
+        masks = _requirement_mass_masks_for_layer(
+            compiled,
+            layer,
+            requirement,
+            max_tip_mass_per_flyweight_kg,
+            mass_sample_count,
+        )
+        individual_status[requirement.id] = any(masks)
+
+    requirements_by_layer: list[list[ForceRequirement]] = [[] for _ in range(layer_count)]
+    for requirement in hard_requirements:
         x = min(max(requirement.shift_m, 0.0), travel)
         layer = min(layer_count - 1, int(x / dx))
         requirements_by_layer[layer].append(requirement)
 
     edge_masks: list[list[int]] = []
-    individual_status: dict[str, bool] = {requirement.id: False for requirement in requirements}
     for layer_index, layer_edges in enumerate(compiled.viable_edges):
         masks = [all_mask] * len(layer_edges)
         for requirement in requirements_by_layer[layer_index]:
@@ -200,93 +254,82 @@ def condition_path_domain_refined(
                 max_tip_mass_per_flyweight_kg,
                 mass_sample_count,
             )
-            if any(requirement_masks):
-                individual_status[requirement.id] = True
             masks = [left & right for left, right in zip(masks, requirement_masks, strict=True)]
         edge_masks.append(masks)
 
-    forward: list[dict[int, int]] = [dict() for _ in range(station_count)]
-    backward: list[dict[int, int]] = [dict() for _ in range(station_count)]
+    if hard_requirements:
+        forward: list[dict[int, int]] = [dict() for _ in range(station_count)]
+        backward: list[dict[int, int]] = [dict() for _ in range(station_count)]
+        constrained_layers = [index for index, row in enumerate(requirements_by_layer) if row]
+        first_constrained_layer = min(constrained_layers)
+        last_constrained_layer = max(constrained_layers)
 
-    # The compiled graph has already proven that every viable node is reachable
-    # from the start and can reach the finish. Before the first constrained
-    # layer, forward mass reachability is therefore simply "all masses"; after
-    # the last constrained layer, backward reachability is the same. Starting
-    # the dynamic programs at those boundaries avoids another full scan of the
-    # unconstrained half of the graph for the common one-point interaction.
-    constrained_layers = [
-        index for index, row in enumerate(requirements_by_layer) if row
-    ]
-    first_constrained_layer = min(constrained_layers)
-    last_constrained_layer = max(constrained_layers)
+        for station in range(first_constrained_layer + 1):
+            forward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+        for layer_index in range(first_constrained_layer, layer_count):
+            next_map = forward[layer_index + 1]
+            for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
+                mask = forward[layer_index].get(edge.start_state, 0) & edge_masks[layer_index][edge_index]
+                if mask:
+                    next_map[edge.end_state] = next_map.get(edge.end_state, 0) | mask
 
-    for station in range(first_constrained_layer + 1):
-        forward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
-    for layer_index in range(first_constrained_layer, layer_count):
-        next_map = forward[layer_index + 1]
-        for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
-            mask = forward[layer_index].get(edge.start_state, 0) & edge_masks[layer_index][edge_index]
-            if mask:
-                next_map[edge.end_state] = next_map.get(edge.end_state, 0) | mask
+        for station in range(last_constrained_layer + 1, station_count):
+            backward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+        for layer_index in range(last_constrained_layer, -1, -1):
+            current_map = backward[layer_index]
+            for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
+                mask = backward[layer_index + 1].get(edge.end_state, 0) & edge_masks[layer_index][edge_index]
+                if mask:
+                    current_map[edge.start_state] = current_map.get(edge.start_state, 0) | mask
 
-    for station in range(last_constrained_layer + 1, station_count):
-        backward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
-    for layer_index in range(last_constrained_layer, -1, -1):
-        current_map = backward[layer_index]
-        for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
-            mask = backward[layer_index + 1].get(edge.end_state, 0) & edge_masks[layer_index][edge_index]
-            if mask:
-                current_map[edge.start_state] = current_map.get(edge.start_state, 0) | mask
+        node_masks: list[dict[int, int]] = []
+        conditioned_nodes: list[set[int]] = []
+        conditioned_edge_masks: list[list[int]] = []
+        conditioned_edges: list[list[LayerEdge]] = []
+        for station in range(station_count):
+            row: dict[int, int] = {}
+            nodes: set[int] = set()
+            for state_index in compiled.viable_nodes[station]:
+                mask = forward[station].get(state_index, 0) & backward[station].get(state_index, 0)
+                if mask:
+                    row[state_index] = mask
+                    nodes.add(state_index)
+            node_masks.append(row)
+            conditioned_nodes.append(nodes)
 
-    node_masks: list[dict[int, int]] = []
-    conditioned_nodes: list[set[int]] = []
-    conditioned_edge_masks: list[list[int]] = []
-    conditioned_edges: list[list[LayerEdge]] = []
-    for station in range(station_count):
-        row: dict[int, int] = {}
-        nodes: set[int] = set()
-        for state_index in compiled.viable_nodes[station]:
-            mask = forward[station].get(state_index, 0) & backward[station].get(state_index, 0)
-            if mask:
-                row[state_index] = mask
-                nodes.add(state_index)
-        node_masks.append(row)
-        conditioned_nodes.append(nodes)
+        for layer_index, layer_edges in enumerate(compiled.viable_edges):
+            masks: list[int] = []
+            edges: list[LayerEdge] = []
+            for edge_index, edge in enumerate(layer_edges):
+                mask = (
+                    forward[layer_index].get(edge.start_state, 0)
+                    & edge_masks[layer_index][edge_index]
+                    & backward[layer_index + 1].get(edge.end_state, 0)
+                )
+                masks.append(mask)
+                if mask:
+                    edges.append(edge)
+            conditioned_edge_masks.append(masks)
+            conditioned_edges.append(edges)
+    else:
+        node_masks = [
+            {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+            for station in range(station_count)
+        ]
+        conditioned_nodes = [set(row) for row in compiled.viable_nodes]
+        conditioned_edge_masks = [[all_mask] * len(row) for row in compiled.viable_edges]
+        conditioned_edges = [list(row) for row in compiled.viable_edges]
 
-    for layer_index, layer_edges in enumerate(compiled.viable_edges):
-        masks: list[int] = []
-        edges: list[LayerEdge] = []
-        for edge_index, edge in enumerate(layer_edges):
-            mask = (
-                forward[layer_index].get(edge.start_state, 0)
-                & edge_masks[layer_index][edge_index]
-                & backward[layer_index + 1].get(edge.end_state, 0)
-            )
-            masks.append(mask)
-            if mask:
-                edges.append(edge)
-        conditioned_edge_masks.append(masks)
-        conditioned_edges.append(edges)
-
-    # The blank Requirements view is a particularly common call. With no force
-    # points, the conditioned graph is identical to the full graph, so compute
-    # the force projection once and reuse the already-compiled physical domain.
-    # This also avoids re-certifying a second representative atlas merely to
-    # display the untouched starting state.
+    jointly_feasible = bool(conditioned_nodes and conditioned_nodes[0])
     full_force_capability = _full_force_projection_cached(
         compiled,
         max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
         shaft_speed_rad_s=display_speed,
         samples_per_layer=force_samples_per_layer,
     )
-    if requirements:
+
+    if hard_requirements:
         if representative_solution_count == 0:
-            # Interactive point editing only needs an exact graph filter and a
-            # compact picture of the surviving force set.  Re-walking every
-            # surviving edge at every display sample is much more expensive
-            # than the filter itself, so use the exact graph-station states
-            # here.  The detailed edge-continuous projection is rebuilt only
-            # when the user explicitly opens the Solutions view.
             conditioned_force_capability = _node_force_interval_projection(
                 compiled,
                 node_masks=node_masks,
@@ -312,27 +355,32 @@ def condition_path_domain_refined(
             alpha_sample_count=compiled.alpha_sample_count,
         )
         projection["meaning"] = (
-            "Physical projection of complete graph states that remain reachable and "
-            "co-reachable while carrying at least one common tip mass satisfying all "
-            "current force requirements."
+            "Physical projection after hard force locks. Soft profile guides rank complete "
+            "paths but do not remove physically valid graph states."
         )
     else:
         conditioned_force_capability = full_force_capability
         projection = compiled.document["domain_projection"]
 
-    jointly_feasible = bool(conditioned_nodes and conditioned_nodes[0])
-    preview_only = False
+    preview_only = representative_solution_count == 0 and bool(guide_requirements)
     if not jointly_feasible:
-        representative_solutions = []
-    elif representative_solution_count == 0 and requirements:
-        # Requirement editing still needs immediate geometric feedback. Extract a
-        # few complete graph paths that carry one common mass through the current
-        # requirements, but deliberately skip the expensive nonlocal history
-        # certification. These are visual previews only; the Solutions view
-        # replaces them with history-certified ramps on explicit request.
+        representative_solutions: list[dict[str, object]] = []
+    elif guide_requirements:
+        representative_solutions = _profile_ranked_representatives(
+            compiled,
+            guide_requirements=guide_requirements,
+            hard_requirements=hard_requirements,
+            edge_masks=conditioned_edge_masks,
+            max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+            mass_sample_count=mass_sample_count,
+            representative_solution_count=(6 if representative_solution_count == 0 else representative_solution_count),
+            display_speed=display_speed,
+            certify_history=(representative_solution_count > 0),
+        )
+    elif representative_solution_count == 0 and hard_requirements:
         representative_solutions = _conditioned_preview_representatives(
             compiled,
-            requirements,
+            hard_requirements,
             conditioned_edge_masks,
             max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
             mass_sample_count=mass_sample_count,
@@ -340,12 +388,10 @@ def condition_path_domain_refined(
             display_speed=display_speed,
         )
         preview_only = True
-    elif representative_solution_count == 0:
-        representative_solutions = []
-    elif requirements:
+    elif representative_solution_count > 0 and hard_requirements:
         representative_solutions = _conditioned_representatives(
             compiled,
-            requirements,
+            hard_requirements,
             conditioned_edge_masks,
             max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
             mass_sample_count=mass_sample_count,
@@ -360,43 +406,54 @@ def condition_path_domain_refined(
             display_speed=display_speed,
         )
 
-    impossible_ids = [identifier for identifier, possible in individual_status.items() if not possible]
+    hard_impossible_ids = [
+        requirement.id for requirement in hard_requirements if not individual_status.get(requirement.id, False)
+    ]
+    guide_outside_ids = [
+        requirement.id for requirement in guide_requirements if not individual_status.get(requirement.id, False)
+    ]
     findings: list[dict[str, object]] = []
-    if impossible_ids:
-        findings.append(
-            {
-                "severity": "error",
-                "code": "INDIVIDUAL_REQUIREMENT_OUTSIDE_CAPABILITY",
-                "message": "One or more force points are outside the architecture capability for the allowed mass range.",
-                "requirement_ids": impossible_ids,
-            }
-        )
-    elif requirements and not jointly_feasible:
-        findings.append(
-            {
-                "severity": "error",
-                "code": "REQUIREMENTS_JOINTLY_INCOMPATIBLE",
-                "message": (
-                    "Every force point is individually attainable, but no complete ramp "
-                    "with one constant tip mass can satisfy all points together."
-                ),
-            }
-        )
+    if hard_impossible_ids:
+        findings.append({
+            "severity": "error",
+            "code": "HARD_LOCK_OUTSIDE_CAPABILITY",
+            "message": "One or more hard force locks lie outside the architecture capability.",
+            "requirement_ids": hard_impossible_ids,
+        })
+    elif hard_requirements and not jointly_feasible:
+        findings.append({
+            "severity": "error",
+            "code": "HARD_LOCKS_JOINTLY_INCOMPATIBLE",
+            "message": "The hard force locks are individually attainable but cannot be satisfied by one complete ramp and one constant tip mass.",
+        })
+    if guide_outside_ids:
+        findings.append({
+            "severity": "warning",
+            "code": "PROFILE_GUIDE_OUTSIDE_CAPABILITY",
+            "message": "One or more profile handles are outside the architecture capability; best-fit solutions will approach them as closely as possible.",
+            "requirement_ids": guide_outside_ids,
+        })
 
     mass_values_seen: list[float] = []
     for row in node_masks:
         for mask in row.values():
             for first, last in _mask_runs(mask):
-                mass_values_seen.extend(
-                    (
-                        _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                        _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                    )
-                )
+                mass_values_seen.extend((
+                    _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                    _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                ))
+
+    best_fit = None
+    if representative_solutions:
+        solution = representative_solutions[0].get("solution")
+        if isinstance(solution, dict):
+            fit = solution.get("profile_fit")
+            if isinstance(fit, dict):
+                best_fit = fit
 
     return {
         "validity": {
-            "valid": jointly_feasible and not impossible_ids,
+            "valid": jointly_feasible and not hard_impossible_ids,
             "findings": findings,
         },
         "requirements": [
@@ -406,7 +463,8 @@ def condition_path_domain_refined(
                 "force_N": requirement.force_N,
                 "shaft_speed_rad_s": requirement.shaft_speed_rad_s,
                 "tolerance_N": requirement.tolerance_N,
-                "individually_attainable": individual_status[requirement.id],
+                "mode": "guide" if _is_profile_guide(requirement) else "hard",
+                "individually_attainable": individual_status.get(requirement.id, False),
             }
             for requirement in requirements
         ],
@@ -431,12 +489,433 @@ def condition_path_domain_refined(
         "representative_solutions": representative_solutions,
         "summary": {
             "requirement_count": len(requirements),
+            "profile_guide_count": len(guide_requirements),
+            "hard_lock_count": len(hard_requirements),
             "jointly_feasible": jointly_feasible,
             "conditioned_domain_point_count": projection["point_count"],
             "representative_solution_count": len(representative_solutions),
             "representative_solutions_preview_only": preview_only,
+            "best_profile_rms_error_N": None if best_fit is None else best_fit.get("rms_error_N"),
+            "best_profile_max_error_N": None if best_fit is None else best_fit.get("max_abs_error_N"),
         },
     }
+
+
+def _is_profile_guide(requirement: ForceRequirement) -> bool:
+    return requirement.id.startswith("guide-")
+
+
+def _profile_points(
+    guides: tuple[ForceRequirement, ...],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return unique sorted guide points, averaging accidental duplicate shifts."""
+    grouped: dict[float, list[ForceRequirement]] = {}
+    for requirement in guides:
+        grouped.setdefault(round(float(requirement.shift_m), 12), []).append(requirement)
+    xs: list[float] = []
+    ys: list[float] = []
+    tolerances: list[float] = []
+    for key in sorted(grouped):
+        row = grouped[key]
+        xs.append(float(np.mean([item.shift_m for item in row])))
+        ys.append(float(np.mean([item.force_N for item in row])))
+        tolerances.append(float(np.mean([max(1.0, item.tolerance_N) for item in row])))
+    return np.asarray(xs), np.asarray(ys), np.asarray(tolerances)
+
+
+def _profile_target_samples(
+    guides: tuple[ForceRequirement, ...],
+    *,
+    count: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    xs, ys, tolerances = _profile_points(guides)
+    if len(xs) == 0:
+        return xs, ys, tolerances
+    if len(xs) == 1:
+        return xs.copy(), ys.copy(), tolerances.copy()
+    sample_x = np.linspace(float(xs[0]), float(xs[-1]), max(3, count))
+    target = np.asarray(PchipInterpolator(xs, ys, extrapolate=False)(sample_x), dtype=float)
+    corridor = np.asarray(PchipInterpolator(xs, tolerances, extrapolate=False)(sample_x), dtype=float)
+    return sample_x, target, np.maximum(1.0, corridor)
+
+
+def _profile_edge_quadratics(
+    compiled: CompiledPathDomain,
+    guides: tuple[ForceRequirement, ...],
+    display_speed: float,
+    *,
+    samples_per_layer: int = 5,
+) -> list[tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Edge error = A*m^2 + B*m + C against the full target profile."""
+    profile_x, profile_y, _corridor = _profile_points(guides)
+    if len(profile_x) == 0:
+        return [
+            (np.zeros(len(row)), np.zeros(len(row)), np.zeros(len(row)))
+            for row in compiled.viable_edges
+        ]
+    interpolator = PchipInterpolator(profile_x, profile_y, extrapolate=False) if len(profile_x) >= 2 else None
+    omega2 = display_speed * display_speed
+    layer_count = compiled.shift_station_count - 1
+    dx = compiled.architecture.required_travel_m / layer_count
+    result: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+
+    for layer_index, edges in enumerate(compiled.viable_edges):
+        n = len(edges)
+        A = np.zeros(n, dtype=float)
+        B = np.zeros(n, dtype=float)
+        C = np.zeros(n, dtype=float)
+        if n == 0:
+            result.append((A, B, C))
+            continue
+        x0 = layer_index * dx
+        x1 = x0 + dx
+        if len(profile_x) == 1:
+            samples = np.asarray([profile_x[0]]) if x0 - 1e-12 <= profile_x[0] <= x1 + 1e-12 else np.asarray([])
+            targets = np.asarray([profile_y[0]]) if samples.size else np.asarray([])
+        else:
+            left = max(x0, float(profile_x[0]))
+            right = min(x1, float(profile_x[-1]))
+            if right < left - 1e-12:
+                samples = np.asarray([])
+                targets = np.asarray([])
+            else:
+                samples = np.linspace(left, right, max(2, samples_per_layer))
+                targets = np.asarray(interpolator(samples), dtype=float)
+        for shift_m, target in zip(samples, targets, strict=True):
+            arm_gain, tip_gain, active = _edge_gains_at_shift(compiled, layer_index, float(shift_m))
+            base = omega2 * arm_gain
+            slope = omega2 * tip_gain
+            err0 = base - float(target)
+            A += np.where(active, slope * slope, 0.0)
+            B += np.where(active, 2.0 * err0 * slope, 0.0)
+            C += np.where(active, err0 * err0, 0.0)
+        result.append((A, B, C))
+    return result
+
+
+def _profile_candidate_paths(
+    compiled: CompiledPathDomain,
+    guides: tuple[ForceRequirement, ...],
+    edge_masks: list[list[int]],
+    *,
+    max_mass_kg: float,
+    mass_sample_count: int,
+    display_speed: float,
+    probe_count: int,
+) -> list[tuple[int, ...]]:
+    """Globally minimize target-profile error on the layered DAG for sampled masses."""
+    quadratics = _profile_edge_quadratics(compiled, guides, display_speed)
+    if max_mass_kg <= 1.0e-15:
+        mass_probes = np.asarray([0.0])
+    else:
+        probe_indices = {
+            int(round(value))
+            for value in np.linspace(0, mass_sample_count - 1, max(3, probe_count))
+        }
+        # Hard locks can leave a very narrow shared mass window. Include the
+        # endpoints and midpoint of every globally surviving mass run so the
+        # target-guided search cannot miss a valid design merely because a
+        # uniform probe grid stepped over that window.
+        global_mask = 0
+        if edge_masks:
+            for mask in edge_masks[0]:
+                global_mask |= mask
+        if global_mask:
+            for first, last in _mask_runs(global_mask):
+                probe_indices.update((first, (first + last) // 2, last))
+        mass_probes = np.asarray([
+            max_mass_kg * index / (mass_sample_count - 1)
+            for index in sorted(probe_indices)
+        ])
+    candidates: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+
+    for mass in mass_probes:
+        if max_mass_kg <= 1.0e-15:
+            bit = 1
+        else:
+            mass_index = int(round(float(mass) / max_mass_kg * (mass_sample_count - 1)))
+            mass_index = max(0, min(mass_sample_count - 1, mass_index))
+            bit = 1 << mass_index
+        costs = {state_index: 0.0 for state_index in compiled.viable_nodes[0]}
+        predecessors: list[dict[int, int]] = []
+        for layer_index, edges in enumerate(compiled.viable_edges):
+            next_costs: dict[int, float] = {}
+            predecessor: dict[int, int] = {}
+            A, B, C = quadratics[layer_index]
+            local = A * mass * mass + B * mass + C
+            for edge_index, edge in enumerate(edges):
+                if edge_masks[layer_index][edge_index] & bit == 0:
+                    continue
+                start_cost = costs.get(edge.start_state)
+                if start_cost is None:
+                    continue
+                total = start_cost + float(local[edge_index])
+                previous = next_costs.get(edge.end_state)
+                if previous is None or total < previous:
+                    next_costs[edge.end_state] = total
+                    predecessor[edge.end_state] = edge.start_state
+            predecessors.append(predecessor)
+            costs = next_costs
+            if not costs:
+                break
+        if len(predecessors) != compiled.shift_station_count - 1 or not costs:
+            continue
+        end_state = min(costs, key=costs.get)
+        path = [end_state]
+        current = end_state
+        ok = True
+        for layer_index in range(compiled.shift_station_count - 2, -1, -1):
+            previous = predecessors[layer_index].get(current)
+            if previous is None:
+                ok = False
+                break
+            path.append(previous)
+            current = previous
+        if not ok:
+            continue
+        signature = tuple(reversed(path))
+        if signature not in seen:
+            seen.add(signature)
+            candidates.append(signature)
+    return candidates
+
+
+def _profile_fit_for_path(
+    compiled: CompiledPathDomain,
+    state_path: tuple[int, ...],
+    guides: tuple[ForceRequirement, ...],
+    hard_requirements: tuple[ForceRequirement, ...],
+    *,
+    max_mass_kg: float,
+    display_speed: float,
+) -> tuple[float, float, float, tuple[float, float], np.ndarray, np.ndarray] | None:
+    ramp_path = _path_from_state_indices(
+        compiled.architecture,
+        compiled.states,
+        list(state_path),
+        compiled.shift_station_count,
+    )
+    interval = _continuous_path_mass_interval(ramp_path, hard_requirements, max_mass_kg)
+    if interval is None:
+        return None
+    mass_low, mass_high = interval
+    sample_x, target, _corridor = _profile_target_samples(guides, count=129)
+    if len(sample_x) == 0:
+        mass = 0.5 * (mass_low + mass_high)
+        return 0.0, 0.0, mass, interval, sample_x, target
+
+    base: list[float] = []
+    slope: list[float] = []
+    omega2 = display_speed * display_speed
+    for x in sample_x:
+        row = ramp_path.evaluate(float(x))
+        arm_gain, tip_gain, _ = _normalized_force_gain(
+            compiled.architecture,
+            row["q_rad"],
+            row["dq_dx_rad_per_m"],
+        )
+        base.append(omega2 * arm_gain)
+        slope.append(omega2 * tip_gain)
+    base_arr = np.asarray(base)
+    slope_arr = np.asarray(slope)
+    denominator = float(np.dot(slope_arr, slope_arr))
+    if denominator > 1.0e-18:
+        mass = float(np.dot(slope_arr, target - base_arr) / denominator)
+    else:
+        mass = 0.5 * (mass_low + mass_high)
+    mass = min(max(mass, mass_low), mass_high)
+    force = base_arr + mass * slope_arr
+    error = force - target
+    rms = float(np.sqrt(np.mean(error * error)))
+    maximum = float(np.max(np.abs(error)))
+    return rms, maximum, mass, interval, sample_x, target
+
+
+def _profile_ranked_representatives(
+    compiled: CompiledPathDomain,
+    *,
+    guide_requirements: tuple[ForceRequirement, ...],
+    hard_requirements: tuple[ForceRequirement, ...],
+    edge_masks: list[list[int]],
+    max_tip_mass_per_flyweight_kg: float,
+    mass_sample_count: int,
+    representative_solution_count: int,
+    display_speed: float,
+    certify_history: bool,
+) -> list[dict[str, object]]:
+    if representative_solution_count <= 0:
+        return []
+
+    guide_signature = tuple(
+        (round(item.shift_m, 12), round(item.force_N, 7), round(item.tolerance_N, 7))
+        for item in guide_requirements
+    )
+    hard_signature = tuple(
+        (round(item.shift_m, 12), round(item.force_N, 7), round(item.tolerance_N, 7))
+        for item in hard_requirements
+    )
+    cache_key = (
+        "profile",
+        id(compiled),
+        guide_signature,
+        hard_signature,
+        round(max_tip_mass_per_flyweight_kg, 12),
+        int(mass_sample_count),
+        int(representative_solution_count),
+        round(display_speed, 7),
+        bool(certify_history),
+    )
+    cached = _SOLUTION_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    target_candidates = _profile_candidate_paths(
+        compiled,
+        guide_requirements,
+        edge_masks,
+        max_mass_kg=max_tip_mass_per_flyweight_kg,
+        mass_sample_count=mass_sample_count,
+        display_speed=display_speed,
+        probe_count=(11 if not certify_history else 31),
+    )
+    # Add a bounded geometry-diverse pool so the gallery can expose alternative
+    # near-optimal families, but rank every path by full-profile error afterwards.
+    fallback = _candidate_state_paths(
+        compiled,
+        edge_masks=edge_masks,
+        max_candidates=(36 if not certify_history else 96),
+    )
+    candidate_paths: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+    for path in [*target_candidates, *compiled.representative_state_paths, *fallback]:
+        signature = tuple(path)
+        if signature not in seen:
+            seen.add(signature)
+            candidate_paths.append(signature)
+
+    scored: list[tuple[float, float, float, tuple[float, float], tuple[int, ...], np.ndarray, np.ndarray]] = []
+    for path in candidate_paths:
+        fit = _profile_fit_for_path(
+            compiled,
+            path,
+            guide_requirements,
+            hard_requirements,
+            max_mass_kg=max_tip_mass_per_flyweight_kg,
+            display_speed=display_speed,
+        )
+        if fit is None:
+            continue
+        rms, maximum, mass, interval, target_x, target_force = fit
+        scored.append((rms, maximum, mass, interval, path, target_x, target_force))
+    scored.sort(key=lambda item: (item[0], item[1]))
+    if not scored:
+        return []
+
+    # Quality first, diversity second. Never choose a geometrically interesting
+    # path whose profile fit is dramatically worse than the best achievable one.
+    best_rms = scored[0][0]
+    quality_limit = max(best_rms * 1.6, best_rms + 120.0)
+    quality_pool = [item for item in scored if item[0] <= quality_limit][:40]
+    if not quality_pool:
+        quality_pool = scored[:40]
+    pool_by_path = {item[4]: item for item in quality_pool}
+    diverse = _diverse_path_order(compiled, [item[4] for item in quality_pool])
+    ordered_paths = [scored[0][4]] + [path for path in diverse if path != scored[0][4]]
+    for item in scored:
+        if item[4] not in ordered_paths:
+            ordered_paths.append(item[4])
+
+    existing = {
+        tuple(path): document
+        for path, document in zip(
+            compiled.representative_state_paths,
+            compiled.representative_documents,
+            strict=True,
+        )
+    }
+    results: list[dict[str, object]] = []
+    sample_count = max(161, 20 * compiled.shift_station_count + 1)
+    for path in ordered_paths:
+        item = pool_by_path.get(path)
+        if item is None:
+            item = next((entry for entry in scored if entry[4] == path), None)
+        if item is None:
+            continue
+        rms, maximum, mass, interval, _path, target_x, target_force = item
+        ramp_path = _path_from_state_indices(
+            compiled.architecture,
+            compiled.states,
+            list(path),
+            compiled.shift_station_count,
+        )
+        document = existing.get(path)
+        if certify_history:
+            if document is None:
+                certification = certify_path_history(
+                    ramp_path,
+                    trace_sample_count=compiled.history_trace_sample_count,
+                )
+                if not certification.valid:
+                    continue
+                document = _path_document(
+                    ramp_path,
+                    list(path),
+                    certification,
+                    sample_count=sample_count,
+                )
+        else:
+            data = ramp_path.sample(max(81, 10 * compiled.shift_station_count + 1))
+            document = {
+                "state_indices": list(path),
+                "shift_m": [float(value) for value in data["shift_m"]],
+                "q_deg": [degrees(float(value)) for value in data["q_rad"]],
+                "ramp_tangent_deg": [float(value) for value in data["ramp_tangent_deg"]],
+                "roller_center": {
+                    "x_m": [float(value) for value in data["roller_center_x_m"]],
+                    "r_m": [float(value) for value in data["roller_center_r_m"]],
+                },
+                "ramp_surface": {
+                    "x_m": [float(value) for value in data["contact_x_m"]],
+                    "r_m": [float(value) for value in data["contact_r_m"]],
+                },
+                "capability": _path_capability_document(compiled.architecture, data),
+                "history": {
+                    "max_contact_root_count": 0,
+                    "multiple_root_shift_count": 0,
+                    "trace_shift_m": [],
+                    "trace_parameter_m": [],
+                    "trace_q_deg": [],
+                },
+            }
+        mass_min, mass_max = interval
+        solution = {
+            **document,
+            "solution": {
+                "tip_mass_min_kg": mass_min,
+                "tip_mass_max_kg": mass_max,
+                "example_tip_mass_kg": mass,
+                "force_N": _path_absolute_force_document(
+                    document,
+                    mass,
+                    hard_requirements,
+                    display_speed,
+                ),
+                "profile_fit": {
+                    "rms_error_N": rms,
+                    "max_abs_error_N": maximum,
+                    "target_shift_m": [float(value) for value in target_x],
+                    "target_force_N": [float(value) for value in target_force],
+                    "history_certified": certify_history,
+                },
+            },
+        }
+        results.append(solution)
+        if len(results) >= representative_solution_count:
+            break
+
+    _SOLUTION_CACHE[cache_key] = results
+    return results
 
 
 def _requirement_mass_masks_for_layer(

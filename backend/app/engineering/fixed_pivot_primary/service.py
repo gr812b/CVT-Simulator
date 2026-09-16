@@ -15,6 +15,7 @@ from .cinder_adapter import (
     evaluate_response,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
+from .path_domain_packaging import compile_path_domain_cached_packaging
 from .path_domain import (
     CompiledPathDomain,
     ForceRequirement,
@@ -149,7 +150,7 @@ class FixedPivotPrimaryDesignService:
         """Build and cache the reusable local/history path domain."""
 
         try:
-            compiled = compile_path_domain(
+            compiled = compile_path_domain_cached_packaging(
                 architecture,
                 zones,
                 shift_station_count=shift_station_count,

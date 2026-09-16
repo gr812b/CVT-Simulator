@@ -77,8 +77,11 @@ export function ConditionedSolutionsExplorer({
 
   const massMin = selected.solution.tip_mass_min_kg;
   const massMax = selected.solution.tip_mass_max_kg;
+  const selectedFit = profileFit(selected);
   const forceValues = absoluteForce(selected, massKg, analysis.force_capability.reference_shaft_speed_rad_s);
-  const forcePlot = createForcePlot(selected.shift_m, forceValues, requirements);
+  const forcePlot = createForcePlot(selected.shift_m, forceValues, requirements, selectedFit?.target_force_N ?? []);
+  const guideCount = requirements.filter((item) => item.id.startsWith('guide-')).length;
+  const lockCount = requirements.length - guideCount;
   const pose = samplePathAtShift(selected, shiftM);
   const forceAtShift = interpolate(selected.shift_m, forceValues, shiftM);
   const pivotX = architecture.pivot_axial_position_m - shiftM;
@@ -91,25 +94,26 @@ export function ConditionedSolutionsExplorer({
         <div>
           <button type="button" className={styles.toolButton} onClick={onBack}>← Requirements</button>
           <div className={ui.titleBlock}>
-            <strong>Surviving ramp designs</strong>
-            <span>Choose a representative complete ramp, then inspect the same design through mechanism position and force response.</span>
+            <strong>Best-fit ramp designs</strong>
+            <span>Solutions are ranked by whole-profile force error first, then diversified geometrically among near-optimal paths. Every shown ramp is history certified.</span>
           </div>
         </div>
         <div className={ui.headerStats}>
           <Stat label="representatives" value={String(solutions.length)} />
-          <Stat label="requirements" value={String(requirements.length)} />
+          <Stat label="profile" value={`${guideCount} guides · ${lockCount} locks`} />
           <Stat
             label="selected mass window"
             value={`${(massMin * G).toFixed(1)}–${(massMax * G).toFixed(1)} g`}
           />
+          {selectedFit && <Stat label="profile RMS" value={`${selectedFit.rms_error_N.toFixed(1)} N`} />}
         </div>
       </header>
 
       <div className={ui.workspace}>
         <aside className={ui.gallery}>
           <div className={ui.galleryHeader}>
-            <strong>Ramp gallery</strong>
-            <span>All thumbnails use the same physical axes.</span>
+            <strong>Ranked ramp gallery</strong>
+            <span>Ramp 1 is the best force-profile match found; later cards stay near-optimal while exploring different physical shapes.</span>
           </div>
           <div className={ui.galleryList}>
             {solutions.map((solution, index) => (
@@ -201,7 +205,7 @@ export function ConditionedSolutionsExplorer({
             <div className={ui.panelHeader}>
               <div>
                 <strong>Force response</strong>
-                <span>Every mass inside this slider interval satisfies all current force requirements for this exact ramp.</span>
+                <span>The amber target is the shape-preserving profile through your guide handles. The selected mass is the best continuous fit within this ramp’s hard-lock-compatible mass interval.</span>
               </div>
               <span>{(massKg * G).toFixed(1)} g / flyweight</span>
             </div>
@@ -229,6 +233,12 @@ export function ConditionedSolutionsExplorer({
               <svg viewBox={`0 0 ${FORCE_W} ${FORCE_H}`} className={ui.forceCanvas} role="img" aria-label="Selected ramp force curve and requirements">
                 <rect width={FORCE_W} height={FORCE_H} rx="12" className={ui.canvasBackground} />
                 <ForceGrid plot={forcePlot} travelM={architecture.required_travel_m} />
+                {selectedFit && selectedFit.target_shift_m.length > 1 && (
+                  <path
+                    d={curvePath(selectedFit.target_shift_m, selectedFit.target_force_N, forcePlot)}
+                    style={{ fill: 'none', stroke: 'rgba(255, 208, 122, 0.96)', strokeWidth: 2.4, strokeDasharray: '7 4' }}
+                  />
+                )}
                 <path d={curvePath(selected.shift_m, forceValues, forcePlot)} className={ui.forceCurve} />
                 {requirements.map((requirement) => (
                   <g key={requirement.id}>
@@ -239,7 +249,7 @@ export function ConditionedSolutionsExplorer({
                       y2={forcePlot.y(requirement.force_N + requirement.tolerance_N)}
                       className={ui.requirementTolerance}
                     />
-                    <circle cx={forcePlot.x(requirement.shift_m)} cy={forcePlot.y(requirement.force_N)} r="5.5" className={ui.requirementPoint} />
+                    <circle cx={forcePlot.x(requirement.shift_m)} cy={forcePlot.y(requirement.force_N)} r={requirement.id.startsWith('guide-') ? 5.5 : 6.5} className={ui.requirementPoint} style={requirement.id.startsWith('guide-') ? undefined : { fill: '#ff9f9f' }} />
                   </g>
                 ))}
                 <line x1={forcePlot.x(shiftM)} x2={forcePlot.x(shiftM)} y1={FORCE_TOP} y2={FORCE_H - FORCE_BOTTOM} className={ui.shiftCursor} />
@@ -273,6 +283,7 @@ function SolutionCard({
   const q1 = solution.q_deg[solution.q_deg.length - 1];
   const a0 = solution.ramp_tangent_deg[0];
   const a1 = solution.ramp_tangent_deg[solution.ramp_tangent_deg.length - 1];
+  const fit = profileFit(solution);
   return (
     <button type="button" className={selected ? ui.cardSelected : ui.card} onClick={onSelect}>
       <div className={ui.cardTop}>
@@ -284,7 +295,7 @@ function SolutionCard({
       </svg>
       <div className={ui.cardMetrics}>
         <span><em>q</em>{q0.toFixed(1)}° → {q1.toFixed(1)}°</span>
-        <span><em>tangent</em>{a0.toFixed(1)}° → {a1.toFixed(1)}°</span>
+        {fit ? <span><em>fit</em>{fit.rms_error_N.toFixed(0)} N RMS · {fit.max_abs_error_N.toFixed(0)} N max</span> : <span><em>tangent</em>{a0.toFixed(1)}° → {a1.toFixed(1)}°</span>}
         <span><em>mass</em>{massMin.toFixed(0)}–{massMax.toFixed(0)} g</span>
       </div>
     </button>
@@ -297,6 +308,20 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Readout({ label, value }: { label: string; value: string }) {
   return <div className={ui.readout}><span>{label}</span><strong>{value}</strong></div>;
+}
+
+
+type ProfileFit = {
+  rms_error_N: number;
+  max_abs_error_N: number;
+  target_shift_m: number[];
+  target_force_N: number[];
+  history_certified: boolean;
+};
+
+function profileFit(solution: ConditionedRampSolution): ProfileFit | null {
+  const payload = solution.solution as ConditionedRampSolution['solution'] & { profile_fit?: ProfileFit };
+  return payload.profile_fit ?? null;
 }
 
 function absoluteForce(solution: ConditionedRampSolution, massKg: number, omega: number): number[] {
@@ -398,10 +423,11 @@ function gridValues(min: number, max: number, step: number): number[] {
   return values;
 }
 
-function createForcePlot(shifts: number[], forces: number[], requirements: ForceRequirement[]): ForcePlot | null {
+function createForcePlot(shifts: number[], forces: number[], requirements: ForceRequirement[], targetForces: number[] = []): ForcePlot | null {
   if (!shifts.length || shifts.length !== forces.length) return null;
   const values = [
     ...forces,
+    ...targetForces,
     ...requirements.flatMap((item) => [item.force_N - item.tolerance_N, item.force_N + item.tolerance_N]),
   ].filter(Number.isFinite);
   if (!values.length) return null;
