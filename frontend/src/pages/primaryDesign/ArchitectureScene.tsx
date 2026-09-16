@@ -34,9 +34,8 @@ interface ArchitectureSceneProps {
   architecture: FixedPivotArchitecture;
   analysis: ArchitectureAnalysis | null;
   pathDomain?: PrimaryPathDomainAnalysis | null;
-  selectedRepresentativePathIndex?: number;
+  comparisonBaseline?: PrimaryPathDomainAnalysis | null;
   showLocalWorkspace?: boolean;
-  showRepresentativeFamily?: boolean;
   zones: PackagingZone[];
   stale: boolean;
   selectedZoneId: string | null;
@@ -49,9 +48,8 @@ export function ArchitectureScene({
   architecture,
   analysis,
   pathDomain = null,
-  selectedRepresentativePathIndex = 0,
-  showLocalWorkspace = true,
-  showRepresentativeFamily = true,
+  comparisonBaseline = null,
+  showLocalWorkspace = false,
   zones,
   stale,
   selectedZoneId,
@@ -103,10 +101,12 @@ export function ArchitectureScene({
       rCandidates.push(analysis.viewport.r_min_m, analysis.viewport.r_max_m);
     }
     if (pathDomain) {
-      for (const path of pathDomain.representative_paths) {
-        xCandidates.push(...path.ramp_surface.x_m, ...path.roller_center.x_m);
-        rCandidates.push(...path.ramp_surface.r_m, ...path.roller_center.r_m);
-      }
+      xCandidates.push(...pathDomain.domain_projection.ramp_surface_points.x_m);
+      rCandidates.push(...pathDomain.domain_projection.ramp_surface_points.r_m);
+    }
+    if (comparisonBaseline) {
+      xCandidates.push(...comparisonBaseline.domain_projection.ramp_surface_points.x_m);
+      rCandidates.push(...comparisonBaseline.domain_projection.ramp_surface_points.r_m);
     }
     return {
       x_min_m: Math.min(...xCandidates),
@@ -114,7 +114,7 @@ export function ArchitectureScene({
       r_min_m: Math.max(0, Math.min(...rCandidates)),
       r_max_m: Math.max(...rCandidates),
     };
-  }, [analysis, architecture.roller_radius_m, draftOpenArc, draftFullArc, pathDomain]);
+  }, [analysis, architecture.roller_radius_m, draftOpenArc, draftFullArc, pathDomain, comparisonBaseline]);
 
   const scene = useMemo(() => createScene(view), [view]);
   const travelHandle = {
@@ -293,21 +293,29 @@ export function ArchitectureScene({
         <rect width={WIDTH} height={HEIGHT} rx="12" fill="var(--primary-design-canvas, #0d1319)" />
         <EngineeringGrid scene={scene} />
 
-        {showLocalWorkspace && (
-          <FullWorkspaceView
+        <FullWorkspaceView
+          scene={scene}
+          architecture={architecture}
+          analysis={analysis}
+          stale={stale}
+          showLocalRampWorkspace={showLocalWorkspace || !pathDomain}
+          ghostLocalRampWorkspace={Boolean(pathDomain)}
+        />
+
+        {comparisonBaseline && (
+          <DomainProjectionView
             scene={scene}
-            architecture={architecture}
-            analysis={analysis}
-            stale={stale}
+            pathDomain={comparisonBaseline}
+            stale={false}
+            baseline
           />
         )}
 
-        {pathDomain && pathDomain.representative_paths.length > 0 && (
-          <RepresentativePathsView
+        {pathDomain && (
+          <DomainProjectionView
             scene={scene}
             pathDomain={pathDomain}
-            selectedRepresentativePathIndex={selectedRepresentativePathIndex}
-            showRepresentativeFamily={showRepresentativeFamily}
+            stale={stale}
           />
         )}
 
@@ -405,10 +413,10 @@ export function ArchitectureScene({
         <span><strong>dotted centre arcs</strong> draggable arm length</span>
         <span><strong>dashed roller edges + faint band</strong> finite roller radius; drag outer edge to resize</span>
         <span><strong>gold</strong> any positive-tangent ramp surface</span>
-        <span><strong>green</strong> ramp workspace after ramp packaging</span>
+        <span><strong>green cloud</strong> current complete-path-viable physical ramp states</span>
+        {comparisonBaseline && <span><strong>blue cloud</strong> pinned baseline domain</span>}
+        <span><strong>gold / pale green</strong> optional Phase-2 local geometric superset</span>
         <span><strong>flat dashed</strong> q = -30° / 90° limiting ramps</span>
-        <span><strong>white/cyan</strong> representative exact-valid ramp paths</span>
-        <span><strong>lavender dashed</strong> selected roller-centre path</span>
       </div>
     </div>
   );
@@ -419,61 +427,67 @@ function FullWorkspaceView({
   architecture,
   analysis,
   stale,
+  showLocalRampWorkspace,
+  ghostLocalRampWorkspace = false,
 }: {
   scene: ReturnType<typeof createScene>;
   architecture: FixedPivotArchitecture;
   analysis: ArchitectureAnalysis | null;
   stale: boolean;
+  showLocalRampWorkspace: boolean;
+  ghostLocalRampWorkspace?: boolean;
 }) {
   if (!analysis) return null;
-  const opacity = stale ? 0.22 : 1;
+  const baseOpacity = stale ? 0.20 : 1;
+  const localOpacity = stale ? 0.12 : ghostLocalRampWorkspace ? 0.25 : 1;
   return (
-    <g opacity={opacity}>
-      <PolygonSet scene={scene} polygons={analysis.workspace.roller_center} className={styles.rollerWorkspace} opacity={0.38} />
-      <PolygonSet scene={scene} polygons={analysis.workspace.potential_ramp_surface} className={styles.rampOpportunity} opacity={0.30} />
-      <PolygonSet scene={scene} polygons={analysis.workspace.packaging_feasible_ramp_surface} className={styles.rampFeasible} opacity={0.38} />
+    <g>
+      <g opacity={baseOpacity}>
+        <PolygonSet scene={scene} polygons={analysis.workspace.roller_center} className={styles.rollerWorkspace} opacity={0.38} />
+      </g>
+      {showLocalRampWorkspace && (
+        <g opacity={localOpacity}>
+          <PolygonSet scene={scene} polygons={analysis.workspace.potential_ramp_surface} className={styles.rampOpportunity} opacity={0.30} />
+          <PolygonSet scene={scene} polygons={analysis.workspace.packaging_feasible_ramp_surface} className={styles.rampFeasible} opacity={0.38} />
+        </g>
+      )}
+      <g opacity={baseOpacity}>
       <path d={scene.path(analysis.boundaries.q_min_flat_ramp.x_m, analysis.boundaries.q_min_flat_ramp.r_m)} className={styles.qLimitFlat} />
       <path d={scene.path(analysis.boundaries.q_max_flat_ramp.x_m, analysis.boundaries.q_max_flat_ramp.r_m)} className={styles.qLimitFlat} />
       <path d={scene.path(analysis.boundaries.pivot_travel.x_m, analysis.boundaries.pivot_travel.r_m)} className={styles.travelDimension} />
       <text x={scene.sx(analysis.boundaries.q_min_flat_ramp.x_m[0]) + 8} y={scene.sy(analysis.boundaries.q_min_flat_ramp.r_m[0]) + 18} className={styles.svgLabel}>q = {analysis.limits.q_min_deg.toFixed(0)}° flat limit</text>
       <text x={scene.sx(analysis.boundaries.q_max_flat_ramp.x_m[0]) + 8} y={scene.sy(analysis.boundaries.q_max_flat_ramp.r_m[0]) - 9} className={styles.svgLabel}>q = {analysis.limits.q_max_deg.toFixed(0)}° flat limit</text>
-      <line x1={scene.sx(architecture.pivot_axial_position_m)} y1={scene.sy(0)} x2={scene.sx(architecture.pivot_axial_position_m)} y2={scene.sy(architecture.pivot_radius_m)} className={styles.shaftReference} />
-      <text x={scene.sx(architecture.pivot_axial_position_m) + 8} y={scene.sy(0) - 7} className={styles.svgLabel}>shaft r = 0</text>
+        <line x1={scene.sx(architecture.pivot_axial_position_m)} y1={scene.sy(0)} x2={scene.sx(architecture.pivot_axial_position_m)} y2={scene.sy(architecture.pivot_radius_m)} className={styles.shaftReference} />
+        <text x={scene.sx(architecture.pivot_axial_position_m) + 8} y={scene.sy(0) - 7} className={styles.svgLabel}>shaft r = 0</text>
+      </g>
     </g>
   );
 }
 
-function RepresentativePathsView({
+function DomainProjectionView({
   scene,
   pathDomain,
-  selectedRepresentativePathIndex,
-  showRepresentativeFamily,
+  stale,
+  baseline = false,
 }: {
   scene: ReturnType<typeof createScene>;
   pathDomain: PrimaryPathDomainAnalysis;
-  selectedRepresentativePathIndex: number;
-  showRepresentativeFamily: boolean;
+  stale: boolean;
+  baseline?: boolean;
 }) {
-  const selected = pathDomain.representative_paths[Math.min(selectedRepresentativePathIndex, pathDomain.representative_paths.length - 1)] ?? null;
+  const points = pathDomain.domain_projection.ramp_surface_points;
+  const radiusPx = Math.max(1.8, pathDomain.domain_projection.visual_radius_m * scene.scale);
   return (
-    <g pointerEvents="none">
-      {showRepresentativeFamily && pathDomain.representative_paths.map((path, index) => (
-        <path
-          key={index}
-          d={scene.path(path.ramp_surface.x_m, path.ramp_surface.r_m)}
-          className={index === selectedRepresentativePathIndex ? styles.domainPathSelectedScene : styles.domainPathFaintScene}
+    <g opacity={stale ? 0.24 : 1} pointerEvents="none">
+      {points.x_m.map((x, index) => (
+        <circle
+          key={`${points.station[index]}-${index}`}
+          cx={scene.sx(x)}
+          cy={scene.sy(points.r_m[index])}
+          r={radiusPx}
+          className={baseline ? styles.domainBaselinePoint : styles.domainViablePoint}
         />
       ))}
-      {!showRepresentativeFamily && selected && (
-        <path d={scene.path(selected.ramp_surface.x_m, selected.ramp_surface.r_m)} className={styles.domainPathSelectedScene} />
-      )}
-      {selected && (
-        <>
-          <path d={scene.path(selected.roller_center.x_m, selected.roller_center.r_m)} className={styles.domainRollerSelectedScene} />
-          <circle cx={scene.sx(selected.ramp_surface.x_m[0])} cy={scene.sy(selected.ramp_surface.r_m[0])} r="4" className={styles.domainPathStart} />
-          <circle cx={scene.sx(selected.ramp_surface.x_m[selected.ramp_surface.x_m.length - 1])} cy={scene.sy(selected.ramp_surface.r_m[selected.ramp_surface.r_m.length - 1])} r="4" className={styles.domainPathEnd} />
-        </>
-      )}
     </g>
   );
 }
