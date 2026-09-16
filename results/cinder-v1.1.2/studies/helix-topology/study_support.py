@@ -366,6 +366,89 @@ def _full_variant(ab):
     return next(item for item in ab.VARIANTS if item.key == "full")
 
 
+def _sample_result_with_fresh_system(
+    *,
+    route,
+    ab,
+    assembly,
+    engine,
+    road_load,
+    constants,
+    programme,
+    result,
+    sample_step_s: float,
+    added_secondary_torque: SmoothStep | None = None,
+    primary_boundary=None,
+    secondary_boundary=None,
+):
+    """Sample an integrated result with a fresh contact evaluator.
+
+    The engaged-contact evaluator intentionally caches continuation data for
+    nonlinear stick solves.  Reusing the *integration* system for a reporting
+    pass starts the chronological resampling at t=0 with continuation data
+    left over from the end of the trajectory.  In multi-root regions that can
+    select a different algebraic closure even though the stored state and mode
+    are unchanged.
+
+    Build an equivalent fresh system, then let ``sample_variant`` walk the
+    retained dense trajectory forward in time.  The reporting continuation is
+    therefore reconstructed in the same temporal direction as integration.
+    """
+
+    reporting_system, _ = build_slotted_system(
+        route=route,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
+        added_secondary_torque=added_secondary_torque,
+        primary_boundary=primary_boundary,
+        secondary_boundary=secondary_boundary,
+    )
+    samples, contributions = ab.sample_variant(
+        variant=_full_variant(ab),
+        system=reporting_system,
+        result=result,
+        step_s=sample_step_s,
+    )
+    augment_helix_contact_rows(samples, reporting_system.cvt.model)
+    return reporting_system, samples, contributions
+
+
+def _assert_restart_reporting_consistency(
+    *,
+    restart: "Restart",
+    samples: list[Any],
+    margin_tolerance_Nm: float = 1.0e-5,
+) -> None:
+    """Guard unchanged-boundary restarts against algebraic branch drift.
+
+    The caller may use this only when the boundary at scenario t=0 is exactly
+    the same as at the conditioning state.  A mismatch means that a restart or
+    reporting solve selected a different contact-closure branch, in which case
+    the candidate metrics are not trustworthy.
+    """
+
+    expected = restart.baseline_margin_Nm
+    if expected is None:
+        return
+    first = next(
+        (sample for sample in samples if abs(float(sample.time)) <= 1.0e-12),
+        None,
+    )
+    if first is None:
+        raise RuntimeError("Restart reporting produced no t=0 sample.")
+    actual = finite_float(first.row.get("helix_reacted_torque_margin_Nm"))
+    if actual is None or abs(actual - expected) > margin_tolerance_Nm:
+        raise RuntimeError(
+            "Restart closure mismatch at t=0: expected baseline helix margin "
+            f"{expected:.9g} N m, reporting recovered {actual!r} N m. "
+            "This indicates algebraic contact-closure branch drift; candidate "
+            "metrics must not be used."
+        )
+
+
 def augment_helix_contact_rows(samples: list[Any], model) -> list[dict[str, Any]]:
     """Add the exact production reacted-torque decomposition to sample rows."""
 
@@ -496,16 +579,20 @@ def run_flat_slotted_reference(
     if not result.completed:
         raise RuntimeError("Slotted reference launch failed: " + result.termination_reason)
 
-    samples, contributions = ab.sample_variant(
-        variant=_full_variant(ab),
-        system=system,
+    reporting_system, samples, contributions = _sample_result_with_fresh_system(
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=resolved.constants,
+        programme=programme,
         result=result,
-        step_s=sample_step_s,
+        sample_step_s=sample_step_s,
     )
-    augment_helix_contact_rows(samples, system.cvt.model)
     return (
         SlottedRun(
-            system=system,
+            system=reporting_system,
             result=result,
             samples=samples,
             contribution_rows=contributions,
@@ -527,6 +614,7 @@ class Restart:
     time_s: float
     full_state: Any
     mode: object
+    baseline_margin_Nm: float | None = None
 
 
 def select_restart(run: SlottedRun, target_percent: float, *, maximum_error_percent=1.0):
@@ -555,6 +643,9 @@ def select_restart(run: SlottedRun, target_percent: float, *, maximum_error_perc
         time_s=float(sample.time),
         full_state=np.array(sample.full_state, dtype=float, copy=True),
         mode=sample.composed_mode,
+        baseline_margin_Nm=finite_float(
+            sample.row.get("helix_reacted_torque_margin_Nm")
+        ),
     )
 
 
@@ -592,11 +683,9 @@ def run_secondary_torque_probe(
         programme=programme,
         added_secondary_torque=signal,
     )
-    initial_mode = (
-        system.classify_initial_mode(restart.full_state)
-        if reclassify_initial_mode
-        else restart.mode
-    )
+    # Added secondary torque is exactly zero at t=0, so preserve the
+    # naturally reached hybrid mode from conditioning.
+    initial_mode = restart.mode
     result = integrate_system(
         system=system,
         initial_state=restart.full_state,
@@ -609,16 +698,22 @@ def run_secondary_torque_probe(
     if not result.completed:
         return None, result, topology_status
 
-    samples, contributions = ab.sample_variant(
-        variant=_full_variant(ab),
-        system=system,
+    reporting_system, samples, contributions = _sample_result_with_fresh_system(
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
         result=result,
-        step_s=sample_step_s,
+        sample_step_s=sample_step_s,
+        added_secondary_torque=signal,
     )
-    augment_helix_contact_rows(samples, system.cvt.model)
+    _assert_restart_reporting_consistency(restart=restart, samples=samples)
     return (
         SlottedRun(
-            system=system,
+            system=reporting_system,
             result=result,
             samples=samples,
             contribution_rows=contributions,
@@ -719,6 +814,9 @@ def select_dynamic_restart(
         time_s=float(sample.time),
         full_state=np.array(sample.full_state, dtype=float, copy=True),
         mode=sample.composed_mode,
+        baseline_margin_Nm=finite_float(
+            sample.row.get("helix_reacted_torque_margin_Nm")
+        ),
     )
     return restart, float(score)
 
@@ -777,16 +875,24 @@ def run_custom_restart_case(
     if not result.completed:
         return None, result, topology_status
 
-    samples, contributions = ab.sample_variant(
-        variant=_full_variant(ab),
-        system=system,
+    reporting_system, samples, contributions = _sample_result_with_fresh_system(
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
         result=result,
-        step_s=sample_step_s,
+        sample_step_s=sample_step_s,
+        primary_boundary=primary_boundary,
+        secondary_boundary=secondary_boundary,
     )
-    augment_helix_contact_rows(samples, system.cvt.model)
+    if not reclassify_initial_mode:
+        _assert_restart_reporting_consistency(restart=restart, samples=samples)
     return (
         SlottedRun(
-            system=system,
+            system=reporting_system,
             result=result,
             samples=samples,
             contribution_rows=contributions,
@@ -796,6 +902,81 @@ def run_custom_restart_case(
         topology_status,
     )
 
+
+
+def run_slotted_full_launch_programme(
+    *,
+    route,
+    ab,
+    assembly,
+    engine,
+    road_load,
+    constants,
+    programme,
+    duration_s: float,
+    sample_step_s: float,
+    rtol: float,
+    atol: float,
+    max_step_s: float,
+    maximum_transitions: int = 500,
+):
+    """Run one full natural launch under an arbitrary slotted route programme.
+
+    Unlike the short restart screens, this preserves the complete causal history
+    leading into the disturbance.  It is used to replay legacy hill studies
+    whose pre-hill vehicle/CVT state may be essential to the helix reaction
+    reversal.  Reporting again uses a fresh evaluator so nonlinear-contact
+    continuation is rebuilt chronologically.
+    """
+
+    system, topology_status = build_slotted_system(
+        route=route,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
+    )
+    initial_cvt = route.launch_cvt_state(primary_rpm=1800.0)
+    initial_full = system.initial_state(
+        cvt_state=initial_cvt,
+        host_state=system.host.initial_state(secondary_shaft_angle=0.0),
+    )
+    result = integrate_system(
+        system=system,
+        initial_state=initial_full,
+        initial_mode=system.classify_initial_mode(initial_full),
+        duration_s=duration_s,
+        rtol=rtol,
+        atol=atol,
+        max_step_s=max_step_s,
+        maximum_transitions=maximum_transitions,
+    )
+    if not result.completed:
+        return None, result, topology_status
+
+    reporting_system, samples, contributions = _sample_result_with_fresh_system(
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
+        result=result,
+        sample_step_s=sample_step_s,
+    )
+    return (
+        SlottedRun(
+            system=reporting_system,
+            result=result,
+            samples=samples,
+            contribution_rows=contributions,
+            topology_status=topology_status,
+        ),
+        result,
+        topology_status,
+    )
 
 def finite_float(value: Any) -> float | None:
     try:

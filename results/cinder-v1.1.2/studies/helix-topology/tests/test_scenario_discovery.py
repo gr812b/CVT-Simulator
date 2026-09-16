@@ -10,6 +10,7 @@ if str(STUDY_ROOT) not in sys.path:
 
 from experiments.run_scenario_discovery import (  # noqa: E402
     build_cases,
+    legacy_hill_specs,
     minimum_margin_decomposition,
 )
 
@@ -123,3 +124,21 @@ def test_custom_torque_boundaries_have_expected_smoothstep_semantics(monkeypatch
     ).evaluate(ctx)
     assert prescribed.external_torque == 50.0
     assert prescribed.equivalent_inertia == 3.0
+
+
+def test_full_run_adds_exact_legacy_hill_and_harder_natural_replay():
+    specs = legacy_hill_specs(_cfg(), quick=False)
+    assert [item["case_id"] for item in specs] == [
+        "E4_L01_legacy_ablation_hill",
+        "E4_L02_natural_45deg_hill",
+    ]
+    assert specs[0]["kind"] == "tagged_route_default"
+    assert specs[0]["analysis_start_s"] == 10.0
+    assert specs[0]["analysis_end_s"] == 22.0
+    assert specs[1]["kind"] == "natural_hard_hill"
+    assert specs[1]["flat_runup_s"] == 10.0
+    assert specs[1]["target_grade_deg"] == 45.0
+
+
+def test_quick_mode_skips_long_legacy_hill_replays():
+    assert legacy_hill_specs(_cfg(), quick=True) == []

@@ -187,10 +187,10 @@ def plot_atlas(rows: list[dict[str, Any]], *, output_dir: Path, title: str) -> N
 
     fig, ax = plt.subplots(figsize=(10.5, 5.5))
     for key, label in (
-        ("loop.radial_shift_acceleration_N", r"radial $\\ddot{s}$"),
-        ("loop.radial_geometry_curvature_N", r"radial $\\dot{s}^2$"),
-        ("loop.tangential_belt_acceleration_N", r"tangential $\\dot{v}_b$"),
-        ("loop.tangential_shifting_radius_N", r"tangential $\\dot{s}v_b$"),
+        ("loop.radial_shift_acceleration_N", r"radial $\ddot{s}$"),
+        ("loop.radial_geometry_curvature_N", r"radial $\dot{s}^2$"),
+        ("loop.tangential_belt_acceleration_N", r"tangential $\dot{v}_b$"),
+        ("loop.tangential_shifting_radius_N", r"tangential $\dot{s}v_b$"),
         ("loop.normal_contact_N", "normal/contact"),
     ):
         ax.plot(t, series(key), label=label)
@@ -206,10 +206,10 @@ def plot_atlas(rows: list[dict[str, Any]], *, output_dir: Path, title: str) -> N
 
     fig, ax = plt.subplots(figsize=(10.5, 5.5))
     for key, label in (
-        ("loop.share.radial_shift_acceleration", r"radial $\\ddot{s}$"),
-        ("loop.share.radial_geometry_curvature", r"radial $\\dot{s}^2$"),
-        ("loop.share.tangential_belt_acceleration", r"tangential $\\dot{v}_b$"),
-        ("loop.share.tangential_shifting_radius", r"tangential $\\dot{s}v_b$"),
+        ("loop.share.radial_shift_acceleration", r"radial $\ddot{s}$"),
+        ("loop.share.radial_geometry_curvature", r"radial $\dot{s}^2$"),
+        ("loop.share.tangential_belt_acceleration", r"tangential $\dot{v}_b$"),
+        ("loop.share.tangential_shifting_radius", r"tangential $\dot{s}v_b$"),
         ("loop.share.normal_contact", "normal/contact"),
     ):
         ax.plot(t, series(key), label=label)
@@ -225,9 +225,9 @@ def plot_atlas(rows: list[dict[str, Any]], *, output_dir: Path, title: str) -> N
 
     fig, ax = plt.subplots(figsize=(10.5, 5.5))
     for key, label in (
-        ("transport.belt_inertia_N", r"$m_b\\dot{v}_b$"),
-        ("transport.primary_reaction_N", r"$\\tau_p/r_p$"),
-        ("transport.secondary_reaction_N", r"$\\tau_s/r_s$"),
+        ("transport.belt_inertia_N", r"$m_b\dot{v}_b$"),
+        ("transport.primary_reaction_N", r"$\tau_p/r_p$"),
+        ("transport.secondary_reaction_N", r"$\tau_s/r_s$"),
     ):
         ax.plot(t, series(key), label=label)
     ax.axhline(0.0, linewidth=0.8)
@@ -241,10 +241,10 @@ def plot_atlas(rows: list[dict[str, Any]], *, output_dir: Path, title: str) -> N
     plt.close(fig)
 
     drivers = (
-        ("state.shift_acceleration_m_per_s2", "loop.radial_shift_acceleration_N", r"$\\ddot{s}$ [m/s²]", r"$R_{\\ddot{s}}$ [N]"),
-        ("state.shift_speed_m_per_s", "loop.radial_geometry_curvature_N", r"$\\dot{s}$ [m/s]", r"$R_{\\dot{s}^2}$ [N]"),
-        ("state.belt_acceleration_m_per_s2", "loop.tangential_belt_acceleration_N", r"$\\dot{v}_b$ [m/s²]", r"$R_{\\dot{v}_b}$ [N]"),
-        ("state.shift_speed_m_per_s", "loop.tangential_shifting_radius_N", r"$\\dot{s}$ [m/s]", r"$R_{\\dot{s}v_b}$ [N]"),
+        ("state.shift_acceleration_m_per_s2", "loop.radial_shift_acceleration_N", r"$\ddot{s}$ [m/s²]", r"$R_{\ddot{s}}$ [N]"),
+        ("state.shift_speed_m_per_s", "loop.radial_geometry_curvature_N", r"$\dot{s}$ [m/s]", r"$R_{\dot{s}^2}$ [N]"),
+        ("state.belt_acceleration_m_per_s2", "loop.tangential_belt_acceleration_N", r"$\dot{v}_b$ [m/s²]", r"$R_{\dot{v}_b}$ [N]"),
+        ("state.shift_speed_m_per_s", "loop.tangential_shifting_radius_N", r"$\dot{s}$ [m/s]", r"$R_{\dot{s}v_b}$ [N]"),
     )
     for i, (xkey, ykey, xlabel, ylabel) in enumerate(drivers, start=1):
         fig, ax = plt.subplots(figsize=(6.5, 5.5))

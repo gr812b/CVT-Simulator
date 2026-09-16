@@ -96,7 +96,7 @@
       "onset_s": 0.05,
       "hold_s": 0.5,
       "near_boundary_margin_Nm": 1.0,
-      "bench_secondary_inertia_kg_m2": 0.002011338398044471,
+      "bench_secondary_inertia_kg_m2": 0.3,
       "hill_entry": {
         "restart_keys": [
           "s50",
@@ -144,9 +144,9 @@
           -25.0
         ],
         "secondary_drive_torques_Nm": [
-          120.0,
-          300.0,
-          600.0
+          20.0,
+          60.0,
+          120.0
         ],
         "question": "With the vehicle removed, can a driven secondary shaft cleanly force reverse power flow and a helix reaction reversal?"
       },
@@ -159,9 +159,9 @@
         ],
         "ramp_s": 0.1,
         "secondary_load_torques_Nm": [
-          -120.0,
-          -300.0,
-          -600.0
+          -20.0,
+          -60.0,
+          -120.0
         ],
         "question": "With the vehicle removed, how does a direct resisting secondary load approach the selected-flank boundary from different ratios and a high-dynamic natural state?"
       },
@@ -177,7 +177,39 @@
         "maximum_step_cap_s": 0.003,
         "minimum_max_step_s": 0.00025
       },
-      "question": "Across road-load, reverse-power-flow, engine-braking, bench-drive, and high-dynamic initial states, which mechanisms produce clean and substantial opposite-flank demand?"
+      "question": "Across road-load, reverse-power-flow, engine-braking, bench-drive, and high-dynamic initial states, which mechanisms produce clean and substantial opposite-flank demand?",
+      "legacy_hill_replays": {
+        "enabled": true,
+        "quick_mode": "skipped",
+        "cases": [
+          {
+            "case_id": "E4_L01_legacy_ablation_hill",
+            "kind": "tagged_route_default",
+            "description": "Exact physical grade programme used by run_dynamic_actuator_ablation.py --scenario hill: 10 s flat, 2 s rise to 30 deg, 10 s at 30 deg, then the tagged default continuation.",
+            "analysis_start_s": 10.0,
+            "analysis_end_s": 22.0
+          },
+          {
+            "case_id": "E4_L02_natural_45deg_hill",
+            "kind": "natural_hard_hill",
+            "description": "Full natural launch followed by a deliberately harder hill from the evolved vehicle/CVT state.",
+            "flat_runup_s": 10.0,
+            "ramp_s": 0.25,
+            "hold_s": 6.0,
+            "target_grade_deg": 45.0,
+            "analysis_start_s": 10.0
+          }
+        ],
+        "solver": {
+          "method": "LSODA",
+          "relative_tolerance": 0.0003,
+          "absolute_tolerance": 3e-07,
+          "sample_step_s": 0.001,
+          "max_step_s": 0.003,
+          "maximum_transitions": 500
+        },
+        "question": "Does a naturally evolved full-launch hill trajectory reproduce the unilateral helix lift-off condition seen in earlier hill studies, and if so where and why?"
+      }
     },
     "candidate_reruns": {
       "stage": "E5",

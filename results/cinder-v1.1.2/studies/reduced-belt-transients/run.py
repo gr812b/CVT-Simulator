@@ -18,7 +18,9 @@ import sys
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
-DEFAULT_CASE = RELEASE_ROOT / "defaults" / "baja_reference_simulation_case.json"
+REPO_ROOT = STUDY_ROOT.parents[3]
+RELEASE_DEFAULT_CASE = RELEASE_ROOT / "defaults" / "baja_reference_simulation_case.json"
+REPO_EXAMPLE_CASE = REPO_ROOT / "cvtModel" / "examples" / "baja_baseline_simulation_case.json"
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
@@ -138,9 +140,46 @@ def _synthesize(case_summaries: dict[str, dict]) -> None:
     plt.close(fig)
 
 
+def _resolve_base_case(requested: Path | None) -> Path:
+    """Resolve the canonical executable Baja baseline without assuming one tree layout.
+
+    Results releases normally carry their own frozen baseline under ``defaults/``.
+    Development/result worktrees also carry the same executable baseline under
+    ``cvtModel/examples``.  Prefer the release-local copy when available; otherwise
+    use the repository example so the study still runs in lean result checkouts.
+    An explicit ``--base-case`` always wins.
+    """
+
+    if requested is not None:
+        candidate = requested.expanduser().resolve()
+        if not candidate.is_file():
+            raise FileNotFoundError(f"Explicit --base-case does not exist: {candidate}")
+        return candidate
+
+    for candidate in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE):
+        if candidate.is_file():
+            return candidate.resolve()
+
+    searched = "\n  - ".join(str(path) for path in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE))
+    raise FileNotFoundError(
+        "Could not locate the executable Baja baseline. Searched:\n  - "
+        + searched
+        + "\nPass --base-case PATH to an equivalent cinder_composed_simulation_case JSON."
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-case", type=Path, default=DEFAULT_CASE)
+    parser.add_argument(
+        "--base-case",
+        type=Path,
+        default=None,
+        help=(
+            "Optional executable baseline JSON. By default the study prefers the "
+            "release-local defaults case and falls back to "
+            "cvtModel/examples/baja_baseline_simulation_case.json."
+        ),
+    )
     parser.add_argument("--max-samples", type=int, default=6000)
     parser.add_argument("--only", choices=[p["name"] for p in PROTOCOLS], action="append")
     parser.add_argument("--tests-only", action="store_true", help="Run pure final-equation tests and stop before importing CINDER.")
@@ -153,7 +192,8 @@ def main() -> int:
         return 0
 
     subprocess.run([sys.executable, str(VERIFY)], check=True)
-    base_path = args.base_case.resolve()
+    base_path = _resolve_base_case(args.base_case)
+    print(f"Base simulation case: {base_path}")
     base = json.loads(base_path.read_text(encoding="utf-8"))
     if ARTIFACTS.exists():
         shutil.rmtree(ARTIFACTS)

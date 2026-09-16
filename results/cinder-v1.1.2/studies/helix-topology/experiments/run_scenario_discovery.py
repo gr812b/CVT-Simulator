@@ -43,6 +43,7 @@ from study_support import (  # noqa: E402
     load_json,
     run_custom_restart_case,
     run_flat_slotted_reference,
+    run_slotted_full_launch_programme,
     select_dynamic_restart,
     select_restart,
     transient_grade_programme,
@@ -104,6 +105,80 @@ def _rows_after(rows: list[dict[str, Any]], onset_s: float) -> list[dict[str, An
         if t is not None and t >= onset_s:
             out.append(row)
     return out
+
+
+def _rows_between(
+    rows: list[dict[str, Any]],
+    start_s: float,
+    end_s: float | None = None,
+) -> list[dict[str, Any]]:
+    out = []
+    for row in rows:
+        t = _finite(row, "time_s")
+        if t is None or t < start_s:
+            continue
+        if end_s is not None and t > end_s:
+            continue
+        out.append(row)
+    return out
+
+
+def legacy_hill_specs(cfg: dict[str, Any], *, quick: bool) -> list[dict[str, Any]]:
+    replay = cfg.get("legacy_hill_replays", {})
+    if quick or not replay.get("enabled", False):
+        return []
+    return [dict(item) for item in replay.get("cases", [])]
+
+
+def build_legacy_hill_programme(route, spec: dict[str, Any]):
+    kind = str(spec["kind"])
+    if kind == "tagged_route_default":
+        # This is the exact physical grade programme selected by
+        # run_dynamic_actuator_ablation.py --scenario hill in the pinned
+        # release helper.
+        return route.GradeProgramme.default()
+    if kind == "natural_hard_hill":
+        flat = float(spec["flat_runup_s"])
+        ramp = float(spec["ramp_s"])
+        hold = float(spec["hold_s"])
+        grade = float(spec["target_grade_deg"])
+        return route.GradeProgramme(
+            (
+                route.GradePhase(
+                    name="natural flat run-up",
+                    start_s=0.0,
+                    end_s=flat,
+                    start_degrees=0.0,
+                    end_degrees=0.0,
+                    transition=False,
+                ),
+                route.GradePhase(
+                    name="hard hill entry",
+                    start_s=flat,
+                    end_s=flat + ramp,
+                    start_degrees=0.0,
+                    end_degrees=grade,
+                    transition=True,
+                ),
+                route.GradePhase(
+                    name="hard hill hold",
+                    start_s=flat + ramp,
+                    end_s=flat + ramp + hold,
+                    start_degrees=grade,
+                    end_degrees=grade,
+                    transition=False,
+                ),
+            )
+        )
+    raise ValueError(f"Unsupported legacy hill replay kind: {kind}")
+
+
+def programme_phase_name(programme, time_s: float) -> str:
+    phases = tuple(programme.phases)
+    for index, phase in enumerate(phases):
+        if phase.contains(float(time_s), include_end=index == len(phases) - 1):
+            return str(phase.name)
+    return str(phases[-1].name) if phases else ""
 
 
 def response_class(result, onset_s: float) -> str:
@@ -168,6 +243,7 @@ def minimum_margin_decomposition(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "minimum_margin_ratio_secondary_over_primary": _finite(
             row, "ratio_secondary_over_primary"
         ),
+        "minimum_margin_route_phase": row.get("route_phase"),
         "minimum_margin_primary_external_torque_Nm": _finite(
             row, "primary_external_torque_Nm"
         ),
@@ -237,7 +313,7 @@ def build_cases(cfg: dict[str, Any], *, quick: bool) -> list[DiscoveryCase]:
             onset_s=0.0,
             ramp_s=0.10,
             primary_target_torque_Nm=-20.0,
-            secondary_target_torque_Nm=300.0,
+            secondary_target_torque_Nm=60.0,
             bench_secondary_inertia_kg_m2=float(cfg["bench_secondary_inertia_kg_m2"]),
         )
         add(
@@ -245,7 +321,7 @@ def build_cases(cfg: dict[str, Any], *, quick: bool) -> list[DiscoveryCase]:
             restart_key="s50",
             onset_s=0.0,
             ramp_s=0.10,
-            secondary_target_torque_Nm=-300.0,
+            secondary_target_torque_Nm=-60.0,
             bench_secondary_inertia_kg_m2=float(cfg["bench_secondary_inertia_kg_m2"]),
         )
         return cases
@@ -358,6 +434,182 @@ def build_boundaries(
         )
 
     return primary, secondary
+
+
+def run_legacy_hill_replays(
+    *,
+    cfg: dict[str, Any],
+    quick: bool,
+    route,
+    ab,
+    assembly,
+    engine,
+    road_load,
+    constants,
+    near_margin: float,
+):
+    replay_cfg = cfg.get("legacy_hill_replays", {})
+    solver = replay_cfg.get("solver", {})
+    summaries: list[dict[str, Any]] = []
+    traces: list[dict[str, Any]] = []
+    transitions: list[dict[str, Any]] = []
+
+    for spec in legacy_hill_specs(cfg, quick=quick):
+        case_id = str(spec["case_id"])
+        family = "legacy_hill_replay"
+        programme = build_legacy_hill_programme(route, spec)
+        duration_s = float(programme.end_time_s)
+        analysis_start = float(spec.get("analysis_start_s", 0.0))
+        analysis_end_raw = spec.get("analysis_end_s")
+        analysis_end = (
+            float(analysis_end_raw) if analysis_end_raw is not None else duration_s
+        )
+
+        try:
+            run, raw_result, _status = run_slotted_full_launch_programme(
+                route=route,
+                ab=ab,
+                assembly=assembly,
+                engine=engine,
+                road_load=road_load,
+                constants=constants,
+                programme=programme,
+                duration_s=duration_s,
+                sample_step_s=float(solver.get("sample_step_s", 0.001)),
+                rtol=float(solver.get("relative_tolerance", 3.0e-4)),
+                atol=float(solver.get("absolute_tolerance", 3.0e-7)),
+                max_step_s=float(solver.get("max_step_s", 0.003)),
+                maximum_transitions=int(solver.get("maximum_transitions", 500)),
+            )
+        except Exception as exc:
+            summaries.append(
+                {
+                    "case_id": case_id,
+                    "family": family,
+                    "status": "exception",
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "replay_kind": spec.get("kind"),
+                    "description": spec.get("description"),
+                }
+            )
+            continue
+
+        if run is None:
+            summaries.append(
+                {
+                    "case_id": case_id,
+                    "family": family,
+                    "status": "integration_failed",
+                    "error": raw_result.termination_reason,
+                    "replay_kind": spec.get("kind"),
+                    "description": spec.get("description"),
+                }
+            )
+            continue
+
+        rows = [sample.row for sample in run.samples]
+        for row in rows:
+            t = float(row["time_s"])
+            row.update(
+                {
+                    "scenario_case_id": case_id,
+                    "scenario_family": family,
+                    "scenario_restart_key": "full_natural_launch",
+                    "scenario_grade_target_deg": spec.get("target_grade_deg", 30.0),
+                    "scenario_primary_target_torque_Nm": None,
+                    "scenario_secondary_target_torque_Nm": None,
+                    "scenario_onset_s": analysis_start,
+                    "scenario_ramp_s": spec.get("ramp_s", 2.0),
+                    "scenario_hold_s": spec.get("hold_s"),
+                    "grade_deg": math.degrees(programme.grade_radians(t)),
+                    "route_phase": programme_phase_name(programme, t),
+                }
+            )
+        traces.extend(rows)
+        for record in run.result.transitions:
+            transitions.append(
+                {
+                    "case_id": case_id,
+                    "family": family,
+                    "time_s": float(record.time),
+                    "route_phase": programme_phase_name(programme, float(record.time)),
+                    "transition_type": type(record.transition).__name__,
+                    "transition": str(record.transition),
+                    "has_successor_state": bool(
+                        getattr(record.transition, "has_successor_state", False)
+                    ),
+                }
+            )
+
+        route_metrics = contact_topology_metrics(
+            rows,
+            case_start_s=0.0,
+            case_end_s=duration_s,
+        )
+        analysis_rows = _rows_between(rows, analysis_start, analysis_end)
+        analysis_metrics = contact_topology_metrics(
+            analysis_rows,
+            case_start_s=analysis_start,
+            case_end_s=analysis_end,
+        )
+        decomposition = minimum_margin_decomposition(analysis_rows)
+        summary = {
+            "case_id": case_id,
+            "family": family,
+            "status": "completed",
+            "classification": classify(analysis_metrics, near_margin_Nm=near_margin),
+            "route_classification": classify(route_metrics, near_margin_Nm=near_margin),
+            "response_class": response_class(run.result, analysis_start),
+            "replay_kind": spec.get("kind"),
+            "description": spec.get("description"),
+            "restart_key": "full_natural_launch",
+            "restart_actual_shift_percent": None,
+            "restart_conditioning_time_s": None,
+            "onset_s": analysis_start,
+            "analysis_end_s": analysis_end,
+            "duration_s": duration_s,
+            "grade_target_deg": spec.get("target_grade_deg", 30.0),
+            "primary_target_torque_Nm": None,
+            "secondary_target_torque_Nm": None,
+            "bench_secondary_inertia_kg_m2": None,
+            "transition_count_after_onset": sum(
+                analysis_start <= float(record.time) <= analysis_end
+                for record in run.result.transitions
+            ),
+            "reset_count_after_onset": sum(
+                analysis_start <= float(record.time) <= analysis_end
+                and getattr(record.transition, "has_successor_state", False)
+                for record in run.result.transitions
+            ),
+            "shift_excursion_mm_after_onset": _range(analysis_rows, "shift_mm"),
+            "minimum_secondary_normal_N_after_onset": _min(
+                analysis_rows, "normal_secondary_N"
+            ),
+            "max_abs_lambda_primary_after_onset": _max_abs(
+                analysis_rows, "lambda_primary"
+            ),
+            "max_abs_lambda_secondary_after_onset": _max_abs(
+                analysis_rows, "lambda_secondary"
+            ),
+            "max_abs_shift_speed_m_s_after_onset": _max_abs(
+                analysis_rows, "shift_speed_m_s"
+            ),
+            "max_abs_helix_force_reconstruction_residual_N": _max_abs(
+                analysis_rows, "helix_force_reconstruction_residual_N"
+            ),
+            **{f"route_{key}": value for key, value in route_metrics.items()},
+            **{f"post_{key}": value for key, value in analysis_metrics.items()},
+            **decomposition,
+        }
+        summaries.append(summary)
+        print(
+            f"{case_id} {family}: {summary['classification']} | "
+            f"hill-window min M_h={summary.get('post_minimum_margin_Nm')!r} N m | "
+            f"whole-route min M_h={summary.get('route_minimum_margin_Nm')!r} N m | "
+            f"driver={summary.get('minimum_margin_dominant_negative_term')}"
+        )
+
+    return summaries, traces, transitions
 
 
 def shortlist(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -627,28 +879,94 @@ def main() -> int:
             f"driver={summary.get('minimum_margin_dominant_negative_term')}"
         )
 
+    legacy_summaries, legacy_traces, legacy_transitions = run_legacy_hill_replays(
+        cfg=cfg,
+        quick=bool(args.quick),
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=resolved.constants,
+        near_margin=near_margin,
+    )
+
     out = ARTIFACTS / "scenario-discovery"
     out.mkdir(parents=True, exist_ok=True)
     write_rows(out / "restart_states.csv", restart_rows)
     write_rows(out / "scenario_summary.csv", summaries)
     write_rows(out / "scenario_trace.csv", traces)
     write_rows(out / "scenario_transitions.csv", transition_rows)
-    selected = shortlist(summaries)
+    write_rows(out / "legacy_hill_summary.csv", legacy_summaries)
+    write_rows(out / "legacy_hill_trace.csv", legacy_traces)
+    write_rows(out / "legacy_hill_transitions.csv", legacy_transitions)
+    for legacy in legacy_summaries:
+        if legacy.get("status") != "completed":
+            continue
+        case_id = str(legacy["case_id"])
+        case_rows = [
+            row for row in legacy_traces
+            if str(row.get("scenario_case_id")) == case_id
+        ]
+        if not case_rows:
+            continue
+        times = [float(row["time_s"]) for row in case_rows]
+        margins = [float(row["helix_reacted_torque_margin_Nm"]) for row in case_rows]
+        grades = [float(row["grade_deg"]) for row in case_rows]
+        fig, ax = plt.subplots(figsize=(11.0, 5.5))
+        ax.plot(times, margins, label="selected-flank margin M_h")
+        ax.axhline(0.0, linewidth=1.0)
+        ax.axvspan(
+            float(legacy["onset_s"]),
+            float(legacy["analysis_end_s"]),
+            alpha=0.08,
+            label="hill analysis window",
+        )
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel("M_h [N m]")
+        ax.grid(True, alpha=0.25)
+        ax2 = ax.twinx()
+        ax2.plot(times, grades, linestyle="--", label="grade")
+        ax2.set_ylabel("Grade [deg]")
+        ax.set_title(case_id.replace("_", " "))
+        handles1, labels1 = ax.get_legend_handles_labels()
+        handles2, labels2 = ax2.get_legend_handles_labels()
+        ax.legend(handles1 + handles2, labels1 + labels2, loc="best", fontsize=8)
+        fig.tight_layout()
+        fig.savefig(out / f"{case_id}_margin_and_grade.png", dpi=180)
+        plt.close(fig)
+
+    selected = shortlist(summaries + legacy_summaries)
     write_rows(out / "candidate_shortlist.csv", selected)
 
     completed = [row for row in summaries if row.get("status") == "completed"]
     aggregate = {
         "stage": "E4",
         "quick": bool(args.quick),
-        "case_count": len(cases),
-        "completed_cases": len(completed),
-        "failed_cases": len(summaries) - len(completed),
+        "case_count": len(cases) + len(legacy_hill_specs(cfg, quick=bool(args.quick))),
+        "short_restart_case_count": len(cases),
+        "legacy_hill_case_count": len(legacy_hill_specs(cfg, quick=bool(args.quick))),
+        "completed_cases": len(completed) + sum(
+            row.get("status") == "completed" for row in legacy_summaries
+        ),
+        "failed_cases": (len(summaries) - len(completed)) + sum(
+            row.get("status") != "completed" for row in legacy_summaries
+        ),
         "families": {},
         "shortlist_case_ids": [row["case_id"] for row in selected],
         "dynamic_restart": {
             "actual_shift_percent": dynamic_restart.actual_shift_percent,
             "conditioning_time_s": dynamic_restart.time_s,
             "dynamic_term_score_Nm": dynamic_score,
+        },
+        "legacy_hill_replays": {
+            "completed": sum(row.get("status") == "completed" for row in legacy_summaries),
+            "opposite_flank_required_in_hill_window": sum(
+                row.get("classification") == "opposite_flank_required"
+                for row in legacy_summaries
+                if row.get("status") == "completed"
+            ),
+            "case_ids": [row.get("case_id") for row in legacy_summaries],
         },
         "note": (
             "Broad discovery under the slotted topology only. Negative M_h is a "
