@@ -1,12 +1,12 @@
 """Run the complete exploratory helix reaction-discovery programme.
 
-Default usage performs E1-E4, writes provenance, and creates one ZIP that can
+Default usage performs E1-E5, writes provenance, and creates one ZIP that can
 be sent back for interpretation:
 
     python results/cinder-v1.1.2/studies/helix-topology/run.py
 
 Use ``--quick`` only as a smoke test.  It keeps E1/E2 unchanged and reduces
-E3/E4 to representative cases.
+E3/E5 to representative cases.
 """
 from __future__ import annotations
 
@@ -82,7 +82,7 @@ def make_bundle(*, quick: bool, through: str) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    stages = ("reaction-map", "forward-control", "stress-screen", "scenario-discovery")
+    stages = ("reaction-map", "forward-control", "stress-screen", "scenario-discovery", "liftoff-envelope")
     parser.add_argument(
         "--through",
         choices=(*stages, "all"),
@@ -98,7 +98,7 @@ def main() -> int:
     parser.add_argument(
         "--quick",
         action="store_true",
-        help="Run small E3/E4 smoke matrices. Do not use quick mode for interpretation.",
+        help="Run small E3-E5 smoke matrices. Do not use quick mode for interpretation.",
     )
     parser.add_argument(
         "--no-bundle",
@@ -122,6 +122,10 @@ def main() -> int:
         (
             "scenario-discovery",
             lambda: run_script("run_scenario_discovery.py", *quick_arg),
+        ),
+        (
+            "liftoff-envelope",
+            lambda: run_script("run_liftoff_envelope.py", *quick_arg),
         ),
     ]
     order = {name: i for i, (name, _) in enumerate(actions)}

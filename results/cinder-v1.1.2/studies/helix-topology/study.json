@@ -211,11 +211,100 @@
         "question": "Does a naturally evolved full-launch hill trajectory reproduce the unilateral helix lift-off condition seen in earlier hill studies, and if so where and why?"
       }
     },
-    "candidate_reruns": {
+    "liftoff_envelope_refinement": {
       "stage": "E5",
-      "role": "planned_after_discovery",
-      "status": "not_implemented_until_artifacts_are_interpreted",
-      "question": "Which representative discoveries should be rerun with tighter tolerances and denser sampling before topology comparison?"
+      "role": "targeted_liftoff_threshold_and_dynamic_novelty_refinement",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "onset_s": 0.05,
+      "hold_s": 0.5,
+      "trace_retention_margin_Nm": 5.0,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0005,
+        "maximum_step_cap_s": 0.0015,
+        "minimum_max_step_s": 0.000125
+      },
+      "vehicle_envelope": {
+        "restart_shift_percents": [
+          30.0,
+          50.0,
+          70.0
+        ],
+        "grade_targets_deg": [
+          0.0,
+          -15.0,
+          -30.0,
+          -45.0
+        ],
+        "primary_target_torques_Nm": [
+          -5.0,
+          -15.0,
+          -25.0,
+          -28.0,
+          -32.0,
+          -36.0,
+          -40.0,
+          -44.0,
+          -48.0
+        ],
+        "ramp_s": 0.25,
+        "bisection_iterations": 4,
+        "reference_scale_definition": "Magnitude no larger than the pinned engine boundary configured maximum braking torque. This is an engine-scale bound, not a validated closed-throttle torque map at every speed.",
+        "question": "For naturally reached mid-range ratios and downhill grades, at what primary braking torque does the full dynamic selected-flank margin cross zero, and is that threshold inside the reference engine-scale braking magnitude?"
+      },
+      "dynamic_ramp_refinement": {
+        "near_qs_margin_upper_Nm": 5.0,
+        "ramp_times_s": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5
+        ],
+        "selection": "For each ratio/grade pair, choose a coarse vehicle point with positive quasi-static margin closest to the full boundary, preferring reference-scale braking when available.",
+        "strict_dynamic_only_definition": "minimum full M_h < 0 while minimum trajectory-frozen M_h,QS > 0 over the resolved post-onset case.",
+        "question": "Can transient helix inertia alone move an otherwise quasi-statically admissible vehicle case through the selected-flank boundary, preferably without belt-slip switching or travel-stop impact?"
+      },
+      "bench_dynamic_novelty": {
+        "restart": "natural sample maximizing helix dynamic-term magnitude",
+        "primary_target_torques_Nm": [
+          -20.0,
+          -25.0,
+          -30.0
+        ],
+        "secondary_drive_torques_Nm": [
+          10.0,
+          15.0,
+          20.0,
+          25.0
+        ],
+        "secondary_inertia_kg_m2": 0.3,
+        "ramp_times_s": [
+          0.05,
+          0.1,
+          0.2
+        ],
+        "hold_s": 0.5,
+        "question": "Around the E4 inertia-dominated back-drive discovery, is there a cleaner mechanism-isolation case where the full dynamic helix crosses zero while M_h,QS remains positive?"
+      },
+      "novelty_metrics": {
+        "M_h_QS": "belt reacted torque + torsional spring torque",
+        "M_h_dynamic": "shaft-acceleration + shift-acceleration + profile-curvature reacted torque",
+        "dynamic_only_duration_s": "measure(full M_h < 0 and M_h,QS > 0)",
+        "strict_dynamic_only_case": "minimum full M_h < 0 and minimum M_h,QS > 0 over the resolved post-onset case",
+        "dynamic_only_at_first_full_crossing": "M_h,QS > 0 at the linearly interpolated first full M_h crossing"
+      }
     },
     "selected_flank_comparator": {
       "stage": "E6",
@@ -245,8 +334,9 @@
     "The slotted reference is a results-programme topology, not a claim that every real CVT should use a slot.",
     "A negative selected-flank margin in the slotted model means opposite-flank support, not a solver failure.",
     "The released CINDER selected-flank topology detects inadmissible tensile reaction but does not model detached motion or opposite-flank capture.",
-    "The exploration stages E1-E4 find, force, classify, and decompose zero crossings across multiple boundary-condition families; they intentionally do not report slotted-vs-unilateral performance conclusions.",
     "Real backlash, free flight, contact impact, friction, and finite capture dynamics are outside the zero-clearance slotted idealization and the first-order detached comparator.",
-    "Subtle crossing cases must be rerun under tighter tolerances before they are promoted to final results."
+    "The exploration stages E1-E4 discover candidate mechanisms; E5 maps lift-off thresholds and explicitly separates full-dynamic from trajectory-frozen quasi-static admissibility.",
+    "A dynamic-only E5 event supports the mechanism statement that retained movable-member inertia changes selected-flank admissibility on the same trajectory. It is not by itself a literature-priority claim.",
+    "E5 cases use tighter tolerances and denser sampling than broad E4 discovery before any candidate is promoted to topology comparison."
   ]
 }

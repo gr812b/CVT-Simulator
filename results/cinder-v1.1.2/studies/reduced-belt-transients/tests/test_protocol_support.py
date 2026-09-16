@@ -28,7 +28,7 @@ class ControlledGradeTests(unittest.TestCase):
         self.assertEqual(p.grade_degrees(1.7), 18.0)
         self.assertEqual(p.phase_name(1.7), "load_hold")
 
-    def test_zero_rise_is_an_ideal_step(self):
+    def test_zero_rise_is_an_instantaneous_road_load_application(self):
         p = SmoothGradeProgram(start_time_s=1.5, rise_time_s=0.0, target_grade_deg=18.0)
         self.assertEqual(p.grade_degrees(1.499999), 0.0)
         self.assertEqual(p.grade_degrees(1.5), 18.0)

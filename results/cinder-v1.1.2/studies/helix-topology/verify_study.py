@@ -9,7 +9,11 @@ STUDY_ROOT = Path(__file__).resolve().parent
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
-from metrics import contact_topology_metrics, integrate_negative_part  # noqa: E402
+from metrics import (
+    contact_topology_metrics,
+    integrate_negative_part,
+    integrate_sign_partition,
+)  # noqa: E402
 from study_support import (  # noqa: E402
     RELEASE_ROOT,
     load_json,
@@ -32,7 +36,8 @@ def main() -> int:
         STUDY_ROOT / "experiments" / "run_forward_control.py",
         STUDY_ROOT / "experiments" / "run_stress_screen.py",
         STUDY_ROOT / "experiments" / "run_scenario_discovery.py",
-        RELEASE_ROOT / "support" / "reference_model.py",
+        STUDY_ROOT / "experiments" / "run_liftoff_envelope.py",
+        RELEASE_ROOT / "defaults" / "reference_model" / "slotted_helix.py",
     )
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
@@ -41,6 +46,9 @@ def main() -> int:
     study = load_json(STUDY_ROOT / "study.json")
     if study["reference_topology"]["name"] != "bilateral_zero_clearance_slot":
         raise RuntimeError("Study reference topology is not the shared slotted policy")
+    e5 = study["experiments"]["liftoff_envelope_refinement"]
+    if e5["status"] != "implemented":
+        raise RuntimeError("E5 lift-off envelope refinement must be implemented")
     e6 = study["experiments"]["selected_flank_comparator"]
     if e6["status"] != "not_implemented_until_detached_topology_is_derived":
         raise RuntimeError("E6 must remain gated until detached helix mechanics exist")
@@ -60,6 +68,13 @@ def main() -> int:
     )
     if metrics["zero_crossing_count"] != 2:
         raise RuntimeError("Topology crossing count smoke check failed")
+    partition = integrate_sign_partition(
+        [0.0, 1.0, 2.0],
+        [1.0, -1.0, 1.0],
+        [2.0, 1.0, 2.0],
+    )
+    if abs(partition.full_negative_qs_positive_s - 1.0) > 1.0e-12:
+        raise RuntimeError("Dynamic-only sign partition smoke check failed")
 
     payload = {
         "status": "ok",
@@ -67,8 +82,8 @@ def main() -> int:
         "cinder_version": study["cinder_version"],
         "reference_topology": study["reference_topology"]["name"],
         "materialized_launch_tools": str(launch_tools),
-        "implemented_stages": ["E1", "E2", "E3", "E4"],
-        "gated_stages": ["E5", "E6", "E7"],
+        "implemented_stages": ["E1", "E2", "E3", "E4", "E5"],
+        "gated_stages": ["E6", "E7"],
     }
     print(json.dumps(payload, indent=2))
     return 0

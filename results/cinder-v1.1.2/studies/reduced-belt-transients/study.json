@@ -1,36 +1,42 @@
 {
   "study_id": "cinder-v1.1.2-reduced-belt-transients",
-  "title": "Reduced-belt transient mechanics: phase-aware broad and controlled exploration",
+  "title": "Reduced-belt transient mechanics: equation sensitivity and Baja operating envelope",
   "release": "1.1.2",
-  "status": "phase-aware-exploration",
-  "scientific_question": "Which surviving transient terms in CINDER's final reduced-belt equations are active, what physical conditions activate them, and which coherent approximation classes merit later trajectory-level testing?",
+  "status": "equation-sensitivity-plus-envelope-exploration",
+  "scientific_question": "Which surviving transient terms in CINDER's final reduced-belt equations can become mechanically important, what physical variables make them grow, and does a reasonable Baja operating envelope actually reach those conditions?",
   "governing_equations_modified": false,
   "ablation_switches_present": false,
-  "analysis_levels": [
+  "analysis_lenses": [
+    "direct final-equation sensitivity",
     "hybrid-regime phase",
-    "free-stick shift fraction",
-    "free-stick contact demand",
-    "kinematic driver",
-    "operating-point response coefficient",
-    "controlled disturbance timescale",
-    "controlled disturbance magnitude"
+    "kinematic driver versus response coefficient",
+    "equation-derived 1/5/10/25 percent contribution thresholds",
+    "smart Baja signed-load envelope",
+    "ratio and belt-speed coverage through disturbance timing",
+    "contact-demand coverage",
+    "documented secondary-preload robustness"
   ],
-  "broad_protocols": [
-    "ordinary_flat_launch",
-    "moderate_load_step",
-    "strong_load_step",
-    "severe_load_step"
-  ],
-  "controlled_protocols": {
-    "common_load_start_time_s": 1.5,
-    "timescale_axis": {
-      "target_grade_deg": 18.0,
-      "rise_times_s": [0.0, 0.05, 0.2, 0.8]
-    },
-    "magnitude_axis": {
-      "rise_time_s": 0.2,
-      "target_grades_deg": [8.0, 18.0, 28.0]
-    }
+  "equation_growth_laws": {
+    "shift_acceleration": "K(s) * s_ddot",
+    "path_curvature": "K(s) * s_dot^2",
+    "belt_acceleration": "K(s,lambda_p,lambda_s) * v_b_dot",
+    "moving_radius": "K(s,lambda_p,lambda_s) * s_dot * v_b",
+    "whole_belt_inertia": "m_b * v_b_dot"
   },
-  "decision_gate": "No belt reduction is introduced until phase-aware and controlled-load results distinguish persistent, event-only, driver-limited, coefficient-limited, and structurally dynamic terms."
+  "baja_envelope": {
+    "default_low_discrepancy_samples": 18,
+    "grade_bounds_deg": [-20.0, 30.0],
+    "load_start_bounds_s": [1.05, 3.35],
+    "smooth_rise_time_bounds_s": [0.05, 0.8],
+    "fixed_mechanistic_anchors": 6,
+    "secondary_preload_robustness_anchors": 4,
+    "negative_grade_semantics": "downhill/unloading under the normal full-throttle engine boundary; not asserted closed-throttle overrun"
+  },
+  "documented_tune_robustness": {
+    "reference_secondary_compression_preload_mm": 110.0,
+    "reference_torsional_pretension_deg": 300.0,
+    "lower_variant": {"secondary_compression_preload_mm": 105.0, "torsional_pretension_deg": 280.0},
+    "higher_variant": {"secondary_compression_preload_mm": 115.0, "torsional_pretension_deg": 320.0}
+  },
+  "decision_gate": "No belt reduction is introduced until equation-level growth thresholds and the physically bounded Baja envelope are interpreted together and a small set of trajectory cases visibly connects predicted sensitivity to observed mechanics."
 }

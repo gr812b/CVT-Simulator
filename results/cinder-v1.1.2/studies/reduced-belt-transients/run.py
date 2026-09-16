@@ -27,7 +27,10 @@ if str(STUDY_ROOT) not in sys.path:
 
 from audit_simulation_case import run_case
 from belt_terms import inventory
+from envelope_design import apply_tune_variant, build_baja_envelope
+from equation_sensitivity import build_equation_sensitivity
 from protocol_support import SmoothGradeProgram, make_time_programmed_boundary
+from sensitivity_synthesis import synthesize_sensitivity_connections
 from study_support import ARTIFACTS, write_json, write_rows
 
 BROAD_PROTOCOLS = (
@@ -68,7 +71,7 @@ BROAD_PROTOCOLS = (
 # Sparse, mechanistic design rather than a Cartesian sweep.  The 18-degree
 # series isolates timescale.  The 0.20-s series isolates disturbance magnitude.
 CONTROLLED_PROTOCOLS = (
-    {"name": "controlled_18deg_step", "title": "18 degree ideal step", "target_grade_deg": 18.0, "rise_time_s": 0.0},
+    {"name": "controlled_18deg_step", "title": "18 degree instantaneous road-load application", "target_grade_deg": 18.0, "rise_time_s": 0.0},
     {"name": "controlled_18deg_050ms", "title": "18 degree rise over 50 ms", "target_grade_deg": 18.0, "rise_time_s": 0.05},
     {"name": "controlled_18deg_200ms", "title": "18 degree rise over 200 ms", "target_grade_deg": 18.0, "rise_time_s": 0.20},
     {"name": "controlled_18deg_800ms", "title": "18 degree rise over 800 ms", "target_grade_deg": 18.0, "rise_time_s": 0.80},
@@ -119,6 +122,17 @@ def _broad_document(base: dict[str, Any], protocol: dict[str, Any]) -> dict[str,
 def _controlled_document(base: dict[str, Any]) -> dict[str, Any]:
     document = copy.deepcopy(base)
     document["scenario"]["time_span_s"] = [0.0, CONTROLLED_DURATION_S]
+    document["shaft_boundaries"]["secondary"]["road_profile"] = {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0,
+    }
+    return document
+
+
+def _envelope_document(base: dict[str, Any], *, start_time_s: float, rise_time_s: float) -> dict[str, Any]:
+    document = copy.deepcopy(base)
+    duration = max(5.0, float(start_time_s) + float(rise_time_s) + 2.0)
+    document["scenario"]["time_span_s"] = [0.0, duration]
     document["shaft_boundaries"]["secondary"]["road_profile"] = {
         "kind": "constant_grade",
         "grade_angle_rad": 0.0,
@@ -184,20 +198,20 @@ def _controlled_metric_row(name: str, payload: dict[str, Any]) -> dict[str, Any]
         "target_grade_deg": control["target_grade_deg"],
         "rise_time_s": control["rise_time_s"],
         "start_time_s": control["start_time_s"],
-        "response_max_abs_R_sddot_N": channel(response, "loop.radial_shift_acceleration_N"),
-        "response_p95_abs_R_sddot_N": channel(response, "loop.radial_shift_acceleration_N", "p95_abs"),
-        "response_activity_R_sddot": response["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
-        "response_max_abs_R_sdot2_N": channel(response, "loop.radial_geometry_curvature_N"),
-        "response_max_abs_R_vbdot_N": channel(response, "loop.tangential_belt_acceleration_N"),
-        "response_max_abs_R_sdotvb_N": channel(response, "loop.tangential_shifting_radius_N"),
+        "response_max_abs_shift_acceleration_contribution_N": channel(response, "loop.radial_shift_acceleration_N"),
+        "response_p95_abs_shift_acceleration_contribution_N": channel(response, "loop.radial_shift_acceleration_N", "p95_abs"),
+        "response_activity_shift_acceleration_contribution": response["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
+        "response_max_abs_path_curvature_contribution_N": channel(response, "loop.radial_geometry_curvature_N"),
+        "response_max_abs_belt_acceleration_contribution_N": channel(response, "loop.tangential_belt_acceleration_N"),
+        "response_max_abs_moving_radius_contribution_N": channel(response, "loop.tangential_shifting_radius_N"),
         "response_transport_inertia_max_abs_N": channel(response, "transport.belt_inertia_N"),
         "response_transport_inertia_activity": response["integrated_activity_share"].get("transport.belt_inertia_N"),
         "response_max_abs_shift_accel_mps2": context(response, "state.shift_acceleration_m_per_s2"),
         "response_max_abs_belt_accel_mps2": context(response, "state.belt_acceleration_m_per_s2"),
         "response_max_contact_static_fraction": context(response, "contact.max_static_utilization_fraction", "max"),
         "pre_max_contact_static_fraction": context(pre, "contact.max_static_utilization_fraction", "max"),
-        "rise_activity_R_sddot": None if rise is None else rise["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
-        "rise_max_abs_R_sddot_N": channel(rise, "loop.radial_shift_acceleration_N"),
+        "rise_activity_shift_acceleration_contribution": None if rise is None else rise["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
+        "rise_max_abs_shift_acceleration_contribution_N": channel(rise, "loop.radial_shift_acceleration_N"),
     }
 
 
@@ -329,7 +343,7 @@ def _plot_synthesis(case_summaries: dict[str, dict[str, Any]], controlled_rows: 
             "loop.tangential_belt_acceleration_N",
             "loop.tangential_shifting_radius_N",
         )
-        labels = ("transport inertia", "radial sddot", "radial sdot^2", "tangential vbdot", "tangential sdot*vb")
+        labels = ("whole-belt inertia", "shift acceleration", "shift-path curvature", "belt acceleration", "moving-radius transport")
         x = np.arange(len(broad), dtype=float)
         width = 0.14
         fig, ax = plt.subplots(figsize=(11, 5.5))
@@ -357,15 +371,15 @@ def _plot_synthesis(case_summaries: dict[str, dict[str, Any]], controlled_rows: 
             fig, ax = plt.subplots(figsize=(7.0, 5.2))
             ax.plot(
                 [float(row["rise_time_s"]) for row in eighteen],
-                [float(row["response_max_abs_R_sddot_N"]) for row in eighteen],
+                [float(row["response_max_abs_shift_acceleration_contribution_N"]) for row in eighteen],
                 marker="o",
             )
             ax.set_xlabel("18° load rise time [s]")
-            ax.set_ylabel(r"max $|R_{\ddot{s}}|$ in first 1 s [N]")
-            ax.set_title("Radial shift-acceleration term vs disturbance timescale")
+            ax.set_ylabel("max |shift-acceleration contribution| in first 1 s [N]")
+            ax.set_title("Shift-acceleration contribution vs road-load application timescale")
             ax.grid(True, alpha=0.25)
             fig.tight_layout()
-            fig.savefig(ARTIFACTS / "controlled_timescale_R_sddot.png", dpi=180)
+            fig.savefig(ARTIFACTS / "controlled_timescale_shift_acceleration.png", dpi=180)
             plt.close(fig)
 
         severity = sorted(
@@ -376,15 +390,15 @@ def _plot_synthesis(case_summaries: dict[str, dict[str, Any]], controlled_rows: 
             fig, ax = plt.subplots(figsize=(7.0, 5.2))
             ax.plot(
                 [float(row["target_grade_deg"]) for row in severity],
-                [float(row["response_max_abs_R_sddot_N"]) for row in severity],
+                [float(row["response_max_abs_shift_acceleration_contribution_N"]) for row in severity],
                 marker="o",
             )
             ax.set_xlabel("Target grade [deg], 0.20 s smooth rise")
-            ax.set_ylabel(r"max $|R_{\ddot{s}}|$ in first 1 s [N]")
-            ax.set_title("Radial shift-acceleration term vs disturbance magnitude")
+            ax.set_ylabel("max |shift-acceleration contribution| in first 1 s [N]")
+            ax.set_title("Shift-acceleration contribution vs road-load magnitude")
             ax.grid(True, alpha=0.25)
             fig.tight_layout()
-            fig.savefig(ARTIFACTS / "controlled_severity_R_sddot.png", dpi=180)
+            fig.savefig(ARTIFACTS / "controlled_severity_shift_acceleration.png", dpi=180)
             plt.close(fig)
 
 
@@ -398,7 +412,8 @@ def _synthesize(case_summaries: dict[str, dict[str, Any]], families: dict[str, s
 
     controlled_rows = [
         row for name, payload in case_summaries.items()
-        if (row := _controlled_metric_row(name, payload)) is not None
+        if families.get(name) == "controlled"
+        and (row := _controlled_metric_row(name, payload)) is not None
     ]
     write_rows(ARTIFACTS / "controlled_load_summary.csv", controlled_rows)
     _write_shift_coefficient_rows(case_summaries)
@@ -416,12 +431,21 @@ def _synthesize(case_summaries: dict[str, dict[str, Any]], families: dict[str, s
 
 
 def main() -> int:
-    all_names = [p["name"] for p in BROAD_PROTOCOLS] + [p["name"] for p in CONTROLLED_PROTOCOLS]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-case", type=Path, default=None)
     parser.add_argument("--max-samples", type=int, default=6000)
-    parser.add_argument("--stage", choices=("all", "broad", "controlled"), default="all")
-    parser.add_argument("--only", choices=all_names, action="append")
+    parser.add_argument(
+        "--stage",
+        choices=("all", "broad", "controlled", "sensitivity", "envelope"),
+        default="all",
+    )
+    parser.add_argument(
+        "--envelope-points",
+        type=int,
+        default=18,
+        help="Low-discrepancy Baja-envelope samples before fixed anchors are added.",
+    )
+    parser.add_argument("--only", action="append", help="Run only the named protocol(s).")
     parser.add_argument("--tests-only", action="store_true")
     parser.add_argument("--skip-tests", action="store_true")
     args = parser.parse_args()
@@ -438,10 +462,30 @@ def main() -> int:
     base_path = _resolve_base_case(args.base_case)
     print(f"Base simulation case: {base_path}")
     base = json.loads(base_path.read_text(encoding="utf-8"))
+    envelope_cases = build_baja_envelope(args.envelope_points)
+    valid_names = {p["name"] for p in BROAD_PROTOCOLS} | {p["name"] for p in CONTROLLED_PROTOCOLS} | {c.name for c in envelope_cases}
+    if args.only:
+        unknown = sorted(set(args.only) - valid_names)
+        if unknown:
+            raise ValueError("Unknown --only protocol(s): " + ", ".join(unknown))
+
     if ARTIFACTS.exists():
         shutil.rmtree(ARTIFACTS)
     ARTIFACTS.mkdir(parents=True)
     write_json(ARTIFACTS / "term_inventory.json", list(inventory()))
+
+    # Direct equation analysis is independent of trajectory integration.  It
+    # maps the final-equation coefficients over engaged ratio/contact space.
+    if args.stage in {"all", "sensitivity", "envelope"}:
+        from cinder.contracts import decode_simulation_case_document
+
+        decoded_for_sensitivity = decode_simulation_case_document(base)
+        print("\n=== Direct equation sensitivity ===")
+        build_equation_sensitivity(
+            system=decoded_for_sensitivity.system,
+            document=base,
+            output_dir=ARTIFACTS / "equation_sensitivity",
+        )
 
     protocol_dir = ARTIFACTS / "resolved_protocols"
     protocol_dir.mkdir()
@@ -481,8 +525,8 @@ def main() -> int:
                 **protocol,
                 "family": "controlled",
                 "purpose": (
-                    "Controlled smooth secondary road-load rise. All cases are identical until "
-                    f"t={CONTROLLED_START_TIME_S:.2f} s; only target grade or rise time changes."
+                    "Controlled secondary road-load application. All cases are identical until "
+                    f"t={CONTROLLED_START_TIME_S:.2f} s; only target grade or application time changes."
                 ),
                 "controlled_load": program.as_dict(),
             }
@@ -504,23 +548,99 @@ def main() -> int:
             )
             families[protocol["name"]] = "controlled"
 
+    if args.stage in {"all", "envelope"}:
+        write_rows(
+            ARTIFACTS / "baja_envelope_design.csv",
+            [
+                {
+                    "case": case.name,
+                    "title": case.title,
+                    "design_source": case.source,
+                    "tune_variant": case.tune_variant,
+                    "load_start_time_s": case.start_time_s,
+                    "rise_time_s": case.rise_time_s,
+                    "target_grade_deg": case.target_grade_deg,
+                }
+                for case in envelope_cases
+            ],
+        )
+        print(f"\n=== Smart Baja operating envelope ({len(envelope_cases)} cases) ===")
+        for index, case in enumerate(envelope_cases, start=1):
+            if args.only and case.name not in args.only:
+                continue
+            document = _envelope_document(
+                base, start_time_s=case.start_time_s, rise_time_s=case.rise_time_s
+            )
+            apply_tune_variant(document, case.tune_variant)
+            case_path = protocol_dir / f"{case.name}.json"
+            write_json(case_path, document)
+            program = SmoothGradeProgram(
+                start_time_s=case.start_time_s,
+                rise_time_s=case.rise_time_s,
+                target_grade_deg=case.target_grade_deg,
+            )
+            protocol_context = case.as_protocol()
+            protocol_context["controlled_load"] = program.as_dict()
+            protocol_context["design_bounds"] = {
+                "grade_deg": [-20.0, 30.0],
+                "load_start_time_s": [1.05, 3.35],
+                "smooth_rise_time_s": [0.05, 0.80],
+                "interpretation": (
+                    "signed road-grade/load envelope during natural full-throttle Baja acceleration; "
+                    "negative grade probes unloading/downhill but is not asserted to be closed-throttle overrun"
+                ),
+            }
+
+            def configure_envelope(system, *, _program=program):
+                system.secondary_boundary = make_time_programmed_boundary(
+                    base_boundary=system.secondary_boundary,
+                    program=_program,
+                )
+
+            print(
+                f"[{index:02d}/{len(envelope_cases):02d}] {case.title}; "
+                f"start={case.start_time_s:.3f}s; tune={case.tune_variant}"
+            )
+            summaries[case.name] = run_case(
+                case_path=case_path,
+                name=case.name,
+                max_samples=args.max_samples,
+                skip_environment_check=True,
+                protocol=protocol_context,
+                configure_system=configure_envelope,
+            )
+            families[case.name] = "baja_envelope"
+
     _synthesize(summaries, families)
+    connection_summary = synthesize_sensitivity_connections(
+        artifacts_dir=ARTIFACTS,
+        families=families,
+    )
     write_json(
         ARTIFACTS / "stage_status.json",
         {
-            "stage": "phase-aware-broad-plus-controlled-exploration",
+            "stage": "equation-sensitivity-plus-baja-envelope-exploration",
             "governing_model_modified": False,
             "ablation_switches_present": False,
             "broad_protocol_count": sum(1 for family in families.values() if family == "broad"),
             "controlled_protocol_count": sum(1 for family in families.values() if family == "controlled"),
-            "controlled_design": {
-                "common_start_time_s": CONTROLLED_START_TIME_S,
-                "timescale_axis": "18 degree target with rise times 0, 0.05, 0.20, 0.80 s",
-                "magnitude_axis": "0.20 s rise with targets 8, 18, 28 degrees",
+            "baja_envelope_protocol_count": sum(1 for family in families.values() if family == "baja_envelope"),
+            "equation_sensitivity_generated": (ARTIFACTS / "equation_sensitivity" / "summary.json").is_file(),
+            "baja_envelope_design": {
+                "space_filling_count": args.envelope_points,
+                "grade_bounds_deg": [-20.0, 30.0],
+                "load_start_bounds_s": [1.05, 3.35],
+                "rise_time_bounds_s": [0.05, 0.80],
+                "documented_secondary_preload_robustness": {
+                    "compression_m": [0.105, 0.110, 0.115],
+                    "torsional_pretension_deg": [280.0, 300.0, 320.0],
+                },
             },
+            "threshold_definition": connection_summary.get("threshold_definition"),
             "next_action": (
-                "Interpret phase-aware free-stick, ratio/coefficient, contact-demand, and controlled-load results "
-                "before defining any coherent belt reduction."
+                "Use equation-derived growth thresholds together with the smart Baja envelope to identify "
+                "which retained terms are never excited, transient-only, contact-demand-sensitive, or persistent; "
+                "then select a few trajectory cases that visibly cross the predicted thresholds before ablation."
             ),
         },
     )

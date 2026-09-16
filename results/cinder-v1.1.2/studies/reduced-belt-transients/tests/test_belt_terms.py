@@ -110,6 +110,20 @@ class FinalEquationTests(unittest.TestCase):
                 row[f"loop.{name}_N"], coefficient * driver, places=12
             )
 
+    def test_equation_threshold_channels_are_self_consistent(self):
+        row = decompose_final_equations(sample())
+        contact_scale = row["loop.contact_scale_N"]
+        target = 0.10 * contact_scale
+        checks = (
+            ("loop.response_coefficient.radial_shift_acceleration_N_per_mps2", "loop.threshold.10pct.shift_acceleration_m_per_s2", 1),
+            ("loop.response_coefficient.radial_geometry_curvature_N_per_m2ps2", "loop.threshold.10pct.shift_speed_curvature_m_per_s", 2),
+            ("loop.response_coefficient.tangential_belt_acceleration_N_per_mps2", "loop.threshold.10pct.belt_acceleration_m_per_s2", 1),
+            ("loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2", "loop.threshold.10pct.shift_speed_times_belt_speed_m2_per_s2", 1),
+        )
+        for coefficient_key, threshold_key, power in checks:
+            contribution = abs(row[coefficient_key]) * row[threshold_key] ** power
+            self.assertAlmostEqual(contribution, target, places=12)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -80,3 +80,28 @@ class HelixTopologyMetricTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_sign_partition_detects_dynamic_only_interval():
+    from metrics import integrate_sign_partition
+
+    result = integrate_sign_partition(
+        [0.0, 1.0, 2.0],
+        [1.0, -1.0, 1.0],
+        [2.0, 1.0, 2.0],
+    )
+    assert abs(result.full_negative_qs_positive_s - 1.0) < 1.0e-12
+    assert result.both_negative_s == 0.0
+    assert abs(result.first_full_negative_qs_positive_time_s - 0.5) < 1.0e-12
+
+
+def test_first_negative_entry_interpolates_companion():
+    from metrics import first_negative_entry_with_companion
+
+    time_s, companion = first_negative_entry_with_companion(
+        [0.0, 1.0],
+        [2.0, -2.0],
+        [4.0, 2.0],
+    )
+    assert abs(time_s - 0.5) < 1.0e-12
+    assert abs(companion - 3.0) < 1.0e-12

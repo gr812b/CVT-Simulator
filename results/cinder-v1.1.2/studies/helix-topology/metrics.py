@@ -259,3 +259,117 @@ def contact_topology_metrics(
         "zero_crossing_count": crossings,
         "first_opposite_flank_time_s": first_entry,
     }
+
+@dataclass(frozen=True)
+class SignPartitionIntegral:
+    """Piecewise-linear duration partition for full vs quasi-static margins."""
+
+    full_negative_qs_positive_s: float
+    both_negative_s: float
+    full_positive_qs_negative_s: float
+    both_positive_s: float
+    first_full_negative_qs_positive_time_s: float | None
+
+
+def integrate_sign_partition(
+    times: Iterable[float],
+    full_margin: Iterable[float],
+    qs_margin: Iterable[float],
+) -> SignPartitionIntegral:
+    """Exactly partition time by the signs of two piecewise-linear margins.
+
+    The key region for this study is ``full < 0`` while ``qs > 0``: the full
+    dynamic helix demands the opposite flank even though the same sampled
+    trajectory would remain selected-flank admissible after removing the
+    movable-member inertia terms.
+    """
+
+    t = [float(x) for x in times]
+    full = [float(x) for x in full_margin]
+    qs = [float(x) for x in qs_margin]
+    if not (len(t) == len(full) == len(qs)):
+        raise ValueError("times and margins must have the same length")
+    if len(t) < 2:
+        return SignPartitionIntegral(0.0, 0.0, 0.0, 0.0, None)
+    if any(not isfinite(x) for x in (*t, *full, *qs)):
+        raise ValueError("times and margins must be finite")
+    if any(t1 < t0 for t0, t1 in zip(t, t[1:])):
+        raise ValueError("times must be nondecreasing")
+
+    dyn_only = 0.0
+    both_neg = 0.0
+    qs_only = 0.0
+    both_pos = 0.0
+    first_dyn: float | None = None
+
+    for t0, t1, f0, f1, q0, q1 in zip(t, t[1:], full, full[1:], qs, qs[1:]):
+        dt = t1 - t0
+        if dt <= 0.0:
+            continue
+        cuts = [0.0, 1.0]
+        if (f0 < 0.0) != (f1 < 0.0):
+            cuts.append(_crossing_fraction(f0, f1))
+        if (q0 < 0.0) != (q1 < 0.0):
+            cuts.append(_crossing_fraction(q0, q1))
+        cuts = sorted(set(cuts))
+
+        for a, b in zip(cuts, cuts[1:]):
+            if b <= a:
+                continue
+            mid = 0.5 * (a + b)
+            f_mid = f0 + mid * (f1 - f0)
+            q_mid = q0 + mid * (q1 - q0)
+            piece = (b - a) * dt
+            if f_mid < 0.0 and q_mid > 0.0:
+                dyn_only += piece
+                if first_dyn is None:
+                    first_dyn = t0 + a * dt
+            elif f_mid < 0.0 and q_mid <= 0.0:
+                both_neg += piece
+            elif f_mid >= 0.0 and q_mid < 0.0:
+                qs_only += piece
+            else:
+                both_pos += piece
+
+    return SignPartitionIntegral(
+        full_negative_qs_positive_s=dyn_only,
+        both_negative_s=both_neg,
+        full_positive_qs_negative_s=qs_only,
+        both_positive_s=both_pos,
+        first_full_negative_qs_positive_time_s=first_dyn,
+    )
+
+
+def first_negative_entry_with_companion(
+    times: Iterable[float],
+    driver: Iterable[float],
+    companion: Iterable[float],
+) -> tuple[float | None, float | None]:
+    """Return first entry of ``driver < 0`` and companion value at that entry.
+
+    Both signals are treated as piecewise linear on the same time grid.  The
+    companion interpolation is useful for asking whether the quasi-static
+    margin was still positive exactly when the full dynamic margin crossed.
+    """
+
+    t = [float(x) for x in times]
+    d = [float(x) for x in driver]
+    c = [float(x) for x in companion]
+    if not (len(t) == len(d) == len(c)):
+        raise ValueError("times, driver, and companion must have the same length")
+    if not t:
+        return None, None
+    if any(not isfinite(x) for x in (*t, *d, *c)):
+        raise ValueError("inputs must be finite")
+    if d[0] < 0.0:
+        return t[0], c[0]
+    for t0, t1, d0, d1, c0, c1 in zip(t, t[1:], d, d[1:], c, c[1:]):
+        if t1 <= t0:
+            continue
+        if d0 >= 0.0 and d1 < 0.0:
+            frac = _crossing_fraction(d0, d1)
+            return (
+                t0 + frac * (t1 - t0),
+                c0 + frac * (c1 - c0),
+            )
+    return None, None

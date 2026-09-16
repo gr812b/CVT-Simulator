@@ -129,3 +129,67 @@ K_{\dot s v_b}=q(H_pr'_p-H_sr'_s),\qquad D_{\dot s v_b}=\dot s\,v_b.
 This is not a new model or approximation. It is an exact factorization of the
 same final terms used above, recorded so operating-point sensitivity can be
 separated from kinematic excitation.
+
+## Sensitivity normalization used by the envelope study
+
+The four transient terms are interpreted as response laws rather than only as
+trajectory signals.  For any accepted free-stick state define
+
+\[
+F_C=|G_pN_p|+|G_sN_s|,
+\]
+
+which is the magnitude sum of the two non-cancelling contact contributions
+before their signed difference enters the loop compatibility.  The study uses
+this as a local mechanical scale; it does **not** divide by the nearly zero
+closed-loop residual.
+
+For a requested contribution fraction \(\alpha\), the kinematic thresholds are
+
+\[
+|\ddot s|_{\alpha}=\frac{\alpha F_C}{|K_{\ddot s}|},
+\]
+
+\[
+|\dot s|_{\alpha,\dot s^2}
+=\sqrt{\frac{\alpha F_C}{|K_{\dot s^2}|}},
+\]
+
+\[
+|\dot v_b|_{\alpha}=\frac{\alpha F_C}{|K_{\dot v_b}|},
+\]
+
+and
+
+\[
+(|\dot s|v_b)_{\alpha}
+=\frac{\alpha F_C}{|K_{\dot s v_b}|}.
+\]
+
+The reported sensitivity coordinate
+
+\[
+\chi_i=\frac{|D_i|}{|D_i|_{10\%}}
+\]
+
+therefore answers a direct question: how close is the actual Baja state to the
+kinematic excitation required for this retained transient mechanism to equal
+10% of the contact-force scale at the **same ratio, normal loads, and traction
+state**?  This comparison preserves the coefficient dependence on geometry and
+contact while making the driver requirement physically legible.
+
+For the whole-belt transport equation the analogous reference scale is
+
+\[
+F_T=\left|\frac{\tau_p}{r_{p,\mathrm{eff}}}\right|
++\left|\frac{\tau_s}{r_{s,\mathrm{eff}}}\right|,
+\]
+
+so the belt-acceleration threshold is
+
+\[
+|\dot v_b|_{\alpha,\mathrm{transport}}=\frac{\alpha F_T}{m_b}.
+\]
+
+This is a force-scale diagnostic only.  It does not by itself justify removing
+the dynamic belt-transport state.
