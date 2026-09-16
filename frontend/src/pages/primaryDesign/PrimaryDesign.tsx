@@ -123,7 +123,7 @@ export const PrimaryDesign = () => {
       const next = await analyzePrimaryPathDomain(nextArchitecture, nextZones, {
         shift_station_count: 9,
         q_sample_count: 61,
-        alpha_sample_count: 7,
+        alpha_sample_count: 9,
         representative_path_count: 8,
         edge_audit_sample_count: 65,
         history_trace_sample_count: 65,

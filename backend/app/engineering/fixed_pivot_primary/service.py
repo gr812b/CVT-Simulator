@@ -19,7 +19,10 @@ from .path_domain import (
     CompiledPathDomain,
     ForceRequirement,
     compile_path_domain,
-    condition_path_domain,
+)
+from .path_domain_refinement import (
+    condition_path_domain_refined,
+    refresh_compiled_domain_views,
 )
 
 INCH = 0.0254
@@ -156,6 +159,10 @@ class FixedPivotPrimaryDesignService:
                 edge_audit_sample_count=edge_audit_sample_count,
                 history_trace_sample_count=history_trace_sample_count,
             )
+            refresh_compiled_domain_views(
+                compiled,
+                representative_count=(12 if representative_path_count >= 8 else representative_path_count),
+            )
         except (TypeError, ValueError, RuntimeError) as error:
             raise PrimaryDesignError(
                 "INVALID_PATH_DOMAIN",
@@ -185,7 +192,7 @@ class FixedPivotPrimaryDesignService:
 
         cached = self._get_domain(domain_id)
         try:
-            result = condition_path_domain(
+            result = condition_path_domain_refined(
                 cached.compiled,
                 requirements,
                 max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,

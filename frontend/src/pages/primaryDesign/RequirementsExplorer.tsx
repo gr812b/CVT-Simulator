@@ -7,6 +7,7 @@ import {
   type ForceRequirement,
   type PrimaryPathDomainAnalysis,
 } from '@api/primaryDesign';
+import { ConditionedSolutionsExplorer } from './ConditionedSolutionsExplorer';
 import styles from './PrimaryDesign.module.scss';
 
 const WIDTH = 720;
@@ -15,12 +16,11 @@ const PAD_LEFT = 58;
 const PAD_RIGHT = 20;
 const PAD_TOP = 24;
 const PAD_BOTTOM = 46;
-const MM = 1000;
 const G = 1000;
-const RPM_PER_RAD_S = 60 / (2 * Math.PI);
 const RAD_S_PER_RPM = 2 * Math.PI / 60;
 
 type DragState = { id: string; pointerId: number } | null;
+type RequirementsView = 'requirements' | 'solutions';
 
 export function RequirementsExplorer({
   architecture,
@@ -37,8 +37,11 @@ export function RequirementsExplorer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState<DragState>(null);
+  const [view, setView] = useState<RequirementsView>('requirements');
+  const [yZoom, setYZoom] = useState(1);
   const forceSvgRef = useRef<SVGSVGElement | null>(null);
   const requestSerial = useRef(0);
+  const initializedDomainRef = useRef<string | null>(null);
 
   const solve = useCallback(async (
     nextRequirements: ForceRequirement[],
@@ -55,7 +58,7 @@ export function RequirementsExplorer({
         nextMaxMassKg,
         {
           mass_sample_count: 1025,
-          representative_solution_count: 8,
+          representative_solution_count: 12,
           reference_shaft_speed_rad_s: nextRpm * RAD_S_PER_RPM,
         },
       );
@@ -73,12 +76,12 @@ export function RequirementsExplorer({
           nextMaxMassKg,
           {
             mass_sample_count: 1025,
-            representative_solution_count: 8,
+            representative_solution_count: 12,
             reference_shaft_speed_rad_s: nextRpm * RAD_S_PER_RPM,
           },
         );
         if (serial === requestSerial.current) {
-          setError('That force point is outside the full attainable region for this RPM and mass limit, so it was not added.');
+          setError('That force point is outside the actual attainable force set at this shift, so it was not added.');
         }
       }
       if (serial === requestSerial.current) setConditioned(result);
@@ -92,7 +95,14 @@ export function RequirementsExplorer({
   }, [domain.domain_id, maxMassKg, rpm]);
 
   useEffect(() => {
+    // React StrictMode intentionally runs mount effects twice in development.
+    // Conditioning a large graph twice is pure duplicate work, so key the
+    // initialization to the cached domain id.
+    if (initializedDomainRef.current === domain.domain_id) return;
+    initializedDomainRef.current = domain.domain_id;
     setRequirements([]);
+    setView('requirements');
+    setYZoom(1);
     setMaxMassKg((value) => Math.min(value, architecture.max_tip_mass_per_flyweight_kg));
     void solve([], rpm, Math.min(maxMassKg, architecture.max_tip_mass_per_flyweight_kg));
   }, [domain.domain_id]); // solve is deliberately not included; domain changes are the reset boundary.
@@ -113,12 +123,28 @@ export function RequirementsExplorer({
 
   const fullCapability = conditioned?.force_capability.full ?? null;
   const conditionedCapability = conditioned?.force_capability.conditioned ?? null;
+  const focusForce = requirements.length
+    ? requirements.reduce((sum, item) => sum + item.force_N, 0) / requirements.length
+    : null;
   const plot = useMemo(
-    () => createForcePlot(fullCapability, architecture.required_travel_m),
-    [fullCapability, architecture.required_travel_m],
+    () => createForcePlot(fullCapability, architecture.required_travel_m, yZoom, focusForce),
+    [fullCapability, architecture.required_travel_m, yZoom, focusForce],
   );
 
-  const eventToRequirement = (event: React.PointerEvent<SVGSVGElement>): { shiftM: number; forceN: number; rawForceN: number; insideEnvelope: boolean } | null => {
+  if (view === 'solutions' && conditioned?.summary.jointly_feasible && conditioned.representative_solutions.length > 0) {
+    return (
+      <ConditionedSolutionsExplorer
+        architecture={architecture}
+        analysis={conditioned}
+        requirements={requirements}
+        onBack={() => setView('requirements')}
+      />
+    );
+  }
+
+  const eventToRequirement = (
+    event: React.PointerEvent<SVGSVGElement>,
+  ): { shiftM: number; forceN: number; rawForceN: number; insideCapability: boolean } | null => {
     if (!plot || !fullCapability) return null;
     const svg = forceSvgRef.current;
     const matrix = svg?.getScreenCTM();
@@ -127,19 +153,25 @@ export function RequirementsExplorer({
     point.x = event.clientX;
     point.y = event.clientY;
     const local = point.matrixTransform(matrix.inverse());
-    const shiftM = clamp(plot.shift(local.x), 0, architecture.required_travel_m);
-    const [minForce, maxForce] = interpolateEnvelope(fullCapability, shiftM);
-    if (minForce === null || maxForce === null) return null;
-    const requestedForce = plot.force(local.y);
-    const forceN = clamp(requestedForce, minForce, maxForce);
-    return { shiftM, forceN, rawForceN: requestedForce, insideEnvelope: requestedForce >= minForce - 1e-6 && requestedForce <= maxForce + 1e-6 };
+    const requestedShift = clamp(plot.shift(local.x), 0, architecture.required_travel_m);
+    const station = nearestCapabilityStation(fullCapability, requestedShift);
+    if (!station || station.force_intervals_N.length === 0) return null;
+    const rawForceN = plot.force(local.y);
+    const containing = station.force_intervals_N.find(([low, high]) => rawForceN >= low - 1e-6 && rawForceN <= high + 1e-6) ?? null;
+    const chosen = containing ?? nearestInterval(station.force_intervals_N, rawForceN);
+    if (!chosen) return null;
+    return {
+      shiftM: station.shift_m,
+      forceN: clamp(rawForceN, chosen[0], chosen[1]),
+      rawForceN,
+      insideCapability: containing !== null,
+    };
   };
 
   const addRequirement = (event: React.PointerEvent<SVGSVGElement>) => {
     if (drag || !fullCapability) return;
     const value = eventToRequirement(event);
-    if (!value) return;
-    if (!value.insideEnvelope) return;
+    if (!value || !value.insideCapability) return;
     const requirement: ForceRequirement = {
       id: `force-${Date.now().toString(36)}-${requirements.length}`,
       shift_m: value.shiftM,
@@ -173,18 +205,10 @@ export function RequirementsExplorer({
       forceSvgRef.current.releasePointerCapture(event.pointerId);
     }
     setDrag(null);
-    // Use the latest functional-state value; the final pointer-move update may
-    // not have produced a new render before pointer-up fires.
     setRequirements((current) => {
       window.setTimeout(() => void solve(current), 0);
       return current;
     });
-  };
-
-  const deleteRequirement = (id: string) => {
-    const next = requirements.filter((item) => item.id !== id);
-    setRequirements(next);
-    void solve(next);
   };
 
   const clearRequirements = () => {
@@ -220,9 +244,13 @@ export function RequirementsExplorer({
           <div className={styles.rampFamilyHeader}>
             <div>
               <strong>Force requirements</strong>
-              <span>Click inside the faded full-capability band. Drag a point to move it; the graph is reconditioned when you release.</span>
+              <span>Only the actually attainable force intervals are filled. Click in a filled interval; dragging stops at the nearest feasible boundary.</span>
             </div>
-            <span>{requirements.length} point{requirements.length === 1 ? '' : 's'}</span>
+            <div className={styles.requirementControlActions}>
+              <button type="button" className={styles.toolButton} onClick={() => setYZoom((value) => Math.max(1, value / 1.5))}>Y −</button>
+              <button type="button" className={styles.toolButton} onClick={() => setYZoom(1)}>Y ×{yZoom.toFixed(1)}</button>
+              <button type="button" className={styles.toolButton} onClick={() => setYZoom((value) => Math.min(8, value * 1.5))}>Y +</button>
+            </div>
           </div>
           {plot && fullCapability ? (
             <svg
@@ -238,8 +266,8 @@ export function RequirementsExplorer({
             >
               <rect width={WIDTH} height={HEIGHT} rx="12" className={styles.requirementCanvasBackground} />
               <ForceGrid plot={plot} />
-              <path d={envelopePath(fullCapability, plot)} className={styles.requirementFullBand} />
-              {conditionedCapability && <path d={envelopePath(conditionedCapability, plot)} className={styles.requirementConditionedBand} />}
+              <CapabilitySlices capability={fullCapability} plot={plot} className={styles.requirementFullBand} />
+              {conditionedCapability && <CapabilitySlices capability={conditionedCapability} plot={plot} className={styles.requirementConditionedBand} />}
               {conditioned?.representative_solutions.map((solution, index) => (
                 <path
                   key={index}
@@ -259,7 +287,7 @@ export function RequirementsExplorer({
                   />
                 </g>
               ))}
-              <text x={PAD_LEFT} y={HEIGHT - 12} className={styles.requirementAxisTitle}>shift (mm)</text>
+              <text x={PAD_LEFT} y={HEIGHT - 12} className={styles.requirementAxisTitle}>shift</text>
               <text x={12} y={PAD_TOP + 4} className={styles.requirementAxisTitle}>closing force (N)</text>
             </svg>
           ) : <div className={styles.loading}>Building absolute force capability for this mass limit…</div>}
@@ -290,7 +318,7 @@ export function RequirementsExplorer({
       <div className={styles.requirementSummaryGrid}>
         <Summary label="Joint solution" value={conditioned ? (conditioned.summary.jointly_feasible ? 'available' : 'none') : '—'} kind={conditioned?.summary.jointly_feasible ? 'good' : 'neutral'} />
         <Summary label="Surviving mass range" value={conditioned?.mass.surviving_mass_min_kg == null ? '—' : `${(conditioned.mass.surviving_mass_min_kg * G).toFixed(1)}–${((conditioned.mass.surviving_mass_max_kg ?? 0) * G).toFixed(1)} g`} />
-        <Summary label="Example solutions" value={String(conditioned?.representative_solutions.length ?? 0)} />
+        <Summary label="Extracted solution ramps" value={String(conditioned?.representative_solutions.length ?? 0)} />
         <Summary label="Mass lattice resolution" value={conditioned ? `${(conditioned.mass.mass_resolution_kg * G).toFixed(2)} g` : '—'} />
       </div>
 
@@ -300,20 +328,21 @@ export function RequirementsExplorer({
         </div>
       )}
 
-      {conditioned && conditioned.representative_solutions.length > 0 && (
-        <div className={styles.requirementSolutions}>
-          {conditioned.representative_solutions.map((solution, index) => (
-            <div key={index} className={styles.requirementSolutionCard}>
-              <strong>Example ramp {index + 1}</strong>
-              <span>example mass {(solution.solution.example_tip_mass_kg * G).toFixed(1)} g / flyweight</span>
-              <span>allowed {(solution.solution.tip_mass_min_kg * G).toFixed(1)}–{(solution.solution.tip_mass_max_kg * G).toFixed(1)} g</span>
-              <span>q {solution.q_deg[0].toFixed(1)}° → {solution.q_deg[solution.q_deg.length - 1].toFixed(1)}°</span>
-            </div>
-          ))}
+      {conditioned?.summary.jointly_feasible && conditioned.representative_solutions.length > 0 && (
+        <div className={styles.requirementControlActions}>
+          <button type="button" className={styles.primaryButton} onClick={() => setView('solutions')}>
+            Review {conditioned.representative_solutions.length} surviving ramps →
+          </button>
         </div>
       )}
 
-      <p className={styles.helpText}>The highlighted result is a domain of <strong>ramp + one constant physical tip mass</strong> solutions. Each additional force point intersects the shared mass carried through the complete path graph. Points cannot be created outside the full architecture capability; nevertheless, two individually attainable points can still be jointly incompatible.</p>
+      {conditioned && conditioned.summary.jointly_feasible && conditioned.representative_solutions.length === 0 && (
+        <div className={styles.requirementFinding}>
+          <span>The graph is feasible, but no history-certified representative was extracted from this narrow region. The graph solution remains valid; increase the representative extraction budget before choosing a concrete ramp.</span>
+        </div>
+      )}
+
+      <p className={styles.helpText}>The highlighted result is a domain of <strong>ramp + one constant physical tip mass</strong> solutions. Force-space holes remain holes rather than being filled by a min/max envelope. Each additional force point intersects the shared mass carried through the complete path graph.</p>
     </div>
   );
 }
@@ -374,15 +403,30 @@ interface ForcePlot {
   yMax: number;
 }
 
-function createForcePlot(capability: AbsoluteForceCapability | null, travelM: number): ForcePlot | null {
+function createForcePlot(
+  capability: AbsoluteForceCapability | null,
+  travelM: number,
+  zoom: number,
+  focusForce: number | null,
+): ForcePlot | null {
   if (!capability) return null;
-  const values = capability.stations.flatMap((station) => [station.force_min_N, station.force_max_N]).filter((value): value is number => value !== null && Number.isFinite(value));
+  const values = capability.stations.flatMap((station) => station.force_intervals_N.flat()).filter(Number.isFinite);
   if (!values.length) return null;
   const rawMin = Math.min(...values, 0);
   const rawMax = Math.max(...values, 1);
   const margin = Math.max(10, 0.08 * (rawMax - rawMin));
-  const yMin = Math.max(0, rawMin - margin);
-  const yMax = rawMax + margin;
+  const baseMin = Math.max(0, rawMin - margin);
+  const baseMax = rawMax + margin;
+  const baseSpan = Math.max(1, baseMax - baseMin);
+  const span = baseSpan / Math.max(1, zoom);
+  const desiredCenter = focusForce ?? 0.5 * (baseMin + baseMax);
+  let yMin = desiredCenter - 0.5 * span;
+  let yMax = desiredCenter + 0.5 * span;
+  if (yMin < 0) {
+    yMax -= yMin;
+    yMin = 0;
+  }
+  if (yMax > baseMax && zoom <= 1.0001) yMax = baseMax;
   const innerW = WIDTH - PAD_LEFT - PAD_RIGHT;
   const innerH = HEIGHT - PAD_TOP - PAD_BOTTOM;
   const x = (shiftM: number) => PAD_LEFT + clamp(shiftM / Math.max(1e-12, travelM), 0, 1) * innerW;
@@ -398,12 +442,24 @@ function ForceGrid({ plot }: { plot: ForcePlot }) {
   return <g>{forceTicks.map((value) => <g key={value}><line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={plot.y(value)} y2={plot.y(value)} className={styles.requirementGrid} /><text x={8} y={plot.y(value) + 4} className={styles.requirementTick}>{value.toFixed(0)}</text></g>)}{shiftTicks.map((fraction) => { const x = PAD_LEFT + fraction * (WIDTH - PAD_LEFT - PAD_RIGHT); return <g key={fraction}><line x1={x} x2={x} y1={PAD_TOP} y2={HEIGHT - PAD_BOTTOM} className={styles.requirementGrid} /><text x={x} y={HEIGHT - 15} textAnchor="middle" className={styles.requirementTick}>{fraction === 0 ? '0' : `${(fraction * 100).toFixed(0)}%`}</text></g>; })}</g>;
 }
 
-function envelopePath(capability: AbsoluteForceCapability, plot: ForcePlot): string {
-  const valid = capability.stations.filter((station) => station.force_min_N !== null && station.force_max_N !== null);
-  if (valid.length < 2) return '';
-  const top = valid.map((station, index) => `${index === 0 ? 'M' : 'L'} ${plot.x(station.shift_m)} ${plot.y(station.force_max_N as number)}`);
-  const bottom = valid.slice().reverse().map((station) => `L ${plot.x(station.shift_m)} ${plot.y(station.force_min_N as number)}`);
-  return [...top, ...bottom, 'Z'].join(' ');
+function CapabilitySlices({ capability, plot, className }: { capability: AbsoluteForceCapability; plot: ForcePlot; className: string }) {
+  const rows = capability.stations;
+  if (rows.length === 0) return null;
+  return (
+    <g className={className}>
+      {rows.flatMap((station, stationIndex) => {
+        const leftShift = stationIndex === 0 ? station.shift_m : 0.5 * (rows[stationIndex - 1].shift_m + station.shift_m);
+        const rightShift = stationIndex === rows.length - 1 ? station.shift_m : 0.5 * (station.shift_m + rows[stationIndex + 1].shift_m);
+        const x0 = plot.x(leftShift);
+        const x1 = plot.x(rightShift);
+        return station.force_intervals_N.map(([low, high], intervalIndex) => {
+          const y0 = plot.y(high);
+          const y1 = plot.y(low);
+          return <rect key={`${stationIndex}-${intervalIndex}`} x={Math.min(x0, x1)} y={Math.min(y0, y1)} width={Math.max(1.5, Math.abs(x1 - x0) + 0.8)} height={Math.max(0.8, Math.abs(y1 - y0))} stroke="none" />;
+        });
+      })}
+    </g>
+  );
 }
 
 function curvePath(shifts: number[], forces: number[], plot: ForcePlot): string {
@@ -411,26 +467,38 @@ function curvePath(shifts: number[], forces: number[], plot: ForcePlot): string 
   return shifts.map((shift, index) => `${index === 0 ? 'M' : 'L'} ${plot.x(shift)} ${plot.y(forces[index])}`).join(' ');
 }
 
-function interpolateEnvelope(capability: AbsoluteForceCapability, shiftM: number): [number | null, number | null] {
-  const rows = capability.stations;
-  if (!rows.length) return [null, null];
-  if (shiftM <= rows[0].shift_m) return [rows[0].force_min_N, rows[0].force_max_N];
-  if (shiftM >= rows[rows.length - 1].shift_m) return [rows[rows.length - 1].force_min_N, rows[rows.length - 1].force_max_N];
-  let lo = 0;
-  let hi = rows.length - 1;
-  while (hi - lo > 1) {
-    const mid = Math.floor((lo + hi) / 2);
-    if (rows[mid].shift_m <= shiftM) lo = mid;
-    else hi = mid;
+function nearestCapabilityStation(capability: AbsoluteForceCapability, shiftM: number) {
+  if (!capability.stations.length) return null;
+  let best = capability.stations[0];
+  let bestDistance = Math.abs(best.shift_m - shiftM);
+  for (const station of capability.stations.slice(1)) {
+    const distance = Math.abs(station.shift_m - shiftM);
+    if (distance < bestDistance) {
+      best = station;
+      bestDistance = distance;
+    }
   }
-  const a = rows[lo];
-  const b = rows[hi];
-  if (a.force_min_N === null || a.force_max_N === null || b.force_min_N === null || b.force_max_N === null) return [null, null];
-  const t = (shiftM - a.shift_m) / Math.max(1e-12, b.shift_m - a.shift_m);
-  return [
-    a.force_min_N + t * (b.force_min_N - a.force_min_N),
-    a.force_max_N + t * (b.force_max_N - a.force_max_N),
-  ];
+  return best;
+}
+
+function nearestInterval(intervals: Array<[number, number]>, value: number): [number, number] | null {
+  if (!intervals.length) return null;
+  let best = intervals[0];
+  let bestDistance = intervalDistance(best, value);
+  for (const interval of intervals.slice(1)) {
+    const distance = intervalDistance(interval, value);
+    if (distance < bestDistance) {
+      best = interval;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function intervalDistance([low, high]: [number, number], value: number): number {
+  if (value < low) return low - value;
+  if (value > high) return value - high;
+  return 0;
 }
 
 function clamp(value: number, min: number, max: number): number {

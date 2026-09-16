@@ -339,6 +339,7 @@ export interface AbsoluteForceCapability {
     active_state_count: number;
     force_min_N: number | null;
     force_max_N: number | null;
+    force_intervals_N: Array<[number, number]>;
     mass_min_kg: number | null;
     mass_max_kg: number | null;
   }>;
