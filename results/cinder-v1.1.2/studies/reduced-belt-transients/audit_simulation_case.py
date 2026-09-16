@@ -1,4 +1,4 @@
-"""Run one unchanged CINDER simulation case and build its final-equation belt atlas."""
+"""Run one unchanged CINDER case and build the final-equation belt atlas."""
 from __future__ import annotations
 
 import argparse
@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from typing import Any, Callable
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
@@ -20,7 +21,26 @@ from trajectory_audit import write_atlas
 EXPECTED_CINDER_VERSION = "1.1.2"
 
 
-def run_case(*, case_path: Path, name: str, max_samples: int, skip_environment_check: bool = False):
+def _protocol_context(document: dict[str, Any], *, name: str, protocol: dict[str, Any] | None) -> dict[str, Any]:
+    result = dict(protocol or {})
+    result.setdefault("name", name)
+    result.setdefault("title", name.replace("_", " ").title())
+    geometry = document["assembly"]["geometry"]
+    contact = document["assembly"]["contact"]
+    result.setdefault("max_shift_m", float(geometry["max_shift_m"]))
+    result.setdefault("static_friction_coefficient", float(contact["static_friction_coefficient"]))
+    return result
+
+
+def run_case(
+    *,
+    case_path: Path,
+    name: str,
+    max_samples: int,
+    skip_environment_check: bool = False,
+    protocol: dict[str, Any] | None = None,
+    configure_system: Callable[[Any], None] | None = None,
+):
     if not skip_environment_check:
         subprocess.run([sys.executable, str(VERIFY)], check=True)
     import cinder
@@ -31,8 +51,13 @@ def run_case(*, case_path: Path, name: str, max_samples: int, skip_environment_c
     document = json.loads(case_path.read_text(encoding="utf-8"))
     validation = validate_simulation_case_document(document)
     if not validation.is_valid:
-        raise RuntimeError("Simulation case failed CINDER validation: " + "; ".join(f.message for f in validation.findings))
+        raise RuntimeError(
+            "Simulation case failed CINDER validation: "
+            + "; ".join(f.message for f in validation.findings)
+        )
     decoded = decode_simulation_case_document(document)
+    if configure_system is not None:
+        configure_system(decoded.system)
     result = decoded.system.run(
         time_span=decoded.time_span,
         initial_state=decoded.initial_state,
@@ -44,21 +69,29 @@ def run_case(*, case_path: Path, name: str, max_samples: int, skip_environment_c
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    (output / "simulation_case.json").write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    (output / "simulation_case.json").write_text(
+        json.dumps(document, indent=2) + "\n", encoding="utf-8"
+    )
+    protocol_context = _protocol_context(document, name=name, protocol=protocol)
+    protocol_context["source"] = str(case_path)
+    write_json(output / "protocol.json", protocol_context)
     summary = write_atlas(
         system=decoded.system,
         trace=result.trace,
         output_dir=output,
-        protocol={"name": name, "title": name.replace("_", " ").title(), "source": str(case_path)},
+        protocol=protocol_context,
         maximum_samples=max_samples,
     )
-    write_json(output / "run_summary.json", {
-        "completed": bool(result.completed),
-        "termination_reason": result.termination_reason,
-        "transition_count": len(result.transitions),
-        "final_time_s": float(result.final_time),
-        "engaged_sample_count": summary["overall"]["engaged_sample_count"],
-    })
+    write_json(
+        output / "run_summary.json",
+        {
+            "completed": bool(result.completed),
+            "termination_reason": result.termination_reason,
+            "transition_count": len(result.transitions),
+            "final_time_s": float(result.final_time),
+            "engaged_sample_count": summary["overall"]["engaged_sample_count"],
+        },
+    )
     return summary
 
 
@@ -69,7 +102,12 @@ def main() -> int:
     parser.add_argument("--max-samples", type=int, default=6000)
     parser.add_argument("--skip-environment-check", action="store_true")
     args = parser.parse_args()
-    run_case(case_path=args.case.resolve(), name=args.name, max_samples=args.max_samples, skip_environment_check=args.skip_environment_check)
+    run_case(
+        case_path=args.case.resolve(),
+        name=args.name,
+        max_samples=args.max_samples,
+        skip_environment_check=args.skip_environment_check,
+    )
     print(f"Artifacts: {ARTIFACTS / args.name}")
     return 0
 

@@ -1,20 +1,19 @@
 {
   "study_id": "cinder-v1.1.2-reduced-belt-transients",
-  "title": "Reduced-belt transient mechanics: broad exploration",
+  "title": "Reduced-belt transient mechanics: phase-aware broad and controlled exploration",
   "release": "1.1.2",
-  "status": "broad-exploration",
-  "scientific_question": "Which surviving transient terms in CINDER's final reduced-belt equations are active, under what operating conditions do they become important, and what targeted follow-up is justified before any coherent reduction is introduced?",
+  "status": "phase-aware-exploration",
+  "scientific_question": "Which surviving transient terms in CINDER's final reduced-belt equations are active, what physical conditions activate them, and which coherent approximation classes merit later trajectory-level testing?",
   "governing_equations_modified": false,
   "ablation_switches_present": false,
-  "final_equation_channels": [
-    "transport.belt_inertia_N",
-    "transport.primary_reaction_N",
-    "transport.secondary_reaction_N",
-    "loop.radial_shift_acceleration_N",
-    "loop.radial_geometry_curvature_N",
-    "loop.tangential_belt_acceleration_N",
-    "loop.tangential_shifting_radius_N",
-    "loop.normal_contact_N"
+  "analysis_levels": [
+    "hybrid-regime phase",
+    "free-stick shift fraction",
+    "free-stick contact demand",
+    "kinematic driver",
+    "operating-point response coefficient",
+    "controlled disturbance timescale",
+    "controlled disturbance magnitude"
   ],
   "broad_protocols": [
     "ordinary_flat_launch",
@@ -22,5 +21,16 @@
     "strong_load_step",
     "severe_load_step"
   ],
-  "decision_gate": "Do not implement reductions until the cross-protocol atlas identifies which mechanisms merit targeted excitation and which approximation classes are physically coherent."
+  "controlled_protocols": {
+    "common_load_start_time_s": 1.5,
+    "timescale_axis": {
+      "target_grade_deg": 18.0,
+      "rise_times_s": [0.0, 0.05, 0.2, 0.8]
+    },
+    "magnitude_axis": {
+      "rise_time_s": 0.2,
+      "target_grades_deg": [8.0, 18.0, 28.0]
+    }
+  },
+  "decision_gate": "No belt reduction is introduced until phase-aware and controlled-load results distinguish persistent, event-only, driver-limited, coefficient-limited, and structurally dynamic terms."
 }

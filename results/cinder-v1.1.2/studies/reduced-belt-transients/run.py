@@ -1,9 +1,8 @@
-"""Run the broad discovery pass for reduced-belt transient mechanics.
+"""Run broad and controlled exploration of CINDER's surviving belt terms.
 
-This runner does not modify the governing model.  It creates a small family of
-transparent Baja-style protocols from the canonical v1.1.2 reference document,
-runs each full model, and builds the same final-equation term atlas for all of
-them.  The purpose is orientation before any ablation is designed.
+Stage A reproduces broad route/launch coverage. Stage B uses controlled smooth
+secondary-load rises to separate disturbance *magnitude* from disturbance
+*timescale*. No governing CVT equation or contact law is modified.
 """
 from __future__ import annotations
 
@@ -15,6 +14,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from typing import Any
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
@@ -27,13 +27,14 @@ if str(STUDY_ROOT) not in sys.path:
 
 from audit_simulation_case import run_case
 from belt_terms import inventory
+from protocol_support import SmoothGradeProgram, make_time_programmed_boundary
 from study_support import ARTIFACTS, write_json, write_rows
 
-
-PROTOCOLS = (
+BROAD_PROTOCOLS = (
     {
         "name": "ordinary_flat_launch",
         "title": "Ordinary flat launch",
+        "family": "broad",
         "purpose": "Baseline launch and natural active upshift on the canonical full model.",
         "duration_s": 6.0,
         "grade_steps": ((0.0, 0.0),),
@@ -41,28 +42,61 @@ PROTOCOLS = (
     {
         "name": "moderate_load_step",
         "title": "Moderate wheel-load increase",
-        "purpose": "Introduce a moderate grade step during the launch/upshift trajectory and observe load-driven backshift/recovery if it occurs.",
+        "family": "broad",
+        "purpose": "8 degree spatial grade step during natural upshift, then return to flat.",
         "duration_s": 8.0,
         "grade_steps": ((0.0, 0.0), (5.0, 8.0), (14.0, 0.0)),
     },
     {
         "name": "strong_load_step",
         "title": "Strong wheel-load increase",
-        "purpose": "Excite faster shift and belt-transport response without changing belt/contact physics.",
+        "family": "broad",
+        "purpose": "18 degree spatial grade step during natural upshift, then return to flat.",
         "duration_s": 8.0,
         "grade_steps": ((0.0, 0.0), (5.0, 18.0), (14.0, 0.0)),
     },
     {
         "name": "severe_load_step",
         "title": "Severe load/contact-demand exploration",
-        "purpose": "Explore the high-demand end of the same physical model; contact transition is observed only if it occurs naturally.",
+        "family": "broad",
+        "purpose": "28 degree spatial grade step to obtain a natural load-driven backshift if the full model produces one.",
         "duration_s": 8.0,
         "grade_steps": ((0.0, 0.0), (5.0, 28.0), (14.0, 0.0)),
     },
 )
 
+# Sparse, mechanistic design rather than a Cartesian sweep.  The 18-degree
+# series isolates timescale.  The 0.20-s series isolates disturbance magnitude.
+CONTROLLED_PROTOCOLS = (
+    {"name": "controlled_18deg_step", "title": "18 degree ideal step", "target_grade_deg": 18.0, "rise_time_s": 0.0},
+    {"name": "controlled_18deg_050ms", "title": "18 degree rise over 50 ms", "target_grade_deg": 18.0, "rise_time_s": 0.05},
+    {"name": "controlled_18deg_200ms", "title": "18 degree rise over 200 ms", "target_grade_deg": 18.0, "rise_time_s": 0.20},
+    {"name": "controlled_18deg_800ms", "title": "18 degree rise over 800 ms", "target_grade_deg": 18.0, "rise_time_s": 0.80},
+    {"name": "controlled_08deg_200ms", "title": "8 degree rise over 200 ms", "target_grade_deg": 8.0, "rise_time_s": 0.20},
+    {"name": "controlled_28deg_200ms", "title": "28 degree rise over 200 ms", "target_grade_deg": 28.0, "rise_time_s": 0.20},
+)
+CONTROLLED_START_TIME_S = 1.50
+CONTROLLED_DURATION_S = 4.50
 
-def _resolved_protocol(base: dict, protocol: dict) -> dict:
+
+def _resolve_base_case(requested: Path | None) -> Path:
+    if requested is not None:
+        candidate = requested.expanduser().resolve()
+        if not candidate.is_file():
+            raise FileNotFoundError(f"Explicit --base-case does not exist: {candidate}")
+        return candidate
+    for candidate in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE):
+        if candidate.is_file():
+            return candidate.resolve()
+    searched = "\n  - ".join(str(path) for path in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE))
+    raise FileNotFoundError(
+        "Could not locate the executable Baja baseline. Searched:\n  - "
+        + searched
+        + "\nPass --base-case PATH to an equivalent cinder_composed_simulation_case JSON."
+    )
+
+
+def _broad_document(base: dict[str, Any], protocol: dict[str, Any]) -> dict[str, Any]:
     document = copy.deepcopy(base)
     document["scenario"]["time_span_s"] = [0.0, float(protocol["duration_s"])]
     steps = protocol["grade_steps"]
@@ -82,7 +116,23 @@ def _resolved_protocol(base: dict, protocol: dict) -> dict:
     return document
 
 
-def _synthesize(case_summaries: dict[str, dict]) -> None:
+def _controlled_document(base: dict[str, Any]) -> dict[str, Any]:
+    document = copy.deepcopy(base)
+    document["scenario"]["time_span_s"] = [0.0, CONTROLLED_DURATION_S]
+    document["shaft_boundaries"]["secondary"]["road_profile"] = {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0,
+    }
+    return document
+
+
+def _free_stick(summary: dict[str, Any]) -> dict[str, Any] | None:
+    return summary.get("phase_analysis", {}).get("named_phases", {}).get("free_stick_all")
+
+
+def _append_summary_rows(rows: list[dict[str, Any]], *, case: str, family: str, scope: str, summary: dict[str, Any] | None) -> None:
+    if not summary:
+        return
     terms = (
         "transport.belt_inertia_N",
         "loop.radial_shift_acceleration_N",
@@ -91,22 +141,177 @@ def _synthesize(case_summaries: dict[str, dict]) -> None:
         "loop.tangential_shifting_radius_N",
         "loop.normal_contact_N",
     )
-    rows = []
-    for name, payload in case_summaries.items():
-        summary = payload["overall"]
-        for term in terms:
-            stats = summary["channels"].get(term, {})
-            rows.append({
-                "case": name,
-                "term": term,
-                "max_abs_N": stats.get("max_abs"),
-                "median_abs_N": stats.get("median_abs"),
-                "p95_abs_N": stats.get("p95_abs"),
-                "integrated_activity_share": summary["integrated_activity_share"].get(term),
-            })
-    write_rows(ARTIFACTS / "exploration_summary.csv", rows)
-    write_json(ARTIFACTS / "exploration_summary.json", {"cases": case_summaries, "term_rows": rows})
+    for term in terms:
+        stats = summary.get("channels", {}).get(term, {})
+        rows.append({
+            "case": case,
+            "family": family,
+            "scope": scope,
+            "term": term,
+            "sample_count": summary.get("sample_count"),
+            "max_abs_N": stats.get("max_abs"),
+            "median_abs_N": stats.get("median_abs"),
+            "p95_abs_N": stats.get("p95_abs"),
+            "integrated_activity_share": summary.get("integrated_activity_share", {}).get(term),
+        })
 
+
+def _controlled_metric_row(name: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+    protocol = payload.get("protocol", {})
+    control = protocol.get("controlled_load")
+    if not isinstance(control, dict):
+        return None
+    windows = payload.get("phase_analysis", {}).get("controlled_windows", {})
+    response = windows.get("first_1s_after_start", {}).get("summary")
+    pre = windows.get("pre_load_reference", {}).get("summary")
+    rise = windows.get("load_rise", {}).get("summary")
+    if response is None:
+        return None
+
+    def channel(summary: dict[str, Any] | None, key: str, field: str = "max_abs"):
+        if not summary:
+            return None
+        return summary.get("channels", {}).get(key, {}).get(field)
+
+    def context(summary: dict[str, Any] | None, key: str, field: str = "max_abs"):
+        if not summary:
+            return None
+        item = summary.get("context", {}).get(key)
+        return None if item is None else item.get(field)
+
+    return {
+        "case": name,
+        "target_grade_deg": control["target_grade_deg"],
+        "rise_time_s": control["rise_time_s"],
+        "start_time_s": control["start_time_s"],
+        "response_max_abs_R_sddot_N": channel(response, "loop.radial_shift_acceleration_N"),
+        "response_p95_abs_R_sddot_N": channel(response, "loop.radial_shift_acceleration_N", "p95_abs"),
+        "response_activity_R_sddot": response["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
+        "response_max_abs_R_sdot2_N": channel(response, "loop.radial_geometry_curvature_N"),
+        "response_max_abs_R_vbdot_N": channel(response, "loop.tangential_belt_acceleration_N"),
+        "response_max_abs_R_sdotvb_N": channel(response, "loop.tangential_shifting_radius_N"),
+        "response_transport_inertia_max_abs_N": channel(response, "transport.belt_inertia_N"),
+        "response_transport_inertia_activity": response["integrated_activity_share"].get("transport.belt_inertia_N"),
+        "response_max_abs_shift_accel_mps2": context(response, "state.shift_acceleration_m_per_s2"),
+        "response_max_abs_belt_accel_mps2": context(response, "state.belt_acceleration_m_per_s2"),
+        "response_max_contact_static_fraction": context(response, "contact.max_static_utilization_fraction", "max"),
+        "pre_max_contact_static_fraction": context(pre, "contact.max_static_utilization_fraction", "max"),
+        "rise_activity_R_sddot": None if rise is None else rise["integrated_activity_share"].get("loop.radial_shift_acceleration_N"),
+        "rise_max_abs_R_sddot_N": channel(rise, "loop.radial_shift_acceleration_N"),
+    }
+
+
+def _write_shift_coefficient_rows(case_summaries: dict[str, dict[str, Any]]) -> None:
+    coefficient_keys = (
+        "loop.response_coefficient.radial_shift_acceleration_N_per_mps2",
+        "loop.response_coefficient.radial_geometry_curvature_N_per_m2ps2",
+        "loop.response_coefficient.tangential_belt_acceleration_N_per_mps2",
+        "loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2",
+    )
+    rows: list[dict[str, Any]] = []
+    for case, payload in case_summaries.items():
+        bands = payload.get("phase_analysis", {}).get("free_stick_by_shift_fraction", {})
+        for band, summary in bands.items():
+            for key in coefficient_keys:
+                stats = summary.get("response_coefficients", {}).get(key)
+                if not stats:
+                    continue
+                rows.append({
+                    "case": case,
+                    "shift_fraction_band": band,
+                    "coefficient": key,
+                    "median": stats.get("median"),
+                    "p05": stats.get("p05"),
+                    "p95": stats.get("p95"),
+                    "max_abs": stats.get("max_abs"),
+                })
+    write_rows(ARTIFACTS / "response_coefficients_by_shift.csv", rows)
+
+
+
+def _write_phase_dependence_tables(case_summaries: dict[str, dict[str, Any]]) -> None:
+    terms = (
+        "transport.belt_inertia_N",
+        "loop.radial_shift_acceleration_N",
+        "loop.radial_geometry_curvature_N",
+        "loop.tangential_belt_acceleration_N",
+        "loop.tangential_shifting_radius_N",
+        "loop.normal_contact_N",
+    )
+    for family_key, filename in (
+        ("free_stick_by_shift_fraction", "activity_by_shift_fraction.csv"),
+        ("free_stick_by_contact_demand", "activity_by_contact_demand.csv"),
+    ):
+        rows: list[dict[str, Any]] = []
+        for case, payload in case_summaries.items():
+            groups = payload.get("phase_analysis", {}).get(family_key, {})
+            for band, summary in groups.items():
+                for term in terms:
+                    stats = summary.get("channels", {}).get(term, {})
+                    share_stats = summary.get("instantaneous_activity_share", {}).get(term) or {}
+                    rows.append({
+                        "case": case,
+                        "band": band,
+                        "term": term,
+                        "sample_count": summary.get("sample_count"),
+                        "max_abs_N": stats.get("max_abs"),
+                        "p95_abs_N": stats.get("p95_abs"),
+                        "integrated_activity_share": summary.get("integrated_activity_share", {}).get(term),
+                        "instantaneous_share_p95": share_stats.get("p95"),
+                        "instantaneous_share_max": share_stats.get("max"),
+                    })
+        write_rows(ARTIFACTS / filename, rows)
+
+
+def _write_term_envelope(case_summaries: dict[str, dict[str, Any]], families: dict[str, str]) -> None:
+    terms = (
+        "transport.belt_inertia_N",
+        "loop.radial_shift_acceleration_N",
+        "loop.radial_geometry_curvature_N",
+        "loop.tangential_belt_acceleration_N",
+        "loop.tangential_shifting_radius_N",
+        "loop.normal_contact_N",
+    )
+    rows: list[dict[str, Any]] = []
+    for term in terms:
+        candidates = []
+        for case, payload in case_summaries.items():
+            free = _free_stick(payload)
+            if not free:
+                continue
+            stats = free.get("channels", {}).get(term)
+            share_stats = free.get("instantaneous_activity_share", {}).get(term)
+            if not stats:
+                continue
+            candidates.append((case, free, stats, share_stats or {}))
+        if not candidates:
+            continue
+        peak_case, peak_summary, peak_stats, peak_share = max(
+            candidates, key=lambda item: float(item[2].get("max_abs") or 0.0)
+        )
+        share_case, share_summary, share_mag, share_stats = max(
+            candidates, key=lambda item: float(item[3].get("max") or 0.0)
+        )
+        integrated_values = [
+            float(item[1].get("integrated_activity_share", {}).get(term) or 0.0)
+            for item in candidates
+        ]
+        rows.append({
+            "term": term,
+            "free_stick_peak_abs_N": peak_stats.get("max_abs"),
+            "free_stick_peak_case": peak_case,
+            "free_stick_peak_context": json.dumps(peak_summary.get("peak_context", {}).get(term)),
+            "free_stick_max_instantaneous_share": share_stats.get("max"),
+            "free_stick_max_share_case": share_case,
+            "free_stick_max_p95_share_across_cases": max(
+                float(item[3].get("p95") or 0.0) for item in candidates
+            ),
+            "free_stick_integrated_share_min": min(integrated_values),
+            "free_stick_integrated_share_max": max(integrated_values),
+        })
+    write_rows(ARTIFACTS / "term_envelope.csv", rows)
+
+def _plot_synthesis(case_summaries: dict[str, dict[str, Any]], controlled_rows: list[dict[str, Any]]) -> None:
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -115,79 +320,117 @@ def _synthesize(case_summaries: dict[str, dict]) -> None:
     except Exception:
         return
 
-    transient_terms = (
-        "transport.belt_inertia_N",
-        "loop.radial_shift_acceleration_N",
-        "loop.radial_geometry_curvature_N",
-        "loop.tangential_belt_acceleration_N",
-        "loop.tangential_shifting_radius_N",
+    broad = [p["name"] for p in BROAD_PROTOCOLS if p["name"] in case_summaries]
+    if broad:
+        transient_terms = (
+            "transport.belt_inertia_N",
+            "loop.radial_shift_acceleration_N",
+            "loop.radial_geometry_curvature_N",
+            "loop.tangential_belt_acceleration_N",
+            "loop.tangential_shifting_radius_N",
+        )
+        labels = ("transport inertia", "radial sddot", "radial sdot^2", "tangential vbdot", "tangential sdot*vb")
+        x = np.arange(len(broad), dtype=float)
+        width = 0.14
+        fig, ax = plt.subplots(figsize=(11, 5.5))
+        for index, (term, label) in enumerate(zip(transient_terms, labels, strict=True)):
+            values = []
+            for case in broad:
+                free = _free_stick(case_summaries[case])
+                values.append(0.0 if free is None else (free["integrated_activity_share"].get(term) or 0.0))
+            ax.bar(x + (index - 2) * width, values, width=width, label=label)
+        ax.set_xticks(x, [case.replace("_", "\n") for case in broad])
+        ax.set_ylabel("Free-stick integrated equation activity share [-]")
+        ax.set_title("Reduced-belt exploration: continuously engaged free-stick mechanics")
+        ax.legend(ncol=2)
+        ax.grid(True, axis="y", alpha=0.25)
+        fig.tight_layout()
+        fig.savefig(ARTIFACTS / "cross_case_free_stick_activity.png", dpi=180)
+        plt.close(fig)
+
+    if controlled_rows:
+        eighteen = sorted(
+            [row for row in controlled_rows if abs(float(row["target_grade_deg"]) - 18.0) < 1e-12],
+            key=lambda row: float(row["rise_time_s"]),
+        )
+        if eighteen:
+            fig, ax = plt.subplots(figsize=(7.0, 5.2))
+            ax.plot(
+                [float(row["rise_time_s"]) for row in eighteen],
+                [float(row["response_max_abs_R_sddot_N"]) for row in eighteen],
+                marker="o",
+            )
+            ax.set_xlabel("18° load rise time [s]")
+            ax.set_ylabel(r"max $|R_{\ddot{s}}|$ in first 1 s [N]")
+            ax.set_title("Radial shift-acceleration term vs disturbance timescale")
+            ax.grid(True, alpha=0.25)
+            fig.tight_layout()
+            fig.savefig(ARTIFACTS / "controlled_timescale_R_sddot.png", dpi=180)
+            plt.close(fig)
+
+        severity = sorted(
+            [row for row in controlled_rows if abs(float(row["rise_time_s"]) - 0.20) < 1e-12],
+            key=lambda row: float(row["target_grade_deg"]),
+        )
+        if severity:
+            fig, ax = plt.subplots(figsize=(7.0, 5.2))
+            ax.plot(
+                [float(row["target_grade_deg"]) for row in severity],
+                [float(row["response_max_abs_R_sddot_N"]) for row in severity],
+                marker="o",
+            )
+            ax.set_xlabel("Target grade [deg], 0.20 s smooth rise")
+            ax.set_ylabel(r"max $|R_{\ddot{s}}|$ in first 1 s [N]")
+            ax.set_title("Radial shift-acceleration term vs disturbance magnitude")
+            ax.grid(True, alpha=0.25)
+            fig.tight_layout()
+            fig.savefig(ARTIFACTS / "controlled_severity_R_sddot.png", dpi=180)
+            plt.close(fig)
+
+
+def _synthesize(case_summaries: dict[str, dict[str, Any]], families: dict[str, str]) -> None:
+    rows: list[dict[str, Any]] = []
+    for name, payload in case_summaries.items():
+        family = families[name]
+        _append_summary_rows(rows, case=name, family=family, scope="overall", summary=payload.get("overall"))
+        _append_summary_rows(rows, case=name, family=family, scope="free_stick_all", summary=_free_stick(payload))
+    write_rows(ARTIFACTS / "exploration_summary.csv", rows)
+
+    controlled_rows = [
+        row for name, payload in case_summaries.items()
+        if (row := _controlled_metric_row(name, payload)) is not None
+    ]
+    write_rows(ARTIFACTS / "controlled_load_summary.csv", controlled_rows)
+    _write_shift_coefficient_rows(case_summaries)
+    _write_phase_dependence_tables(case_summaries)
+    _write_term_envelope(case_summaries, families)
+    write_json(
+        ARTIFACTS / "exploration_summary.json",
+        {
+            "cases": case_summaries,
+            "summary_rows": rows,
+            "controlled_load_rows": controlled_rows,
+        },
     )
-    labels = ("transport inertia", "radial sddot", "radial sdot^2", "tangential vbdot", "tangential sdot*vb")
-    cases = list(case_summaries)
-    x = np.arange(len(cases), dtype=float)
-    width = 0.14
-    fig, ax = plt.subplots(figsize=(11, 5.5))
-    for index, (term, label) in enumerate(zip(transient_terms, labels, strict=True)):
-        values = [case_summaries[case]["overall"]["integrated_activity_share"].get(term) or 0.0 for case in cases]
-        ax.bar(x + (index - 2) * width, values, width=width, label=label)
-    ax.set_xticks(x, [case.replace("_", "\n") for case in cases])
-    ax.set_ylabel("Time-integrated equation activity share [-]")
-    ax.set_title("Reduced-belt discovery: transient-term activity across broad protocols")
-    ax.legend(ncol=2)
-    ax.grid(True, axis="y", alpha=0.25)
-    fig.tight_layout()
-    fig.savefig(ARTIFACTS / "cross_case_activity.png", dpi=180)
-    plt.close(fig)
-
-
-def _resolve_base_case(requested: Path | None) -> Path:
-    """Resolve the canonical executable Baja baseline without assuming one tree layout.
-
-    Results releases normally carry their own frozen baseline under ``defaults/``.
-    Development/result worktrees also carry the same executable baseline under
-    ``cvtModel/examples``.  Prefer the release-local copy when available; otherwise
-    use the repository example so the study still runs in lean result checkouts.
-    An explicit ``--base-case`` always wins.
-    """
-
-    if requested is not None:
-        candidate = requested.expanduser().resolve()
-        if not candidate.is_file():
-            raise FileNotFoundError(f"Explicit --base-case does not exist: {candidate}")
-        return candidate
-
-    for candidate in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE):
-        if candidate.is_file():
-            return candidate.resolve()
-
-    searched = "\n  - ".join(str(path) for path in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE))
-    raise FileNotFoundError(
-        "Could not locate the executable Baja baseline. Searched:\n  - "
-        + searched
-        + "\nPass --base-case PATH to an equivalent cinder_composed_simulation_case JSON."
-    )
+    _plot_synthesis(case_summaries, controlled_rows)
 
 
 def main() -> int:
+    all_names = [p["name"] for p in BROAD_PROTOCOLS] + [p["name"] for p in CONTROLLED_PROTOCOLS]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--base-case",
-        type=Path,
-        default=None,
-        help=(
-            "Optional executable baseline JSON. By default the study prefers the "
-            "release-local defaults case and falls back to "
-            "cvtModel/examples/baja_baseline_simulation_case.json."
-        ),
-    )
+    parser.add_argument("--base-case", type=Path, default=None)
     parser.add_argument("--max-samples", type=int, default=6000)
-    parser.add_argument("--only", choices=[p["name"] for p in PROTOCOLS], action="append")
-    parser.add_argument("--tests-only", action="store_true", help="Run pure final-equation tests and stop before importing CINDER.")
+    parser.add_argument("--stage", choices=("all", "broad", "controlled"), default="all")
+    parser.add_argument("--only", choices=all_names, action="append")
+    parser.add_argument("--tests-only", action="store_true")
     parser.add_argument("--skip-tests", action="store_true")
     args = parser.parse_args()
 
     if not args.skip_tests:
-        subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", str(STUDY_ROOT / "tests"), "-v"], check=True)
+        subprocess.run(
+            [sys.executable, "-m", "unittest", "discover", "-s", str(STUDY_ROOT / "tests"), "-v"],
+            check=True,
+        )
     if args.tests_only:
         return 0
 
@@ -200,31 +443,87 @@ def main() -> int:
     ARTIFACTS.mkdir(parents=True)
     write_json(ARTIFACTS / "term_inventory.json", list(inventory()))
 
-    selected = [p for p in PROTOCOLS if not args.only or p["name"] in args.only]
     protocol_dir = ARTIFACTS / "resolved_protocols"
     protocol_dir.mkdir()
-    summaries: dict[str, dict] = {}
-    for protocol in selected:
-        document = _resolved_protocol(base, protocol)
-        case_path = protocol_dir / f"{protocol['name']}.json"
-        write_json(case_path, document)
-        print(f"\n=== {protocol['title']} ===")
-        summaries[protocol["name"]] = run_case(
-            case_path=case_path,
-            name=protocol["name"],
-            max_samples=args.max_samples,
-            skip_environment_check=True,
-        )
-        summaries[protocol["name"]]["study_purpose"] = protocol["purpose"]
+    summaries: dict[str, dict[str, Any]] = {}
+    families: dict[str, str] = {}
 
-    _synthesize(summaries)
-    write_json(ARTIFACTS / "stage_status.json", {
-        "stage": "broad-exploration",
-        "governing_model_modified": False,
-        "ablation_switches_present": False,
-        "protocol_count": len(selected),
-        "next_action": "Inspect the atlas and cross-case activity before designing targeted transient sweeps or coherent reductions.",
-    })
+    if args.stage in {"all", "broad"}:
+        for protocol in BROAD_PROTOCOLS:
+            if args.only and protocol["name"] not in args.only:
+                continue
+            document = _broad_document(base, protocol)
+            case_path = protocol_dir / f"{protocol['name']}.json"
+            write_json(case_path, document)
+            print(f"\n=== {protocol['title']} ===")
+            summaries[protocol["name"]] = run_case(
+                case_path=case_path,
+                name=protocol["name"],
+                max_samples=args.max_samples,
+                skip_environment_check=True,
+                protocol=protocol,
+            )
+            families[protocol["name"]] = "broad"
+
+    if args.stage in {"all", "controlled"}:
+        controlled_document = _controlled_document(base)
+        for protocol in CONTROLLED_PROTOCOLS:
+            if args.only and protocol["name"] not in args.only:
+                continue
+            program = SmoothGradeProgram(
+                start_time_s=CONTROLLED_START_TIME_S,
+                rise_time_s=float(protocol["rise_time_s"]),
+                target_grade_deg=float(protocol["target_grade_deg"]),
+            )
+            case_path = protocol_dir / f"{protocol['name']}.json"
+            write_json(case_path, controlled_document)
+            protocol_context = {
+                **protocol,
+                "family": "controlled",
+                "purpose": (
+                    "Controlled smooth secondary road-load rise. All cases are identical until "
+                    f"t={CONTROLLED_START_TIME_S:.2f} s; only target grade or rise time changes."
+                ),
+                "controlled_load": program.as_dict(),
+            }
+
+            def configure(system, *, _program=program):
+                system.secondary_boundary = make_time_programmed_boundary(
+                    base_boundary=system.secondary_boundary,
+                    program=_program,
+                )
+
+            print(f"\n=== {protocol['title']} ===")
+            summaries[protocol["name"]] = run_case(
+                case_path=case_path,
+                name=protocol["name"],
+                max_samples=args.max_samples,
+                skip_environment_check=True,
+                protocol=protocol_context,
+                configure_system=configure,
+            )
+            families[protocol["name"]] = "controlled"
+
+    _synthesize(summaries, families)
+    write_json(
+        ARTIFACTS / "stage_status.json",
+        {
+            "stage": "phase-aware-broad-plus-controlled-exploration",
+            "governing_model_modified": False,
+            "ablation_switches_present": False,
+            "broad_protocol_count": sum(1 for family in families.values() if family == "broad"),
+            "controlled_protocol_count": sum(1 for family in families.values() if family == "controlled"),
+            "controlled_design": {
+                "common_start_time_s": CONTROLLED_START_TIME_S,
+                "timescale_axis": "18 degree target with rise times 0, 0.05, 0.20, 0.80 s",
+                "magnitude_axis": "0.20 s rise with targets 8, 18, 28 degrees",
+            },
+            "next_action": (
+                "Interpret phase-aware free-stick, ratio/coefficient, contact-demand, and controlled-load results "
+                "before defining any coherent belt reduction."
+            ),
+        },
+    )
     print(f"\nExploration artifacts: {ARTIFACTS}")
     return 0
 

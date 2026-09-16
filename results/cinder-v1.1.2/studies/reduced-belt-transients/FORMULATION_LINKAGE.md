@@ -97,3 +97,35 @@ Here \(r_p,r_s\) are the **belt centroid radii**, not the effective torque radii
 The first four tension-loop contributions are the transient belt mechanics being explored. `loop.normal_contact_N` is retained primarily as the contact/load reference that closes the equation; it is not itself a proposed ablation target.
 
 Each equation receives an instantaneous activity scale equal to the sum of the absolute values of its surviving additive contributions. This gives bounded activity shares without dividing by a residual that should be approximately zero.
+
+## Exploration factorization
+
+For the four transient tension-loop terms the phase-aware study also stores
+
+\[
+R_i = K_i D_i,
+\]
+
+with
+
+\[
+K_{\ddot s}=-2q(r_pr'_p-r_sr'_s),\qquad D_{\ddot s}=\ddot s,
+\]
+
+\[
+K_{\dot s^2}=-2q(r_pr''_p-r_sr''_s),\qquad D_{\dot s^2}=\dot s^2,
+\]
+
+\[
+K_{\dot v_b}=q(H_pr_p-H_sr_s),\qquad D_{\dot v_b}=\dot v_b,
+\]
+
+and
+
+\[
+K_{\dot s v_b}=q(H_pr'_p-H_sr'_s),\qquad D_{\dot s v_b}=\dot s\,v_b.
+\]
+
+This is not a new model or approximation. It is an exact factorization of the
+same final terms used above, recorded so operating-point sensitivity can be
+separated from kinematic excitation.

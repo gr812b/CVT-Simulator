@@ -95,6 +95,21 @@ class FinalEquationTests(unittest.TestCase):
         self.assertAlmostEqual(loop_share, 1.0, places=12)
         self.assertAlmostEqual(transport_share, 1.0, places=12)
 
+    def test_each_transient_term_is_response_coefficient_times_driver(self):
+        row = decompose_final_equations(sample())
+        triples = (
+            ("radial_shift_acceleration", "N_per_mps2", "mps2"),
+            ("radial_geometry_curvature", "N_per_m2ps2", "m2ps2"),
+            ("tangential_belt_acceleration", "N_per_mps2", "mps2"),
+            ("tangential_shifting_radius", "N_per_m2ps2", "m2ps2"),
+        )
+        for name, coefficient_unit, driver_unit in triples:
+            coefficient = row[f"loop.response_coefficient.{name}_{coefficient_unit}"]
+            driver = row[f"loop.driver.{name}_{driver_unit}"]
+            self.assertAlmostEqual(
+                row[f"loop.{name}_N"], coefficient * driver, places=12
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

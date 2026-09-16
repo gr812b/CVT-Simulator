@@ -54,6 +54,10 @@ def summarize_channel(rows: list[dict[str, Any]], key: str) -> dict[str, float] 
     return {
         "min": float(np.min(values)),
         "max": float(np.max(values)),
+        "mean": float(np.mean(values)),
+        "median": float(np.median(values)),
+        "p05": float(np.percentile(values, 5.0)),
+        "p95": float(np.percentile(values, 95.0)),
         "max_abs": float(np.max(absolute)),
         "median_abs": float(np.median(absolute)),
         "p95_abs": float(np.percentile(absolute, 95.0)),

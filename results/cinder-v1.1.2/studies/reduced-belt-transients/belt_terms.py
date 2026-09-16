@@ -136,11 +136,23 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
     transport_scale, transport_shares = _shares(transport)
     transport_residual = sum(transport.values())
 
+    response_coefficients = {
+        "radial_shift_acceleration": -2.0 * q * (rp * rpp - rs * rsp),
+        "radial_geometry_curvature": -2.0 * q * (rp * rpp2 - rs * rsp2),
+        "tangential_belt_acceleration": q * (Hp * rp - Hs * rs),
+        "tangential_shifting_radius": q * (Hp * rpp - Hs * rsp),
+    }
+    drivers = {
+        "radial_shift_acceleration": sddot,
+        "radial_geometry_curvature": sdot**2,
+        "tangential_belt_acceleration": vbdot,
+        "tangential_shifting_radius": sdot * vb,
+    }
     loop = {
-        "radial_shift_acceleration_N": -2.0 * q * (rp * rpp - rs * rsp) * sddot,
-        "radial_geometry_curvature_N": -2.0 * q * (rp * rpp2 - rs * rsp2) * sdot**2,
-        "tangential_belt_acceleration_N": q * (Hp * rp - Hs * rs) * vbdot,
-        "tangential_shifting_radius_N": q * (Hp * rpp - Hs * rsp) * sdot * vb,
+        "radial_shift_acceleration_N": response_coefficients["radial_shift_acceleration"] * drivers["radial_shift_acceleration"],
+        "radial_geometry_curvature_N": response_coefficients["radial_geometry_curvature"] * drivers["radial_geometry_curvature"],
+        "tangential_belt_acceleration_N": response_coefficients["tangential_belt_acceleration"] * drivers["tangential_belt_acceleration"],
+        "tangential_shifting_radius_N": response_coefficients["tangential_shifting_radius"] * drivers["tangential_shifting_radius"],
         "normal_contact_N": Gp * Np - Gs * Ns,
     }
     loop_scale, loop_shares = _shares(loop)
@@ -170,6 +182,14 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
         "coefficient.secondary_H": Hs,
         "coefficient.primary_G": Gp,
         "coefficient.secondary_G": Gs,
+        "loop.response_coefficient.radial_shift_acceleration_N_per_mps2": response_coefficients["radial_shift_acceleration"],
+        "loop.response_coefficient.radial_geometry_curvature_N_per_m2ps2": response_coefficients["radial_geometry_curvature"],
+        "loop.response_coefficient.tangential_belt_acceleration_N_per_mps2": response_coefficients["tangential_belt_acceleration"],
+        "loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2": response_coefficients["tangential_shifting_radius"],
+        "loop.driver.radial_shift_acceleration_mps2": drivers["radial_shift_acceleration"],
+        "loop.driver.radial_geometry_curvature_m2ps2": drivers["radial_geometry_curvature"],
+        "loop.driver.tangential_belt_acceleration_mps2": drivers["tangential_belt_acceleration"],
+        "loop.driver.tangential_shifting_radius_m2ps2": drivers["tangential_shifting_radius"],
         "transport.belt_inertia_N": transport["belt_inertia_N"],
         "transport.primary_reaction_N": transport["primary_reaction_N"],
         "transport.secondary_reaction_N": transport["secondary_reaction_N"],
