@@ -14,7 +14,7 @@ acceptance rules.  It improves three presentation/search layers:
 
 from __future__ import annotations
 
-from math import isfinite, pi
+from math import degrees, isfinite, pi
 
 import numpy as np
 
@@ -23,6 +23,8 @@ import numpy as np
 # edge when only RPM changes or when React mounts the page in development mode.
 _EDGE_GAIN_CACHE: dict[tuple[int, int], list[tuple[int, float, np.ndarray, np.ndarray, np.ndarray]]] = {}
 _FULL_FORCE_CACHE: dict[tuple[int, int, float], dict[str, object]] = {}
+_REQUIREMENT_GAIN_CACHE: dict[tuple[int, int, float], tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+_SOLUTION_CACHE: dict[tuple[object, ...], list[dict[str, object]]] = {}
 
 from .path_domain import (
     CompiledPathDomain,
@@ -34,6 +36,7 @@ from .path_domain import (
     _mass_from_index,
     _normalized_force_gain,
     _path_absolute_force_document,
+    _path_capability_document,
     _path_document,
     _path_from_state_indices,
     _physical_domain_projection,
@@ -145,8 +148,8 @@ def condition_path_domain_refined(
         raise ValueError("maximum tip mass cannot exceed the architecture limit")
     if mass_sample_count < 65:
         raise ValueError("mass_sample_count must be at least 65")
-    if representative_solution_count < 1:
-        raise ValueError("representative_solution_count must be positive")
+    if representative_solution_count < 0:
+        raise ValueError("representative_solution_count must be non-negative")
     if reference_shaft_speed_rad_s is not None and reference_shaft_speed_rad_s <= 0.0:
         raise ValueError("reference shaft speed must be positive")
 
@@ -188,47 +191,47 @@ def condition_path_domain_refined(
     edge_masks: list[list[int]] = []
     individual_status: dict[str, bool] = {requirement.id: False for requirement in requirements}
     for layer_index, layer_edges in enumerate(compiled.viable_edges):
-        masks: list[int] = []
-        x0 = layer_index * dx
-        for edge in layer_edges:
-            template = compiled.templates[edge.template_index]
-            segment = PathSegment(
-                x0_m=x0,
-                x1_m=x0 + dx,
-                q0_rad=template.q0_rad,
-                q1_rad=template.q1_rad,
-                m0_rad_per_m=template.m0_rad_per_m,
-                m1_rad_per_m=template.m1_rad_per_m,
+        masks = [all_mask] * len(layer_edges)
+        for requirement in requirements_by_layer[layer_index]:
+            requirement_masks = _requirement_mass_masks_for_layer(
+                compiled,
+                layer_index,
+                requirement,
+                max_tip_mass_per_flyweight_kg,
+                mass_sample_count,
             )
-            mask = all_mask
-            for requirement in requirements_by_layer[layer_index]:
-                requirement_mask = _requirement_mass_mask(
-                    architecture,
-                    segment,
-                    requirement,
-                    max_tip_mass_per_flyweight_kg,
-                    mass_sample_count,
-                )
-                if requirement_mask:
-                    individual_status[requirement.id] = True
-                mask &= requirement_mask
-            masks.append(mask)
+            if any(requirement_masks):
+                individual_status[requirement.id] = True
+            masks = [left & right for left, right in zip(masks, requirement_masks, strict=True)]
         edge_masks.append(masks)
 
     forward: list[dict[int, int]] = [dict() for _ in range(station_count)]
     backward: list[dict[int, int]] = [dict() for _ in range(station_count)]
-    for state_index in compiled.viable_nodes[0]:
-        forward[0][state_index] = all_mask
-    for layer_index, layer_edges in enumerate(compiled.viable_edges):
+
+    # The compiled graph has already proven that every viable node is reachable
+    # from the start and can reach the finish. Before the first constrained
+    # layer, forward mass reachability is therefore simply "all masses"; after
+    # the last constrained layer, backward reachability is the same. Starting
+    # the dynamic programs at those boundaries avoids another full scan of the
+    # unconstrained half of the graph for the common one-point interaction.
+    constrained_layers = [
+        index for index, row in enumerate(requirements_by_layer) if row
+    ]
+    first_constrained_layer = min(constrained_layers)
+    last_constrained_layer = max(constrained_layers)
+
+    for station in range(first_constrained_layer + 1):
+        forward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+    for layer_index in range(first_constrained_layer, layer_count):
         next_map = forward[layer_index + 1]
-        for edge_index, edge in enumerate(layer_edges):
+        for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
             mask = forward[layer_index].get(edge.start_state, 0) & edge_masks[layer_index][edge_index]
             if mask:
                 next_map[edge.end_state] = next_map.get(edge.end_state, 0) | mask
 
-    for state_index in compiled.viable_nodes[-1]:
-        backward[-1][state_index] = all_mask
-    for layer_index in range(layer_count - 1, -1, -1):
+    for station in range(last_constrained_layer + 1, station_count):
+        backward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+    for layer_index in range(last_constrained_layer, -1, -1):
         current_map = backward[layer_index]
         for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
             mask = backward[layer_index + 1].get(edge.end_state, 0) & edge_masks[layer_index][edge_index]
@@ -277,14 +280,29 @@ def condition_path_domain_refined(
         samples_per_layer=force_samples_per_layer,
     )
     if requirements:
-        conditioned_force_capability = _force_interval_projection(
-            compiled,
-            max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
-            shaft_speed_rad_s=display_speed,
-            edge_mass_masks=conditioned_edge_masks,
-            mass_sample_count=mass_sample_count,
-            samples_per_layer=force_samples_per_layer,
-        )
+        if representative_solution_count == 0:
+            # Interactive point editing only needs an exact graph filter and a
+            # compact picture of the surviving force set.  Re-walking every
+            # surviving edge at every display sample is much more expensive
+            # than the filter itself, so use the exact graph-station states
+            # here.  The detailed edge-continuous projection is rebuilt only
+            # when the user explicitly opens the Solutions view.
+            conditioned_force_capability = _node_force_interval_projection(
+                compiled,
+                node_masks=node_masks,
+                max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+                shaft_speed_rad_s=display_speed,
+                mass_sample_count=mass_sample_count,
+            )
+        else:
+            conditioned_force_capability = _force_interval_projection(
+                compiled,
+                max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+                shaft_speed_rad_s=display_speed,
+                edge_mass_masks=conditioned_edge_masks,
+                mass_sample_count=mass_sample_count,
+                samples_per_layer=force_samples_per_layer,
+            )
         projection = _physical_domain_projection(
             architecture,
             conditioned_nodes,
@@ -303,7 +321,28 @@ def condition_path_domain_refined(
         projection = compiled.document["domain_projection"]
 
     jointly_feasible = bool(conditioned_nodes and conditioned_nodes[0])
-    if jointly_feasible and requirements:
+    preview_only = False
+    if not jointly_feasible:
+        representative_solutions = []
+    elif representative_solution_count == 0 and requirements:
+        # Requirement editing still needs immediate geometric feedback. Extract a
+        # few complete graph paths that carry one common mass through the current
+        # requirements, but deliberately skip the expensive nonlocal history
+        # certification. These are visual previews only; the Solutions view
+        # replaces them with history-certified ramps on explicit request.
+        representative_solutions = _conditioned_preview_representatives(
+            compiled,
+            requirements,
+            conditioned_edge_masks,
+            max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+            mass_sample_count=mass_sample_count,
+            preview_count=6,
+            display_speed=display_speed,
+        )
+        preview_only = True
+    elif representative_solution_count == 0:
+        representative_solutions = []
+    elif requirements:
         representative_solutions = _conditioned_representatives(
             compiled,
             requirements,
@@ -313,15 +352,13 @@ def condition_path_domain_refined(
             representative_solution_count=representative_solution_count,
             display_speed=display_speed,
         )
-    elif jointly_feasible:
+    else:
         representative_solutions = _unconditioned_representatives(
             compiled,
             max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
             representative_solution_count=representative_solution_count,
             display_speed=display_speed,
         )
-    else:
-        representative_solutions = []
 
     impossible_ids = [identifier for identifier, possible in individual_status.items() if not possible]
     findings: list[dict[str, object]] = []
@@ -397,8 +434,124 @@ def condition_path_domain_refined(
             "jointly_feasible": jointly_feasible,
             "conditioned_domain_point_count": projection["point_count"],
             "representative_solution_count": len(representative_solutions),
+            "representative_solutions_preview_only": preview_only,
         },
     }
+
+
+def _requirement_mass_masks_for_layer(
+    compiled: CompiledPathDomain,
+    layer_index: int,
+    requirement: ForceRequirement,
+    max_mass_kg: float,
+    mass_sample_count: int,
+) -> list[int]:
+    """Vectorized exact force-point mass masks for every edge in one graph layer."""
+
+    arm_gain, tip_gain, active = _edge_gains_at_shift(
+        compiled,
+        layer_index,
+        requirement.shift_m,
+    )
+    count = len(compiled.viable_edges[layer_index])
+    if count == 0:
+        return []
+
+    omega2 = requirement.shaft_speed_rad_s * requirement.shaft_speed_rad_s
+    target_low = requirement.force_N - requirement.tolerance_N
+    target_high = requirement.force_N + requirement.tolerance_N
+    base = omega2 * arm_gain
+    slope = omega2 * tip_gain
+    masks = [0] * count
+    all_mask = (1 << mass_sample_count) - 1
+
+    flat = active & (np.abs(slope) <= 1.0e-14)
+    flat_ok = flat & (base >= target_low - 1.0e-9) & (base <= target_high + 1.0e-9)
+    for index in np.flatnonzero(flat_ok):
+        masks[int(index)] = all_mask
+
+    sloped = active & (np.abs(slope) > 1.0e-14)
+    if not np.any(sloped):
+        return masks
+
+    indices = np.flatnonzero(sloped)
+    a = (target_low - base[indices]) / slope[indices]
+    b = (target_high - base[indices]) / slope[indices]
+    mass_low = np.maximum(0.0, np.minimum(a, b))
+    mass_high = np.minimum(max_mass_kg, np.maximum(a, b))
+    feasible = mass_high >= mass_low - 1.0e-12
+    if max_mass_kg <= 1.0e-15:
+        for local_index in np.flatnonzero(feasible):
+            if mass_low[local_index] <= 1.0e-12 <= mass_high[local_index] + 1.0e-12:
+                masks[int(indices[local_index])] = 1
+        return masks
+
+    scale = (mass_sample_count - 1) / max_mass_kg
+    first = np.ceil(mass_low * scale - 1.0e-10).astype(np.int64)
+    last = np.floor(mass_high * scale + 1.0e-10).astype(np.int64)
+    first = np.clip(first, 0, mass_sample_count - 1)
+    last = np.clip(last, 0, mass_sample_count - 1)
+    feasible &= last >= first
+    for local_index in np.flatnonzero(feasible):
+        lo = int(first[local_index])
+        hi = int(last[local_index])
+        masks[int(indices[local_index])] = ((1 << (hi - lo + 1)) - 1) << lo
+    return masks
+
+
+def _edge_gains_at_shift(
+    compiled: CompiledPathDomain,
+    layer_index: int,
+    shift_m: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return exact Hermite arm/tip gains for all viable edges at one shift."""
+
+    key = (id(compiled), int(layer_index), round(float(shift_m), 12))
+    cached = _REQUIREMENT_GAIN_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    layer_edges = compiled.viable_edges[layer_index]
+    if not layer_edges:
+        empty = np.asarray([], dtype=float)
+        result = (empty, empty, np.asarray([], dtype=bool))
+        _REQUIREMENT_GAIN_CACHE[key] = result
+        return result
+
+    architecture = compiled.architecture
+    layer_count = compiled.shift_station_count - 1
+    dx = architecture.required_travel_m / layer_count
+    x0 = layer_index * dx
+    t = min(1.0, max(0.0, (float(shift_m) - x0) / dx))
+    templates = [compiled.templates[edge.template_index] for edge in layer_edges]
+    q0 = np.asarray([template.q0_rad for template in templates], dtype=float)
+    q1 = np.asarray([template.q1_rad for template in templates], dtype=float)
+    m0 = np.asarray([template.m0_rad_per_m for template in templates], dtype=float)
+    m1 = np.asarray([template.m1_rad_per_m for template in templates], dtype=float)
+    delta = q1 - q0
+    M0 = dx * m0
+    M1 = dx * m1
+    A = 3.0 * delta - 2.0 * M0 - M1
+    B = -2.0 * delta + M0 + M1
+    q = q0 + M0 * t + A * t * t + B * t * t * t
+    dq = (M0 + 2.0 * A * t + 3.0 * B * t * t) / dx
+
+    sin_q = np.sin(q)
+    cos_q = np.cos(q)
+    n = float(architecture.number_of_flyweights)
+    R = architecture.pivot_radius_m
+    L = architecture.arm_length_m
+    arm_mass = architecture.arm_mass_per_flyweight_kg
+    arm_gain = 0.5 * n * arm_mass * (
+        R * L * cos_q + (2.0 / 3.0) * L * L * sin_q * cos_q
+    ) * dq
+    tip_gain = 0.5 * n * (
+        2.0 * L * cos_q * (R + L * sin_q)
+    ) * dq
+    active = (dq > 1.0e-8) & np.isfinite(arm_gain) & np.isfinite(tip_gain)
+    result = (arm_gain, tip_gain, active)
+    _REQUIREMENT_GAIN_CACHE[key] = result
+    return result
 
 
 def _continuous_normalized_capability(
@@ -572,11 +725,15 @@ def _unrestricted_condition_result(
         samples_per_layer=force_samples_per_layer,
     )
     projection = compiled.document["domain_projection"]
-    representatives = _unconditioned_representatives(
-        compiled,
-        max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
-        representative_solution_count=representative_solution_count,
-        display_speed=display_speed,
+    representatives = (
+        _unconditioned_representatives(
+            compiled,
+            max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+            representative_solution_count=representative_solution_count,
+            display_speed=display_speed,
+        )
+        if representative_solution_count > 0
+        else []
     )
     graph = compiled.document["graph"]
     assert isinstance(graph, dict)
@@ -610,6 +767,91 @@ def _unrestricted_condition_result(
         },
     }
 
+def _node_force_interval_projection(
+    compiled: CompiledPathDomain,
+    *,
+    node_masks: list[dict[int, int]],
+    max_tip_mass_per_flyweight_kg: float,
+    shaft_speed_rad_s: float,
+    mass_sample_count: int,
+) -> dict[str, object]:
+    """Cheap exact-at-stations force projection for interactive filtering.
+
+    The graph filter already produces a mass bitset for every surviving state.
+    Evaluating those states at the graph stations is O(nodes), rather than
+    O(edges * display_samples).  This projection is intentionally discrete; it
+    is never used to decide whether a new point is placeable.
+    """
+
+    omega2 = shaft_speed_rad_s * shaft_speed_rad_s
+    architecture = compiled.architecture
+    station_count = compiled.shift_station_count
+    stations: list[dict[str, object]] = []
+
+    for station in range(station_count):
+        shift_m = (
+            station / max(1, station_count - 1)
+            * architecture.required_travel_m
+        )
+        force_lows: list[float] = []
+        force_highs: list[float] = []
+        mass_lows: list[float] = []
+        mass_highs: list[float] = []
+        active_count = 0
+
+        for state_index, mask in node_masks[station].items():
+            if not mask:
+                continue
+            state = compiled.states[state_index]
+            if state.dq_dx_rad_per_m <= 1.0e-8:
+                continue
+            arm_gain, tip_gain, _ = _normalized_force_gain(
+                architecture, state.q_rad, state.dq_dx_rad_per_m
+            )
+            active_count += 1
+            for first, last in _mask_runs(mask):
+                low_mass = _mass_from_index(
+                    first, max_tip_mass_per_flyweight_kg, mass_sample_count
+                )
+                high_mass = _mass_from_index(
+                    last, max_tip_mass_per_flyweight_kg, mass_sample_count
+                )
+                a = omega2 * (arm_gain + low_mass * tip_gain)
+                b = omega2 * (arm_gain + high_mass * tip_gain)
+                force_lows.append(min(a, b))
+                force_highs.append(max(a, b))
+                mass_lows.append(low_mass)
+                mass_highs.append(high_mass)
+
+        merged_force = _merge_numpy_intervals(
+            np.asarray(force_lows, dtype=float),
+            np.asarray(force_highs, dtype=float),
+        )
+        merged_mass = _merge_numpy_intervals(
+            np.asarray(mass_lows, dtype=float),
+            np.asarray(mass_highs, dtype=float),
+        )
+        stations.append(
+            {
+                "station": station,
+                "shift_m": shift_m,
+                "active_state_count": active_count,
+                "force_min_N": merged_force[0][0] if merged_force else None,
+                "force_max_N": merged_force[-1][1] if merged_force else None,
+                "force_intervals_N": [[lo, hi] for lo, hi in merged_force],
+                "mass_min_kg": merged_mass[0][0] if merged_mass else None,
+                "mass_max_kg": merged_mass[-1][1] if merged_mass else None,
+            }
+        )
+
+    return {
+        "shaft_speed_rad_s": shaft_speed_rad_s,
+        "max_tip_mass_per_flyweight_kg": max_tip_mass_per_flyweight_kg,
+        "stations": stations,
+        "projection_kind": "graph_stations",
+    }
+
+
 def _force_interval_projection(
     compiled: CompiledPathDomain,
     *,
@@ -619,9 +861,36 @@ def _force_interval_projection(
     mass_sample_count: int,
     samples_per_layer: int,
 ) -> dict[str, object]:
+    """Project attainable force as interval unions without per-sample mask scans."""
+
     omega2 = shaft_speed_rad_s * shaft_speed_rad_s
     samples: list[dict[str, object]] = []
-    all_mask = (1 << mass_sample_count) - 1
+
+    run_data: list[tuple[np.ndarray, np.ndarray, np.ndarray] | None] = []
+    if edge_mass_masks is not None:
+        for masks in edge_mass_masks:
+            edge_indices: list[int] = []
+            mass_lows: list[float] = []
+            mass_highs: list[float] = []
+            for edge_index, mask in enumerate(masks):
+                if not mask:
+                    continue
+                for first, last in _mask_runs(mask):
+                    edge_indices.append(edge_index)
+                    mass_lows.append(
+                        _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count)
+                    )
+                    mass_highs.append(
+                        _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count)
+                    )
+            if edge_indices:
+                run_data.append((
+                    np.asarray(edge_indices, dtype=np.int64),
+                    np.asarray(mass_lows, dtype=float),
+                    np.asarray(mass_highs, dtype=float),
+                ))
+            else:
+                run_data.append(None)
 
     for layer_index, shift_m, arm, tip, active in _edge_gain_samples(compiled, samples_per_layer):
         if edge_mass_masks is None:
@@ -634,32 +903,33 @@ def _force_interval_projection(
             merged_mass = [(0.0, max_tip_mass_per_flyweight_kg)] if lows.size else []
             active_count = int(lows.size)
         else:
-            intervals: list[tuple[float, float]] = []
-            mass_intervals: list[tuple[float, float]] = []
-            active_count = 0
-            masks = edge_mass_masks[layer_index]
-            for edge_index in np.flatnonzero(active):
-                mask = masks[int(edge_index)]
-                if not mask:
-                    continue
-                if mask == all_mask:
-                    mass_runs = ((0.0, max_tip_mass_per_flyweight_kg),)
+            layer_runs = run_data[layer_index]
+            if layer_runs is None:
+                merged = []
+                merged_mass = []
+                active_count = 0
+            else:
+                edge_indices, mass_lows, mass_highs = layer_runs
+                valid_runs = active[edge_indices]
+                indices = edge_indices[valid_runs]
+                lows_mass = mass_lows[valid_runs]
+                highs_mass = mass_highs[valid_runs]
+                if indices.size == 0:
+                    merged = []
+                    merged_mass = []
+                    active_count = 0
                 else:
-                    mass_runs = tuple(
-                        (
-                            _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                            _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                        )
-                        for first, last in _mask_runs(mask)
+                    low_force = omega2 * (arm[indices] + lows_mass * tip[indices])
+                    high_force = omega2 * (arm[indices] + highs_mass * tip[indices])
+                    merged = _merge_numpy_intervals(
+                        np.minimum(low_force, high_force),
+                        np.maximum(low_force, high_force),
                     )
-                for low_mass, high_mass in mass_runs:
-                    a = omega2 * (float(arm[edge_index]) + low_mass * float(tip[edge_index]))
-                    b = omega2 * (float(arm[edge_index]) + high_mass * float(tip[edge_index]))
-                    intervals.append((min(a, b), max(a, b)))
-                    mass_intervals.append((low_mass, high_mass))
-                active_count += 1
-            merged = _merge_intervals(intervals)
-            merged_mass = _merge_intervals(mass_intervals)
+                    merged_mass = _merge_numpy_intervals(
+                        np.minimum(lows_mass, highs_mass),
+                        np.maximum(lows_mass, highs_mass),
+                    )
+                    active_count = int(np.unique(indices).size)
 
         samples.append(
             {
@@ -729,6 +999,92 @@ def _unconditioned_representatives(
         )
     return solutions
 
+def _conditioned_preview_representatives(
+    compiled: CompiledPathDomain,
+    requirements: tuple[ForceRequirement, ...],
+    edge_masks: list[list[int]],
+    *,
+    max_tip_mass_per_flyweight_kg: float,
+    mass_sample_count: int,
+    preview_count: int,
+    display_speed: float,
+) -> list[dict[str, object]]:
+    """Return cheap complete-path previews for interactive requirement editing.
+
+    These paths satisfy the current graph constraints and admit one continuous
+    constant tip-mass interval through every force point. They intentionally do
+    not run the nonlocal history certification used by the final Solutions view.
+    """
+
+    if preview_count <= 0:
+        return []
+    candidates = _candidate_state_paths(
+        compiled,
+        edge_masks=edge_masks,
+        max_candidates=max(18, 4 * preview_count),
+    )
+    previews: list[dict[str, object]] = []
+    sample_count = max(81, 10 * compiled.shift_station_count + 1)
+    for state_path in _diverse_path_order(compiled, candidates):
+        ramp_path = _path_from_state_indices(
+            compiled.architecture,
+            compiled.states,
+            list(state_path),
+            compiled.shift_station_count,
+        )
+        interval = _continuous_path_mass_interval(
+            ramp_path,
+            requirements,
+            max_tip_mass_per_flyweight_kg,
+        )
+        if interval is None:
+            continue
+        data = ramp_path.sample(sample_count)
+        document: dict[str, object] = {
+            "state_indices": list(state_path),
+            "shift_m": [float(value) for value in data["shift_m"]],
+            "q_deg": [degrees(float(value)) for value in data["q_rad"]],
+            "ramp_tangent_deg": [float(value) for value in data["ramp_tangent_deg"]],
+            "roller_center": {
+                "x_m": [float(value) for value in data["roller_center_x_m"]],
+                "r_m": [float(value) for value in data["roller_center_r_m"]],
+            },
+            "ramp_surface": {
+                "x_m": [float(value) for value in data["contact_x_m"]],
+                "r_m": [float(value) for value in data["contact_r_m"]],
+            },
+            "capability": _path_capability_document(compiled.architecture, data),
+            "history": {
+                "max_contact_root_count": 0,
+                "multiple_root_shift_count": 0,
+                "trace_shift_m": [],
+                "trace_parameter_m": [],
+                "trace_q_deg": [],
+            },
+        }
+        mass_min, mass_max = interval
+        example_mass = 0.5 * (mass_min + mass_max)
+        previews.append(
+            {
+                **document,
+                "solution": {
+                    "tip_mass_min_kg": mass_min,
+                    "tip_mass_max_kg": mass_max,
+                    "example_tip_mass_kg": example_mass,
+                    "force_N": _path_absolute_force_document(
+                        document,
+                        example_mass,
+                        requirements,
+                        display_speed,
+                    ),
+                },
+            }
+        )
+        if len(previews) >= preview_count:
+            break
+    return previews
+
+
 def _conditioned_representatives(
     compiled: CompiledPathDomain,
     requirements: tuple[ForceRequirement, ...],
@@ -739,25 +1095,50 @@ def _conditioned_representatives(
     representative_solution_count: int,
     display_speed: float,
 ) -> list[dict[str, object]]:
-    state_paths = _candidate_state_paths(
-        compiled,
-        edge_masks=edge_masks,
-        max_candidates=max(72, 10 * representative_solution_count),
+    """Extract a small diverse history-certified gallery only on explicit request."""
+
+    if representative_solution_count <= 0:
+        return []
+    requirement_signature = tuple(
+        (
+            requirement.id,
+            round(requirement.shift_m, 12),
+            round(requirement.force_N, 8),
+            round(requirement.shaft_speed_rad_s, 8),
+            round(requirement.tolerance_N, 8),
+        )
+        for requirement in requirements
     )
+    cache_key = (
+        id(compiled),
+        requirement_signature,
+        round(max_tip_mass_per_flyweight_kg, 12),
+        int(mass_sample_count),
+        int(representative_solution_count),
+        round(display_speed, 8),
+    )
+    cached = _SOLUTION_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     solutions: list[tuple[tuple[int, ...], dict[str, object]]] = []
-    for state_path in _diverse_path_order(compiled, state_paths):
+    seen: set[tuple[int, ...]] = set()
+
+    # Start with already history-certified architecture representatives. Broad
+    # requirement regions often retain several of these, so the solution page
+    # can open without repeating the expensive nonlocal certification.
+    for state_path, document in zip(
+        compiled.representative_state_paths,
+        compiled.representative_documents,
+        strict=True,
+    ):
+        signature = tuple(state_path)
         ramp_path = _path_from_state_indices(
             compiled.architecture,
             compiled.states,
-            list(state_path),
+            list(signature),
             compiled.shift_station_count,
         )
-        certification = certify_path_history(
-            ramp_path,
-            trace_sample_count=compiled.history_trace_sample_count,
-        )
-        if not certification.valid:
-            continue
         interval = _continuous_path_mass_interval(
             ramp_path,
             requirements,
@@ -765,15 +1146,9 @@ def _conditioned_representatives(
         )
         if interval is None:
             continue
-        document = _path_document(
-            ramp_path,
-            list(state_path),
-            certification,
-            sample_count=max(161, 20 * compiled.shift_station_count + 1),
-        )
         mass_min, mass_max = interval
         example_mass = 0.5 * (mass_min + mass_max)
-        document = {
+        solution_document = {
             **document,
             "solution": {
                 "tip_mass_min_kg": mass_min,
@@ -787,10 +1162,78 @@ def _conditioned_representatives(
                 ),
             },
         }
-        solutions.append((tuple(state_path), document))
+        solutions.append((signature, solution_document))
+        seen.add(signature)
+        if len(solutions) >= representative_solution_count:
+            result = [item for _, item in solutions]
+            _SOLUTION_CACHE[cache_key] = result
+            return result
+
+    # Only if the pre-certified atlas did not cover the conditioned region do
+    # we search the conditioned graph and certify fresh paths. Keep this pool
+    # deliberately bounded; the gallery needs representative designs, not an
+    # exhaustive enumeration.
+    remaining = representative_solution_count - len(solutions)
+    state_paths = _candidate_state_paths(
+        compiled,
+        edge_masks=edge_masks,
+        max_candidates=max(24, 5 * remaining),
+    )
+    for state_path in _diverse_path_order(compiled, state_paths):
+        signature = tuple(state_path)
+        if signature in seen:
+            continue
+        ramp_path = _path_from_state_indices(
+            compiled.architecture,
+            compiled.states,
+            list(signature),
+            compiled.shift_station_count,
+        )
+        interval = _continuous_path_mass_interval(
+            ramp_path,
+            requirements,
+            max_tip_mass_per_flyweight_kg,
+        )
+        if interval is None:
+            continue
+        certification = certify_path_history(
+            ramp_path,
+            trace_sample_count=compiled.history_trace_sample_count,
+        )
+        if not certification.valid:
+            continue
+        document = _path_document(
+            ramp_path,
+            list(signature),
+            certification,
+            sample_count=max(161, 20 * compiled.shift_station_count + 1),
+        )
+        mass_min, mass_max = interval
+        example_mass = 0.5 * (mass_min + mass_max)
+        solution_document = {
+            **document,
+            "solution": {
+                "tip_mass_min_kg": mass_min,
+                "tip_mass_max_kg": mass_max,
+                "example_tip_mass_kg": example_mass,
+                "force_N": _path_absolute_force_document(
+                    document,
+                    example_mass,
+                    requirements,
+                    display_speed,
+                ),
+            },
+        }
+        solutions.append((signature, solution_document))
+        seen.add(signature)
         if len(solutions) >= representative_solution_count:
             break
-    return [document for _, document in solutions]
+
+    ordered_paths = _diverse_path_order(compiled, [path for path, _ in solutions])
+    by_path = {path: document for path, document in solutions}
+    result = [by_path[path] for path in ordered_paths[:representative_solution_count]]
+    _SOLUTION_CACHE[cache_key] = result
+    return result
 
 
 def _candidate_state_paths(

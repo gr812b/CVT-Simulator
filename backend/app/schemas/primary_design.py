@@ -96,7 +96,7 @@ class FixedPivotPathDomainConditionRequest(ApiModel):
     requirements: list[ForceRequirementRequest] = Field(default_factory=list, max_length=32)
     max_tip_mass_per_flyweight_kg: float = Field(ge=0.0)
     mass_sample_count: int = Field(default=1025, ge=65, le=4097)
-    representative_solution_count: int = Field(default=8, ge=1, le=24)
+    representative_solution_count: int = Field(default=8, ge=0, le=24)
     reference_shaft_speed_rad_s: float | None = Field(default=None, gt=0.0)
 
 
