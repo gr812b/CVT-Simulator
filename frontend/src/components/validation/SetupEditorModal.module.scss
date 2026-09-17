@@ -1,10 +1,13 @@
+@use '@styles/_colors';
+@use '@styles/_fonts';
+
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 1000;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.48);
+  background: rgba(0, 0, 0, 0.58);
   padding: 2rem;
 }
 
@@ -12,10 +15,12 @@
   width: min(980px, 96vw);
   max-height: 92vh;
   overflow: auto;
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  background: var(--background-primary, #fff);
+  background: var(--secondary);
+  color: var(--text-color);
   padding: 1.2rem;
-  box-shadow: 0 18px 64px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 18px 64px rgba(0, 0, 0, 0.35);
 }
 
 .modal header {
@@ -26,47 +31,125 @@
   position: sticky;
   top: -1.2rem;
   padding: 1rem 0;
-  background: inherit;
+  background: var(--secondary);
   z-index: 2;
 }
 
-.modal h2, .modal h3 { margin: 0; }
-.body { display: grid; gap: 0.9rem; }
+.modal h2,
+.modal h3,
+.modal p,
+.modal summary,
+.modal span,
+.modal label {
+  color: var(--text-color);
+}
+
+.modal h2,
+.modal h3 {
+  margin: 0;
+}
+
+.body {
+  display: grid;
+  gap: 0.9rem;
+}
 
 .fieldRow {
   display: grid;
   grid-template-columns: minmax(220px, 1.25fr) minmax(200px, 0.8fr) minmax(260px, 1fr);
   gap: 0.8rem;
   align-items: end;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.8rem;
 }
 
-.fieldRow label, .kindSelect {
+.fieldRow label,
+.kindSelect {
   display: grid;
   gap: 0.3rem;
   font-size: 0.86rem;
 }
 
-.valueWithUnit, .uncertaintyRow { display: flex; gap: 0.4rem; align-items: center; }
-.valueWithUnit input, .uncertaintyRow input { min-width: 0; flex: 1; }
-.valueWithUnit small { min-width: 52px; opacity: 0.7; }
-.sourceField { min-width: 0; }
-
-input, select, textarea {
-  border: 1px solid rgba(127, 127, 127, 0.42);
-  border-radius: 7px;
-  padding: 0.48rem 0.55rem;
-  background: inherit;
-  color: inherit;
+.valueWithUnit,
+.uncertaintyRow {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
-.kindSelect { margin-bottom: 0.7rem; }
-.curveEditor { padding: 0.75rem 0; }
-.curveEditor p { opacity: 0.72; }
-.curveRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.35rem 0; }
-.advanced { margin-top: 1.3rem; }
-.advanced textarea { width: 100%; min-height: 280px; font-family: monospace; margin: 0.7rem 0; }
+.valueWithUnit input,
+.uncertaintyRow input {
+  min-width: 0;
+  flex: 1;
+}
+
+.valueWithUnit small {
+  min-width: 52px;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.sourceField {
+  min-width: 0;
+}
+
+.modal input,
+.modal select,
+.modal textarea,
+.modal button {
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  padding: 0.48rem 0.55rem;
+  background: var(--background);
+  color: var(--text-color);
+}
+
+.modal button {
+  cursor: pointer;
+}
+
+.modal button:hover {
+  border-color: var(--primary);
+}
+
+.modal input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+
+.modal select option {
+  background-color: var(--background);
+  color: var(--text-color);
+}
+
+.kindSelect {
+  margin-bottom: 0.7rem;
+}
+
+.curveEditor {
+  padding: 0.75rem 0;
+}
+
+.curveEditor p {
+  opacity: 0.72;
+}
+
+.curveRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+}
+
+.advanced {
+  margin-top: 1.3rem;
+}
+
+.advanced textarea {
+  width: 100%;
+  min-height: 280px;
+  font-family: monospace;
+  margin: 0.7rem 0;
+}
 
 @media (max-width: 800px) {
   .fieldRow { grid-template-columns: 1fr; }

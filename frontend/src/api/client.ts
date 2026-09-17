@@ -1003,3 +1003,72 @@ export async function saveValidationRun(payload: ValidationRunSave): Promise<Rec
     }),
   }), 'validation run');
 }
+
+// CVT validation integrated V0.4 result retrieval -----------------------
+export interface ValidationMetric {
+  bias: number;
+  mae: number;
+  rmse: number;
+  maxAbs: number;
+  count: number;
+}
+
+export interface ValidationRunRecord {
+  id: string;
+  accountId: string;
+  sourceFilename: string;
+  rawCsv: string;
+  cropStartS: number;
+  cropEndS: number;
+  channelConfig: Record<string, unknown>;
+  initialStateConfig: Record<string, unknown>;
+  workspaceSnapshot: Record<string, unknown> & { workflowDefaults?: Record<string, unknown> };
+  resolvedDocument: SimulationCaseDocument;
+  simulationRunId: string | null;
+  resultSnapshot: SimulationResult;
+  metrics: Record<string, ValidationMetric>;
+  createdAt: string;
+}
+
+function validationMetricNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
+}
+
+function parseValidationRunRecord(raw: unknown): ValidationRunRecord {
+  const item = object(raw, 'validation run');
+  const metricsRaw = object(item.metrics ?? {}, 'validation run.metrics');
+  const metrics: Record<string, ValidationMetric> = {};
+  for (const [key, value] of Object.entries(metricsRaw)) {
+    const metric = object(value, `validation run.metrics.${key}`);
+    metrics[key] = {
+      bias: validationMetricNumber(metric.bias),
+      mae: validationMetricNumber(metric.mae),
+      rmse: validationMetricNumber(metric.rmse),
+      maxAbs: validationMetricNumber(metric.maxAbs),
+      count: validationMetricNumber(metric.count),
+    };
+  }
+  return {
+    id: string(item.id, 'validation run.id'),
+    accountId: string(item.account_id, 'validation run.account_id'),
+    sourceFilename: string(item.source_filename, 'validation run.source_filename'),
+    rawCsv: string(item.raw_csv, 'validation run.raw_csv'),
+    cropStartS: number(item.crop_start_s, 'validation run.crop_start_s'),
+    cropEndS: number(item.crop_end_s, 'validation run.crop_end_s'),
+    channelConfig: object(item.channel_config, 'validation run.channel_config'),
+    initialStateConfig: object(item.initial_state_config, 'validation run.initial_state_config'),
+    workspaceSnapshot: object(item.workspace_snapshot, 'validation run.workspace_snapshot') as ValidationRunRecord['workspaceSnapshot'],
+    resolvedDocument: object(item.resolved_document, 'validation run.resolved_document') as unknown as SimulationCaseDocument,
+    simulationRunId: item.simulation_run_id === null || item.simulation_run_id === undefined
+      ? null
+      : string(item.simulation_run_id, 'validation run.simulation_run_id'),
+    resultSnapshot: object(item.result_snapshot, 'validation run.result_snapshot') as unknown as SimulationResult,
+    metrics,
+    createdAt: string(item.created_at, 'validation run.created_at'),
+  };
+}
+
+export async function getValidationRun(runId: string): Promise<ValidationRunRecord> {
+  const raw = await apiJson<unknown>(`/api/v1/validation/runs/${encodeURIComponent(runId)}`);
+  return parseValidationRunRecord(raw);
+}

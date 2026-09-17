@@ -70,6 +70,26 @@ function defaultChannels(data: ParsedDynoData): ChannelConfig[] {
         mapping: 'shift_position' as const, initializeState: false,
         uncertainty: { status: 'pending' as const, unit: 'raw' },
       };
+      if (key === 'primary_power_kw') return {
+        key, label: 'Primary power', unit: 'kW', enabled: false, role: 'unused' as const,
+        mapping: 'none' as const, initializeState: false,
+        uncertainty: { status: 'pending' as const, unit: 'kW' },
+      };
+      if (key === 'secondary_power_kw') return {
+        key, label: 'Secondary power', unit: 'kW', enabled: false, role: 'unused' as const,
+        mapping: 'none' as const, initializeState: false,
+        uncertainty: { status: 'pending' as const, unit: 'kW' },
+      };
+      if (key === 'efficiency_percent') return {
+        key, label: 'Efficiency', unit: '%', enabled: false, role: 'unused' as const,
+        mapping: 'none' as const, initializeState: false,
+        uncertainty: { status: 'pending' as const, unit: '%' },
+      };
+      if (key === 'primary_torque' || key === 'secondary_torque') return {
+        key, label: key === 'primary_torque' ? 'Primary torque' : 'Secondary torque', unit: 'N·m',
+        enabled: false, role: 'unused' as const, mapping: 'none' as const, initializeState: false,
+        uncertainty: { status: 'pending' as const, unit: 'N·m' },
+      };
       return {
         key,
         label: key.replaceAll('_', ' '),
@@ -112,6 +132,95 @@ function numeric(value: number | null | undefined, name: string): number {
   return value;
 }
 
+interface ResolvedInitialState {
+  primaryAngularSpeedRadPerS: number;
+  secondaryAngularSpeedRadPerS: number;
+  beltSpeedMPerS: number;
+  shiftPositionM: number;
+  shiftSpeedMPerS: number;
+  beltSpeedSource: 'manual' | 'deadzone_secondary_lock';
+  beltSecondaryLockRadiusM?: number;
+}
+
+function objectValue(value: unknown, name: string): JsonObject {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${name} is missing from the validation setup.`);
+  }
+  return value as JsonObject;
+}
+
+function finiteNumber(value: unknown, name: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${name} must be a finite number in the validation setup.`);
+  }
+  return value;
+}
+
+function resolveInitialState(
+  workspace: ValidationWorkspace,
+  data: ParsedDynoData,
+  crop: CropWindow,
+  channels: ChannelConfig[],
+): ResolvedInitialState {
+  const workflow = (workspace.workflowDefaults ?? {}) as ValidationWorkflowDefaults;
+  const manual = { ...DEFAULT_MANUAL_STATE, ...(workflow.manualInitialState ?? {}) };
+  const primary = findMapped(channels, 'primary_speed');
+  const secondary = findMapped(channels, 'secondary_speed');
+  const shift = findMapped(channels, 'shift_position');
+
+  const primaryInitial = primary?.initializeState
+    ? rpmToRadPerS(measurementValueAtStart(data, crop, primary) ?? 0)
+    : manual.primaryAngularSpeedRadPerS;
+  const secondaryInitial = secondary?.initializeState
+    ? rpmToRadPerS(measurementValueAtStart(data, crop, secondary) ?? 0)
+    : manual.secondaryAngularSpeedRadPerS;
+  const shiftInitial = shift?.initializeState && shift.unit === 'm'
+    ? measurementValueAtStart(data, crop, shift) ?? manual.shiftPositionM
+    : manual.shiftPositionM;
+  const shiftSpeedInitial = manual.shiftSpeedMPerS;
+
+  const setup = workspace.setupDocument as unknown as JsonObject;
+  const assembly = objectValue(setup.assembly, 'assembly');
+  const geometry = objectValue(assembly.geometry, 'assembly.geometry');
+  const deadzoneShift = finiteNumber(geometry.deadzone_shift_m, 'assembly.geometry.deadzone_shift_m');
+  const inDeadzone = deadzoneShift > 0 && (
+    shiftInitial < deadzoneShift
+    || (shiftInitial === deadzoneShift && shiftSpeedInitial < 0)
+  );
+
+  if (inDeadzone) {
+    const belt = objectValue(geometry.belt, 'assembly.geometry.belt');
+    const secondaryOuterRadius = finiteNumber(
+      geometry.secondary_outer_radius_at_zero_shift_m,
+      'assembly.geometry.secondary_outer_radius_at_zero_shift_m',
+    );
+    const cordDepth = finiteNumber(
+      belt.cord_depth_from_outer_m,
+      'assembly.geometry.belt.cord_depth_from_outer_m',
+    );
+    const lockRadius = secondaryOuterRadius - cordDepth;
+    if (!(lockRadius > 0)) throw new Error('Resolved deadzone belt-secondary lock radius must be positive.');
+    return {
+      primaryAngularSpeedRadPerS: primaryInitial,
+      secondaryAngularSpeedRadPerS: secondaryInitial,
+      beltSpeedMPerS: lockRadius * secondaryInitial,
+      shiftPositionM: shiftInitial,
+      shiftSpeedMPerS: shiftSpeedInitial,
+      beltSpeedSource: 'deadzone_secondary_lock',
+      beltSecondaryLockRadiusM: lockRadius,
+    };
+  }
+
+  return {
+    primaryAngularSpeedRadPerS: primaryInitial,
+    secondaryAngularSpeedRadPerS: secondaryInitial,
+    beltSpeedMPerS: manual.beltSpeedMPerS,
+    shiftPositionM: shiftInitial,
+    shiftSpeedMPerS: shiftSpeedInitial,
+    beltSpeedSource: 'manual',
+  };
+}
+
 function trackingBoundary(
   points: Array<{ time_s: number; value: number }>,
   workflow: ValidationWorkflowDefaults,
@@ -135,29 +244,19 @@ function resolveDocument(
 ): SimulationCaseDocument {
   const document = deepClone(workspace.setupDocument) as unknown as JsonObject;
   const workflow = (workspace.workflowDefaults ?? {}) as ValidationWorkflowDefaults;
-  const manual = { ...DEFAULT_MANUAL_STATE, ...(workflow.manualInitialState ?? {}) };
   const primary = findMapped(channels, 'primary_speed');
   const secondary = findMapped(channels, 'secondary_speed');
   const shift = findMapped(channels, 'shift_position');
-
-  const primaryInitial = primary?.initializeState
-    ? rpmToRadPerS(measurementValueAtStart(data, crop, primary) ?? 0)
-    : manual.primaryAngularSpeedRadPerS;
-  const secondaryInitial = secondary?.initializeState
-    ? rpmToRadPerS(measurementValueAtStart(data, crop, secondary) ?? 0)
-    : manual.secondaryAngularSpeedRadPerS;
-  const shiftInitial = shift?.initializeState && shift.unit === 'm'
-    ? measurementValueAtStart(data, crop, shift) ?? manual.shiftPositionM
-    : manual.shiftPositionM;
+  const initial = resolveInitialState(workspace, data, crop, channels);
 
   const scenario = document.scenario as JsonObject;
   scenario.time_span_s = [0, crop.endS - crop.startS];
   scenario.initial_cvt_state = {
-    primary_angular_speed_rad_per_s: primaryInitial,
-    secondary_angular_speed_rad_per_s: secondaryInitial,
-    belt_speed_m_per_s: manual.beltSpeedMPerS,
-    shift_position_m: shiftInitial,
-    shift_speed_m_per_s: manual.shiftSpeedMPerS,
+    primary_angular_speed_rad_per_s: initial.primaryAngularSpeedRadPerS,
+    secondary_angular_speed_rad_per_s: initial.secondaryAngularSpeedRadPerS,
+    belt_speed_m_per_s: initial.beltSpeedMPerS,
+    shift_position_m: initial.shiftPositionM,
+    shift_speed_m_per_s: initial.shiftSpeedMPerS,
   };
 
   const boundaries = document.shaft_boundaries as JsonObject;
@@ -231,6 +330,7 @@ export const Validation = () => {
   const { isLoading, loadingMessage, setLoading } = useLoading();
   const [workspace, setWorkspace] = useState<ValidationWorkspace | null>(null);
   const [workspaceStatus, setWorkspaceStatus] = useState('Loading setup…');
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [data, setData] = useState<ParsedDynoData | null>(null);
   const [channels, setChannels] = useState<ChannelConfig[]>([]);
   const [crop, setCrop] = useState<CropWindow>({ startS: 0, endS: 1 });
@@ -244,9 +344,14 @@ export const Validation = () => {
     void getValidationWorkspace(DEMO_ACCOUNT_ID)
       .then((loaded) => {
         setWorkspace(loaded);
+        setWorkspaceError(null);
         setWorkspaceStatus('Saved');
       })
-      .catch((error) => setWorkspaceStatus(error instanceof Error ? error.message : String(error)))
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        setWorkspaceError(message);
+        setWorkspaceStatus(`Setup unavailable: ${message}`);
+      })
       .finally(() => setLoading(false));
   }, [setLoading]);
 
@@ -315,27 +420,38 @@ export const Validation = () => {
       const primary = findMapped(channels, 'primary_speed');
       const secondary = findMapped(channels, 'secondary_speed');
       if (primary?.role === 'comparison' && workflow.primaryMode !== 'track_measured_speed') {
-        nextMetrics[primary.key] = comparisonMetric(data, crop, primary, simSeries(result, 'primary_angular_speed_rad_per_s', RAD_PER_S_TO_RPM));
+        nextMetrics[primary.key] = comparisonMetric(data, crop, primary, simSeries(result, 'state.primary_angular_speed', RAD_PER_S_TO_RPM));
       }
       if (secondary?.role === 'comparison' && workflow.secondaryMode !== 'track_measured_speed') {
-        nextMetrics[secondary.key] = comparisonMetric(data, crop, secondary, simSeries(result, 'secondary_angular_speed_rad_per_s', RAD_PER_S_TO_RPM));
+        nextMetrics[secondary.key] = comparisonMetric(data, crop, secondary, simSeries(result, 'state.secondary_angular_speed', RAD_PER_S_TO_RPM));
       }
       setMetrics(nextMetrics);
 
-      await saveValidationRun({
+      const resolvedInitialState = resolveInitialState(workspace, data, crop, channels);
+      setLoading(true, 'Saving validation result…');
+      const savedValidationRun = await saveValidationRun({
         accountId: DEMO_ACCOUNT_ID,
         sourceFilename: data.filename,
         rawCsv: data.rawCsv,
         cropStartS: crop.startS,
         cropEndS: crop.endS,
         channelConfig: Object.fromEntries(channels.map((channel) => [channel.key, channel])),
-        initialStateConfig: { manual, resolved_start_s: crop.startS },
+        initialStateConfig: {
+          manual,
+          resolved_start_s: crop.startS,
+          resolved: resolvedInitialState,
+        },
         workspaceSnapshot: workspace,
         resolvedDocument: document,
         simulationRunId: result.run.id,
         resultSnapshot: result.result as unknown as Record<string, unknown>,
         metrics: nextMetrics,
       });
+      const validationRunId = savedValidationRun.id;
+      if (typeof validationRunId !== 'string' || validationRunId.length === 0) {
+        throw new Error('Validation result was saved without a run id.');
+      }
+      navigate(`/validation/runs/${validationRunId}`);
     } catch (error) {
       alert(`Validation run failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -352,17 +468,85 @@ export const Validation = () => {
   const secondaryInitial = data !== null && mappedSecondary?.initializeState
     ? measurementValueAtStart(data, crop, mappedSecondary)
     : null;
+  const resolvedInitial = workspace !== null && data !== null
+    ? resolveInitialState(workspace, data, crop, channels)
+    : null;
 
   const resultSeries = useMemo(() => {
     if (completed === null) return { primary_speed: [], secondary_speed: [], shift_position: [] };
     const offset = (series: Array<[number, number]>) =>
       series.map(([time, value]) => [time + crop.startS, value] as [number, number]);
     return {
-      primary_speed: offset(simSeries(completed, 'primary_angular_speed_rad_per_s', RAD_PER_S_TO_RPM)),
-      secondary_speed: offset(simSeries(completed, 'secondary_angular_speed_rad_per_s', RAD_PER_S_TO_RPM)),
-      shift_position: offset(simSeries(completed, 'shift_position_m', 1)),
+      primary_speed: offset(simSeries(completed, 'state.primary_angular_speed', RAD_PER_S_TO_RPM)),
+      secondary_speed: offset(simSeries(completed, 'state.secondary_angular_speed', RAD_PER_S_TO_RPM)),
+      shift_position: offset(simSeries(completed, 'state.shift_position', 1)),
     };
   }, [completed, crop.startS]);
+
+  const renderChannelCard = (channel: ChannelConfig) => {
+    if (data === null) return null;
+    const uncertainty = channel.uncertainty.status === 'known' ? channel.uncertainty.absolute : undefined;
+    const sim = channel.mapping === 'primary_speed' ? resultSeries.primary_speed
+      : channel.mapping === 'secondary_speed' ? resultSeries.secondary_speed
+      : channel.mapping === 'shift_position' ? resultSeries.shift_position
+      : undefined;
+    return (
+      <div key={channel.key} className={styles.channelCard}>
+        <ValidationTraceChart
+          title={channel.label}
+          unit={channel.unit}
+          timeS={data.timeS}
+          measured={data.columns[channel.key]}
+          cropStartS={crop.startS}
+          cropEndS={crop.endS}
+          onCropChange={(startS, endS) => setCrop({ startS, endS })}
+          simulated={completed === null || !channel.enabled ? undefined : sim}
+          uncertaintyAbsolute={uncertainty}
+        />
+        <div className={styles.channelControls}>
+          <label><input type="checkbox" checked={channel.enabled} onChange={(event) => updateChannel(channel.key, { enabled: event.target.checked, role: event.target.checked ? 'comparison' : 'unused' })} /> Enable</label>
+          <label>Use as
+            <select value={channel.role} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { role: event.target.value as ChannelConfig['role'] })}>
+              <option value="comparison">Comparison</option>
+              <option value="boundary_input">Boundary input</option>
+              <option value="diagnostic">Diagnostic</option>
+              <option value="unused">Unused</option>
+            </select>
+          </label>
+          <label>Mapping
+            <select value={channel.mapping} onChange={(event) => updateChannel(channel.key, { mapping: event.target.value as ChannelConfig['mapping'] })}>
+              <option value="none">None</option>
+              <option value="primary_speed">Primary speed</option>
+              <option value="secondary_speed">Secondary speed</option>
+              <option value="shift_position">Shift position</option>
+            </select>
+          </label>
+          <label>Unit <input value={channel.unit} onChange={(event) => updateChannel(channel.key, { unit: event.target.value })} /></label>
+          <label><input type="checkbox" checked={channel.initializeState} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { initializeState: event.target.checked })} /> Initialize state at crop start</label>
+          <label>Uncertainty
+            <select value={channel.uncertainty.status} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, status: event.target.value as ChannelConfig['uncertainty']['status'] } })}>
+              <option value="pending">Pending</option>
+              <option value="known">Known</option>
+              <option value="not_applicable">N/A</option>
+            </select>
+          </label>
+          {channel.uncertainty.status === 'known' && <label>± <input type="number" step="any" value={channel.uncertainty.absolute ?? 0} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, absolute: Number(event.target.value), unit: channel.unit } })} /> {channel.unit}</label>}
+        </div>
+        {metrics[channel.key] !== undefined && (
+          <dl className={styles.metrics}>
+            <div><dt>RMSE</dt><dd>{formatMetric(metrics[channel.key].rmse)} {channel.unit}</dd></div>
+            <div><dt>MAE</dt><dd>{formatMetric(metrics[channel.key].mae)} {channel.unit}</dd></div>
+            <div><dt>Bias</dt><dd>{formatMetric(metrics[channel.key].bias)} {channel.unit}</dd></div>
+            <div><dt>Max |error|</dt><dd>{formatMetric(metrics[channel.key].maxAbs)} {channel.unit}</dd></div>
+          </dl>
+        )}
+      </div>
+    );
+  };
+
+  const primaryRpmChannel = channels.find((channel) => channel.key === 'primary_rpm');
+  const secondaryRpmChannel = channels.find((channel) => channel.key === 'secondary_rpm');
+  const otherChannels = channels.filter((channel) => channel.key !== 'primary_rpm' && channel.key !== 'secondary_rpm');
 
   return (
     <main className={styles.page}>
@@ -388,80 +572,34 @@ export const Validation = () => {
       {data !== null && (
         <>
           <section className={styles.traceGrid}>
-            {channels.map((channel) => {
-              const uncertainty = channel.uncertainty.status === 'known' ? channel.uncertainty.absolute : undefined;
-              const sim = channel.mapping === 'primary_speed' ? resultSeries.primary_speed
-                : channel.mapping === 'secondary_speed' ? resultSeries.secondary_speed
-                : channel.mapping === 'shift_position' ? resultSeries.shift_position
-                : undefined;
-              return (
-                <div key={channel.key} className={styles.channelCard}>
-                  <ValidationTraceChart
-                    title={channel.label}
-                    unit={channel.unit}
-                    timeS={data.timeS}
-                    measured={data.columns[channel.key]}
-                    cropStartS={crop.startS}
-                    cropEndS={crop.endS}
-                    onCropChange={(startS, endS) => setCrop({ startS, endS })}
-                    simulated={completed === null || !channel.enabled ? undefined : sim}
-                    uncertaintyAbsolute={uncertainty}
-                  />
-                  <div className={styles.channelControls}>
-                    <label><input type="checkbox" checked={channel.enabled} onChange={(event) => updateChannel(channel.key, { enabled: event.target.checked, role: event.target.checked ? 'comparison' : 'unused' })} /> Enable</label>
-                    <label>Use as
-                      <select value={channel.role} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { role: event.target.value as ChannelConfig['role'] })}>
-                        <option value="comparison">Comparison</option>
-                        <option value="boundary_input">Boundary input</option>
-                        <option value="diagnostic">Diagnostic</option>
-                        <option value="unused">Unused</option>
-                      </select>
-                    </label>
-                    <label>Mapping
-                      <select value={channel.mapping} onChange={(event) => updateChannel(channel.key, { mapping: event.target.value as ChannelConfig['mapping'] })}>
-                        <option value="none">None</option>
-                        <option value="primary_speed">Primary speed</option>
-                        <option value="secondary_speed">Secondary speed</option>
-                        <option value="shift_position">Shift position</option>
-                      </select>
-                    </label>
-                    <label>Unit <input value={channel.unit} onChange={(event) => updateChannel(channel.key, { unit: event.target.value })} /></label>
-                    <label><input type="checkbox" checked={channel.initializeState} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { initializeState: event.target.checked })} /> Initialize state at crop start</label>
-                    <label>Uncertainty
-                      <select value={channel.uncertainty.status} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, status: event.target.value as ChannelConfig['uncertainty']['status'] } })}>
-                        <option value="pending">Pending</option>
-                        <option value="known">Known</option>
-                        <option value="not_applicable">N/A</option>
-                      </select>
-                    </label>
-                    {channel.uncertainty.status === 'known' && <label>± <input type="number" step="any" value={channel.uncertainty.absolute ?? 0} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, absolute: Number(event.target.value), unit: channel.unit } })} /> {channel.unit}</label>}
-                  </div>
-                  {metrics[channel.key] !== undefined && (
-                    <dl className={styles.metrics}>
-                      <div><dt>RMSE</dt><dd>{formatMetric(metrics[channel.key].rmse)} {channel.unit}</dd></div>
-                      <div><dt>MAE</dt><dd>{formatMetric(metrics[channel.key].mae)} {channel.unit}</dd></div>
-                      <div><dt>Bias</dt><dd>{formatMetric(metrics[channel.key].bias)} {channel.unit}</dd></div>
-                      <div><dt>Max |error|</dt><dd>{formatMetric(metrics[channel.key].maxAbs)} {channel.unit}</dd></div>
-                    </dl>
-                  )}
-                </div>
-              );
-            })}
+            {primaryRpmChannel !== undefined && renderChannelCard(primaryRpmChannel)}
+            {secondaryRpmChannel !== undefined && renderChannelCard(secondaryRpmChannel)}
           </section>
+
+          {otherChannels.length > 0 && (
+            <details className={styles.otherChannels}>
+              <summary>View all other data channels ({otherChannels.length})</summary>
+              <p>These channels stay available for mapping, provenance, and diagnostics without crowding the primary trimming view.</p>
+              <section className={styles.traceGrid}>
+                {otherChannels.map((channel) => renderChannelCard(channel))}
+              </section>
+            </details>
+          )}
 
           <section className={styles.setupCard}>
             <h2>2. Physical setup</h2>
             <p>These are autosaved and reused on the next run. Every validation run still freezes its own snapshot.</p>
+            {workspaceError !== null && <p className={styles.setupError}>{workspaceError}</p>}
             <div className={styles.setupButtons}>
-              <button type="button" onClick={() => setEditor('primary')}>Primary boundary · Edit</button>
-              <button type="button" onClick={() => setEditor('cvt')}>CVT setup · Edit</button>
-              <button type="button" onClick={() => setEditor('secondary')}>Secondary boundary · Edit</button>
+              <button type="button" disabled={workspace === null} onClick={() => setEditor('primary')}>Primary boundary · Edit</button>
+              <button type="button" disabled={workspace === null} onClick={() => setEditor('cvt')}>CVT setup · Edit</button>
+              <button type="button" disabled={workspace === null} onClick={() => setEditor('secondary')}>Secondary boundary · Edit</button>
             </div>
           </section>
 
-          {workspace !== null && (
-            <section className={styles.controllerCard}>
+          <section className={styles.controllerCard}>
               <h2>3. Experimental boundary / actuator mode</h2>
+              <fieldset className={styles.sectionFieldset} disabled={workspace === null}>
               <div className={styles.controllerGrid}>
                 <label>Primary
                   <select value={workflow.primaryMode ?? 'physical'} onChange={(event) => updateWorkflow({ primaryMode: event.target.value as ValidationWorkflowDefaults['primaryMode'] })}>
@@ -495,18 +633,35 @@ export const Validation = () => {
                   <label>Force limit [N] <input type="number" step="any" value={workflow.axialTracking?.forceLimitN ?? ''} onChange={(event) => updateWorkflow({ axialTracking: { positionGainNPerM: workflow.axialTracking?.positionGainNPerM ?? null, speedGainNSPerM: workflow.axialTracking?.speedGainNSPerM ?? 0, forceLimitN: Number(event.target.value) } })} /></label>
                 </div>
               )}
+              </fieldset>
             </section>
-          )}
 
           <section className={styles.stateCard}>
             <h2>4. Initial state at t = {crop.startS.toFixed(3)} s</h2>
+            <fieldset className={styles.sectionFieldset} disabled={workspace === null}>
             <div className={styles.stateGrid}>
               <label>Primary speed [rpm]<input disabled={primaryInitial !== null} value={primaryInitial ?? manual.primaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, primaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} /></label>
               <label>Secondary speed [rpm]<input disabled={secondaryInitial !== null} value={secondaryInitial ?? manual.secondaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, secondaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} /></label>
-              <label>Belt speed [m/s]<input type="number" step="any" value={manual.beltSpeedMPerS} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, beltSpeedMPerS: Number(event.target.value) } })} /></label>
+              <label>Belt speed [m/s]
+                <input
+                  type="number"
+                  step="any"
+                  disabled={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'}
+                  value={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'
+                    ? resolvedInitial.beltSpeedMPerS
+                    : manual.beltSpeedMPerS}
+                  onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, beltSpeedMPerS: Number(event.target.value) } })}
+                />
+                {resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock' && (
+                  <small className={styles.derivedState}>
+                    Derived by deadzone constraint: v_b = r_s ω_s, r_s = {resolvedInitial.beltSecondaryLockRadiusM?.toFixed(6)} m
+                  </small>
+                )}
+              </label>
               <label>Shift position [m]<input type="number" step="any" disabled={mappedShift?.initializeState === true && mappedShift.unit === 'm'} value={mappedShift?.initializeState === true && mappedShift.unit === 'm' && data !== null ? measurementValueAtStart(data, crop, mappedShift) ?? manual.shiftPositionM : manual.shiftPositionM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftPositionM: Number(event.target.value) } })} /></label>
               <label>Shift speed [m/s]<input type="number" step="any" value={manual.shiftSpeedMPerS} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftSpeedMPerS: Number(event.target.value) } })} /></label>
             </div>
+            </fieldset>
           </section>
 
           <section className={styles.runCard}>
@@ -521,7 +676,7 @@ export const Validation = () => {
           section={editor}
           document={workspace.setupDocument}
           metrology={workspace.metrology as unknown as Record<string, MeasurementMetadata>}
-          onChange={(setupDocument, metrology) => setWorkspace({ ...workspace, setupDocument, metrology: metrology as unknown as Record<string, Record<string, unknown>> })}
+          onChange={(setupDocument, metrology) => setWorkspace((current) => current === null ? current : ({ ...current, setupDocument, metrology: metrology as unknown as Record<string, Record<string, unknown>> }))}
           onClose={() => setEditor(null)}
         />
       )}

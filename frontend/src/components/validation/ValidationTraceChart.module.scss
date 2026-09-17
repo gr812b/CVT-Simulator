@@ -1,16 +1,46 @@
+@use '@styles/_colors';
+@use '@styles/_fonts';
+
 .card {
-  border: 1px solid rgba(127, 127, 127, 0.28);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 0.9rem;
-  background: var(--background-secondary, #fff);
+  background: var(--secondary);
+  color: var(--text-color);
 }
 
-.card h3 {
-  margin: 0 0 0.4rem;
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.heading h3 {
+  margin: 0;
   font-size: 1rem;
+  color: var(--text-color);
+}
+
+.heading span {
+  color: var(--text-color);
+  opacity: 0.64;
+  font-size: 0.76rem;
+  text-align: right;
 }
 
 .chart {
   width: 100%;
   height: 320px;
+}
+
+@media (max-width: 720px) {
+  .heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .heading span { text-align: left; }
 }

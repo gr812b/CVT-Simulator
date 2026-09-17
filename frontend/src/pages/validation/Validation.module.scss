@@ -1,26 +1,94 @@
+@use '@styles/_colors';
+@use '@styles/_fonts';
+
+:global(html),
+:global(body),
+:global(#root) {
+  min-height: 100%;
+  background-color: var(--background);
+  color: var(--text-color);
+}
+
+:global(body) {
+  margin: 0;
+}
+
 .page {
+  min-height: 100vh;
   max-width: 1500px;
   margin: 0 auto;
   padding: 1.4rem 1.8rem 5rem;
   display: grid;
   gap: 1.2rem;
+  background-color: var(--background);
+  color: var(--text-color);
 }
 
-.header { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
-.header h1 { margin: 0.45rem 0 0.3rem; }
-.header p { margin: 0; opacity: 0.72; max-width: 850px; }
-.saveStatus { font-size: 0.85rem; opacity: 0.72; white-space: nowrap; }
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: flex-start;
+}
 
-.uploadCard, .setupCard, .controllerCard, .stateCard, .runCard {
-  border: 1px solid rgba(127, 127, 127, 0.26);
+.header h1 {
+  margin: 0.45rem 0 0.3rem;
+  color: var(--text-color);
+}
+
+.header p {
+  margin: 0;
+  color: var(--text-color);
+  opacity: 0.72;
+  max-width: 850px;
+}
+
+.saveStatus {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.72;
+  white-space: nowrap;
+}
+
+.uploadCard,
+.setupCard,
+.controllerCard,
+.stateCard,
+.runCard {
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem 1.1rem;
-  background: var(--background-secondary, #fff);
+  background: var(--secondary);
+  color: var(--text-color);
 }
-.uploadCard h2, .setupCard h2, .controllerCard h2, .stateCard h2 { margin: 0 0 0.7rem; }
 
-.traceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(540px, 1fr)); gap: 1rem; }
-.channelCard { display: grid; gap: 0.55rem; }
+.uploadCard h2,
+.setupCard h2,
+.controllerCard h2,
+.stateCard h2 {
+  margin: 0 0 0.7rem;
+  color: var(--text-color);
+}
+
+.uploadCard p,
+.setupCard p,
+.controllerCard p,
+.stateCard p {
+  color: var(--text-color);
+}
+
+.traceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(540px, 1fr));
+  gap: 1rem;
+}
+
+.channelCard {
+  display: grid;
+  gap: 0.55rem;
+  color: var(--text-color);
+}
+
 .channelControls {
   display: flex;
   flex-wrap: wrap;
@@ -28,36 +96,191 @@
   align-items: end;
   padding: 0 0.35rem 0.6rem;
 }
-.channelControls label { display: flex; gap: 0.35rem; align-items: center; font-size: 0.86rem; }
-.channelControls select, .channelControls input { max-width: 150px; }
 
-.metrics { margin: 0 0.35rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
-.metrics div { border-radius: 8px; padding: 0.5rem; background: rgba(127, 127, 127, 0.08); }
-.metrics dt { font-size: 0.74rem; opacity: 0.68; }
-.metrics dd { margin: 0.15rem 0 0; font-weight: 600; }
+.channelControls label {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.86rem;
+  color: var(--text-color);
+}
 
-.setupButtons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-.setupButtons button { min-height: 52px; }
-.controllerGrid, .gainGrid, .stateGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem; }
-.controllerGrid label, .gainGrid label, .stateGrid label { display: grid; gap: 0.3rem; font-size: 0.85rem; }
-.gainGrid { margin-top: 0.9rem; }
+.channelControls select,
+.channelControls input {
+  max-width: 150px;
+}
 
-.runCard { display: flex; justify-content: space-between; align-items: center; }
-.runCard button { font-size: 1rem; font-weight: 650; padding: 0.75rem 1.25rem; }
+.metrics {
+  margin: 0 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
 
-button, input, select {
-  border: 1px solid rgba(127, 127, 127, 0.38);
+.metrics div {
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: var(--accent);
+  color: var(--text-color);
+}
+
+.metrics dt {
+  font-size: 0.74rem;
+  opacity: 0.68;
+}
+
+.metrics dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.setupError {
+  border-left: 3px solid var(--error);
+  padding: 0.55rem 0.75rem;
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+}
+
+.setupButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.setupButtons button {
+  min-height: 52px;
+}
+
+.controllerGrid,
+.gainGrid,
+.stateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+
+.controllerGrid label,
+.gainGrid label,
+.stateGrid label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.derivedState {
+  color: var(--text-color);
+  opacity: 0.68;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.gainGrid {
+  margin-top: 0.9rem;
+}
+
+.sectionFieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.sectionFieldset:disabled {
+  opacity: 0.5;
+}
+
+.runCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.runCard button {
+  font-size: 1rem;
+  font-weight: 650;
+  padding: 0.75rem 1.25rem;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.page button,
+.page input,
+.page select {
+  border: 1px solid var(--border-color);
   border-radius: 7px;
   padding: 0.45rem 0.6rem;
-  background: var(--background-primary, #fff);
-  color: inherit;
+  background: var(--background);
+  color: var(--text-color);
 }
-button { cursor: pointer; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.page button {
+  cursor: pointer;
+}
+
+.page button:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.page button:disabled,
+.page input:disabled,
+.page select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+
+.page input[type='file'] {
+  width: 100%;
+  background-color: var(--background);
+  color: var(--text-color);
+}
+
+.page input[type='file']::file-selector-button {
+  margin-right: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  background-color: var(--accent);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.page input[type='file']::file-selector-button:hover {
+  border-color: var(--primary);
+}
+
+.page select option {
+  background-color: var(--background);
+  color: var(--text-color);
+}
 
 @media (max-width: 720px) {
   .page { padding: 1rem; }
   .traceGrid { grid-template-columns: 1fr; }
   .setupButtons { grid-template-columns: 1fr; }
   .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+.otherChannels {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--secondary);
+  color: var(--text-color);
+  padding: 0.85rem 1rem;
+}
+
+.otherChannels > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.otherChannels > p {
+  margin: 0.65rem 0 0.85rem;
+  opacity: 0.7;
 }

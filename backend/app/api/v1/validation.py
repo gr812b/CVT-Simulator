@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.dependencies import get_database_session
 from app.core.errors import ApiProblem
-from app.database.validation import create_validation_run, get_workspace, upsert_workspace
+from app.database.validation import (
+    create_validation_run,
+    ensure_workspace,
+    get_validation_run,
+    upsert_workspace,
+)
 from app.schemas.validation import (
     ValidationRunCreate,
     ValidationRunResponse,
@@ -30,14 +35,34 @@ def _workspace_response(workspace) -> ValidationWorkspaceResponse:
     )
 
 
+def _run_response(run) -> ValidationRunResponse:
+    return ValidationRunResponse(
+        id=run.id,
+        account_id=run.account_id,
+        source_filename=run.source_filename,
+        raw_csv=run.raw_csv,
+        crop_start_s=run.crop_start_s,
+        crop_end_s=run.crop_end_s,
+        channel_config=run.channel_config,
+        initial_state_config=run.initial_state_config,
+        workspace_snapshot=run.workspace_snapshot,
+        resolved_document=run.resolved_document,
+        simulation_run_id=run.simulation_run_id,
+        result_snapshot=run.result_snapshot,
+        metrics=run.metrics,
+        created_at=run.created_at,
+    )
+
+
 @router.get("/workspace", response_model=ValidationWorkspaceResponse)
 def validation_workspace(
     account_id: str,
     session: Session = Depends(get_database_session),
 ) -> ValidationWorkspaceResponse:
-    workspace = get_workspace(session, account_id=account_id)
-    if workspace is None:
-        raise ApiProblem(404, "validation_workspace_not_found", "No validation workspace exists for this account.")
+    try:
+        workspace = ensure_workspace(session, account_id=account_id)
+    except ValueError as error:
+        raise ApiProblem(422, "validation_workspace_unavailable", str(error)) from error
     return _workspace_response(workspace)
 
 
@@ -68,19 +93,15 @@ def save_validation_run(
     if request.crop_end_s <= request.crop_start_s:
         raise ApiProblem(422, "validation_crop_invalid", "crop_end_s must be greater than crop_start_s.")
     run = create_validation_run(session, **request.model_dump())
-    return ValidationRunResponse(
-        id=run.id,
-        account_id=run.account_id,
-        source_filename=run.source_filename,
-        raw_csv=run.raw_csv,
-        crop_start_s=run.crop_start_s,
-        crop_end_s=run.crop_end_s,
-        channel_config=run.channel_config,
-        initial_state_config=run.initial_state_config,
-        workspace_snapshot=run.workspace_snapshot,
-        resolved_document=run.resolved_document,
-        simulation_run_id=run.simulation_run_id,
-        result_snapshot=run.result_snapshot,
-        metrics=run.metrics,
-        created_at=run.created_at,
-    )
+    return _run_response(run)
+
+
+@router.get("/runs/{run_id}", response_model=ValidationRunResponse)
+def validation_run(
+    run_id: str,
+    session: Session = Depends(get_database_session),
+) -> ValidationRunResponse:
+    run = get_validation_run(session, run_id=run_id)
+    if run is None:
+        raise ApiProblem(404, "validation_run_not_found", f"Validation run {run_id!r} was not found.")
+    return _run_response(run)
