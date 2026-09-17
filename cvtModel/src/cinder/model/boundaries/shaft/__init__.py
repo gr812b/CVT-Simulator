@@ -278,3 +278,7 @@ class TireCoupledShaftBoundary:
                 "tire_patch_speed": patch_speed,
             },
         )
+
+
+# Numerical shaft-history replay through the existing external-torque port.
+from .replay import SpeedReplayShaftBoundary  # noqa: E402,F401

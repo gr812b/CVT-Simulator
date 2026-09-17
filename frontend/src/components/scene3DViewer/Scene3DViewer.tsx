@@ -147,6 +147,7 @@ export const Scene3DViewer = ({
   const [showAngularRotation, setShowAngularRotation] = useState(true);
   const [showMotionBlur, setShowMotionBlur] = useState(false);
   const [gridsVisible, setGridsVisible] = useState(false);
+  const [orthographicView, setOrthographicView] = useState(false);
   const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
   const [modelsTransparent, setModelsTransparent] = useState(false);
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
@@ -473,6 +474,10 @@ export const Scene3DViewer = ({
     setCVTModelsTransparent(sceneController, modelsTransparent);
   }, [modelsTransparent, models, sceneController]);
 
+  useEffect(() => {
+    if (!sceneController) return;
+    sceneController.setCameraProjection(orthographicView ? 'orthographic' : 'perspective');
+  }, [orthographicView, sceneController]);
   const tensionUnit = tensionField?.canonical_unit ?? 'N';
 
   return (
@@ -525,6 +530,14 @@ export const Scene3DViewer = ({
           title={showMotionBlur ? 'Disable Motion Blur' : 'Enable Motion Blur'}
         >
           {showMotionBlur ? '●' : '○'} Blur
+        </button>
+        <button
+          type="button"
+          className={styles.controlButton}
+          onClick={() => setOrthographicView((current) => !current)}
+          title={orthographicView ? 'Switch to Perspective View' : 'Switch to Orthographic View'}
+        >
+          {orthographicView ? '\u25cf' : '\u25cb'} Ortho
         </button>
         <button
           type="button"
