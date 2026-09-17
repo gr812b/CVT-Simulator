@@ -396,6 +396,119 @@
       },
       "success_definition": "Gold case: the full M_h crosses from positive to negative while the trajectory-frozen M_h,QS remains positive by at least 0.25 N m; secondary internal belt power is positive; both belt contacts remain stick-stick with |lambda|<0.649; no hybrid transition has occurred after forcing onset before the crossing; the crossing is more than 2% of shift travel from either travel boundary; and M_h,QS remains positive over the entire resolved post-onset case.",
       "question": "Can a physically reconditioned, lower-preload secondary produce selected-flank lift-off during ordinary forward power flow solely because of retained movable-member dynamics, and which transient type / timescale makes the shift-acceleration term large enough to do it?"
+    },
+    "transient_severity_race": {
+      "stage": "E5.6",
+      "role": "transient_severity_boundary_race_between_helix_liftoff_and_belt_traction_saturation",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "core_preload_degrees": [
+        180.0,
+        210.0,
+        240.0
+      ],
+      "reference_preload_degrees": [
+        270.0,
+        300.0
+      ],
+      "restart_shift_percents": [
+        30.0,
+        50.0,
+        70.0
+      ],
+      "onset_s": 0.03,
+      "hold_s": 0.35,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0001,
+        "maximum_step_cap_s": 0.0005,
+        "minimum_max_step_s": 5e-05,
+        "ramp_step_divisor": 12.0
+      },
+      "engine_target_torques_Nm": [
+        0.0,
+        -5.0,
+        -15.0,
+        -28.0
+      ],
+      "engine_ramp_times_s": [
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25
+      ],
+      "secondary_load_steps_Nm": [
+        -20.0,
+        -40.0,
+        -60.0,
+        -80.0,
+        -100.0,
+        -120.0
+      ],
+      "secondary_load_ramp_times_s": [
+        0.002,
+        0.01,
+        0.05,
+        0.25
+      ],
+      "reference_control_ramp_times_s": [
+        0.002,
+        0.01,
+        0.05
+      ],
+      "sign_controls": {
+        "preload_degrees": [
+          180.0,
+          240.0
+        ],
+        "restart_shift_percents": [
+          50.0
+        ],
+        "throttle_raise_scales": [
+          1.5,
+          2.0
+        ],
+        "secondary_assist_steps_Nm": [
+          40.0,
+          80.0
+        ],
+        "ramp_times_s": [
+          0.001,
+          0.005,
+          0.025,
+          0.1
+        ],
+        "note": "Sparse opposite-sign controls verify that upshift-favoring disturbances load the selected helix flank rather than mimic the target backshift mechanism."
+      },
+      "race": {
+        "simultaneous_tolerance_s": 0.0002,
+        "note": "Event ordering uses the first full M_h positive-to-negative crossing and the first sampled belt departure from stick-stick. With 0.1 ms reporting, events within 0.2 ms are intentionally labelled unresolved/simultaneous."
+      },
+      "success_criteria": {
+        "minimum_qs_margin_at_crossing_Nm": 0.25,
+        "lambda_guard": 0.649,
+        "interior_shift_guard_percent": 2.0
+      },
+      "trace_retention": {
+        "pretraction_full_margin_Nm": 4.0,
+        "shift_accel_term_Nm": -1.0
+      },
+      "success_definition": "Gold case: M_h crosses zero before belt traction leaves stick-stick, secondary belt power remains positive, M_h,QS remains positive by at least 0.25 N m, the shift coordinate is free and more than 2% from either travel stop, no earlier hybrid transition has occurred, and the torque+spring margin remains positive over the resolved post-onset transient.",
+      "question": "As forward-power disturbances are made faster and larger, does selected-flank helix inadmissibility occur before belt traction saturation? How do preload, ratio, disturbance magnitude, and ramp time set that event ordering, and how large can -I_M theta_prime s_ddot become while the belt is still stick-stick?"
     }
   },
   "discovery_metrics": {

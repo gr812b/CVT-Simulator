@@ -13,3 +13,15 @@ Prefer the parent `run.py` rather than invoking these individually. It runs the 
 The scenario-discovery stage also includes two full-history legacy hill replays
 in the normal (non-`--quick`) run.  They are intentionally separate from the
 short restart matrix so the naturally evolved pre-hill state is preserved.
+
+### E5.6 `run_transient_severity_race.py`
+
+Maps the race between selected-flank helix inadmissibility and belt traction
+saturation under increasingly severe forward-power transients.  It forces the
+sub-50 ms engine torque ramps that E5.5 never reached, blends full-throttle
+operation to 0/-5/-15/-28 N m primary torque, extends secondary load steps to
+-120 N m, and retains sparse opposite-sign controls.  Each preload is fully
+reconditioned before 30/50/70% shift restarts are selected.  The primary
+classification is `helix_first`, `traction_first`, `simultaneous_or_unresolved`,
+or `neither`; the gold condition additionally requires forward power, free
+stick-stick contact, positive torque+spring margin, and an interior shift state.

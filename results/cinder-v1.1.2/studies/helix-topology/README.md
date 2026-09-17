@@ -251,3 +251,19 @@ The shortlists are **discovery aids, not rankings of CVT performance**. Failed c
 No conclusion in E1–E5.5 should assume that the slotted topology is inherently better. A negative selected-flank margin in the slotted model means that the constrained slotted solution requires opposite-flank support. It does **not** yet show what a real one-flank mechanism would do after separation.
 
 Real backlash, free flight, impact, friction, and finite opposite-flank capture dynamics also remain outside the zero-clearance slotted idealization and the first detached comparator.
+
+
+## E5.6 transient-severity race
+
+After E5.5 showed that moderate torque steps barely excite shift inertia, E5.6
+forces short engine-torque ramps and larger output-load steps.  It compares the
+first full helix sign change against the first belt departure from stick-stick.
+This directly tests whether a clean dynamic-only helix event can occur before
+traction saturation or whether traction saturation is the gateway to the large
+shift accelerations seen in E5.
+
+Resume only this stage with:
+
+```powershell
+python .\studies\helix-topology\run.py --start-at transient-severity-race
+```

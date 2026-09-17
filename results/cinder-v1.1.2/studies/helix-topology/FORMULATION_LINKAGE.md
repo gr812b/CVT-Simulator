@@ -96,3 +96,25 @@ That derivation is intentionally outside the discovery/refinement slice. E1–E4
 - The contact-topology sign is always the sign of `tau_h = helix_reacted_torque_margin_Nm`.
 
 Every plotted or integrated opposite-flank metric is keyed to `tau_h < 0` rather than to an assumed axial-force sign.
+
+## E5.6 event-order question
+
+The E5.6 transient-severity study does not redefine the helix mechanics.  It
+uses the same reacted-torque margin
+
+\[
+M_h=M_{h,\mathrm{QS}}+M_{h,\mathrm{dyn}},\qquad
+M_{h,\mathrm{QS}}=f\tau_s+k_\theta(\theta_{\rm pre}-\theta),
+\]
+
+and asks which admissibility boundary is encountered first as a forward-power
+transient is made faster or larger.  The two event clocks are:
+
+1. the first positive-to-negative crossing of the full \(M_h\); and
+2. the first departure of belt contact from stick--stick.
+
+A clean dynamic-only result therefore requires the helix clock to lead the
+traction clock while \(M_{h,\mathrm{QS}}>0\), secondary belt power remains
+positive, and the shift coordinate is free and interior.  If the traction clock
+always leads, the study records that ordering directly instead of inferring a
+missing helix topology from a post-slip trajectory.
