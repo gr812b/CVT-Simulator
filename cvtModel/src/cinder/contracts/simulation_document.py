@@ -31,9 +31,11 @@ from cinder.model.boundaries.vehicle import (
 )
 from cinder.model.boundaries.shaft import (
     FixedShaftBoundary,
+    SpeedTrackingShaftBoundary,
     FullThrottleEngineBoundary,
     LockedFinalDriveShaftBoundary,
 )
+from cinder.model.reference import PiecewiseLinearReference, TimeValuePoint
 from cinder.model.system import CVTAssemblySpec, CVTState, MechanicalCVTPlant
 from cinder.results import ReportingGrid, ReportingSettings
 
@@ -210,7 +212,41 @@ def _decode_cvt_state(payload: Mapping[str, Any]) -> CVTState:
     )
 
 
+def _encode_time_reference(reference: PiecewiseLinearReference) -> dict[str, Any]:
+    return {
+        "points": [
+            {"time_s": point.time, "value": point.value}
+            for point in reference.points
+        ]
+    }
+
+
+def _decode_time_reference(payload: object, *, name: str) -> PiecewiseLinearReference:
+    data = _mapping(payload, name)
+    points = _sequence(_require(data, "points"), f"{name}.points")
+    return PiecewiseLinearReference(
+        tuple(
+            TimeValuePoint(
+                time=_number(_mapping(point, f"{name}.points[{index}]"), "time_s"),
+                value=_number(_mapping(point, f"{name}.points[{index}]"), "value"),
+            )
+            for index, point in enumerate(points)
+        )
+    )
+
+
 def _encode_shaft_boundary(boundary: object) -> dict[str, Any]:
+    if isinstance(boundary, SpeedTrackingShaftBoundary):
+        return {
+            "kind": "speed_tracking_shaft",
+            "speed_reference": _encode_time_reference(boundary.speed_reference),
+            "proportional_gain_Nm_s_per_rad": boundary.proportional_gain,
+            "tracking_error_budget_rad_per_s": boundary.tracking_error_budget,
+            "feedback_authority_fraction": boundary.feedback_authority_fraction,
+            "torque_limit_Nm": boundary.torque_limit,
+            "equivalent_inertia_kg_m2": boundary.equivalent_inertia,
+            "feedforward_inertia_kg_m2": boundary.feedforward_inertia,
+        }
     if isinstance(boundary, FixedShaftBoundary):
         return {
             "kind": "fixed_shaft",
@@ -260,6 +296,57 @@ def _encode_shaft_boundary(boundary: object) -> dict[str, Any]:
 
 def _decode_shaft_boundary(payload: Mapping[str, Any]) -> object:
     kind = _string(payload, "kind")
+    if kind == "speed_tracking_shaft":
+        reference = _decode_time_reference(
+            _require(payload, "speed_reference"), name="shaft_boundary.speed_reference"
+        )
+        torque_limit = _number(payload, "torque_limit_Nm")
+        equivalent_inertia = (
+            _number(payload, "equivalent_inertia_kg_m2")
+            if "equivalent_inertia_kg_m2" in payload else 0.0
+        )
+        feedforward_inertia = (
+            _number(payload, "feedforward_inertia_kg_m2")
+            if "feedforward_inertia_kg_m2" in payload else None
+        )
+        error_budget = payload.get("tracking_error_budget_rad_per_s")
+        authority_fraction = payload.get("feedback_authority_fraction")
+        explicit_gain = payload.get("proportional_gain_Nm_s_per_rad")
+        if error_budget is not None:
+            boundary = SpeedTrackingShaftBoundary.from_tracking_error_budget(
+                speed_reference=reference,
+                torque_limit=torque_limit,
+                tracking_error_budget=float(error_budget),
+                equivalent_inertia=equivalent_inertia,
+                feedforward_inertia=feedforward_inertia,
+                feedback_authority_fraction=(
+                    SpeedTrackingShaftBoundary.DEFAULT_FEEDBACK_AUTHORITY_FRACTION
+                    if authority_fraction is None else float(authority_fraction)
+                ),
+            )
+            if explicit_gain is not None and abs(
+                boundary.proportional_gain - float(explicit_gain)
+            ) > 1.0e-12 * max(1.0, abs(boundary.proportional_gain)):
+                raise DesignDocumentError(
+                    "speed_tracking_shaft explicit gain is inconsistent with its error-budget tuning."
+                )
+            return boundary
+        if explicit_gain is not None:
+            return SpeedTrackingShaftBoundary(
+                speed_reference=reference,
+                proportional_gain=float(explicit_gain),
+                torque_limit=torque_limit,
+                equivalent_inertia=equivalent_inertia,
+                feedforward_inertia=(
+                    0.0 if feedforward_inertia is None else feedforward_inertia
+                ),
+            )
+        return SpeedTrackingShaftBoundary.auto_tuned(
+            speed_reference=reference,
+            torque_limit=torque_limit,
+            equivalent_inertia=equivalent_inertia,
+            feedforward_inertia=feedforward_inertia,
+        )
     if kind == "fixed_shaft":
         return FixedShaftBoundary(
             external_torque=_number(payload, "external_torque_Nm"),

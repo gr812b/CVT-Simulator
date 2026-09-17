@@ -13,6 +13,8 @@ from math import degrees, radians
 from typing import Any
 
 from cinder.model.cvt.actuation import (
+    AxialMotionTrackingForce,
+    AxialMotionTrackingForceSpec,
     AxialSpringForce,
     AxialSpringForceSpec,
     CentrifugalRampForce,
@@ -38,6 +40,7 @@ from cinder.model.cvt.inertia import (
     SecondaryInertia,
     resolve_inertias,
 )
+from cinder.model.reference import PiecewiseLinearReference, TimeValuePoint
 from cinder.model.cvt.profiles import (
     C3TransitionSegment,
     CircularSegment,
@@ -265,7 +268,48 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
     return PulleySpec(actuator=PulleyActuator(*force_laws), helical_coupling=coupling)
 
 
+def _encode_time_reference(reference: PiecewiseLinearReference | None) -> dict[str, Any] | None:
+    if reference is None:
+        return None
+    return {
+        "points": [
+            {"time_s": point.time, "value": point.value}
+            for point in reference.points
+        ]
+    }
+
+
+def _decode_time_reference(payload: object, *, name: str) -> PiecewiseLinearReference | None:
+    if payload is None:
+        return None
+    data = _mapping(payload, name)
+    points = _sequence(_require(data, "points"), f"{name}.points")
+    return PiecewiseLinearReference(
+        tuple(
+            TimeValuePoint(
+                time=_number(_mapping(point, f"{name}.points[{index}]"), "time_s"),
+                value=_number(_mapping(point, f"{name}.points[{index}]"), "value"),
+            )
+            for index, point in enumerate(points)
+        )
+    )
+
+
 def _encode_force_law(force_law: object) -> dict[str, Any]:
+    if isinstance(force_law, AxialMotionTrackingForce):
+        spec = force_law.spec
+        if spec.force_limit == float("inf"):
+            raise UnsupportedDesignDocumentError(
+                "Serialized axial tracking actuators require a finite force_limit."
+            )
+        return {
+            "kind": "axial_motion_tracking",
+            "position_reference": _encode_time_reference(spec.position_reference),
+            "speed_reference": _encode_time_reference(spec.speed_reference),
+            "position_gain_N_per_m": spec.position_gain,
+            "speed_gain_N_s_per_m": spec.speed_gain,
+            "force_limit_N": spec.force_limit,
+        }
     if isinstance(force_law, AxialSpringForce):
         spec = force_law.spec
         return {
@@ -341,6 +385,20 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
 
 def _decode_force_law(payload: Mapping[str, Any]) -> object:
     kind = _string(payload, "kind")
+    if kind == "axial_motion_tracking":
+        return AxialMotionTrackingForce(
+            AxialMotionTrackingForceSpec(
+                position_reference=_decode_time_reference(
+                    payload.get("position_reference"), name="position_reference"
+                ),
+                speed_reference=_decode_time_reference(
+                    payload.get("speed_reference"), name="speed_reference"
+                ),
+                position_gain=_number(payload, "position_gain_N_per_m"),
+                speed_gain=_number(payload, "speed_gain_N_s_per_m"),
+                force_limit=_number(payload, "force_limit_N"),
+            )
+        )
     if kind == "axial_spring":
         return AxialSpringForce(
             AxialSpringForceSpec(

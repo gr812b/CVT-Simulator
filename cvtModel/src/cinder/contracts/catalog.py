@@ -71,6 +71,40 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
 
     return (
         ComponentDescriptor(
+            kind="axial_motion_tracking",
+            label="Axial motion tracking actuator",
+            description=(
+                "Force-limited servo-like local axial actuator that tracks a "
+                "piecewise-linear position and/or speed reference without imposing "
+                "an exact kinematic constraint."
+            ),
+            parameters=(
+                ComponentParameter(
+                    "position_reference", "Position reference", "object", False,
+                    "Optional piecewise-linear local axial-position reference.",
+                    value_kind="object", dimension="structure",
+                ),
+                ComponentParameter(
+                    "speed_reference", "Speed reference", "object", False,
+                    "Optional piecewise-linear local axial-speed reference.",
+                    value_kind="object", dimension="structure",
+                ),
+                ComponentParameter(
+                    "position_gain_N_per_m", "Position gain", "N/m", True,
+                    "Proportional local position-error gain.", 0.0,
+                    dimension="linear_stiffness",
+                ),
+                ComponentParameter(
+                    "speed_gain_N_s_per_m", "Speed gain", "N·s/m", True,
+                    "Local axial-speed-error gain.", 0.0, dimension="damping",
+                ),
+                ComponentParameter(
+                    "force_limit_N", "Force limit", "N", True,
+                    "Symmetric actuator force limit.", 0.0, dimension="force",
+                ),
+            ),
+        ),
+        ComponentDescriptor(
             kind="axial_spring",
             label="Axial spring",
             description="Linear compression spring expressed in the mounted pulley local axial coordinate.",
