@@ -280,6 +280,5 @@ class TireCoupledShaftBoundary:
         )
 
 
-# Generic physical tracking boundary; imported last to avoid coupling the
-# core boundary protocol to any validation workflow.
-from .tracking import SpeedTrackingShaftBoundary  # noqa: E402,F401
+# Numerical shaft-history replay through the existing external-torque port.
+from .replay import SpeedReplayShaftBoundary  # noqa: E402,F401

@@ -1,9 +1,4 @@
-"""Small serializable time-reference primitives for physical tracking components.
-
-The reference is deliberately a CINDER model primitive rather than a validation
-utility.  Any host, shaft boundary, or actuator can consume a measured,
-commanded, or synthetic time history without knowing where it came from.
-"""
+"""Small serializable scalar time-history primitives."""
 
 from __future__ import annotations
 
@@ -30,11 +25,8 @@ class TimeValuePoint:
 class PiecewiseLinearReference:
     """Clamped piecewise-linear scalar time history.
 
-    Outside the supplied interval the endpoint value is held constant.  Inside
-    the interval the value is linearly interpolated and ``slope_at`` returns the
-    exact segment slope.  This makes the same primitive suitable for shaft-speed
-    commands and axial position/rate commands without introducing controller
-    state into CINDER's five-state CVT plant.
+    Values are linearly interpolated between samples and held at the endpoint
+    values outside the supplied interval.  Times must be strictly increasing.
     """
 
     points: tuple[TimeValuePoint, ...]
@@ -43,12 +35,13 @@ class PiecewiseLinearReference:
     def __post_init__(self) -> None:
         if len(self.points) < 2:
             raise ValueError("PiecewiseLinearReference requires at least two points.")
-        object.__setattr__(self, "_times", tuple(point.time for point in self.points))
-        previous = self.points[0].time
-        for point in self.points[1:]:
-            if point.time <= previous:
-                raise ValueError("reference point times must be strictly increasing.")
-            previous = point.time
+        if not all(isinstance(point, TimeValuePoint) for point in self.points):
+            raise TypeError("points must contain only TimeValuePoint values.")
+
+        times = tuple(point.time for point in self.points)
+        if any(right <= left for left, right in zip(times, times[1:])):
+            raise ValueError("reference point times must be strictly increasing.")
+        object.__setattr__(self, "_times", times)
 
     @property
     def start_time(self) -> float:
@@ -65,6 +58,7 @@ class PiecewiseLinearReference:
             return self.points[0].value
         if time >= self.points[-1].time:
             return self.points[-1].value
+
         index = self._segment_index(time)
         left = self.points[index]
         right = self.points[index + 1]
@@ -72,12 +66,13 @@ class PiecewiseLinearReference:
         return left.value + fraction * (right.value - left.value)
 
     def slope_at(self, time: float) -> float:
-        """Return the local piecewise-linear slope; zero outside the trace."""
+        """Return the local piecewise-linear slope; zero outside the interval."""
 
         if not isfinite(time):
             raise ValueError("time must be finite.")
         if time < self.points[0].time or time > self.points[-1].time:
             return 0.0
+
         index = self._segment_index(time)
         left = self.points[index]
         right = self.points[index + 1]
