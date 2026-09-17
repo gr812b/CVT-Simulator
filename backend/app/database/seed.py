@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.hashing import canonical_json_hash
+from app.database.resolver import resolve_simulation_case
 from app.database.models import (
     Account,
     AccountInstitutionAffiliation,
@@ -32,6 +33,7 @@ from app.database.models import (
     OutputSystemVersion,
     Tune,
     User,
+    ValidationWorkspace,
     VehicleAssembly,
     VehicleAssemblyVersion,
 )
@@ -58,6 +60,7 @@ SEED_LOAD_CASE_ID = "00000000-0000-4000-8000-000000000060"
 SEED_LOAD_CASE_HILL_20_ID = "00000000-0000-4000-8000-000000000061"
 SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID = "00000000-0000-4000-8000-000000000062"
 SEED_EXECUTION_PRESET_ID = "00000000-0000-4000-8000-000000000070"
+SEED_VALIDATION_WORKSPACE_ID = "00000000-0000-4000-8000-000000000080"
 
 POUND_TO_KG = 0.45359237
 SEED_HEAVY_VEHICLE_MASS_KG = 500.0 * POUND_TO_KG
@@ -131,6 +134,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     if session.get(Account, SEED_ACCOUNT_ID) is not None:
         _refresh_seed_tuning_surface(session, split)
         _refresh_seed_run_setups(session, split)
+        _seed_validation_workspace(session)
         return
 
     user = User(
@@ -494,6 +498,75 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
                 is_system_default=True,
             ),
         ]
+    )
+    session.flush()
+    _seed_validation_workspace(session)
+
+
+def _seed_validation_workspace(session: Session) -> None:
+    """Seed the temporary autosaved validation setup and controller templates."""
+    existing = session.scalar(
+        select(ValidationWorkspace).where(
+            ValidationWorkspace.account_id == SEED_ACCOUNT_ID
+        )
+    )
+    if existing is not None:
+        return
+    resolved = resolve_simulation_case(
+        session,
+        vehicle_assembly_version_id=SEED_ASSEMBLY_VERSION_ID,
+        tune_id=SEED_TUNE_ID,
+        load_case_id=SEED_LOAD_CASE_ID,
+        execution_preset_id=SEED_EXECUTION_PRESET_ID,
+    )
+    initial = copy.deepcopy(resolved["scenario"]["initial_cvt_state"])
+    session.add(
+        ValidationWorkspace(
+            id=SEED_VALIDATION_WORKSPACE_ID,
+            account_id=SEED_ACCOUNT_ID,
+            setup_document=copy.deepcopy(resolved),
+            metrology={},
+            controller_templates=[
+                {
+                    "kind": "speed_tracking_shaft",
+                    "label": "Torque-limited shaft speed tracker",
+                    "proportional_gain_Nm_s_per_rad": None,
+                    "torque_limit_Nm": None,
+                    "equivalent_inertia_kg_m2": 0.0,
+                    "feedforward_inertia_kg_m2": 0.0,
+                },
+                {
+                    "kind": "axial_motion_tracking",
+                    "label": "Force-limited axial motion tracker",
+                    "position_gain_N_per_m": None,
+                    "speed_gain_N_s_per_m": 0.0,
+                    "force_limit_N": None,
+                },
+            ],
+            workflow_defaults={
+                "primaryMode": "physical",
+                "secondaryMode": "physical",
+                "axialMode": "physical",
+                "speedTracking": {
+                    "proportionalGainNmSPerRad": None,
+                    "torqueLimitNm": None,
+                    "equivalentInertiaKgM2": 0.0,
+                    "feedforwardInertiaKgM2": 0.0,
+                },
+                "axialTracking": {
+                    "positionGainNPerM": None,
+                    "speedGainNSPerM": 0.0,
+                    "forceLimitN": None,
+                },
+                "manualInitialState": {
+                    "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
+                    "secondaryAngularSpeedRadPerS": initial["secondary_angular_speed_rad_per_s"],
+                    "beltSpeedMPerS": initial["belt_speed_m_per_s"],
+                    "shiftPositionM": initial["shift_position_m"],
+                    "shiftSpeedMPerS": initial["shift_speed_m_per_s"],
+                },
+            },
+        )
     )
 
 

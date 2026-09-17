@@ -31,9 +31,11 @@ from cinder.model.boundaries.vehicle import (
 )
 from cinder.model.boundaries.shaft import (
     FixedShaftBoundary,
+    SpeedTrackingShaftBoundary,
     FullThrottleEngineBoundary,
     LockedFinalDriveShaftBoundary,
 )
+from cinder.model.reference import PiecewiseLinearReference, TimeValuePoint
 from cinder.model.system import CVTAssemblySpec, CVTState, MechanicalCVTPlant
 from cinder.results import ReportingGrid, ReportingSettings
 
@@ -210,7 +212,39 @@ def _decode_cvt_state(payload: Mapping[str, Any]) -> CVTState:
     )
 
 
+def _encode_time_reference(reference: PiecewiseLinearReference) -> dict[str, Any]:
+    return {
+        "points": [
+            {"time_s": point.time, "value": point.value}
+            for point in reference.points
+        ]
+    }
+
+
+def _decode_time_reference(payload: object, *, name: str) -> PiecewiseLinearReference:
+    data = _mapping(payload, name)
+    points = _sequence(_require(data, "points"), f"{name}.points")
+    return PiecewiseLinearReference(
+        tuple(
+            TimeValuePoint(
+                time=_number(_mapping(point, f"{name}.points[{index}]"), "time_s"),
+                value=_number(_mapping(point, f"{name}.points[{index}]"), "value"),
+            )
+            for index, point in enumerate(points)
+        )
+    )
+
+
 def _encode_shaft_boundary(boundary: object) -> dict[str, Any]:
+    if isinstance(boundary, SpeedTrackingShaftBoundary):
+        return {
+            "kind": "speed_tracking_shaft",
+            "speed_reference": _encode_time_reference(boundary.speed_reference),
+            "proportional_gain_Nm_s_per_rad": boundary.proportional_gain,
+            "torque_limit_Nm": boundary.torque_limit,
+            "equivalent_inertia_kg_m2": boundary.equivalent_inertia,
+            "feedforward_inertia_kg_m2": boundary.feedforward_inertia,
+        }
     if isinstance(boundary, FixedShaftBoundary):
         return {
             "kind": "fixed_shaft",
@@ -260,6 +294,16 @@ def _encode_shaft_boundary(boundary: object) -> dict[str, Any]:
 
 def _decode_shaft_boundary(payload: Mapping[str, Any]) -> object:
     kind = _string(payload, "kind")
+    if kind == "speed_tracking_shaft":
+        return SpeedTrackingShaftBoundary(
+            speed_reference=_decode_time_reference(
+                _require(payload, "speed_reference"), name="shaft_boundary.speed_reference"
+            ),
+            proportional_gain=_number(payload, "proportional_gain_Nm_s_per_rad"),
+            torque_limit=_number(payload, "torque_limit_Nm"),
+            equivalent_inertia=_number(payload, "equivalent_inertia_kg_m2"),
+            feedforward_inertia=_number(payload, "feedforward_inertia_kg_m2"),
+        )
     if kind == "fixed_shaft":
         return FixedShaftBoundary(
             external_torque=_number(payload, "external_torque_Nm"),

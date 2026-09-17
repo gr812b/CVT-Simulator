@@ -1,0 +1,16 @@
+.card {
+  border: 1px solid rgba(127, 127, 127, 0.28);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: var(--background-secondary, #fff);
+}
+
+.card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.chart {
+  width: 100%;
+  height: 320px;
+}

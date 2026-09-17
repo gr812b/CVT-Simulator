@@ -1,0 +1,73 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.48);
+  padding: 2rem;
+}
+
+.modal {
+  width: min(980px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 14px;
+  background: var(--background-primary, #fff);
+  padding: 1.2rem;
+  box-shadow: 0 18px 64px rgba(0, 0, 0, 0.25);
+}
+
+.modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: -1.2rem;
+  padding: 1rem 0;
+  background: inherit;
+  z-index: 2;
+}
+
+.modal h2, .modal h3 { margin: 0; }
+.body { display: grid; gap: 0.9rem; }
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.25fr) minmax(200px, 0.8fr) minmax(260px, 1fr);
+  gap: 0.8rem;
+  align-items: end;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+  padding-bottom: 0.8rem;
+}
+
+.fieldRow label, .kindSelect {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+}
+
+.valueWithUnit, .uncertaintyRow { display: flex; gap: 0.4rem; align-items: center; }
+.valueWithUnit input, .uncertaintyRow input { min-width: 0; flex: 1; }
+.valueWithUnit small { min-width: 52px; opacity: 0.7; }
+.sourceField { min-width: 0; }
+
+input, select, textarea {
+  border: 1px solid rgba(127, 127, 127, 0.42);
+  border-radius: 7px;
+  padding: 0.48rem 0.55rem;
+  background: inherit;
+  color: inherit;
+}
+
+.kindSelect { margin-bottom: 0.7rem; }
+.curveEditor { padding: 0.75rem 0; }
+.curveEditor p { opacity: 0.72; }
+.curveRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.35rem 0; }
+.advanced { margin-top: 1.3rem; }
+.advanced textarea { width: 100%; min-height: 280px; font-family: monospace; margin: 0.7rem 0; }
+
+@media (max-width: 800px) {
+  .fieldRow { grid-template-columns: 1fr; }
+}

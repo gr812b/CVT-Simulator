@@ -924,3 +924,82 @@ export async function waitForSimulationRun(
     await sleep(pollIntervalMs, options.signal);
   }
 }
+
+// CVT validation integrated V0 ---------------------------------------------
+export interface ValidationWorkspace {
+  id: string;
+  accountId: string;
+  setupDocument: SimulationCaseDocument;
+  metrology: Record<string, Record<string, unknown>>;
+  controllerTemplates: Array<Record<string, unknown>>;
+  workflowDefaults: Record<string, unknown>;
+  updatedAt: string;
+}
+
+export interface ValidationRunSave {
+  accountId: string;
+  sourceFilename: string;
+  rawCsv: string;
+  cropStartS: number;
+  cropEndS: number;
+  channelConfig: Record<string, unknown>;
+  initialStateConfig: Record<string, unknown>;
+  workspaceSnapshot: Record<string, unknown> | ValidationWorkspace;
+  resolvedDocument: SimulationCaseDocument;
+  simulationRunId: string | null;
+  resultSnapshot: Record<string, unknown>;
+  metrics: Record<string, unknown>;
+}
+
+function parseValidationWorkspace(raw: unknown): ValidationWorkspace {
+  const item = object(raw, 'validation workspace');
+  return {
+    id: string(item.id, 'validation workspace.id'),
+    accountId: string(item.account_id, 'validation workspace.account_id'),
+    setupDocument: object(item.setup_document, 'validation workspace.setup_document') as unknown as SimulationCaseDocument,
+    metrology: object(item.metrology ?? {}, 'validation workspace.metrology') as Record<string, Record<string, unknown>>,
+    controllerTemplates: array(item.controller_templates ?? [], 'validation workspace.controller_templates')
+      .map((entry) => object(entry, 'validation controller template')),
+    workflowDefaults: object(item.workflow_defaults ?? {}, 'validation workspace.workflow_defaults'),
+    updatedAt: string(item.updated_at, 'validation workspace.updated_at'),
+  };
+}
+
+export async function getValidationWorkspace(accountId = DEMO_ACCOUNT_ID): Promise<ValidationWorkspace> {
+  const raw = await apiJson<unknown>(`/api/v1/validation/workspace?account_id=${encodeURIComponent(accountId)}`);
+  return parseValidationWorkspace(raw);
+}
+
+export async function saveValidationWorkspace(workspace: ValidationWorkspace): Promise<ValidationWorkspace> {
+  const raw = await apiJson<unknown>('/api/v1/validation/workspace', {
+    method: 'PUT',
+    body: JSON.stringify({
+      account_id: workspace.accountId,
+      setup_document: wireDocument(workspace.setupDocument),
+      metrology: workspace.metrology,
+      controller_templates: workspace.controllerTemplates,
+      workflow_defaults: workspace.workflowDefaults,
+    }),
+  });
+  return parseValidationWorkspace(raw);
+}
+
+export async function saveValidationRun(payload: ValidationRunSave): Promise<Record<string, unknown>> {
+  return object(await apiJson<unknown>('/api/v1/validation/runs', {
+    method: 'POST',
+    body: JSON.stringify({
+      account_id: payload.accountId,
+      source_filename: payload.sourceFilename,
+      raw_csv: payload.rawCsv,
+      crop_start_s: payload.cropStartS,
+      crop_end_s: payload.cropEndS,
+      channel_config: payload.channelConfig,
+      initial_state_config: payload.initialStateConfig,
+      workspace_snapshot: payload.workspaceSnapshot,
+      resolved_document: wireDocument(payload.resolvedDocument),
+      simulation_run_id: payload.simulationRunId,
+      result_snapshot: payload.resultSnapshot,
+      metrics: payload.metrics,
+    }),
+  }), 'validation run');
+}

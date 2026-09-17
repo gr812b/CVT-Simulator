@@ -278,3 +278,8 @@ class TireCoupledShaftBoundary:
                 "tire_patch_speed": patch_speed,
             },
         )
+
+
+# Generic physical tracking boundary; imported last to avoid coupling the
+# core boundary protocol to any validation workflow.
+from .tracking import SpeedTrackingShaftBoundary  # noqa: E402,F401

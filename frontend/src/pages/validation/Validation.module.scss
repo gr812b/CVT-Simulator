@@ -1,0 +1,63 @@
+.page {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1.4rem 1.8rem 5rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.header { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
+.header h1 { margin: 0.45rem 0 0.3rem; }
+.header p { margin: 0; opacity: 0.72; max-width: 850px; }
+.saveStatus { font-size: 0.85rem; opacity: 0.72; white-space: nowrap; }
+
+.uploadCard, .setupCard, .controllerCard, .stateCard, .runCard {
+  border: 1px solid rgba(127, 127, 127, 0.26);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  background: var(--background-secondary, #fff);
+}
+.uploadCard h2, .setupCard h2, .controllerCard h2, .stateCard h2 { margin: 0 0 0.7rem; }
+
+.traceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(540px, 1fr)); gap: 1rem; }
+.channelCard { display: grid; gap: 0.55rem; }
+.channelControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  align-items: end;
+  padding: 0 0.35rem 0.6rem;
+}
+.channelControls label { display: flex; gap: 0.35rem; align-items: center; font-size: 0.86rem; }
+.channelControls select, .channelControls input { max-width: 150px; }
+
+.metrics { margin: 0 0.35rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+.metrics div { border-radius: 8px; padding: 0.5rem; background: rgba(127, 127, 127, 0.08); }
+.metrics dt { font-size: 0.74rem; opacity: 0.68; }
+.metrics dd { margin: 0.15rem 0 0; font-weight: 600; }
+
+.setupButtons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.setupButtons button { min-height: 52px; }
+.controllerGrid, .gainGrid, .stateGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem; }
+.controllerGrid label, .gainGrid label, .stateGrid label { display: grid; gap: 0.3rem; font-size: 0.85rem; }
+.gainGrid { margin-top: 0.9rem; }
+
+.runCard { display: flex; justify-content: space-between; align-items: center; }
+.runCard button { font-size: 1rem; font-weight: 650; padding: 0.75rem 1.25rem; }
+
+button, input, select {
+  border: 1px solid rgba(127, 127, 127, 0.38);
+  border-radius: 7px;
+  padding: 0.45rem 0.6rem;
+  background: var(--background-primary, #fff);
+  color: inherit;
+}
+button { cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 720px) {
+  .page { padding: 1rem; }
+  .traceGrid { grid-template-columns: 1fr; }
+  .setupButtons { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}

@@ -64,6 +64,21 @@ def editable_simulation_case_schema() -> dict[str, Any]:
             0.0,
         ),
         EditableFieldDescriptor(
+            "/shaft_boundaries/primary/equivalent_inertia_kg_m2",
+            "Primary boundary inertia", "Primary shaft boundary", "kg m^2", 0.0,
+            when={"/shaft_boundaries/primary/kind": "fixed_shaft"},
+        ),
+        EditableFieldDescriptor(
+            "/shaft_boundaries/primary/proportional_gain_Nm_s_per_rad",
+            "Primary speed-tracking gain", "Primary shaft boundary", "N m s/rad", 0.0,
+            when={"/shaft_boundaries/primary/kind": "speed_tracking_shaft"},
+        ),
+        EditableFieldDescriptor(
+            "/shaft_boundaries/primary/torque_limit_Nm",
+            "Primary tracking torque limit", "Primary shaft boundary", "N m", 0.0,
+            when={"/shaft_boundaries/primary/kind": "speed_tracking_shaft"},
+        ),
+        EditableFieldDescriptor(
             "/shaft_boundaries/primary/equivalent_rotational_inertia_kg_m2",
             "Primary boundary inertia",
             "Primary shaft boundary",
