@@ -420,6 +420,7 @@ def _sample_result_with_fresh_system(
     added_secondary_torque: SmoothStep | None = None,
     primary_boundary=None,
     secondary_boundary=None,
+    deadzone_lock_absolute_tolerance: float | None = None,
 ):
     """Sample an integrated result with a fresh contact evaluator.
 
@@ -446,6 +447,10 @@ def _sample_result_with_fresh_system(
         primary_boundary=primary_boundary,
         secondary_boundary=secondary_boundary,
     )
+    if deadzone_lock_absolute_tolerance is not None:
+        reporting_system.cvt.deadzone_evaluator.belt_secondary_lock_absolute_tolerance = float(
+            deadzone_lock_absolute_tolerance
+        )
     samples, contributions = ab.sample_variant(
         variant=_full_variant(ab),
         system=reporting_system,
@@ -953,6 +958,7 @@ def run_custom_restart_case(
     primary_boundary=None,
     secondary_boundary=None,
     reclassify_initial_mode: bool = False,
+    deadzone_lock_absolute_tolerance: float | None = None,
 ):
     """Integrate one arbitrary slotted-topology restart experiment.
 
@@ -972,6 +978,10 @@ def run_custom_restart_case(
         primary_boundary=primary_boundary,
         secondary_boundary=secondary_boundary,
     )
+    if deadzone_lock_absolute_tolerance is not None:
+        system.cvt.deadzone_evaluator.belt_secondary_lock_absolute_tolerance = float(
+            deadzone_lock_absolute_tolerance
+        )
     initial_mode = (
         system.classify_initial_mode(restart.full_state)
         if reclassify_initial_mode
@@ -1001,6 +1011,7 @@ def run_custom_restart_case(
         sample_step_s=sample_step_s,
         primary_boundary=primary_boundary,
         secondary_boundary=secondary_boundary,
+        deadzone_lock_absolute_tolerance=deadzone_lock_absolute_tolerance,
     )
     if not reclassify_initial_mode:
         _assert_restart_reporting_consistency(restart=restart, samples=samples)

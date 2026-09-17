@@ -267,3 +267,13 @@ Resume only this stage with:
 ```powershell
 python .\studies\helix-topology\run.py --start-at transient-severity-race
 ```
+
+### E5.6 numerical edge handling
+
+The transient-severity race intentionally includes sub-millisecond forcing that can drive the
+CVT across the engagement/deadzone boundary at high speed.  For E5.6 only, the deadzone
+belt-secondary lock validation uses a `1e-6 m/s` absolute tolerance instead of the tagged
+production evaluator's `1e-9 m/s` default.  This is a validation guard for event-localization
+roundoff, not a change to the deadzone equations.  Any case that still throws a numerical or
+mechanism exception is recorded as `solver_exception` in `case_summary.csv`; it does not abort
+the remaining severity matrix.

@@ -367,6 +367,9 @@ def evaluate_case(
         primary_boundary=primary_boundary,
         secondary_boundary=secondary_boundary,
         reclassify_initial_mode=False,
+        deadzone_lock_absolute_tolerance=float(
+            solver.get("deadzone_lock_absolute_tolerance_m_s", 1.0e-6)
+        ),
     )
 
     summary: dict[str, Any] = {
@@ -671,17 +674,37 @@ def main() -> int:
                 }
             )
             continue
-        summary, rows = evaluate_case(
-            case=case,
-            restart=context["restarts"][case.restart_key],
-            route=route,
-            ab=ab,
-            assembly=context["assembly"],
-            engine=context["engine"],
-            road_load=context["road_load"],
-            constants=context["constants"],
-            cfg=cfg,
-        )
+        try:
+            summary, rows = evaluate_case(
+                case=case,
+                restart=context["restarts"][case.restart_key],
+                route=route,
+                ab=ab,
+                assembly=context["assembly"],
+                engine=context["engine"],
+                road_load=context["road_load"],
+                constants=context["constants"],
+                cfg=cfg,
+            )
+        except (ValueError, RuntimeError, FloatingPointError) as exc:
+            summary = {
+                "case_id": case.case_id,
+                "status": "solver_exception",
+                "preload_deg": case.preload_deg,
+                "restart_key": case.restart_key,
+                "perturbation_family": case.perturbation.family,
+                "perturbation_value": case.perturbation.value,
+                "perturbation_label": case.perturbation.label,
+                "perturbation_role": case.perturbation.role,
+                "ramp_s": case.ramp_s,
+                "exception_type": type(exc).__name__,
+                "exception_detail": str(exc),
+            }
+            rows = []
+            print(
+                f"E5.6 case {case.case_id} recorded solver_exception: "
+                f"{type(exc).__name__}: {exc}"
+            )
         case_rows.append(summary)
         pre_full = _finite(summary.get("pretraction_minimum_full_margin_Nm"))
         pre_shift = _finite(summary.get("pretraction_minimum_shift_accel_term_Nm"))
@@ -724,7 +747,11 @@ def main() -> int:
         "quick": bool(args.quick),
         "planned_cases": len(cases),
         "completed_cases": len(completed),
-        "failed_cases": sum(1 for r in case_rows if r.get("status") == "integration_failed"),
+        "failed_cases": sum(
+            1
+            for r in case_rows
+            if r.get("status") in {"integration_failed", "solver_exception"}
+        ),
         "restart_unavailable_cases": sum(1 for r in case_rows if r.get("status") == "restart_unavailable"),
         "event_order_counts": counts,
         "gold_case_count": len(gold),

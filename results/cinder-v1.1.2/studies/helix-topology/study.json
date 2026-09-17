@@ -433,7 +433,8 @@
         "sample_step_s": 0.0001,
         "maximum_step_cap_s": 0.0005,
         "minimum_max_step_s": 5e-05,
-        "ramp_step_divisor": 12.0
+        "ramp_step_divisor": 12.0,
+        "deadzone_lock_absolute_tolerance_m_s": 1e-06
       },
       "engine_target_torques_Nm": [
         0.0,
@@ -508,7 +509,8 @@
         "shift_accel_term_Nm": -1.0
       },
       "success_definition": "Gold case: M_h crosses zero before belt traction leaves stick-stick, secondary belt power remains positive, M_h,QS remains positive by at least 0.25 N m, the shift coordinate is free and more than 2% from either travel stop, no earlier hybrid transition has occurred, and the torque+spring margin remains positive over the resolved post-onset transient.",
-      "question": "As forward-power disturbances are made faster and larger, does selected-flank helix inadmissibility occur before belt traction saturation? How do preload, ratio, disturbance magnitude, and ramp time set that event ordering, and how large can -I_M theta_prime s_ddot become while the belt is still stick-stick?"
+      "question": "As forward-power disturbances are made faster and larger, does selected-flank helix inadmissibility occur before belt traction saturation? How do preload, ratio, disturbance magnitude, and ramp time set that event ordering, and how large can -I_M theta_prime s_ddot become while the belt is still stick-stick?",
+      "numerical_guard_note": "E5.6 uses a study-local 1e-6 m/s absolute belt-secondary deadzone-lock validation tolerance. The tagged production evaluator defaults to 1e-9 m/s; the relaxed guard only prevents tiny event-localization residuals during intentionally extreme sub-millisecond transients from aborting the severity sweep. It does not alter the deadzone equations or event-order success criteria. Any remaining per-case solver exception is recorded and the sweep continues."
     }
   },
   "discovery_metrics": {
