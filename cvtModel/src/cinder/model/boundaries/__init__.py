@@ -7,6 +7,7 @@ from .shaft import (
     LockedFinalDriveShaftBoundary,
     ShaftBoundary,
     ShaftBoundaryContext,
+    SpeedReplayShaftBoundary,
     TanhLongitudinalTire,
     TireCoupledShaftBoundary,
 )
@@ -37,6 +38,7 @@ __all__ = [
     "RoadProfileSample",
     "ShaftBoundary",
     "ShaftBoundaryContext",
+    "SpeedReplayShaftBoundary",
     "TanhLongitudinalTire",
     "TireCoupledShaftBoundary",
     "TorqueCurveSpec",
