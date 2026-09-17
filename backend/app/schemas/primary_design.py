@@ -176,3 +176,41 @@ class FixedPivotOperatingResponse(ApiModel):
     analysis_id: str
     operating: dict[str, float]
     loads: dict[str, Any]
+
+class ForceCurvePointRequest(ApiModel):
+    shift_m: float = Field(ge=0.0)
+    force_N: float = Field(ge=0.0)
+
+
+class FixedPivotInverseDesignRequest(ApiModel):
+    architecture: FixedPivotArchitectureRequest
+    zones: list[PackagingZoneRequest] = Field(default_factory=list, max_length=32)
+    target_points: list[ForceCurvePointRequest] = Field(min_length=1, max_length=64)
+    shaft_speed_rad_s: float = Field(gt=0.0)
+    max_tip_mass_per_flyweight_kg: float = Field(ge=0.0)
+    fixed_tip_mass_per_flyweight_kg: float | None = Field(default=None, ge=0.0)
+    solution_count: int = Field(default=8, ge=1, le=16)
+    sample_count: int = Field(default=181, ge=81, le=401)
+
+
+class FixedPivotInverseDesignResponse(ApiModel):
+    target: dict[str, Any]
+    solutions: list[dict[str, Any]]
+    diagnostics: list[dict[str, Any]]
+    summary: dict[str, Any]
+
+
+class FixedPivotPathDomainCompareRequest(ApiModel):
+    domain_id_a: str = Field(min_length=1)
+    domain_id_b: str = Field(min_length=1)
+    atlas_path_count: int = Field(default=32, ge=8, le=64)
+    mass_mix_count: int = Field(default=7, ge=3, le=15)
+
+
+class FixedPivotPathDomainCompareResponse(ApiModel):
+    definition: dict[str, Any]
+    architecture_a: dict[str, Any]
+    architecture_b: dict[str, Any]
+    witnesses: dict[str, Any]
+    summary: dict[str, Any]
+

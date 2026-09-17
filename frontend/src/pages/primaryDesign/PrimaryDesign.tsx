@@ -21,7 +21,8 @@ import { ForceChart } from './ForceChart';
 import { MechanismScene } from './MechanismScene';
 import { RampFamilyExplorer } from './RampFamilyExplorer';
 import { CapabilityExplorer } from './CapabilityExplorer';
-import { RequirementsExplorer } from './RequirementsExplorer';
+import { ForceInverseDesigner } from './ForceInverseDesigner';
+import { ArchitectureCompareExplorer } from './ArchitectureCompareExplorer';
 import styles from './PrimaryDesign.module.scss';
 
 const MM = 1000;
@@ -29,7 +30,7 @@ const G = 1000;
 const RPM_PER_RAD_S = 60 / (2 * Math.PI);
 const RAD_S_PER_RPM = 2 * Math.PI / 60;
 
-type DesignMode = 'architecture' | 'requirements' | 'concrete';
+type DesignMode = 'architecture' | 'compare' | 'requirements' | 'concrete';
 
 function interpolateNullable(
   axis: number[],
@@ -254,7 +255,7 @@ export const PrimaryDesign = () => {
           <h1>Fixed-Pivot Primary Design</h1>
           <p>Architecture packaging, exact roller contact, flyweight force, and structural-load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Force-conditioned design domain · Phase 3.5</div>
+        <div className={styles.phaseBadge}>Continuous inverse design + architecture capability</div>
       </header>
 
       <div className={styles.modeTabs}>
@@ -263,11 +264,18 @@ export const PrimaryDesign = () => {
         </button>
         <button
           type="button"
-          className={mode === 'requirements' ? styles.modeTabActive : styles.modeTab}
+          className={mode === 'compare' ? styles.modeTabActive : styles.modeTab}
           disabled={!pathDomain || pathDomainDirty}
+          onClick={() => setMode('compare')}
+        >
+          Compare architectures
+        </button>
+        <button
+          type="button"
+          className={mode === 'requirements' ? styles.modeTabActive : styles.modeTab}
           onClick={() => setMode('requirements')}
         >
-          Requirements
+          Force → Ramp
         </button>
         <button type="button" className={mode === 'concrete' ? styles.modeTabActive : styles.modeTab} onClick={() => setMode('concrete')}>
           Concrete design
@@ -301,14 +309,18 @@ export const PrimaryDesign = () => {
           onAnalyzePathDomain={() => void analyzePathDomain(architecture, zones)}
           onContinueToRequirements={() => setMode('requirements')}
         />
-      ) : mode === 'requirements' && pathDomain ? (
+      ) : mode === 'compare' && pathDomain ? (
+        <main className={styles.requirementsPage}>
+          <ArchitectureCompareExplorer architecture={architecture} zones={zones} domain={pathDomain} />
+        </main>
+      ) : mode === 'requirements' ? (
         <main className={styles.requirementsPage}>
           <section className={styles.card}>
             <div className={styles.cardTitleRow}>
-              <h2>Force-conditioned ramp + mass design</h2>
-              <span>full capability stays visible underneath</span>
+              <h2>Force curve → physical ramp</h2>
+              <span>continuous Appendix-D inverse · discrete graph is context only</span>
             </div>
-            <RequirementsExplorer architecture={architecture} domain={pathDomain} />
+            <ForceInverseDesigner architecture={architecture} zones={zones} domain={pathDomainDirty ? null : pathDomain} />
           </section>
         </main>
       ) : (
@@ -463,7 +475,7 @@ function ArchitectureMode({
                 <input type="checkbox" checked={showPhase2Workspace} onChange={(event) => onShowPhase2WorkspaceChange(event.target.checked)} />
                 <span>Show Phase-2 local geometric superset behind the domain</span>
               </label>
-              <p className={styles.helpText}>Future: a dedicated comparison mode will pin architecture A and compare its physical/force domain against architecture B without cluttering the normal design flow.</p>
+              <p className={styles.helpText}>Architecture Compare now uses complete history-certified paths, mass-scale-agnostic force-shape coordinates, and witness ramps rather than overlaying pointwise force envelopes.</p>
             </div>
           )}
           {pathDomain && (
@@ -496,7 +508,7 @@ function ArchitectureMode({
                   <Readout label="Multi-root shifts" value={String(selectedPath.history.multiple_root_shift_count)} />
                 </div>
               )}
-              <button type="button" className={styles.primaryButton} onClick={onContinueToRequirements}>Continue to force requirements →</button>
+              <button type="button" className={styles.primaryButton} onClick={onContinueToRequirements}>Continue to Force → Ramp →</button>
             </>
           )}
         </section>

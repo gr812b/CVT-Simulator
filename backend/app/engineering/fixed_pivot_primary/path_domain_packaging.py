@@ -242,12 +242,95 @@ def _bbox_disjoint(a: tuple[float, float, float, float], b: tuple[float, float, 
     return a[2] + pad < b[0] or b[2] + pad < a[0] or a[3] + pad < b[1] or b[3] + pad < a[1]
 
 
+def _segment_subject_bounds(
+    architecture: ArchitectureDesign,
+    segment: PathSegment,
+) -> tuple[tuple[float, float, float, float], tuple[float, float, float, float]]:
+    """Conservative ramp/flyweight bounds without sampling the finite-roller path.
+
+    Every retained local graph edge already has monotone q and a monotone
+    roller-centre axial coordinate.  Over q in [-30, 90) the radial centre
+    coordinate is monotone as well.  Endpoint centre coordinates therefore
+    bound the complete centre path.  The physical contact point lies exactly
+    one roller radius from that path, so expanding the centre box by R_roll is
+    conservative for the ramp.  The flyweight subject is bounded by the two
+    pivot endpoints, the centre box, and the roller-radius expansion.
+    """
+
+    x0 = segment.x0_m
+    x1 = segment.x1_m
+    q0 = segment.q0_rad
+    q1 = segment.q1_rad
+    L = architecture.arm_length_m
+    rr = architecture.roller_radius_m
+    px0 = architecture.pivot_axial_position_m - x0
+    px1 = architecture.pivot_axial_position_m - x1
+    pr = architecture.pivot_radius_m
+    cx0 = px0 + L * np.cos(q0)
+    cx1 = px1 + L * np.cos(q1)
+    cr0 = pr + L * np.sin(q0)
+    cr1 = pr + L * np.sin(q1)
+
+    centre = (
+        float(min(cx0, cx1)),
+        float(min(cr0, cr1)),
+        float(max(cx0, cx1)),
+        float(max(cr0, cr1)),
+    )
+    ramp = (
+        centre[0] - rr,
+        centre[1] - rr,
+        centre[2] + rr,
+        centre[3] + rr,
+    )
+    flyweight = (
+        min(px0, px1, centre[0] - rr),
+        min(pr, centre[1] - rr),
+        max(px0, px1, centre[2] + rr),
+        max(pr, centre[3] + rr),
+    )
+    return ramp, tuple(float(value) for value in flyweight)
+
+
+def _bbox_contains(outer: tuple[float, float, float, float], inner: tuple[float, float, float, float]) -> bool:
+    return (
+        outer[0] <= inner[0] + 1.0e-12
+        and outer[1] <= inner[1] + 1.0e-12
+        and outer[2] >= inner[2] - 1.0e-12
+        and outer[3] >= inner[3] - 1.0e-12
+    )
+
+
 def _segment_satisfies_packaging_fast(
     architecture: ArchitectureDesign,
     segment: PathSegment,
     zones: tuple[dict[str, object], ...],
 ) -> bool:
     if not zones:
+        return True
+
+    ramp_subject_bounds, flyweight_subject_bounds = _segment_subject_bounds(architecture, segment)
+    active_zones: list[dict[str, object]] = []
+    for item in zones:
+        zone = item["zone"]
+        assert isinstance(zone, PackagingZone)
+        bounds = item["bounds"]
+        assert isinstance(bounds, tuple)
+        subject_bounds = ramp_subject_bounds if zone.subject == "ramp" else flyweight_subject_bounds
+        if zone.rule == "forbid":
+            # Exact-safe broad phase: if the conservative subject box is
+            # disjoint from the buffered keep-out, no sampled geometry or
+            # Shapely construction is needed for this edge.
+            if _bbox_disjoint(subject_bounds, bounds):
+                continue
+        else:
+            # Containment requires the full check, but a failed bounding-box
+            # containment is already sufficient to reject the edge.
+            if not _bbox_contains(bounds, subject_bounds):
+                return False
+        active_zones.append(item)
+
+    if not active_zones:
         return True
 
     xs = np.linspace(segment.x0_m, segment.x1_m, 33)
@@ -263,7 +346,7 @@ def _segment_satisfies_packaging_fast(
     ramp_bounds = ramp_line.bounds
     centre_points = [(row["roller_center_x_m"], row["roller_center_r_m"]) for row in rows]
 
-    for item in zones:
+    for item in active_zones:
         zone = item["zone"]
         assert isinstance(zone, PackagingZone)
         surface = item["surface"]
@@ -307,3 +390,4 @@ def _segment_satisfies_packaging_fast(
                 if not surface.covers(arm):
                     return False
     return True
+

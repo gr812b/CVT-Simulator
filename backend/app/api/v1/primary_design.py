@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from app.api.v1.dependencies import get_container
 from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem
+from app.engineering.fixed_pivot_primary.inverse_design import ForceTargetPoint
 from app.engineering.fixed_pivot_primary import (
     ArchitectureDesign,
     ForceRequirement,
@@ -27,6 +28,10 @@ from app.schemas.primary_design import (
     FixedPivotPathDomainResponse,
     FixedPivotPathDomainConditionRequest,
     FixedPivotPathDomainConditionResponse,
+    FixedPivotInverseDesignRequest,
+    FixedPivotInverseDesignResponse,
+    FixedPivotPathDomainCompareRequest,
+    FixedPivotPathDomainCompareResponse,
 )
 
 router = APIRouter(
@@ -167,3 +172,57 @@ def concrete_response(
         status = 404 if error.code == "ANALYSIS_EXPIRED" else 422
         raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotOperatingResponse(**result)
+
+@router.post("/inverse-design", response_model=FixedPivotInverseDesignResponse)
+def inverse_design_force_curve(
+    request: FixedPivotInverseDesignRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotInverseDesignResponse:
+    architecture = ArchitectureDesign(**request.architecture.model_dump())
+    zones = tuple(
+        PackagingZone(
+            **zone.model_dump(exclude={"polygon_m"}),
+            polygon_m=tuple(tuple(point) for point in zone.polygon_m),
+        )
+        for zone in request.zones
+    )
+    target_points = tuple(
+        ForceTargetPoint(shift_m=point.shift_m, force_N=point.force_N)
+        for point in request.target_points
+    )
+    try:
+        result = container.primary_design.inverse_design_force_curve(
+            architecture=architecture,
+            zones=zones,
+            target_points=target_points,
+            shaft_speed_rad_s=request.shaft_speed_rad_s,
+            max_tip_mass_per_flyweight_kg=request.max_tip_mass_per_flyweight_kg,
+            fixed_tip_mass_per_flyweight_kg=request.fixed_tip_mass_per_flyweight_kg,
+            solution_count=request.solution_count,
+            sample_count=request.sample_count,
+        )
+    except PrimaryDesignError as error:
+        raise ApiProblem(422, error.code.lower(), str(error), error.details) from error
+    return FixedPivotInverseDesignResponse(**result)
+
+
+@router.post(
+    "/architecture/path-domain/compare",
+    response_model=FixedPivotPathDomainCompareResponse,
+)
+def compare_path_domains(
+    request: FixedPivotPathDomainCompareRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotPathDomainCompareResponse:
+    try:
+        result = container.primary_design.compare_path_domains(
+            domain_id_a=request.domain_id_a,
+            domain_id_b=request.domain_id_b,
+            atlas_path_count=request.atlas_path_count,
+            mass_mix_count=request.mass_mix_count,
+        )
+    except PrimaryDesignError as error:
+        status = 404 if error.code == "DOMAIN_EXPIRED" else 422
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
+    return FixedPivotPathDomainCompareResponse(**result)
+

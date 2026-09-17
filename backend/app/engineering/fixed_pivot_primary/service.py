@@ -15,6 +15,8 @@ from .cinder_adapter import (
     evaluate_response,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
+from .architecture_compare import compare_compiled_domains
+from .inverse_design import ForceTargetPoint, inverse_design_force_curve as solve_force_curve_inverse
 from .path_domain_packaging import compile_path_domain_cached_packaging
 from .path_domain import (
     CompiledPathDomain,
@@ -210,6 +212,67 @@ class FixedPivotPrimaryDesignService:
             "domain_id": domain_id,
             **result,
         }
+
+    def inverse_design_force_curve(
+        self,
+        *,
+        architecture: ArchitectureDesign,
+        zones: tuple[PackagingZone, ...],
+        target_points: tuple[ForceTargetPoint, ...],
+        shaft_speed_rad_s: float,
+        max_tip_mass_per_flyweight_kg: float,
+        fixed_tip_mass_per_flyweight_kg: float | None = None,
+        solution_count: int = 8,
+        sample_count: int = 181,
+    ) -> dict[str, object]:
+        """Generate continuous finite-roller ramps for a requested static force curve."""
+        try:
+            return solve_force_curve_inverse(
+                architecture,
+                zones,
+                target_points,
+                shaft_speed_rad_s=shaft_speed_rad_s,
+                max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
+                fixed_tip_mass_per_flyweight_kg=fixed_tip_mass_per_flyweight_kg,
+                solution_count=solution_count,
+                sample_count=sample_count,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_FORCE_CURVE_INVERSE",
+                str(error),
+            ) from error
+
+    def compare_path_domains(
+        self,
+        *,
+        domain_id_a: str,
+        domain_id_b: str,
+        atlas_path_count: int = 32,
+        mass_mix_count: int = 7,
+    ) -> dict[str, object]:
+        """Compare two cached complete-path architecture domains without fixing mass or RPM."""
+        cached_a = self._get_domain(domain_id_a)
+        cached_b = self._get_domain(domain_id_b)
+        try:
+            result = compare_compiled_domains(
+                cached_a.compiled,
+                cached_b.compiled,
+                atlas_path_count=atlas_path_count,
+                mass_mix_count=mass_mix_count,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_ARCHITECTURE_COMPARISON",
+                str(error),
+            ) from error
+        architecture_a = result.get("architecture_a")
+        architecture_b = result.get("architecture_b")
+        if isinstance(architecture_a, dict):
+            architecture_a["domain_id"] = domain_id_a
+        if isinstance(architecture_b, dict):
+            architecture_b["domain_id"] = domain_id_b
+        return result
 
     def analyze_concrete(
         self,

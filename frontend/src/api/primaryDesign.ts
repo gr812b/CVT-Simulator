@@ -447,3 +447,168 @@ export function conditionPrimaryPathDomain(
     }),
   });
 }
+
+export interface InverseDesignTargetPoint {
+  shift_m: number;
+  force_N: number;
+}
+
+export interface InverseRampSolution {
+  tip_mass_per_flyweight_kg: number;
+  initial_q_deg: number;
+  shift_m: number[];
+  q_deg: number[];
+  q_prime_rad_per_m: number[];
+  q_second_rad_per_m2: number[];
+  ramp_tangent_deg: number[];
+  roller_center: { x_m: number[]; r_m: number[] };
+  ramp_surface: { x_m: number[]; r_m: number[] };
+  force: { target_N: number[]; recovered_N: number[] };
+  metrics: {
+    rms_force_error_N: number;
+    max_force_error_N: number;
+    q_margin_deg: number;
+    ramp_tangent_margin_deg: number;
+    minimum_offset_factor: number;
+    minimum_roller_direction_margin: number;
+    minimum_packaging_margin_m: number | null;
+    robustness_score: number;
+  };
+  history: {
+    valid: boolean;
+    max_contact_root_count?: number;
+    multiple_root_shift_count?: number;
+  };
+}
+
+export interface InverseDesignAnalysis {
+  target: {
+    shaft_speed_rad_s: number;
+    shift_m: number[];
+    force_N: number[];
+    input_points: InverseDesignTargetPoint[];
+  };
+  solutions: InverseRampSolution[];
+  diagnostics: Array<{
+    severity: string;
+    code: string;
+    message: string;
+    count?: number;
+    shift_m?: number | null;
+    [key: string]: unknown;
+  }>;
+  summary: {
+    method: string;
+    candidate_pair_count: number;
+    geometry_candidate_count: number;
+    certified_solution_count: number;
+    best_rms_error_N: number | null;
+    best_max_error_N: number | null;
+    target_integrated_force_Nm: number;
+    maximum_integrated_force_Nm: number;
+    capacity_q_min_deg: number;
+    capacity_q_max_deg: number;
+    fixed_tip_mass_per_flyweight_kg: number | null;
+    max_tip_mass_per_flyweight_kg: number;
+    force_definition: string;
+  };
+}
+
+export interface ArchitectureShapePoint {
+  architecture: string;
+  path_index: number;
+  state_indices: number[];
+  mass_mix_fraction: number;
+  tip_to_arm_mass_ratio: number;
+  c1: number;
+  c2: number;
+  c3: number;
+  mean_specific_gain: number;
+  shift_fraction: number[];
+  specific_gain: number[];
+  normalized_shape: number[];
+  ramp: {
+    shift_m: number[];
+    q_deg: number[];
+    ramp_tangent_deg: number[];
+    roller_center: { x_m: number[]; r_m: number[] };
+    ramp_surface: { x_m: number[]; r_m: number[] };
+  };
+}
+
+export interface ArchitectureComparisonWitness {
+  source_architecture: string;
+  nearest_architecture: string;
+  shape_distance: number;
+  max_pointwise_shape_gap: number;
+  gap_shift_fraction: number;
+  source: ArchitectureShapePoint;
+  nearest: ArchitectureShapePoint;
+}
+
+export interface ArchitectureComparisonAnalysis {
+  definition: {
+    mass_agnostic: boolean;
+    specific_gain: string;
+    shape_normalization: string;
+    sampling_note: string;
+  };
+  architecture_a: {
+    domain_id: string;
+    certified_path_count: number;
+    shape_sample_count: number;
+    footprint: {
+      points: Array<Pick<ArchitectureShapePoint, 'c1' | 'c2' | 'c3' | 'path_index' | 'mass_mix_fraction' | 'mean_specific_gain'>>;
+      hull_c1_c2: number[][];
+    };
+    specific_leverage_envelope: { shift_fraction: number[]; min: number[]; max: number[]; median: number[] };
+  };
+  architecture_b: ArchitectureComparisonAnalysis['architecture_a'];
+  witnesses: {
+    a_not_b: ArchitectureComparisonWitness[];
+    b_not_a: ArchitectureComparisonWitness[];
+  };
+  summary: {
+    atlas_path_count_requested: number;
+    mass_mix_count: number;
+    a_to_b_median_shape_distance: number | null;
+    a_to_b_max_shape_distance: number | null;
+    b_to_a_median_shape_distance: number | null;
+    b_to_a_max_shape_distance: number | null;
+  };
+}
+
+export function inverseDesignPrimaryForceCurve(
+  architecture: FixedPivotArchitecture,
+  zones: PackagingZone[],
+  targetPoints: InverseDesignTargetPoint[],
+  shaftSpeedRadS: number,
+  maxTipMassPerFlyweightKg: number,
+  fixedTipMassPerFlyweightKg: number | null,
+  options: Partial<{ solution_count: number; sample_count: number }> = {},
+): Promise<InverseDesignAnalysis> {
+  return request<InverseDesignAnalysis>('/inverse-design', {
+    method: 'POST',
+    body: JSON.stringify({
+      architecture,
+      zones,
+      target_points: targetPoints,
+      shaft_speed_rad_s: shaftSpeedRadS,
+      max_tip_mass_per_flyweight_kg: maxTipMassPerFlyweightKg,
+      fixed_tip_mass_per_flyweight_kg: fixedTipMassPerFlyweightKg,
+      ...options,
+    }),
+  });
+}
+
+export function comparePrimaryPathDomains(
+  domainIdA: string,
+  domainIdB: string,
+  options: Partial<{ atlas_path_count: number; mass_mix_count: number }> = {},
+): Promise<ArchitectureComparisonAnalysis> {
+  return request<ArchitectureComparisonAnalysis>('/architecture/path-domain/compare', {
+    method: 'POST',
+    body: JSON.stringify({ domain_id_a: domainIdA, domain_id_b: domainIdB, ...options }),
+  });
+}
+
