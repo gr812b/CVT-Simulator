@@ -1,6 +1,6 @@
 """Run the complete exploratory helix reaction-discovery programme.
 
-Default usage performs E1-E5.6, writes provenance, and creates one ZIP that can
+Default usage performs E1-E5.8, writes provenance, and creates one ZIP that can
 be sent back for interpretation:
 
     python results/cinder-v1.1.2/studies/helix-topology/run.py
@@ -82,7 +82,7 @@ def make_bundle(*, quick: bool, through: str) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    stages = ("reaction-map", "forward-control", "stress-screen", "scenario-discovery", "liftoff-envelope", "dynamic-only-liftoff", "transient-severity-race")
+    stages = ("reaction-map", "forward-control", "stress-screen", "scenario-discovery", "liftoff-envelope", "dynamic-only-liftoff", "transient-severity-race", "coupled-event-chronology", "paired-helix-performance")
     parser.add_argument(
         "--through",
         choices=(*stages, "all"),
@@ -134,6 +134,14 @@ def main() -> int:
         (
             "transient-severity-race",
             lambda: run_script("run_transient_severity_race.py", *quick_arg),
+        ),
+        (
+            "coupled-event-chronology",
+            lambda: run_script("run_coupled_event_chronology.py"),
+        ),
+        (
+            "paired-helix-performance",
+            lambda: run_script("run_paired_helix_performance.py", *quick_arg),
         ),
     ]
     order = {name: i for i, (name, _) in enumerate(actions)}

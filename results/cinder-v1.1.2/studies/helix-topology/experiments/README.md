@@ -25,3 +25,8 @@ reconditioned before 30/50/70% shift restarts are selected.  The primary
 classification is `helix_first`, `traction_first`, `simultaneous_or_unresolved`,
 or `neither`; the gold condition additionally requires forward power, free
 stick-stick contact, positive torque+spring margin, and an interior shift state.
+
+
+## E5.7 — Coupled event chronology
+
+`run_coupled_event_chronology.py` is a post-processing-only stage. It consumes the completed E5.6 `case_summary.csv` and `retained_trace.csv`, selects a reverse-power helix/traction event and a stock-300° dynamic-term exemplar algorithmically, and writes aligned helix-margin / axial-clamp / normal-force / traction / dynamic-term chronologies. It performs no new CINDER integration.

@@ -277,3 +277,42 @@ production evaluator's `1e-9 m/s` default.  This is a validation guard for event
 roundoff, not a change to the deadzone equations.  Any case that still throws a numerical or
 mechanism exception is recorded as `solver_exception` in `case_summary.csv`; it does not abort
 the remaining severity matrix.
+
+
+### E5.7 coupled-event-chronology
+
+After E5.6, this post-processing stage asks two coupled questions: whether reverse-power helix unloading actually drives secondary normal force toward contact loss / traction saturation, and how large the dynamic helix terms become with the stock 300° preload. Run it alone with:
+
+```powershell
+python .\studies\helix-topology\run.py --start-at coupled-event-chronology --through coupled-event-chronology
+```
+
+It reuses existing E5.6 artifacts and does not rerun the 572-case severity matrix.
+
+## E5.8 — paired helix performance
+
+`paired-helix-performance` reruns two fixed exemplar transients from identical
+initial states with the full dynamic slotted helix and the tagged CINDER
+`quasi_static_helix` ablation.  The quasi-static comparator retains the static
+belt-torque + torsional-spring helix law and returns the movable-sheave
+rotational inertia to the rigid secondary shaft inertia; it does not delete
+hardware inertia.
+
+Run only this stage with:
+
+```powershell
+python .\studies\helix-topology\run.py `
+  --start-at paired-helix-performance `
+  --through paired-helix-performance
+```
+
+The stage writes `artifacts/paired-helix-performance/` with quantitative CSVs
+and paired trajectory, clamp/traction, helix, power, and full-minus-QS plots.
+This remains a slotted/constrained comparison, not true unilateral helix
+detachment.
+
+## E5.8 paired-performance replay note
+
+E5.8 replays the selected E5.6/E5.7 transients at their original timing: perturbation onset at 30 ms, 350 ms post-ramp hold, 0.1 ms reporting, and a 0.5 ms maximum solver step cap. The full-dynamic and quasi-static helix variants start from the exact same conditioned state.
+
+An intentional terminal hybrid condition such as `contact_loss_normal_resultant_floor` is treated as a physical performance outcome, not a study exception. Both trajectories are retained up to their respective terminal times; full-minus-QS deltas are evaluated only over the common admissible interval, and each formulation's termination reason/time is written to the comparison summary.

@@ -511,6 +511,101 @@
       "success_definition": "Gold case: M_h crosses zero before belt traction leaves stick-stick, secondary belt power remains positive, M_h,QS remains positive by at least 0.25 N m, the shift coordinate is free and more than 2% from either travel stop, no earlier hybrid transition has occurred, and the torque+spring margin remains positive over the resolved post-onset transient.",
       "question": "As forward-power disturbances are made faster and larger, does selected-flank helix inadmissibility occur before belt traction saturation? How do preload, ratio, disturbance magnitude, and ramp time set that event ordering, and how large can -I_M theta_prime s_ddot become while the belt is still stick-stick?",
       "numerical_guard_note": "E5.6 uses a study-local 1e-6 m/s absolute belt-secondary deadzone-lock validation tolerance. The tagged production evaluator defaults to 1e-9 m/s; the relaxed guard only prevents tiny event-localization residuals during intentionally extreme sub-millisecond transients from aborting the severity sweep. It does not alter the deadzone equations or event-order success criteria. Any remaining per-case solver exception is recorded and the sweep continues."
+    },
+    "coupled_event_chronology": {
+      "stage": "E5.7",
+      "role": "postprocess_coupled_helix_clamp_traction_and_stock_dynamic_chronology",
+      "status": "implemented",
+      "source_stage": "transient_severity_race",
+      "reruns_cinder": false,
+      "stock_preload_deg": 300.0,
+      "static_friction_coefficient": 0.65,
+      "event_window_s": 0.015,
+      "selection": {
+        "reversal_exemplar": "Highest-preload completed simultaneous/unresolved E5.6 case whose first full M_h crossing is dynamic-only (M_h,QS > 0), then smallest helix/traction event-time separation.",
+        "stock_dynamic_exemplar": "At 300 deg preload, completed E5.6 case with the most negative pre-traction shift-acceleration helix torque term."
+      },
+      "question_clamp_traction": "Near reverse-power helix-flank reversal, does secondary helix unloading materially reduce total secondary closing force / normal resultant and thereby coincide with traction saturation or actual N_s=0 belt contact loss?",
+      "question_stock_dynamics": "With the stock 300 deg torsional preload, how large are the shaft-, shift-, and curvature-driven helix torque corrections while the belt is still sticking, and how do those terms evolve if slip follows?",
+      "outputs": [
+        "summary.json",
+        "helix_traction_event_coupling.csv",
+        "stock_preload_dynamic_summary.csv",
+        "reversal_coupled_chronology.png",
+        "stock_preload_dynamic_terms.png",
+        "normal_force_at_helix_crossing.png"
+      ]
+    },
+    "paired_helix_performance": {
+      "stage": "E5.8",
+      "role": "paired_full_dynamic_vs_quasi_static_helix_transient_performance",
+      "status": "implemented",
+      "reruns_cinder": true,
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "static_friction_coefficient": 0.65,
+      "comparison_grid_step_s": 0.0001,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0001,
+        "maximum_step_cap_s": 0.0005,
+        "minimum_max_step_s": 5e-05,
+        "ramp_step_divisor": 12.0,
+        "deadzone_lock_absolute_tolerance_m_s": 1e-06,
+        "maximum_transitions": 500
+      },
+      "comparator": {
+        "full": "Production full dynamic helix with movable-member shaft, shift-acceleration and curvature terms.",
+        "quasi_static_helix": "Tagged CINDER quasi_static_helix ablation. Static torque+spring helix law is retained; movable-sheave rotational inertia is returned to classical fixed secondary shaft inertia rather than deleted.",
+        "shared_topology": "Both use the signed/slotted helical kinematic constraint theta=theta(s). This is not a detached unilateral comparator."
+      },
+      "initial_state_policy": "Both variants start from the exact same naturally conditioned full-model state at the requested ratio. The quasi-static variant reclassifies the hybrid mode at that same state. E5.8 replays the original E5.6 timing exactly (30 ms onset and 350 ms post-ramp hold).",
+      "cases": [
+        {
+          "case_id": "E58_reversal_270_s30_engine_m28_r050",
+          "label": "270 deg reversal exemplar: engine torque -> -28 N m",
+          "preload_deg": 270.0,
+          "restart_shift_percent": 30.0,
+          "perturbation_family": "engine_target_torque",
+          "perturbation_value": -28.0,
+          "ramp_s": 0.05,
+          "onset_s": 0.03,
+          "hold_s": 0.35,
+          "purpose": "Exact E5.6/E5.7 reversal replay: same 30 ms onset, 50 ms ramp, and 350 ms hold, compared under full-dynamic and quasi-static helix formulations."
+        },
+        {
+          "case_id": "E58_stock_300_s30_output_m120_r002",
+          "label": "300 deg stock control: -120 N m output load step",
+          "preload_deg": 300.0,
+          "restart_shift_percent": 30.0,
+          "perturbation_family": "output_load_step",
+          "perturbation_value": -120.0,
+          "ramp_s": 0.002,
+          "onset_s": 0.03,
+          "hold_s": 0.35,
+          "purpose": "Exact E5.6 stock-preload control timing: same 30 ms onset, 2 ms ramp, and 350 ms hold, compared under full-dynamic and quasi-static helix formulations."
+        }
+      ],
+      "primary_outputs": [
+        "case_comparison_summary.csv",
+        "paired_trace.csv",
+        "trajectory performance plots",
+        "clamp/traction plots",
+        "helix topology plots",
+        "belt torque/power plots",
+        "full-minus-QS delta plots"
+      ],
+      "question": "For identical initial states and boundary transients, how much do the full dynamic helix terms change CVT shift/ratio, shaft speeds, clamp, normal force, traction regime and transmitted belt torque/power relative to the tagged quasi-static helix model?",
+      "terminal_outcome_policy": "Intentional hybrid termination such as contact_loss_normal_resultant_floor is retained as a valid performance outcome. Traces are compared over their common admissible interval and the termination reason/time are reported explicitly."
     }
   },
   "discovery_metrics": {

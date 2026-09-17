@@ -49,7 +49,6 @@ from study_support import (  # noqa: E402
     run_flat_slotted_reference_with_constants,
     select_restart,
     verify_environment,
-    write_reference_provenance,
     write_rows,
 )
 try:
@@ -770,10 +769,20 @@ def main() -> int:
     (out / "summary.json").write_text(json.dumps(summary_payload, indent=2) + "\n", encoding="utf-8")
 
     make_plots(out, case_rows)
-    write_reference_provenance(
-        out,
-        study_name="helix-topology/transient-severity-race",
-        topology="bilateral_zero_clearance_slot",
+    (out / "stage_provenance.json").write_text(
+        json.dumps(
+            {
+                "study": "helix-topology/transient-severity-race",
+                "topology": "bilateral_zero_clearance_slot",
+                "note": (
+                    "Stage-local provenance only. The master runner copies the pinned release / "
+                    "reference-model provenance into the study artifacts after the stage completes."
+                ),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
     )
     print(json.dumps(summary_payload, indent=2))
     print(f"Wrote E5.6 transient-severity artifacts to {out}")
