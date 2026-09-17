@@ -197,50 +197,6 @@ def _assembly_definitions() -> dict[str, Any]:
             },
             "additionalProperties": False,
         },
-        "assemblyTimeReferencePoint": {
-            "type": "object",
-            "required": ["time_s", "value"],
-            "properties": {"time_s": number, "value": number},
-            "additionalProperties": False,
-        },
-        "assemblyTimeReference": {
-            "type": "object",
-            "required": ["points"],
-            "properties": {
-                "points": {
-                    "type": "array",
-                    "minItems": 2,
-                    "items": {"$ref": "#/$defs/assemblyTimeReferencePoint"},
-                }
-            },
-            "additionalProperties": False,
-        },
-        "assemblyAxialMotionTracking": {
-            "type": "object",
-            "required": [
-                "kind", "position_reference", "speed_reference",
-                "position_gain_N_per_m", "speed_gain_N_s_per_m", "force_limit_N"
-            ],
-            "properties": {
-                "kind": {"const": "axial_motion_tracking"},
-                "position_reference": {
-                    "oneOf": [
-                        {"$ref": "#/$defs/assemblyTimeReference"},
-                        {"type": "null"}
-                    ]
-                },
-                "speed_reference": {
-                    "oneOf": [
-                        {"$ref": "#/$defs/assemblyTimeReference"},
-                        {"type": "null"}
-                    ]
-                },
-                "position_gain_N_per_m": nonnegative,
-                "speed_gain_N_s_per_m": nonnegative,
-                "force_limit_N": positive,
-            },
-            "additionalProperties": False,
-        },
         "assemblyAxialSpring": {
             "type": "object",
             "required": [
@@ -367,7 +323,6 @@ def _assembly_definitions() -> dict[str, Any]:
         },
         "assemblyForceLaw": {
             "oneOf": [
-                {"$ref": "#/$defs/assemblyAxialMotionTracking"},
                 {"$ref": "#/$defs/assemblyAxialSpring"},
                 {"$ref": "#/$defs/assemblyCentrifugalRamp"},
                 {"$ref": "#/$defs/assemblyFixedPivotFlyweight"},

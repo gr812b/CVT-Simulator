@@ -1,9 +1,5 @@
 """Concrete local axial-force laws for CINDER pulley actuation."""
 
-from .axial_motion_tracking import (
-    AxialMotionTrackingForce,
-    AxialMotionTrackingForceSpec,
-)
 from .axial_spring import AxialSpringForce, AxialSpringForceSpec
 from .centrifugal_ramp import CentrifugalRampForce, CentrifugalRampForceSpec
 from .fixed_pivot_flyweight import (
@@ -16,8 +12,6 @@ from .helical_torque_reaction import (
 )
 
 __all__ = [
-    "AxialMotionTrackingForce",
-    "AxialMotionTrackingForceSpec",
     "AxialSpringForce",
     "AxialSpringForceSpec",
     "CentrifugalRampForce",

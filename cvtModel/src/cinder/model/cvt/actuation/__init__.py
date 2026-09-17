@@ -22,8 +22,6 @@ from .fixed_pivot_flyweight import (
     PivotedRollerFollowerGeometrySpec,
 )
 from .forces import (
-    AxialMotionTrackingForce,
-    AxialMotionTrackingForceSpec,
     AxialSpringForce,
     AxialSpringForceSpec,
     CentrifugalRampForce,
@@ -56,8 +54,6 @@ __all__ = [
     "ActuatorInspection",
     "AxialForceLaw",
     "InspectableAxialForceLaw",
-    "AxialMotionTrackingForce",
-    "AxialMotionTrackingForceSpec",
     "AxialSpringForce",
     "AxialSpringForceSpec",
     "CentrifugalActuatorSpec",
