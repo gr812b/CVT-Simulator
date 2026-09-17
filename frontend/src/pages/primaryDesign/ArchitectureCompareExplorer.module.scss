@@ -1,51 +1,17 @@
-.root { display: grid; grid-template-columns: 315px minmax(0,1fr); gap: 16px; align-items: start; }
-.controls { position: sticky; top: 12px; display: grid; gap: 10px; padding: 14px; border: 1px solid var(--border-color, #323842); border-radius: 12px; background: rgba(255,255,255,.025); }
-.heading p, .note { margin: 5px 0 0; font-size: 11px; line-height: 1.5; opacity: .67; }
-.field { display: grid; gap: 4px; font-size: 11px; }.field > div { display: flex; align-items: center; gap: 6px; }.field input { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; background: rgba(0,0,0,.18); color: inherit; }.field em { font-size: 10px; opacity: .55; font-style: normal; white-space: nowrap; }
-.checkbox { display: flex; gap: 7px; align-items: start; font-size: 11px; opacity: .8; }.buttons { display: grid; gap: 7px; }.buttons button { padding: 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,.13); background: transparent; color: inherit; cursor: pointer; }.buttons .primary { border: 0; background: var(--accent-color,#70a7ff); color: #0d1117; font-weight: 700; }.buttons button:disabled { opacity: .45; }
-.smallStatus { font-size: 10px; opacity: .6; line-height: 1.4; }.error { padding: 8px; font-size: 11px; border: 1px solid rgba(220,70,70,.35); background: rgba(220,70,70,.12); border-radius: 7px; }
-.workspace { min-width: 0; display: grid; gap: 14px; }.empty { padding: 30px; border: 1px dashed rgba(255,255,255,.15); border-radius: 12px; text-align: center; }.empty p { max-width: 720px; margin: 8px auto 0; opacity: .68; font-size: 12px; line-height: 1.5; }
-.summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; }.summary > div { display: grid; gap: 3px; padding: 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; }.summary span { font-size: 10px; opacity: .6; }.summary strong { font-size: 13px; }
-.card { border: 1px solid var(--border-color,#323842); border-radius: 12px; overflow: hidden; }.cardHeader { padding: 12px 14px 0; }.cardHeader > div { display: grid; gap: 3px; }.cardHeader span { font-size: 11px; opacity: .62; }
-.shapePlot, .leveragePlot { width: 100%; display: block; }.axis { stroke: currentColor; opacity: .12; }.axisText { fill: currentColor; opacity: .62; font-size: 11px; }
-.hullA { fill: #6da7ff; fill-opacity: .09; stroke: #6da7ff; stroke-opacity: .55; stroke-width: 1.5; }.hullB { fill: #f19a68; fill-opacity: .09; stroke: #f19a68; stroke-opacity: .55; stroke-width: 1.5; }.pointA { fill: #6da7ff; opacity: .45; }.pointB { fill: #f19a68; opacity: .45; }
-.bandA { fill: #6da7ff; fill-opacity: .10; stroke: none; }.bandB { fill: #f19a68; fill-opacity: .10; stroke: none; }.lineA { fill: none; stroke: #6da7ff; stroke-width: 2; }.lineB { fill: none; stroke: #f19a68; stroke-width: 2; }
-.note { padding: 0 14px 12px; }
-.witnessStrip { display: flex; gap: 8px; overflow-x: auto; padding: 12px 14px; }.witness, .witnessSelected { flex: 0 0 142px; display: grid; gap: 3px; text-align: left; padding: 9px; border-radius: 8px; color: inherit; cursor: pointer; }.witness { border: 1px solid rgba(255,255,255,.11); background: transparent; }.witnessSelected { border: 1px solid rgba(126,215,168,.5); background: rgba(126,215,168,.07); }.witness span, .witness em { font-size: 10px; opacity: .6; font-style: normal; }
-.witnessInspector { border-top: 1px solid rgba(255,255,255,.08); }.witnessText { padding: 12px 14px 0; display: grid; gap: 3px; }.witnessText span, .witnessText p { font-size: 11px; opacity: .65; }.witnessText p { margin: 3px 0 0; }.witnessInspector svg { width: 100%; display: block; }.witnessSourceLine { fill: none; stroke: #7ed7a8; stroke-width: 3; }.witnessNearestLine { fill: none; stroke: currentColor; opacity: .5; stroke-width: 2; stroke-dasharray: 7 5; }
-@media (max-width: 1000px) { .root { grid-template-columns: 1fr; }.controls { position: static; grid-template-columns: 1fr 1fr; }.heading,.buttons,.checkbox,.smallStatus,.error { grid-column: 1/-1; }.summary { grid-template-columns: 1fr 1fr; } }
-.witnessGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 12px 14px; }
-.witnessGrid > div { min-width: 0; border: 1px solid rgba(255,255,255,.07); border-radius: 9px; overflow: hidden; background: rgba(0,0,0,.06); }
-.witnessGrid svg { width: 100%; display: block; }
-.miniTitle { padding: 8px 10px 0; font-size: 10px; opacity: .6; }
-@media (max-width: 1150px) { .witnessGrid { grid-template-columns: 1fr; } }
-
-.explainer { padding: 13px 15px; border: 1px solid rgba(112,167,255,.24); border-radius: 11px; background: rgba(112,167,255,.055); }
-.explainer p { margin: 5px 0 0; font-size: 12px; line-height: 1.55; opacity: .76; }
-.directionBlock { padding: 12px 14px 4px; border-top: 1px solid rgba(255,255,255,.07); }
-.directionBlock:first-of-type { margin-top: 10px; }
-.directionHeader { display: grid; gap: 3px; }
-.directionHeader span { font-size: 10px; opacity: .58; }
-.noWitness { padding: 8px 0; font-size: 11px; opacity: .55; }
-.witness, .witnessSelected { flex-basis: 210px; }
-.witness em, .witnessSelected em { line-height: 1.35; }
-.witnessText { padding-bottom: 8px; }
-.witnessText > strong { font-size: 14px; }
-.gridLine { stroke: currentColor; opacity: .075; stroke-width: 1; }
-.meanLine { stroke: currentColor; opacity: .32; stroke-width: 1.4; stroke-dasharray: 5 5; }
-.axisTitle { fill: currentColor; opacity: .72; font-size: 11px; }
-.miniTitle { display: grid; gap: 2px; }
-.miniTitle strong { font-size: 11px; opacity: .9; }
-.miniTitle span { font-size: 9px; opacity: .5; }
-.curveLegend { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 10px 10px; font-size: 10px; opacity: .72; }
-.curveLegend span::before { content: ''; display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 3px; }
-.sourceLegend::before { background: #7ed7a8; }
-.nearestLegend::before { background: currentColor; opacity: .5; }
-.advanced { border: 1px solid rgba(255,255,255,.10); border-radius: 11px; overflow: hidden; }
-.advanced > summary { padding: 11px 14px; cursor: pointer; font-weight: 650; font-size: 12px; background: rgba(255,255,255,.025); }
-.advanced > p { margin: 0; padding: 0 14px 12px; font-size: 11px; line-height: 1.5; opacity: .62; }
-.advancedGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 12px 12px; }
-.advancedCard { min-width: 0; border: 1px solid rgba(255,255,255,.07); border-radius: 9px; overflow: hidden; }
-.advancedCard > strong, .advancedCard > span { display: block; padding: 8px 10px 0; }
-.advancedCard > span { font-size: 9px; opacity: .52; padding-top: 2px; }
-@media (max-width: 1150px) { .advancedGrid { grid-template-columns: 1fr; } }
+.root { display: grid; grid-template-columns: minmax(230px, 285px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.controls { display: grid; gap: 12px; position: sticky; top: 10px; padding: 14px; border: 1px solid var(--border-color, #323842); border-radius: 12px; background: rgba(255,255,255,.025); }
+.heading { display: grid; gap: 5px; }.heading p { margin: 0; font-size: 12px; line-height: 1.5; opacity: .72; }
+.field { display: grid; gap: 5px; font-size: 11px; }.field > div { display: flex; gap: 6px; align-items: center; }.field input { width: 100%; padding: 7px 8px; box-sizing: border-box; border-radius: 7px; border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.16); color: inherit; }.field em { font-size: 10px; opacity: .55; font-style: normal; }
+.checkbox { display: flex; gap: 8px; align-items: center; font-size: 11px; }
+.controls button, .card button { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.035); color: inherit; border-radius: 7px; padding: 7px 10px; cursor: pointer; }.controls button:disabled, .card button:disabled { opacity: .45; cursor: default; }
+.primary { background: var(--accent-color, #70a7ff) !important; color: #0d1117 !important; border-color: transparent !important; font-weight: 700; }
+.scaleNote { display: grid; gap: 4px; padding: 10px; border-radius: 8px; background: rgba(112,167,255,.07); border: 1px solid rgba(112,167,255,.20); font-size: 11px; line-height: 1.45; }.scaleNote span { opacity: .75; }
+.domainReady { font-size: 10px; opacity: .65; }.error { padding: 9px 10px; border-radius: 8px; background: rgba(220,70,70,.12); border: 1px solid rgba(220,70,70,.35); font-size: 11px; }
+.workspace { display: grid; gap: 16px; min-width: 0; }.card { border: 1px solid var(--border-color, #323842); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.012); }.cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,.07); }.cardHeader > div:first-child { display: grid; gap: 3px; }.cardHeader span { font-size: 11px; opacity: .63; }.presetRow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.targetPlot { width: 100%; min-height: 390px; display: block; touch-action: none; user-select: none; }.plotBackground { fill: rgba(0,0,0,.08); }.grid { stroke: currentColor; opacity: .08; stroke-width: 1; }.averageLine { stroke: currentColor; opacity: .24; stroke-width: 1.5; stroke-dasharray: 5 5; }.axisText { fill: currentColor; opacity: .58; font-size: 11px; }.axisTitle { fill: currentColor; opacity: .72; font-size: 12px; }.targetLine { fill: none; stroke: #f1c75b; stroke-width: 3.4; }.lineA { fill: none; stroke: #7ed7a8; stroke-width: 3; }.lineB { fill: none; stroke: #70a7ff; stroke-width: 3; stroke-dasharray: 8 5; }.handle { fill: #f1c75b; stroke: #10161d; stroke-width: 2; cursor: grab; }
+.legend { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; padding: 0 14px 12px; font-size: 11px; }.legend span::before { content:''; width: 20px; height: 3px; display: inline-block; margin-right: 6px; vertical-align: middle; border-radius: 3px; }.legendTarget::before { background:#f1c75b; }.legendA::before { background:#7ed7a8; }.legendB::before { background:#70a7ff; }.legend strong { margin-left: auto; opacity: .62; font-size: 10px; }
+.compareActions { display: flex; gap: 12px; align-items: center; padding: 12px 14px 14px; border-top: 1px solid rgba(255,255,255,.06); }.compareActions span { font-size: 11px; opacity: .65; }
+.resultMetrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }.matchMetric { display: grid; gap: 4px; padding: 12px; border: 1px solid rgba(255,255,255,.10); border-radius: 9px; }.matchMetric > strong { font-size: 12px; opacity: .75; }.matchMetric b { font-size: 19px; }.matchMetric span, .matchMetric em { font-size: 11px; opacity: .64; font-style: normal; }
+.conclusion { margin: 0 14px 14px; padding: 11px 12px; border-radius: 9px; background: rgba(255,255,255,.035); font-size: 12px; line-height: 1.45; }.rampPair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 14px 14px; }.rampCard { display: grid; gap: 8px; padding: 11px; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; }.rampCard svg { width: 100%; height: 220px; background: rgba(0,0,0,.07); border-radius: 6px; }.rampLine { fill:none; stroke:currentColor; stroke-width:3; }.rampStats { display:flex; justify-content:space-between; gap:10px; font-size:10px; opacity:.65; }
+.help { margin: 0; padding: 14px; font-size: 12px; opacity: .68; line-height: 1.5; }.discoveryGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }.discoveryCard { display:grid; gap:7px; padding:11px; border:1px solid rgba(255,255,255,.09); border-radius:9px; }.discoveryCard > span { font-size:11px; opacity:.65; line-height:1.45; }.discoveryCard svg { width:100%; min-height:220px; background:rgba(0,0,0,.07); border-radius:6px; }.discoveryCard b { font-size:14px; }.discoveryCard em { font-size:10px; opacity:.58; font-style:normal; }.discoverySource { fill:none; stroke:#f1c75b; stroke-width:3; }.discoveryNearest { fill:none; stroke:#70a7ff; stroke-width:2.5; stroke-dasharray:7 5; }
+@media (max-width: 1050px) { .root { grid-template-columns:1fr; }.controls { position:static; }.rampPair,.discoveryGrid { grid-template-columns:1fr; }.cardHeader { align-items:flex-start; flex-direction:column; }.presetRow { justify-content:flex-start; } }

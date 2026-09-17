@@ -353,3 +353,124 @@ def _directional_witnesses(
         "max": float(np.max(distances)),
     }
 
+
+
+def match_target_shape(
+    compiled_a: CompiledPathDomain,
+    compiled_b: CompiledPathDomain,
+    target_points: list[tuple[float, float]],
+    *,
+    atlas_path_count: int = 40,
+    mass_mix_count: int = 11,
+    sample_count: int = 121,
+) -> dict[str, object]:
+    """Find each architecture's closest complete normalized force-shape match.
+
+    ``target_points`` are (shift_fraction, relative_force) pairs.  Their overall
+    magnitude is intentionally irrelevant: the target and every architecture
+    curve are normalized to unit shift-average before whole-curve RMS distance
+    is evaluated.  Thus RPM and overall flyweight mass scale do not influence
+    the result; only the shape freedom of the architecture and mass distribution
+    mix do.
+    """
+    if atlas_path_count < 8:
+        raise ValueError("atlas_path_count must be at least 8")
+    if mass_mix_count < 3:
+        raise ValueError("mass_mix_count must be at least 3")
+    if sample_count < 41:
+        raise ValueError("sample_count must be at least 41")
+    if len(target_points) < 2:
+        raise ValueError("at least two target shape points are required")
+
+    cleaned = sorted((float(x), float(y)) for x, y in target_points)
+    if cleaned[0][0] < -1e-12 or cleaned[-1][0] > 1.0 + 1e-12:
+        raise ValueError("target shift fractions must lie in [0, 1]")
+    if any(y <= 0.0 or not np.isfinite(y) for _, y in cleaned):
+        raise ValueError("target relative force values must be finite and positive")
+    # Merge duplicate x entries by keeping the last supplied value.
+    dedup: dict[float, float] = {}
+    for x, y in cleaned:
+        dedup[round(x, 12)] = y
+    xs = np.asarray(sorted(dedup), dtype=float)
+    ys = np.asarray([dedup[float(x)] for x in xs], dtype=float)
+    if xs.size < 2:
+        raise ValueError("target shape points must span at least two distinct shift locations")
+    if xs[0] > 0.0:
+        xs = np.insert(xs, 0, 0.0)
+        ys = np.insert(ys, 0, ys[0])
+    if xs[-1] < 1.0:
+        xs = np.append(xs, 1.0)
+        ys = np.append(ys, ys[-1])
+
+    from scipy.interpolate import PchipInterpolator
+
+    xi = np.linspace(0.0, 1.0, sample_count)
+    target_raw = np.asarray(PchipInterpolator(xs, ys, extrapolate=False)(xi), dtype=float)
+    if np.any(~np.isfinite(target_raw)) or np.any(target_raw <= 0.0):
+        raise ValueError("target interpolation produced a non-positive or non-finite force shape")
+    target_mean = float(np.trapezoid(target_raw, xi))
+    if target_mean <= 1e-12:
+        raise ValueError("target shape has zero average")
+    target = target_raw / target_mean
+
+    mixes = np.linspace(0.0, 0.98, mass_mix_count)
+    atlas_a = _certified_atlas(compiled_a, atlas_path_count)
+    atlas_b = _certified_atlas(compiled_b, atlas_path_count)
+    points_a = _shape_points(compiled_a, atlas_a, mixes, label="A")
+    points_b = _shape_points(compiled_b, atlas_b, mixes, label="B")
+
+    def best(rows: list[dict[str, object]], label: str) -> dict[str, object] | None:
+        if not rows:
+            return None
+        scored: list[tuple[float, float, int, dict[str, object], np.ndarray]] = []
+        for index, row in enumerate(rows):
+            source_x = np.asarray(row["shift_fraction"], dtype=float)
+            source_y = np.asarray(row["normalized_shape"], dtype=float)
+            if source_x.size < 2 or source_x.size != source_y.size:
+                continue
+            curve = np.interp(xi, source_x, source_y)
+            delta = curve - target
+            rms = float(np.sqrt(np.mean(delta * delta)))
+            max_gap = float(np.max(np.abs(delta)))
+            scored.append((rms, max_gap, index, row, curve))
+        if not scored:
+            return None
+        scored.sort(key=lambda item: (item[0], item[1]))
+        rms, max_gap, _index, row, curve = scored[0]
+        gap_index = int(np.argmax(np.abs(curve - target)))
+        return {
+            "architecture": label,
+            "rms_shape_error": rms,
+            "max_shape_error": max_gap,
+            "max_error_shift_fraction": float(xi[gap_index]),
+            "mass_mix_fraction": row["mass_mix_fraction"],
+            "tip_to_arm_mass_ratio": row["tip_to_arm_mass_ratio"],
+            "shift_fraction": xi.tolist(),
+            "normalized_shape": curve.tolist(),
+            "ramp": row["ramp"],
+            "sampled_candidate_count": len(scored),
+        }
+
+    match_a = best(points_a, "A")
+    match_b = best(points_b, "B")
+    return {
+        "definition": {
+            "mass_scale_agnostic": True,
+            "normalization": "Target and architecture curves are divided by their own shift-average force before matching. 100% therefore means that curve's own average force.",
+            "distance": "Whole-curve RMS difference in normalized force over the complete shift.",
+            "sampling_note": "Matches are selected from sampled history-certified complete ramps and mass-ratio mixes, not from pointwise force envelopes.",
+        },
+        "target": {
+            "shift_fraction": xi.tolist(),
+            "normalized_shape": target.tolist(),
+            "input_points": [{"shift_fraction": float(x), "relative_force": float(y)} for x, y in target_points],
+        },
+        "architecture_a": match_a,
+        "architecture_b": match_b,
+        "summary": {
+            "a_rms_shape_error": None if match_a is None else match_a["rms_shape_error"],
+            "b_rms_shape_error": None if match_b is None else match_b["rms_shape_error"],
+            "a_max_shape_error": None if match_a is None else match_a["max_shape_error"],
+            "b_max_shape_error": None if match_b is None else match_b["max_shape_error"],
+        },
+    }

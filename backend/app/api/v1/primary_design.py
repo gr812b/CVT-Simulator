@@ -32,6 +32,8 @@ from app.schemas.primary_design import (
     FixedPivotInverseDesignResponse,
     FixedPivotPathDomainCompareRequest,
     FixedPivotPathDomainCompareResponse,
+    FixedPivotPathDomainCompareTargetRequest,
+    FixedPivotPathDomainCompareTargetResponse,
 )
 
 router = APIRouter(
@@ -225,4 +227,26 @@ def compare_path_domains(
         status = 404 if error.code == "DOMAIN_EXPIRED" else 422
         raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotPathDomainCompareResponse(**result)
+
+@router.post(
+    "/architecture/path-domain/compare-target",
+    response_model=FixedPivotPathDomainCompareTargetResponse,
+)
+def compare_path_domains_to_target(
+    request: FixedPivotPathDomainCompareTargetRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotPathDomainCompareTargetResponse:
+    try:
+        result = container.primary_design.compare_path_domains_to_target(
+            domain_id_a=request.domain_id_a,
+            domain_id_b=request.domain_id_b,
+            target_points=[(point.shift_fraction, point.relative_force) for point in request.target_points],
+            atlas_path_count=request.atlas_path_count,
+            mass_mix_count=request.mass_mix_count,
+            sample_count=request.sample_count,
+        )
+    except PrimaryDesignError as error:
+        status = 404 if error.code == "DOMAIN_EXPIRED" else 422
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
+    return FixedPivotPathDomainCompareTargetResponse(**result)
 

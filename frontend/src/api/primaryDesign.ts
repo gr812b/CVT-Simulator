@@ -612,3 +612,66 @@ export function comparePrimaryPathDomains(
   });
 }
 
+export interface ForceShapeTargetPoint {
+  shift_fraction: number;
+  relative_force: number;
+}
+
+export interface ArchitectureTargetMatch {
+  architecture: 'A' | 'B' | string;
+  rms_shape_error: number;
+  max_shape_error: number;
+  max_error_shift_fraction: number;
+  mass_mix_fraction: number;
+  tip_to_arm_mass_ratio: number;
+  shift_fraction: number[];
+  normalized_shape: number[];
+  sampled_candidate_count: number;
+  ramp: {
+    shift_m: number[];
+    q_deg: number[];
+    ramp_tangent_deg: number[];
+    roller_center: { x_m: number[]; r_m: number[] };
+    ramp_surface: { x_m: number[]; r_m: number[] };
+  };
+}
+
+export interface ArchitectureTargetComparisonAnalysis {
+  definition: {
+    mass_scale_agnostic: boolean;
+    normalization: string;
+    distance: string;
+    sampling_note: string;
+  };
+  target: {
+    shift_fraction: number[];
+    normalized_shape: number[];
+    input_points: ForceShapeTargetPoint[];
+  };
+  architecture_a: ArchitectureTargetMatch | null;
+  architecture_b: ArchitectureTargetMatch | null;
+  summary: {
+    a_rms_shape_error: number | null;
+    b_rms_shape_error: number | null;
+    a_max_shape_error: number | null;
+    b_max_shape_error: number | null;
+  };
+}
+
+export function comparePrimaryPathDomainsToTarget(
+  domainIdA: string,
+  domainIdB: string,
+  targetPoints: ForceShapeTargetPoint[],
+  options: Partial<{ atlas_path_count: number; mass_mix_count: number; sample_count: number }> = {},
+): Promise<ArchitectureTargetComparisonAnalysis> {
+  return request<ArchitectureTargetComparisonAnalysis>('/architecture/path-domain/compare-target', {
+    method: 'POST',
+    body: JSON.stringify({
+      domain_id_a: domainIdA,
+      domain_id_b: domainIdB,
+      target_points: targetPoints,
+      ...options,
+    }),
+  });
+}
+

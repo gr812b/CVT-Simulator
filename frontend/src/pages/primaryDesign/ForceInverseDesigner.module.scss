@@ -62,3 +62,17 @@
   .cursorReadout { width: 100%; margin-left: 0; }
   .scrubber { grid-template-columns: 1fr; }
 }
+.solutionCandidateLine { fill: none; stroke: #7ed7a8; stroke-width: 1.5; opacity: .16; pointer-events: none; }
+.legendCandidates::before { background: #7ed7a8; opacity: .25; }
+.localForcePlot { margin: 0 14px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; overflow: hidden; background: rgba(0,0,0,.055); }
+.localForceHeader { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.localForceHeader > div { display: grid; gap: 2px; }.localForceHeader span { font-size: 10px; opacity: .6; }.localForceHeader b { font-size: 13px; white-space: nowrap; }
+.localForcePlot svg { width: 100%; height: 240px; display: block; cursor: crosshair; }
+.localForceLegend { display: flex; gap: 14px; align-items: center; padding: 0 11px 9px; font-size: 10px; }.localForceLegend span::before { content:''; display:inline-block; width:18px; height:3px; margin-right:5px; vertical-align:middle; border-radius:3px; }.localForceLegend em { margin-left:auto; opacity:.55; font-style:normal; }
+.solutionCandidateLine { fill: none; stroke: #7ed7a8; stroke-width: 1.5; opacity: .16; pointer-events: none; }
+.legendCandidates::before { background: #7ed7a8; opacity: .25; }
+.localForcePlot { margin: 0 14px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; overflow: hidden; background: rgba(0,0,0,.055); }
+.localForceHeader { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.localForceHeader > div { display: grid; gap: 2px; }.localForceHeader span { font-size: 10px; opacity: .6; }.localForceHeader b { font-size: 13px; white-space: nowrap; }
+.localForcePlot svg { width: 100%; height: 240px; display: block; cursor: crosshair; }
+.localForceLegend { display: flex; gap: 14px; align-items: center; padding: 0 11px 9px; font-size: 10px; }.localForceLegend span::before { content:''; display:inline-block; width:18px; height:3px; margin-right:5px; vertical-align:middle; border-radius:3px; }.localForceLegend em { margin-left:auto; opacity:.55; font-style:normal; }

@@ -214,3 +214,24 @@ class FixedPivotPathDomainCompareResponse(ApiModel):
     witnesses: dict[str, Any]
     summary: dict[str, Any]
 
+class ForceShapePointRequest(ApiModel):
+    shift_fraction: float = Field(ge=0.0, le=1.0)
+    relative_force: float = Field(gt=0.0)
+
+
+class FixedPivotPathDomainCompareTargetRequest(ApiModel):
+    domain_id_a: str = Field(min_length=1)
+    domain_id_b: str = Field(min_length=1)
+    target_points: list[ForceShapePointRequest] = Field(min_length=2, max_length=64)
+    atlas_path_count: int = Field(default=40, ge=8, le=64)
+    mass_mix_count: int = Field(default=11, ge=3, le=21)
+    sample_count: int = Field(default=121, ge=41, le=301)
+
+
+class FixedPivotPathDomainCompareTargetResponse(ApiModel):
+    definition: dict[str, Any]
+    target: dict[str, Any]
+    architecture_a: dict[str, Any] | None
+    architecture_b: dict[str, Any] | None
+    summary: dict[str, Any]
+

@@ -15,7 +15,7 @@ from .cinder_adapter import (
     evaluate_response,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
-from .architecture_compare import compare_compiled_domains
+from .architecture_compare import compare_compiled_domains, match_target_shape
 from .inverse_design import ForceTargetPoint, inverse_design_force_curve as solve_force_curve_inverse
 from .path_domain_packaging import compile_path_domain_cached_packaging
 from .path_domain import (
@@ -273,6 +273,34 @@ class FixedPivotPrimaryDesignService:
         if isinstance(architecture_b, dict):
             architecture_b["domain_id"] = domain_id_b
         return result
+
+    def compare_path_domains_to_target(
+        self,
+        *,
+        domain_id_a: str,
+        domain_id_b: str,
+        target_points: list[tuple[float, float]],
+        atlas_path_count: int = 40,
+        mass_mix_count: int = 11,
+        sample_count: int = 121,
+    ) -> dict[str, object]:
+        """Match a user-drawn normalized force shape against two complete-path domains."""
+        cached_a = self._get_domain(domain_id_a)
+        cached_b = self._get_domain(domain_id_b)
+        try:
+            return match_target_shape(
+                cached_a.compiled,
+                cached_b.compiled,
+                target_points,
+                atlas_path_count=atlas_path_count,
+                mass_mix_count=mass_mix_count,
+                sample_count=sample_count,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_ARCHITECTURE_TARGET_COMPARISON",
+                str(error),
+            ) from error
 
     def analyze_concrete(
         self,

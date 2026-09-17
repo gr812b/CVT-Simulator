@@ -195,6 +195,9 @@ export function ForceInverseDesigner({
           <text x={(pad.left + width - pad.right) / 2} y={height - 2} textAnchor="middle" className={styles.axisTitle}>Primary closure (mm)</text>
           {capability && <path d={areaPath(capability.shift_m, capability.min_N, capability.max_N, xScale, yScale)} className={styles.capabilityBand} />}
           <path d={linePath(targetCurve.shift_m, targetCurve.force_N, xScale, yScale)} className={styles.targetLine} />
+          {result?.solutions.map((solution, index) => index === selectedIndex ? null : (
+            <path key={`candidate-${index}`} d={linePath(solution.shift_m, solution.force.recovered_N, xScale, yScale)} className={styles.solutionCandidateLine} />
+          ))}
           {selected && <path d={linePath(selected.shift_m, selected.force.recovered_N, xScale, yScale)} className={styles.solutionLine} />}
           {selected && (
             <>
@@ -205,7 +208,7 @@ export function ForceInverseDesigner({
           )}
           {points.map((point, index) => <circle key={`${point.shift_m}-${index}`} cx={xScale(point.shift_m)} cy={yScale(point.force_N)} r={7} className={styles.handle} onPointerDown={(event) => beginDrag(event, index)} onDoubleClick={(event) => { event.stopPropagation(); setPoints((rows) => rows.filter((_, rowIndex) => rowIndex !== index)); setResult(null); }} />)}
         </svg>
-        <div className={styles.legend}><span className={styles.legendTarget}>requested force</span>{selected && <span className={styles.legendSolution}>selected ramp · actual generated force</span>}{capability && <span className={styles.legendCapability}>architecture context only</span>}{selected && inspectedForce != null && inspectedTarget != null && <strong className={styles.cursorReadout}>{(inspectionShiftM * MM).toFixed(2)} mm · actual {inspectedForce.toFixed(0)} N · target {inspectedTarget.toFixed(0)} N</strong>}</div>
+        <div className={styles.legend}><span className={styles.legendTarget}>requested force</span>{result && result.solutions.length > 1 && <span className={styles.legendCandidates}>other generated ramps</span>}{selected && <span className={styles.legendSolution}>selected ramp · actual generated force</span>}{capability && <span className={styles.legendCapability}>architecture context only</span>}{selected && inspectedForce != null && inspectedTarget != null && <strong className={styles.cursorReadout}>{(inspectionShiftM * MM).toFixed(2)} mm · actual {inspectedForce.toFixed(0)} N · target {inspectedTarget.toFixed(0)} N</strong>}</div>
       </div>
 
       {result && (
@@ -300,6 +303,7 @@ function RampInspector({
       </div>
       <div className={styles.inspectorForce}>{currentForce == null ? '—' : `${currentForce.toFixed(0)} N`} <span>actual</span></div>
     </div>
+    <ForceMatchPlot solution={solution} shiftM={shiftM} onShiftChange={onShiftChange} />
     <div className={styles.scrubber}>
       <input
         type="range"
@@ -334,6 +338,45 @@ function RampInspector({
       <Metric label="Min offset factor" value={solution.metrics.minimum_offset_factor.toFixed(4)} />
       <Metric label="History" value={solution.history.valid ? 'certified' : 'not certified'} />
     </div>
+  </div>;
+}
+
+function ForceMatchPlot({ solution, shiftM, onShiftChange }: { solution: InverseRampSolution; shiftM: number; onShiftChange: (value: number) => void }) {
+  const width = 820;
+  const height = 250;
+  const pad = { left: 58, right: 20, top: 18, bottom: 40 };
+  const values = [...solution.force.target_N, ...solution.force.recovered_N];
+  const lo = Math.max(0, Math.min(...values) * 0.92);
+  const hi = Math.max(lo + 100, Math.max(...values) * 1.08);
+  const x0 = solution.shift_m[0] ?? 0;
+  const x1 = solution.shift_m[solution.shift_m.length - 1] ?? x0 + 1;
+  const sx = (v: number) => pad.left + (v - x0) / Math.max(x1 - x0, 1e-9) * (width - pad.left - pad.right);
+  const sy = (v: number) => pad.top + (hi - v) / Math.max(hi - lo, 1) * (height - pad.top - pad.bottom);
+  const currentActual = interpolateSeries(solution.shift_m, solution.force.recovered_N, shiftM);
+  const currentTarget = interpolateSeries(solution.shift_m, solution.force.target_N, shiftM);
+  return <div className={styles.localForcePlot}>
+    <div className={styles.localForceHeader}>
+      <div><strong>Target vs this ramp's actual generated force</strong><span>This is the same selected ramp shown in the mechanism view below.</span></div>
+      <b>{currentActual == null || currentTarget == null ? '—' : `${currentActual.toFixed(0)} / ${currentTarget.toFixed(0)} N`}</b>
+    </div>
+    <svg viewBox={`0 0 ${width} ${height}`} onPointerDown={(event) => {
+      const svg = event.currentTarget;
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return;
+      const p = svg.createSVGPoint(); p.x = event.clientX; p.y = event.clientY;
+      const q = p.matrixTransform(matrix.inverse());
+      const fraction = clamp((q.x - pad.left) / (width - pad.left - pad.right), 0, 1);
+      onShiftChange(x0 + fraction * (x1 - x0));
+    }}>
+      {niceTicks(lo, hi, 5).map((tick) => <g key={tick}><line x1={pad.left} x2={width - pad.right} y1={sy(tick)} y2={sy(tick)} className={styles.grid} /><text x={pad.left - 8} y={sy(tick) + 4} textAnchor="end" className={styles.axisText}>{Math.round(tick)}</text></g>)}
+      <path d={linePath(solution.shift_m, solution.force.target_N, sx, sy)} className={styles.targetLine} />
+      <path d={linePath(solution.shift_m, solution.force.recovered_N, sx, sy)} className={styles.solutionLine} />
+      <line x1={sx(shiftM)} x2={sx(shiftM)} y1={pad.top} y2={height - pad.bottom} className={styles.inspectionCursor} />
+      {currentActual != null && <circle cx={sx(shiftM)} cy={sy(currentActual)} r={5} className={styles.solutionCursor} />}
+      {currentTarget != null && <circle cx={sx(shiftM)} cy={sy(currentTarget)} r={4} className={styles.targetCursor} />}
+      <text x={width / 2} y={height - 7} textAnchor="middle" className={styles.axisText}>primary closure</text>
+    </svg>
+    <div className={styles.localForceLegend}><span className={styles.legendTarget}>target</span><span className={styles.legendSolution}>actual from selected ramp</span><em>Click the plot or use the scrubber below.</em></div>
   </div>;
 }
 
