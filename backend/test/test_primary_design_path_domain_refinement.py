@@ -12,7 +12,10 @@ from app.engineering.fixed_pivot_primary.path_domain_refinement import (
     condition_path_domain_refined,
     refresh_compiled_domain_views,
 )
-from app.engineering.fixed_pivot_primary.path_domain import compile_path_domain, _path_from_state_indices
+from app.engineering.fixed_pivot_primary.path_domain import (
+    compile_path_domain,
+    _path_from_state_indices,
+)
 
 INCH = 0.0254
 
@@ -78,7 +81,10 @@ def test_conditioned_solution_examples_are_extracted_from_conditioned_graph() ->
     )
     omega = 3800.0 * 2.0 * pi / 60.0
     mass = 0.200
-    shifts = (0.35 * compiled.architecture.required_travel_m, 0.70 * compiled.architecture.required_travel_m)
+    shifts = (
+        0.35 * compiled.architecture.required_travel_m,
+        0.70 * compiled.architecture.required_travel_m,
+    )
     requirements = []
     for index, shift in enumerate(shifts):
         row = path.evaluate(shift)

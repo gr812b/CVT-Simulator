@@ -18,8 +18,7 @@ context, but it is deliberately not part of this inverse solve.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import asin, cos, degrees, isfinite, pi, sin, sqrt
-from typing import Iterable
+from math import degrees, isfinite, pi, sin, sqrt
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator, make_interp_spline
@@ -166,7 +165,9 @@ def inverse_design_force_curve(
                 cumulative,
             )
             if failure is not None:
-                _record_failure(failure_counts, failure_examples, failure[0], failure[1], failure[2])
+                _record_failure(
+                    failure_counts, failure_examples, failure[0], failure[1], failure[2]
+                )
                 continue
             assert q_exact is not None
             q_margin = min(float(np.min(q_exact) - Q_MIN), float(Q_MAX_DESIGN - np.max(q_exact)))
@@ -238,28 +239,34 @@ def inverse_design_force_curve(
     diagnostics = _diagnostic_documents(failure_counts, failure_examples)
 
     if total_force_area > capacity["maximum_integrated_force_Nm"] + 1e-9:
-        diagnostics.insert(0, {
-            "severity": "error" if not solutions else "warning",
-            "code": "INTEGRATED_FORCE_CAPACITY_EXCEEDED",
-            "message": (
-                "The area under the requested force curve exceeds the complete q-range centrifugal "
-                "capacity at the allowed maximum tip mass. Reduce the force level, increase speed/mass, "
-                "or change the architecture."
-            ),
-            "target_integrated_force_Nm": total_force_area,
-            **capacity,
-        })
+        diagnostics.insert(
+            0,
+            {
+                "severity": "error" if not solutions else "warning",
+                "code": "INTEGRATED_FORCE_CAPACITY_EXCEEDED",
+                "message": (
+                    "The area under the requested force curve exceeds the complete q-range centrifugal "
+                    "capacity at the allowed maximum tip mass. Reduce the force level, increase speed/mass, "
+                    "or change the architecture."
+                ),
+                "target_integrated_force_Nm": total_force_area,
+                **capacity,
+            },
+        )
 
     if not solutions:
-        diagnostics.insert(0, {
-            "severity": "error",
-            "code": "NO_ADMISSIBLE_CONTINUOUS_INVERSE",
-            "message": (
-                "The static force curve can be inverted algebraically, but no scanned assembly-angle / "
-                "tip-mass realization survived the finite-roller, packaging, and history checks. The "
-                "diagnostics below identify the dominant boundaries."
-            ),
-        })
+        diagnostics.insert(
+            0,
+            {
+                "severity": "error",
+                "code": "NO_ADMISSIBLE_CONTINUOUS_INVERSE",
+                "message": (
+                    "The static force curve can be inverted algebraically, but no scanned assembly-angle / "
+                    "tip-mass realization survived the finite-roller, packaging, and history checks. The "
+                    "diagnostics below identify the dominant boundaries."
+                ),
+            },
+        )
 
     return {
         "target": {
@@ -334,7 +341,9 @@ def _mass_moments(architecture: ArchitectureDesign, tip_mass_kg: float) -> _Mass
     )
 
 
-def _potential(architecture: ArchitectureDesign, moments: _MassMoments, q: float | np.ndarray) -> np.ndarray:
+def _potential(
+    architecture: ArchitectureDesign, moments: _MassMoments, q: float | np.ndarray
+) -> np.ndarray:
     s = np.sin(q)
     return architecture.number_of_flyweights * (
         architecture.pivot_radius_m * moments.Mu * s + 0.5 * moments.Su * s * s
@@ -355,23 +364,39 @@ def _inverse_q_profile(
 
     if S <= _EPS:
         if abs(B) <= _EPS:
-            return None, ("ZERO_MASS_LEVERAGE", None, "The flyweight mass model produces no centrifugal leverage.")
+            return None, (
+                "ZERO_MASS_LEVERAGE",
+                None,
+                "The flyweight mass model produces no centrifugal leverage.",
+            )
         s = y / (nf * B)
     else:
         disc = B * B + 2.0 * S * y / nf
         if np.any(disc < -1e-11):
             index = int(np.argmin(disc))
-            return None, ("INVERSE_BRANCH_LOST", None, f"The analytic sin(q) discriminant becomes negative near sample {index}.")
+            return None, (
+                "INVERSE_BRANCH_LOST",
+                None,
+                f"The analytic sin(q) discriminant becomes negative near sample {index}.",
+            )
         disc = np.maximum(disc, 0.0)
         s = (-B + np.sqrt(disc)) / S
 
     bad = np.where((s < sin(Q_MIN) - 1e-9) | (s > sin(Q_MAX_DESIGN) + 1e-9))[0]
     if bad.size:
-        return None, ("Q_RANGE_EXCEEDED", None, "The requested integrated force drives q outside the allowed fixed-pivot range.")
+        return None, (
+            "Q_RANGE_EXCEEDED",
+            None,
+            "The requested integrated force drives q outside the allowed fixed-pivot range.",
+        )
     s = np.clip(s, sin(Q_MIN), sin(Q_MAX_DESIGN))
     q = np.arcsin(s)
     if np.any(np.diff(q) < -1e-9):
-        return None, ("MOTION_RATIO_REVERSED", None, "The inverse solution reverses flyweight motion during primary closure.")
+        return None, (
+            "MOTION_RATIO_REVERSED",
+            None,
+            "The inverse solution reverses flyweight motion during primary closure.",
+        )
     return q, None
 
 
@@ -380,8 +405,10 @@ def _force_denominator(
     moments: _MassMoments,
     q: np.ndarray,
 ) -> np.ndarray:
-    return architecture.number_of_flyweights * np.cos(q) * (
-        architecture.pivot_radius_m * moments.Mu + moments.Su * np.sin(q)
+    return (
+        architecture.number_of_flyweights
+        * np.cos(q)
+        * (architecture.pivot_radius_m * moments.Mu + moments.Su * np.sin(q))
     )
 
 
@@ -396,7 +423,6 @@ def _evaluate_candidate(
 ) -> tuple[_Candidate | None, tuple[str, float | None, str | None] | None]:
     travel = architecture.required_travel_m
     fit_x = np.linspace(0.0, travel, 65)
-    target_fit = np.maximum(np.asarray(target(fit_x), dtype=float), 0.0)
     anti = target.antiderivative()
     cumulative = (np.asarray(anti(fit_x), dtype=float) - float(anti(0.0))) / (omega * omega)
     moments = _mass_moments(architecture, mass)
@@ -414,39 +440,75 @@ def _evaluate_candidate(
     qp = np.asarray(spline.derivative(1)(xs), dtype=float)
     qpp = np.asarray(spline.derivative(2)(xs), dtype=float)
     if np.any(~np.isfinite(q)) or np.any(~np.isfinite(qp)) or np.any(~np.isfinite(qpp)):
-        return None, ("NONFINITE_PRODUCTION_SPLINE", None, "The C4 production q(x) spline contains non-finite values.")
+        return None, (
+            "NONFINITE_PRODUCTION_SPLINE",
+            None,
+            "The C4 production q(x) spline contains non-finite values.",
+        )
     bad_qp = np.where(qp <= 1.0e-8)[0]
     if bad_qp.size:
-        return None, ("MOTION_RATIO_NONPOSITIVE", float(xs[int(bad_qp[0])]), "The generated q'(x) reaches zero or reverses.")
+        return None, (
+            "MOTION_RATIO_NONPOSITIVE",
+            float(xs[int(bad_qp[0])]),
+            "The generated q'(x) reaches zero or reverses.",
+        )
     if np.min(q) < Q_MIN - 1e-8 or np.max(q) > Q_MAX_DESIGN + 1e-8:
-        return None, ("Q_RANGE_EXCEEDED_AFTER_SMOOTHING", None, "C4 production smoothing leaves the admissible q range.")
+        return None, (
+            "Q_RANGE_EXCEEDED_AFTER_SMOOTHING",
+            None,
+            "C4 production smoothing leaves the admissible q range.",
+        )
 
     H = _force_denominator(architecture, moments, q)
     if np.any(H <= 1e-14):
         index = int(np.argmin(H))
-        return None, ("CENTRIFUGAL_LEVERAGE_SINGULAR", float(xs[index]), "dJ/dq loses positive leverage.")
+        return None, (
+            "CENTRIFUGAL_LEVERAGE_SINGULAR",
+            float(xs[index]),
+            "dJ/dq loses positive leverage.",
+        )
     recovered = omega * omega * H * qp
     target_force = np.maximum(np.asarray(target(xs), dtype=float), 0.0)
 
-    rows = [_geometry_from_q(architecture, float(x), float(a), float(b), float(c)) for x, a, b, c in zip(xs, q, qp, qpp, strict=True)]
+    rows = [
+        _geometry_from_q(architecture, float(x), float(a), float(b), float(c))
+        for x, a, b, c in zip(xs, q, qp, qpp, strict=True)
+    ]
     for index, row in enumerate(rows):
         if not all(isfinite(float(value)) for value in row.values()):
-            return None, ("NONFINITE_FINITE_ROLLER_GEOMETRY", float(xs[index]), "Finite-roller reconstruction became non-finite.")
+            return None, (
+                "NONFINITE_FINITE_ROLLER_GEOMETRY",
+                float(xs[index]),
+                "Finite-roller reconstruction became non-finite.",
+            )
 
     tangent = np.asarray([row["ramp_tangent_deg"] for row in rows], dtype=float)
     offset = np.asarray([row["offset_factor"] for row in rows], dtype=float)
-    direction_margin = np.asarray([
-        architecture.ramp_axial_direction * row["roller_center_dx_dx"] for row in rows
-    ], dtype=float)
+    direction_margin = np.asarray(
+        [architecture.ramp_axial_direction * row["roller_center_dx_dx"] for row in rows],
+        dtype=float,
+    )
     bad = np.where(direction_margin <= 1.0e-8)[0]
     if bad.size:
-        return None, ("ROLLER_CENTER_DIRECTION_REVERSAL", float(xs[int(bad[0])]), "The roller-centre locus ceases to progress along the declared ramp direction.")
+        return None, (
+            "ROLLER_CENTER_DIRECTION_REVERSAL",
+            float(xs[int(bad[0])]),
+            "The roller-centre locus ceases to progress along the declared ramp direction.",
+        )
     bad = np.where(offset <= _OFFSET_MIN)[0]
     if bad.size:
-        return None, ("FINITE_ROLLER_OFFSET_SINGULAR", float(xs[int(bad[0])]), "The finite-radius normal offset approaches its curvature singularity.")
+        return None, (
+            "FINITE_ROLLER_OFFSET_SINGULAR",
+            float(xs[int(bad[0])]),
+            "The finite-radius normal offset approaches its curvature singularity.",
+        )
     bad = np.where(tangent >= _TANGENT_LIMIT_DEG)[0]
     if bad.size:
-        return None, ("RAMP_TANGENT_LIMIT", float(xs[int(bad[0])]), "The generated ramp becomes too close to radial/dead-centre geometry.")
+        return None, (
+            "RAMP_TANGENT_LIMIT",
+            float(xs[int(bad[0])]),
+            "The generated ramp becomes too close to radial/dead-centre geometry.",
+        )
 
     roller_x = np.asarray([row["roller_center_x_m"] for row in rows], dtype=float)
     roller_r = np.asarray([row["roller_center_r_m"] for row in rows], dtype=float)
@@ -485,31 +547,34 @@ def _evaluate_candidate(
     if packaging_margin is not None and np.isfinite(packaging_margin):
         score += min(max(packaging_margin, 0.0) / 0.003, 1.0)
 
-    return _Candidate(
-        q0_rad=q0,
-        mass_kg=mass,
-        shift_m=xs,
-        target_force_N=target_force,
-        recovered_force_N=recovered,
-        q_rad=q,
-        q_prime=qp,
-        q_second=qpp,
-        roller_x=roller_x,
-        roller_r=roller_r,
-        contact_x=contact_x,
-        contact_r=contact_r,
-        tangent_deg=tangent,
-        offset_factor=offset,
-        direction_margin=direction_margin,
-        rms_error_N=rms,
-        max_error_N=max_error,
-        q_margin_deg=q_margin_deg,
-        tangent_margin_deg=tangent_margin,
-        offset_margin=offset_margin,
-        direction_min=direction_min,
-        packaging_margin_m=packaging_margin,
-        score=score,
-    ), None
+    return (
+        _Candidate(
+            q0_rad=q0,
+            mass_kg=mass,
+            shift_m=xs,
+            target_force_N=target_force,
+            recovered_force_N=recovered,
+            q_rad=q,
+            q_prime=qp,
+            q_second=qpp,
+            roller_x=roller_x,
+            roller_r=roller_r,
+            contact_x=contact_x,
+            contact_r=contact_r,
+            tangent_deg=tangent,
+            offset_factor=offset,
+            direction_margin=direction_margin,
+            rms_error_N=rms,
+            max_error_N=max_error,
+            q_margin_deg=q_margin_deg,
+            tangent_margin_deg=tangent_margin,
+            offset_margin=offset_margin,
+            direction_min=direction_min,
+            packaging_margin_m=packaging_margin,
+            score=score,
+        ),
+        None,
+    )
 
 
 def _check_generated_packaging(
@@ -533,14 +598,26 @@ def _check_generated_packaging(
     for zone in zones:
         polygon = Polygon(zone.polygon_m)
         if polygon.is_empty or not polygon.is_valid or polygon.area <= 0.0:
-            return False, None, ("INVALID_PACKAGING_ZONE", None, f"Packaging zone {zone.label!r} is invalid.")
+            return (
+                False,
+                None,
+                ("INVALID_PACKAGING_ZONE", None, f"Packaging zone {zone.label!r} is invalid."),
+            )
         if zone.rule == "forbid":
             surface = polygon.buffer(zone.clearance_m, quad_segs=8)
             if zone.subject == "ramp":
                 distance = float(ramp_line.distance(surface))
                 best_margin = min(best_margin, distance)
                 if ramp_line.intersects(surface):
-                    return False, 0.0, ("PACKAGING_RAMP_KEEP_OUT", None, f"Generated ramp enters keep-out zone {zone.label!r}.")
+                    return (
+                        False,
+                        0.0,
+                        (
+                            "PACKAGING_RAMP_KEEP_OUT",
+                            None,
+                            f"Generated ramp enters keep-out zone {zone.label!r}.",
+                        ),
+                    )
                 continue
             for index in indices:
                 x = float(xs[index])
@@ -553,22 +630,50 @@ def _check_generated_packaging(
                 arm_clearance = float(arm.distance(surface))
                 best_margin = min(best_margin, roller_clearance, arm_clearance)
                 if roller_clearance <= 1e-12 or arm.intersects(surface):
-                    return False, max(0.0, min(roller_clearance, arm_clearance)), (
-                        "PACKAGING_FLYWEIGHT_KEEP_OUT",
-                        x,
-                        f"Flyweight arm/roller enters keep-out zone {zone.label!r}.",
+                    return (
+                        False,
+                        max(0.0, min(roller_clearance, arm_clearance)),
+                        (
+                            "PACKAGING_FLYWEIGHT_KEEP_OUT",
+                            x,
+                            f"Flyweight arm/roller enters keep-out zone {zone.label!r}.",
+                        ),
                     )
         else:
             allowed = polygon.buffer(-zone.clearance_m, quad_segs=8)
             if allowed.is_empty:
-                return False, 0.0, ("PACKAGING_CONTAINMENT_EMPTY", None, f"Clearance removes all of containment zone {zone.label!r}.")
+                return (
+                    False,
+                    0.0,
+                    (
+                        "PACKAGING_CONTAINMENT_EMPTY",
+                        None,
+                        f"Clearance removes all of containment zone {zone.label!r}.",
+                    ),
+                )
             if zone.subject == "ramp":
                 if not allowed.covers(ramp_line):
-                    return False, 0.0, ("PACKAGING_RAMP_CONTAINMENT", None, f"Generated ramp leaves containment zone {zone.label!r}.")
+                    return (
+                        False,
+                        0.0,
+                        (
+                            "PACKAGING_RAMP_CONTAINMENT",
+                            None,
+                            f"Generated ramp leaves containment zone {zone.label!r}.",
+                        ),
+                    )
                 continue
             roller_allowed = allowed.buffer(-architecture.roller_radius_m, quad_segs=8)
             if roller_allowed.is_empty:
-                return False, 0.0, ("PACKAGING_ROLLER_CONTAINMENT_EMPTY", None, f"Roller cannot fit inside containment zone {zone.label!r}.")
+                return (
+                    False,
+                    0.0,
+                    (
+                        "PACKAGING_ROLLER_CONTAINMENT_EMPTY",
+                        None,
+                        f"Roller cannot fit inside containment zone {zone.label!r}.",
+                    ),
+                )
             for index in indices:
                 x = float(xs[index])
                 cx = float(roller_x[index])
@@ -577,8 +682,20 @@ def _check_generated_packaging(
                 point = Point(cx, cr)
                 arm = LineString(((px, architecture.pivot_radius_m), (cx, cr)))
                 if not roller_allowed.covers(point) or not allowed.covers(arm):
-                    return False, 0.0, ("PACKAGING_FLYWEIGHT_CONTAINMENT", x, f"Flyweight leaves containment zone {zone.label!r}.")
-                best_margin = min(best_margin, float(point.distance(roller_allowed.boundary)), float(arm.distance(allowed.boundary)))
+                    return (
+                        False,
+                        0.0,
+                        (
+                            "PACKAGING_FLYWEIGHT_CONTAINMENT",
+                            x,
+                            f"Flyweight leaves containment zone {zone.label!r}.",
+                        ),
+                    )
+                best_margin = min(
+                    best_margin,
+                    float(point.distance(roller_allowed.boundary)),
+                    float(arm.distance(allowed.boundary)),
+                )
 
     return True, (best_margin if np.isfinite(best_margin) else None), None
 
@@ -595,14 +712,16 @@ def _piecewise_path_from_candidate(
     qp = np.asarray(q_spline.derivative(1)(node_x), dtype=float)
     segments: list[PathSegment] = []
     for index in range(node_count - 1):
-        segments.append(PathSegment(
-            x0_m=float(node_x[index]),
-            x1_m=float(node_x[index + 1]),
-            q0_rad=float(q[index]),
-            q1_rad=float(q[index + 1]),
-            m0_rad_per_m=float(qp[index]),
-            m1_rad_per_m=float(qp[index + 1]),
-        ))
+        segments.append(
+            PathSegment(
+                x0_m=float(node_x[index]),
+                x1_m=float(node_x[index + 1]),
+                q0_rad=float(q[index]),
+                q1_rad=float(q[index + 1]),
+                m0_rad_per_m=float(qp[index]),
+                m1_rad_per_m=float(qp[index + 1]),
+            )
+        )
     return PiecewiseRampPath(architecture, tuple(segments))
 
 
@@ -641,7 +760,9 @@ def _integrated_force_capacity(
     omega: float,
 ) -> dict[str, float]:
     moments = _mass_moments(architecture, mass)
-    delta_u = float(_potential(architecture, moments, Q_MAX_DESIGN) - _potential(architecture, moments, Q_MIN))
+    delta_u = float(
+        _potential(architecture, moments, Q_MAX_DESIGN) - _potential(architecture, moments, Q_MIN)
+    )
     return {
         "maximum_integrated_force_Nm": max(0.0, omega * omega * delta_u),
         "capacity_q_min_deg": degrees(Q_MIN),
@@ -697,7 +818,10 @@ def _diverse_candidates(candidates: list[_Candidate], *, max_count: int) -> list
         best_value = -1e30
         for index, candidate in enumerate(remaining):
             distance = min(
-                sqrt(((candidate.q0_rad - other.q0_rad) / q_scale) ** 2 + ((candidate.mass_kg - other.mass_kg) / m_scale) ** 2)
+                sqrt(
+                    ((candidate.q0_rad - other.q0_rad) / q_scale) ** 2
+                    + ((candidate.mass_kg - other.mass_kg) / m_scale) ** 2
+                )
                 for other in selected
             )
             value = distance + 0.10 * candidate.score - 0.01 * candidate.rms_error_N
@@ -739,11 +863,14 @@ def _diagnostic_documents(
     rows = []
     for code, count in sorted(counts.items(), key=lambda item: item[1], reverse=True):
         example = examples.get(code, {})
-        rows.append({
-            "severity": "info",
-            "code": code,
-            "count": count,
-            "shift_m": example.get("shift_m"),
-            "message": example.get("message") or labels.get(code, "Candidate realizations reached this admissibility boundary."),
-        })
+        rows.append(
+            {
+                "severity": "info",
+                "code": code,
+                "count": count,
+                "shift_m": example.get("shift_m"),
+                "message": example.get("message")
+                or labels.get(code, "Candidate realizations reached this admissibility boundary."),
+            }
+        )
     return rows[:12]

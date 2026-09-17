@@ -17,8 +17,6 @@ sampled behaviours in both directions.
 
 from __future__ import annotations
 
-from math import sqrt
-
 import numpy as np
 from scipy.spatial import ConvexHull
 
@@ -204,27 +202,31 @@ def _shape_points(
             c1 = _legendre_coefficient(xi, residual, 1)
             c2 = _legendre_coefficient(xi, residual, 2)
             c3 = _legendre_coefficient(xi, residual, 3)
-            rows.append({
-                "architecture": label,
-                "path_index": path_index,
-                "state_indices": list(signature),
-                "mass_mix_fraction": float(mix),
-                "tip_to_arm_mass_ratio": float(mix / max(1.0 - mix, 1e-12)),
-                "c1": c1,
-                "c2": c2,
-                "c3": c3,
-                "mean_specific_gain": mean_gain,
-                "shift_fraction": ((shift - shift[0]) / max(shift[-1] - shift[0], 1e-12)).tolist(),
-                "specific_gain": specific.tolist(),
-                "normalized_shape": normalized.tolist(),
-                "ramp": {
-                    "shift_m": document.get("shift_m", []),
-                    "q_deg": document.get("q_deg", []),
-                    "ramp_tangent_deg": document.get("ramp_tangent_deg", []),
-                    "roller_center": document.get("roller_center", {}),
-                    "ramp_surface": document.get("ramp_surface", {}),
-                },
-            })
+            rows.append(
+                {
+                    "architecture": label,
+                    "path_index": path_index,
+                    "state_indices": list(signature),
+                    "mass_mix_fraction": float(mix),
+                    "tip_to_arm_mass_ratio": float(mix / max(1.0 - mix, 1e-12)),
+                    "c1": c1,
+                    "c2": c2,
+                    "c3": c3,
+                    "mean_specific_gain": mean_gain,
+                    "shift_fraction": (
+                        (shift - shift[0]) / max(shift[-1] - shift[0], 1e-12)
+                    ).tolist(),
+                    "specific_gain": specific.tolist(),
+                    "normalized_shape": normalized.tolist(),
+                    "ramp": {
+                        "shift_m": document.get("shift_m", []),
+                        "q_deg": document.get("q_deg", []),
+                        "ramp_tangent_deg": document.get("ramp_tangent_deg", []),
+                        "roller_center": document.get("roller_center", {}),
+                        "ramp_surface": document.get("ramp_surface", {}),
+                    },
+                }
+            )
     return rows
 
 
@@ -267,7 +269,9 @@ def _footprint_document(points: list[dict[str, object]]) -> dict[str, object]:
     }
 
 
-def _leverage_envelope(points: list[dict[str, object]], sample_count: int = 81) -> dict[str, object]:
+def _leverage_envelope(
+    points: list[dict[str, object]], sample_count: int = 81
+) -> dict[str, object]:
     xi = np.linspace(0.0, 1.0, sample_count)
     rows: list[np.ndarray] = []
     for point in points:
@@ -305,14 +309,26 @@ def _directional_witnesses(
         return [], {"median": None, "max": None}
 
     xi = np.linspace(0.0, 1.0, 101)
-    source_curves = np.vstack([
-        np.interp(xi, np.asarray(row["shift_fraction"], dtype=float), np.asarray(row["normalized_shape"], dtype=float))
-        for row in source
-    ])
-    target_curves = np.vstack([
-        np.interp(xi, np.asarray(row["shift_fraction"], dtype=float), np.asarray(row["normalized_shape"], dtype=float))
-        for row in target
-    ])
+    source_curves = np.vstack(
+        [
+            np.interp(
+                xi,
+                np.asarray(row["shift_fraction"], dtype=float),
+                np.asarray(row["normalized_shape"], dtype=float),
+            )
+            for row in source
+        ]
+    )
+    target_curves = np.vstack(
+        [
+            np.interp(
+                xi,
+                np.asarray(row["shift_fraction"], dtype=float),
+                np.asarray(row["normalized_shape"], dtype=float),
+            )
+            for row in target
+        ]
+    )
 
     nearest_indices = np.empty(len(source), dtype=int)
     distances = np.empty(len(source), dtype=float)
@@ -335,15 +351,17 @@ def _directional_witnesses(
         nearest = target[int(nearest_indices[index])]
         pointwise = np.abs(source_curves[index] - target_curves[int(nearest_indices[index])])
         gap_index = int(np.argmax(pointwise))
-        witnesses.append({
-            "source_architecture": source_label,
-            "nearest_architecture": target_label,
-            "shape_distance": float(distances[index]),
-            "max_pointwise_shape_gap": float(pointwise[gap_index]),
-            "gap_shift_fraction": float(xi[gap_index]),
-            "source": row,
-            "nearest": nearest,
-        })
+        witnesses.append(
+            {
+                "source_architecture": source_label,
+                "nearest_architecture": target_label,
+                "shape_distance": float(distances[index]),
+                "max_pointwise_shape_gap": float(pointwise[gap_index]),
+                "gap_shift_fraction": float(xi[gap_index]),
+                "source": row,
+                "nearest": nearest,
+            }
+        )
         used_paths.add(path_index)
         if len(witnesses) >= 5:
             break
@@ -352,7 +370,6 @@ def _directional_witnesses(
         "median": float(np.median(distances)),
         "max": float(np.max(distances)),
     }
-
 
 
 def match_target_shape(
@@ -463,7 +480,9 @@ def match_target_shape(
         "target": {
             "shift_fraction": xi.tolist(),
             "normalized_shape": target.tolist(),
-            "input_points": [{"shift_fraction": float(x), "relative_force": float(y)} for x, y in target_points],
+            "input_points": [
+                {"shift_fraction": float(x), "relative_force": float(y)} for x, y in target_points
+            ],
         },
         "architecture_a": match_a,
         "architecture_b": match_b,

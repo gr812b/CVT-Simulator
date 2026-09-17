@@ -25,7 +25,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import atan2, ceil, cos, degrees, floor, hypot, isfinite, pi, sin
-from typing import Iterable
 
 import numpy as np
 from scipy.optimize import brentq, least_squares
@@ -150,7 +149,6 @@ class PiecewiseRampPath:
             else:
                 return segment
         return self.segments[min(max(lo, 0), len(self.segments) - 1)]
-
 
 
 @dataclass(slots=True)
@@ -284,15 +282,17 @@ def compile_path_domain(
             rejected_history.append(
                 {
                     "state_indices": list(state_path),
-                    "failure": None
-                    if failure is None
-                    else {
-                        "code": failure.code,
-                        "message": failure.message,
-                        "shift_m": failure.shift_m,
-                        "first_parameter_m": failure.first_parameter_m,
-                        "second_parameter_m": failure.second_parameter_m,
-                    },
+                    "failure": (
+                        None
+                        if failure is None
+                        else {
+                            "code": failure.code,
+                            "message": failure.message,
+                            "shift_m": failure.shift_m,
+                            "first_parameter_m": failure.first_parameter_m,
+                            "second_parameter_m": failure.second_parameter_m,
+                        }
+                    ),
                 }
             )
             continue
@@ -332,15 +332,17 @@ def compile_path_domain(
     document = {
         "validity": {
             "valid": bool(viable_nodes_list and viable_nodes_list[0]),
-            "findings": []
-            if viable_nodes_list and viable_nodes_list[0]
-            else [
-                {
-                    "severity": "error",
-                    "code": "NO_COMPLETE_PATH",
-                    "message": "The local viability graph contains no complete start-to-finish path.",
-                }
-            ],
+            "findings": (
+                []
+                if viable_nodes_list and viable_nodes_list[0]
+                else [
+                    {
+                        "severity": "error",
+                        "code": "NO_COMPLETE_PATH",
+                        "message": "The local viability graph contains no complete start-to-finish path.",
+                    }
+                ]
+            ),
         },
         "graph": {
             "shift_station_count": shift_station_count,
@@ -473,9 +475,7 @@ def condition_path_domain(
     dx = travel / layer_count
     all_mask = (1 << mass_sample_count) - 1
     mass_step = (
-        max_tip_mass_per_flyweight_kg / (mass_sample_count - 1)
-        if mass_sample_count > 1
-        else 0.0
+        max_tip_mass_per_flyweight_kg / (mass_sample_count - 1) if mass_sample_count > 1 else 0.0
     )
 
     requirements_by_layer: list[list[ForceRequirement]] = [[] for _ in range(layer_count)]
@@ -647,7 +647,9 @@ def condition_path_domain(
             break
 
     jointly_feasible = bool(conditioned_nodes and conditioned_nodes[0])
-    impossible_ids = [identifier for identifier, possible in individual_status.items() if not possible]
+    impossible_ids = [
+        identifier for identifier, possible in individual_status.items() if not possible
+    ]
     findings: list[dict[str, object]] = []
     if impossible_ids:
         findings.append(
@@ -677,8 +679,12 @@ def condition_path_domain(
             if mask:
                 mass_values_seen.extend(
                     [
-                        _mass_from_index(_first_set_bit(mask), max_tip_mass_per_flyweight_kg, mass_sample_count),
-                        _mass_from_index(mask.bit_length() - 1, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                        _mass_from_index(
+                            _first_set_bit(mask), max_tip_mass_per_flyweight_kg, mass_sample_count
+                        ),
+                        _mass_from_index(
+                            mask.bit_length() - 1, max_tip_mass_per_flyweight_kg, mass_sample_count
+                        ),
                     ]
                 )
 
@@ -743,7 +749,7 @@ def _requirement_mass_mask(
 
     q, dq, _ddq = _hermite_q_derivatives(segment, requirement.shift_m)
     arm_gain, tip_gain, _ = _normalized_force_gain(architecture, q, dq)
-    omega2 = requirement.shaft_speed_rad_s ** 2
+    omega2 = requirement.shaft_speed_rad_s**2
     target_low = requirement.force_N - requirement.tolerance_N
     target_high = requirement.force_N + requirement.tolerance_N
     base = omega2 * arm_gain
@@ -787,7 +793,7 @@ def _continuous_path_mass_interval(
             row["q_rad"],
             row["dq_dx_rad_per_m"],
         )
-        omega2 = requirement.shaft_speed_rad_s ** 2
+        omega2 = requirement.shaft_speed_rad_s**2
         target_low = requirement.force_N - requirement.tolerance_N
         target_high = requirement.force_N + requirement.tolerance_N
         base = omega2 * arm_gain
@@ -992,6 +998,7 @@ def _mass_from_index(index: int, max_mass_kg: float, count: int) -> float:
         return 0.0
     return max_mass_kg * index / (count - 1)
 
+
 def certify_path_history(
     path: PiecewiseRampPath,
     *,
@@ -1093,9 +1100,7 @@ def _dq_dx_from_q_alpha(
     alpha: float,
 ) -> float | None:
     d = float(architecture.ramp_axial_direction)
-    denominator = architecture.arm_length_m * (
-        sin(q) * sin(alpha) + d * cos(q) * cos(alpha)
-    )
+    denominator = architecture.arm_length_m * (sin(q) * sin(alpha) + d * cos(q) * cos(alpha))
     if abs(denominator) <= 1.0e-12:
         return None
     dq = -sin(alpha) / denominator
@@ -1217,9 +1222,7 @@ def _audit_local_segment(
     for column in (1, 2, 3):
         vals = matrix[:, column]
         candidate_indices = [
-            i
-            for i in range(1, len(vals) - 1)
-            if vals[i] <= vals[i - 1] and vals[i] <= vals[i + 1]
+            i for i in range(1, len(vals) - 1) if vals[i] <= vals[i - 1] and vals[i] <= vals[i + 1]
         ]
         for index in candidate_indices:
             left = float(ts[index - 1])
@@ -1409,9 +1412,7 @@ def _forward_backward_viability(
     for layer_index in range(len(layers) - 1, -1, -1):
         coreachable = backward[layer_index + 1]
         backward[layer_index] = {
-            edge.start_state
-            for edge in layers[layer_index]
-            if edge.end_state in coreachable
+            edge.start_state for edge in layers[layer_index] if edge.end_state in coreachable
         }
 
     viable_nodes = [forward[i] & backward[i] for i in range(station_count)]
@@ -1452,8 +1453,7 @@ def _extract_candidate_paths(
         index
         for index in starts
         if any(
-            states[end].q_rad > states[index].q_rad + 1.0e-10
-            for end in outgoing[0].get(index, [])
+            states[end].q_rad > states[index].q_rad + 1.0e-10 for end in outgoing[0].get(index, [])
         )
     ]
     if active_starts:
@@ -1475,9 +1475,7 @@ def _extract_candidate_paths(
                     ok = False
                     break
                 active_choices = [
-                    end
-                    for end in choices
-                    if states[end].q_rad > states[current].q_rad + 1.0e-10
+                    end for end in choices if states[end].q_rad > states[current].q_rad + 1.0e-10
                 ]
                 if active_choices:
                     choices = active_choices
@@ -1502,7 +1500,9 @@ def _path_from_state_indices(
 ) -> PiecewiseRampPath:
     dx = architecture.required_travel_m / (station_count - 1)
     segments: list[PathSegment] = []
-    for layer, (left_index, right_index) in enumerate(zip(state_path[:-1], state_path[1:], strict=True)):
+    for layer, (left_index, right_index) in enumerate(
+        zip(state_path[:-1], state_path[1:], strict=True)
+    ):
         left = states[left_index]
         right = states[right_index]
         x0 = layer * dx
@@ -1559,7 +1559,9 @@ def _trace_history_selected_branch(
             chosen = min(roots, key=lambda root: (root.q_rad, root.parameter_m))
             intended = path.evaluate(x)
             intended_q = intended["q_rad"]
-            if abs(chosen.parameter_m - x) > 2.0e-5 or abs(chosen.q_rad - intended_q) > np.deg2rad(0.08):
+            if abs(chosen.parameter_m - x) > 2.0e-5 or abs(chosen.q_rad - intended_q) > np.deg2rad(
+                0.08
+            ):
                 return HistoryCertification(
                     valid=False,
                     failure=HistoryFailure(
@@ -1585,7 +1587,9 @@ def _trace_history_selected_branch(
             else:
                 dx_prev = float(xs[index - 1] - xs[index - 2])
                 ds_prev = previous_s - previous_previous_s
-                predicted_s = previous_s + ds_prev * ((x - float(xs[index - 1])) / max(dx_prev, _EPS))
+                predicted_s = previous_s + ds_prev * (
+                    (x - float(xs[index - 1])) / max(dx_prev, _EPS)
+                )
             outward = [root for root in roots if root.q_rad >= previous_q - np.deg2rad(0.08)]
             pool = outward if outward else roots
             chosen = min(
@@ -1599,8 +1603,12 @@ def _trace_history_selected_branch(
             intended_q = intended["q_rad"]
             # A distinct mathematical root is harmless. What is not harmless is
             # history jumping from the designed continuous branch to that root.
-            parameter_tolerance = max(3.0e-5, 0.35 * (path.x_max_m - path.x_min_m) / (trace_sample_count - 1))
-            if abs(chosen.parameter_m - x) > parameter_tolerance or abs(chosen.q_rad - intended_q) > np.deg2rad(0.12):
+            parameter_tolerance = max(
+                3.0e-5, 0.35 * (path.x_max_m - path.x_min_m) / (trace_sample_count - 1)
+            )
+            if abs(chosen.parameter_m - x) > parameter_tolerance or abs(
+                chosen.q_rad - intended_q
+            ) > np.deg2rad(0.12):
                 return HistoryCertification(
                     valid=False,
                     failure=HistoryFailure(
@@ -1685,7 +1693,9 @@ def _contact_roots_at_shift(path: PiecewiseRampPath, shift_m: float) -> list[Con
             roots.append(a)
         if fa * fb < 0.0:
             try:
-                roots.append(float(brentq(alternate_factor, a, b, xtol=1.0e-13, rtol=1.0e-12, maxiter=100)))
+                roots.append(
+                    float(brentq(alternate_factor, a, b, xtol=1.0e-13, rtol=1.0e-12, maxiter=100))
+                )
             except ValueError:
                 pass
     if abs(float(values[-1])) <= scale_tol:
@@ -1695,7 +1705,11 @@ def _contact_roots_at_shift(path: PiecewiseRampPath, shift_m: float) -> list[Con
 
     absolute = np.abs(values)
     for i in range(1, sample_count - 1):
-        if absolute[i] <= absolute[i - 1] and absolute[i] <= absolute[i + 1] and absolute[i] <= 50.0 * scale_tol:
+        if (
+            absolute[i] <= absolute[i - 1]
+            and absolute[i] <= absolute[i + 1]
+            and absolute[i] <= 50.0 * scale_tol
+        ):
             result = minimize_scalar(
                 lambda s: abs(alternate_factor(float(s))),
                 bounds=(float(ss[i - 1]), float(ss[i + 1])),
@@ -1798,14 +1812,18 @@ def _first_nonlocal_self_intersection(
         if abs(guess2 - guess1) <= min_separation:
             continue
         span = (path.x_max_m - path.x_min_m) / max(1, len(points) - 1) * 2.5
-        lower = np.array([
-            max(path.x_min_m, guess1 - span),
-            max(path.x_min_m, guess2 - span),
-        ])
-        upper = np.array([
-            min(path.x_max_m, guess1 + span),
-            min(path.x_max_m, guess2 + span),
-        ])
+        lower = np.array(
+            [
+                max(path.x_min_m, guess1 - span),
+                max(path.x_min_m, guess2 - span),
+            ]
+        )
+        upper = np.array(
+            [
+                min(path.x_max_m, guess1 + span),
+                min(path.x_max_m, guess2 + span),
+            ]
+        )
         if lower[0] >= upper[0] or lower[1] >= upper[1]:
             continue
 
@@ -1908,19 +1926,15 @@ def _normalized_force_gain(
 
     sin_q = sin(q)
     cos_q = cos(q)
-    d_j_d_q_arm = count * arm_mass * (
-        pivot_radius * length * cos_q
-        + (2.0 / 3.0) * length * length * sin_q * cos_q
+    d_j_d_q_arm = (
+        count
+        * arm_mass
+        * (pivot_radius * length * cos_q + (2.0 / 3.0) * length * length * sin_q * cos_q)
     )
-    d_j_d_q_tip_per_kg = count * (
-        2.0 * length * cos_q * (pivot_radius + length * sin_q)
-    )
+    d_j_d_q_tip_per_kg = count * (2.0 * length * cos_q * (pivot_radius + length * sin_q))
     arm_gain = 0.5 * d_j_d_q_arm * dq
     tip_gain_per_kg = 0.5 * d_j_d_q_tip_per_kg * dq
-    max_tip_total_gain = (
-        arm_gain
-        + architecture.max_tip_mass_per_flyweight_kg * tip_gain_per_kg
-    )
+    max_tip_total_gain = arm_gain + architecture.max_tip_mass_per_flyweight_kg * tip_gain_per_kg
     return arm_gain, tip_gain_per_kg, max_tip_total_gain
 
 
@@ -1932,19 +1946,14 @@ def _capability_projection(
 ) -> dict[str, object]:
     stations: list[dict[str, float | int | None]] = []
     for station in range(station_count):
-        shift_m = (
-            station / max(1, station_count - 1)
-            * architecture.required_travel_m
-        )
+        shift_m = station / max(1, station_count - 1) * architecture.required_travel_m
         active_states = [
             states[index]
             for index in viable_nodes[station]
             if states[index].dq_dx_rad_per_m > 1.0e-8
         ]
         gains = [
-            _normalized_force_gain(
-                architecture, state.q_rad, state.dq_dx_rad_per_m
-            )
+            _normalized_force_gain(architecture, state.q_rad, state.dq_dx_rad_per_m)
             for state in active_states
         ]
 
@@ -2036,10 +2045,7 @@ def _physical_domain_projection(
     tangent_values: list[float] = []
 
     for station in range(station_count):
-        shift_m = (
-            station / max(1, station_count - 1)
-            * architecture.required_travel_m
-        )
+        shift_m = station / max(1, station_count - 1) * architecture.required_travel_m
         for index in sorted(viable_nodes[station]):
             state = states[index]
             geometry = _geometry_from_q(

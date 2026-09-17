@@ -5,9 +5,14 @@ from math import pi
 import numpy as np
 
 from app.engineering.fixed_pivot_primary.models import ArchitectureDesign, PackagingZone
-from app.engineering.fixed_pivot_primary.path_domain import ForceRequirement, _path_from_state_indices
+from app.engineering.fixed_pivot_primary.path_domain import (
+    ForceRequirement,
+    _path_from_state_indices,
+)
 from app.engineering.fixed_pivot_primary.path_domain_refinement import condition_path_domain_refined
-from app.engineering.fixed_pivot_primary.path_domain_packaging import compile_path_domain_cached_packaging
+from app.engineering.fixed_pivot_primary.path_domain_packaging import (
+    compile_path_domain_cached_packaging,
+)
 
 INCH = 0.0254
 

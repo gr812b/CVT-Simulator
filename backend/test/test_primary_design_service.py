@@ -31,9 +31,7 @@ def test_reference_concrete_design_is_full_range_and_below_90_deg() -> None:
     )
 
     assert analysis["validity"]["valid"] is True
-    assert abs(
-        analysis["contact_valid_travel_m"] - analysis["requested_travel_m"]
-    ) < 1.0e-9
+    assert abs(analysis["contact_valid_travel_m"] - analysis["requested_travel_m"]) < 1.0e-9
     assert analysis["summary"]["max_arm_angle_deg"] < 90.0
     assert len(analysis["geometry"]["axis_values"]) == 81
     initial_q = analysis["geometry"]["fields"]["arm_angle_deg"][0]
@@ -53,9 +51,7 @@ def test_zero_speed_quasistatic_force_is_zero_and_reference_speed_is_positive() 
     zero = service.evaluate_concrete_response(
         analysis_id=analysis_id,
         operating=OperatingCondition(
-            tip_mass_per_flyweight_kg=operating_defaults[
-                "tip_mass_per_flyweight_kg"
-            ],
+            tip_mass_per_flyweight_kg=operating_defaults["tip_mass_per_flyweight_kg"],
             shaft_speed_rad_s=0.0,
         ),
     )
@@ -124,9 +120,7 @@ def test_rejected_physical_design_still_returns_requested_ramp_and_failure_locat
     assert analysis["validity"]["valid"] is False
     assert analysis["validity"]["failure"]["shift_m"] is not None
     assert len(analysis["ramp_surface_open"]["x_m"]) > 2
-    assert len(analysis["ramp_surface_open"]["x_m"]) == len(
-        analysis["ramp_surface_open"]["r_m"]
-    )
+    assert len(analysis["ramp_surface_open"]["x_m"]) == len(analysis["ramp_surface_open"]["r_m"])
 
 
 def test_runtime_map_compile_failure_is_warning_not_physical_geometry_failure(monkeypatch) -> None:
@@ -215,12 +209,10 @@ def test_architecture_workspace_spans_negative_30_to_90_and_required_travel() ->
     # reach the exact q=90 flat limit.
     q90_r = clear["boundaries"]["q_max_flat_ramp"]["r_m"][0]
     potential_max_r = max(
-        max(polygon["r_m"])
-        for polygon in clear["workspace"]["potential_ramp_surface"]
+        max(polygon["r_m"]) for polygon in clear["workspace"]["potential_ramp_surface"]
     )
     feasible_max_r = max(
-        max(polygon["r_m"])
-        for polygon in clear["workspace"]["packaging_feasible_ramp_surface"]
+        max(polygon["r_m"]) for polygon in clear["workspace"]["packaging_feasible_ramp_surface"]
     )
     assert abs(potential_max_r - q90_r) < 1.0e-9
     assert abs(feasible_max_r - q90_r) < 1.0e-9
@@ -301,4 +293,3 @@ def test_concrete_ramp_placement_uses_initial_flyweight_angle_not_point_a() -> N
     assert "initial_flyweight_angle_deg" in defaults["ramp"]
     assert "anchor_axial_from_pivot_m" not in defaults["ramp"]
     assert "anchor_radial_from_pivot_m" not in defaults["ramp"]
-

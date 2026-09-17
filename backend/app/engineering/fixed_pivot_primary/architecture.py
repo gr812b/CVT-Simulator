@@ -59,14 +59,10 @@ def analyze_architecture_workspace(
         raise ValueError("packaging zone ids must be unique.")
     zone_geometries = tuple((_zone_polygon(zone), zone) for zone in zones)
     flyweight_zones = tuple(
-        (polygon, zone)
-        for polygon, zone in zone_geometries
-        if zone.subject == "flyweight"
+        (polygon, zone) for polygon, zone in zone_geometries if zone.subject == "flyweight"
     )
     ramp_zones = tuple(
-        (polygon, zone)
-        for polygon, zone in zone_geometries
-        if zone.subject == "ramp"
+        (polygon, zone) for polygon, zone in zone_geometries if zone.subject == "ramp"
     )
 
     q_values = np.linspace(Q_MIN_RAD, Q_MAX_RAD, reach_sample_count)
@@ -81,9 +77,7 @@ def analyze_architecture_workspace(
         q_values,
         shift_m=architecture.required_travel_m,
     )
-    roller_center_workspace = Polygon(
-        [*open_arc, *tuple(reversed(full_arc))]
-    )
+    roller_center_workspace = Polygon([*open_arc, *tuple(reversed(full_arc))])
     if not roller_center_workspace.is_valid:
         roller_center_workspace = roller_center_workspace.buffer(0)
 
@@ -94,12 +88,8 @@ def analyze_architecture_workspace(
     # self-intersection can make polygon repair discard a legitimate lobe
     # (most visibly the region approaching q = 90 deg).  Tessellate the
     # parameter domain instead and union the mapped cells.
-    open_ramp_slice = _ramp_surface_slice_workspace(
-        architecture, q_values, shift_m=0.0
-    )
-    potential_ramp_workspace = _sweep_geometry_x(
-        open_ramp_slice, -architecture.required_travel_m
-    )
+    open_ramp_slice = _ramp_surface_slice_workspace(architecture, q_values, shift_m=0.0)
+    potential_ramp_workspace = _sweep_geometry_x(open_ramp_slice, -architecture.required_travel_m)
     feasible_ramp_workspace = _clip_subject_workspace(
         potential_ramp_workspace,
         ramp_zones,
@@ -170,9 +160,7 @@ def analyze_architecture_workspace(
     span = max(max_x - min_x, max_r - min_r, 0.050)
     pad = max(0.010, 0.12 * span)
 
-    full_shift_pivot_x = (
-        architecture.pivot_axial_position_m - architecture.required_travel_m
-    )
+    full_shift_pivot_x = architecture.pivot_axial_position_m - architecture.required_travel_m
 
     ramp_fraction = (
         feasible_ramp_workspace.area / potential_ramp_workspace.area
@@ -244,10 +232,7 @@ def _roller_center_arc(
     q_values: np.ndarray,
     shift_m: float,
 ) -> tuple[tuple[float, float], ...]:
-    return tuple(
-        _roller_center(architecture, float(q), shift_m=shift_m)
-        for q in q_values
-    )
+    return tuple(_roller_center(architecture, float(q), shift_m=shift_m) for q in q_values)
 
 
 def _flyweight_pose_geometry(
@@ -293,9 +278,7 @@ def _ramp_surface_slice_workspace(
 
     rows: list[list[tuple[float, float]]] = []
     for raw_q in q_mesh:
-        center_x, center_r = _roller_center(
-            architecture, float(raw_q), shift_m=shift_m
-        )
+        center_x, center_r = _roller_center(architecture, float(raw_q), shift_m=shift_m)
         row: list[tuple[float, float]] = []
         for raw_alpha in alpha_mesh:
             alpha = float(raw_alpha)
@@ -331,6 +314,7 @@ def _ramp_surface_slice_workspace(
         return GeometryCollection()
     return unary_union(tuple(cells)).buffer(0)
 
+
 def _sweep_geometry_x(geometry: BaseGeometry, delta_x: float) -> BaseGeometry:
     """Exact union of a polygonal geometry translated continuously in x."""
 
@@ -342,8 +326,7 @@ def _sweep_geometry_x(geometry: BaseGeometry, delta_x: float) -> BaseGeometry:
         polygons = tuple(geometry.geoms)
     else:
         polygons = tuple(
-            item for item in getattr(geometry, "geoms", ())
-            if item.geom_type == "Polygon"
+            item for item in getattr(geometry, "geoms", ()) if item.geom_type == "Polygon"
         )
     swept = [_sweep_polygon_x(polygon, delta_x) for polygon in polygons]
     return unary_union(tuple(swept)) if swept else GeometryCollection()

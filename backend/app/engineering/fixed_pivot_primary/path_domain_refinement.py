@@ -14,26 +14,16 @@ acceptance rules.  It improves three presentation/search layers:
 
 from __future__ import annotations
 
-from math import degrees, isfinite, pi
+from math import degrees, pi
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
-
-# Projection caches are process-local and keyed by the cached domain object.
-# They keep the interactive Requirements page from re-evaluating every Hermite
-# edge when only RPM changes or when React mounts the page in development mode.
-_EDGE_GAIN_CACHE: dict[tuple[int, int], list[tuple[int, float, np.ndarray, np.ndarray, np.ndarray]]] = {}
-_FULL_FORCE_CACHE: dict[tuple[int, int, float], dict[str, object]] = {}
-_REQUIREMENT_GAIN_CACHE: dict[tuple[int, int, float], tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
-_SOLUTION_CACHE: dict[tuple[object, ...], list[dict[str, object]]] = {}
 
 from .path_domain import (
     CompiledPathDomain,
     ForceRequirement,
     LayerEdge,
-    PathSegment,
     _continuous_path_mass_interval,
-    _first_set_bit,
     _mass_from_index,
     _normalized_force_gain,
     _path_absolute_force_document,
@@ -42,10 +32,21 @@ from .path_domain import (
     _path_from_state_indices,
     _physical_domain_projection,
     _reference_speed,
-    _requirement_mass_mask,
     _station_projection,
     certify_path_history,
 )
+
+# Projection caches are process-local and keyed by the cached domain object.
+# They keep the interactive Requirements page from re-evaluating every Hermite
+# edge when only RPM changes or when React mounts the page in development mode.
+_EDGE_GAIN_CACHE: dict[
+    tuple[int, int], list[tuple[int, float, np.ndarray, np.ndarray, np.ndarray]]
+] = {}
+_FULL_FORCE_CACHE: dict[tuple[int, int, float], dict[str, object]] = {}
+_REQUIREMENT_GAIN_CACHE: dict[tuple[int, int, float], tuple[np.ndarray, np.ndarray, np.ndarray]] = (
+    {}
+)
+_SOLUTION_CACHE: dict[tuple[object, ...], list[dict[str, object]]] = {}
 
 
 def refresh_compiled_domain_views(
@@ -143,7 +144,9 @@ def refresh_compiled_domain_views(
     # domain is already being compiled so entering the next page is immediate.
     _full_force_projection_cached(
         compiled,
-        max_tip_mass_per_flyweight_kg=min(0.300, compiled.architecture.max_tip_mass_per_flyweight_kg),
+        max_tip_mass_per_flyweight_kg=min(
+            0.300, compiled.architecture.max_tip_mass_per_flyweight_kg
+        ),
         shaft_speed_rad_s=1.0,
         samples_per_layer=9,
     )
@@ -194,8 +197,12 @@ def condition_path_domain_refined(
         if requirement.shaft_speed_rad_s <= 0.0:
             raise ValueError("force requirements require a positive shaft speed")
 
-    guide_requirements = tuple(requirement for requirement in requirements if _is_profile_guide(requirement))
-    hard_requirements = tuple(requirement for requirement in requirements if not _is_profile_guide(requirement))
+    guide_requirements = tuple(
+        requirement for requirement in requirements if _is_profile_guide(requirement)
+    )
+    hard_requirements = tuple(
+        requirement for requirement in requirements if not _is_profile_guide(requirement)
+    )
 
     if not requirements:
         result = _unrestricted_condition_result(
@@ -208,12 +215,14 @@ def condition_path_domain_refined(
         )
         summary = result.get("summary")
         if isinstance(summary, dict):
-            summary.update({
-                "profile_guide_count": 0,
-                "hard_lock_count": 0,
-                "best_profile_rms_error_N": None,
-                "best_profile_max_error_N": None,
-            })
+            summary.update(
+                {
+                    "profile_guide_count": 0,
+                    "hard_lock_count": 0,
+                    "best_profile_rms_error_N": None,
+                    "best_profile_max_error_N": None,
+                }
+            )
         return result
 
     station_count = compiled.shift_station_count
@@ -265,20 +274,30 @@ def condition_path_domain_refined(
         last_constrained_layer = max(constrained_layers)
 
         for station in range(first_constrained_layer + 1):
-            forward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+            forward[station] = {
+                state_index: all_mask for state_index in compiled.viable_nodes[station]
+            }
         for layer_index in range(first_constrained_layer, layer_count):
             next_map = forward[layer_index + 1]
             for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
-                mask = forward[layer_index].get(edge.start_state, 0) & edge_masks[layer_index][edge_index]
+                mask = (
+                    forward[layer_index].get(edge.start_state, 0)
+                    & edge_masks[layer_index][edge_index]
+                )
                 if mask:
                     next_map[edge.end_state] = next_map.get(edge.end_state, 0) | mask
 
         for station in range(last_constrained_layer + 1, station_count):
-            backward[station] = {state_index: all_mask for state_index in compiled.viable_nodes[station]}
+            backward[station] = {
+                state_index: all_mask for state_index in compiled.viable_nodes[station]
+            }
         for layer_index in range(last_constrained_layer, -1, -1):
             current_map = backward[layer_index]
             for edge_index, edge in enumerate(compiled.viable_edges[layer_index]):
-                mask = backward[layer_index + 1].get(edge.end_state, 0) & edge_masks[layer_index][edge_index]
+                mask = (
+                    backward[layer_index + 1].get(edge.end_state, 0)
+                    & edge_masks[layer_index][edge_index]
+                )
                 if mask:
                     current_map[edge.start_state] = current_map.get(edge.start_state, 0) | mask
 
@@ -373,7 +392,9 @@ def condition_path_domain_refined(
             edge_masks=conditioned_edge_masks,
             max_tip_mass_per_flyweight_kg=max_tip_mass_per_flyweight_kg,
             mass_sample_count=mass_sample_count,
-            representative_solution_count=(6 if representative_solution_count == 0 else representative_solution_count),
+            representative_solution_count=(
+                6 if representative_solution_count == 0 else representative_solution_count
+            ),
             display_speed=display_speed,
             certify_history=(representative_solution_count > 0),
         )
@@ -407,41 +428,53 @@ def condition_path_domain_refined(
         )
 
     hard_impossible_ids = [
-        requirement.id for requirement in hard_requirements if not individual_status.get(requirement.id, False)
+        requirement.id
+        for requirement in hard_requirements
+        if not individual_status.get(requirement.id, False)
     ]
     guide_outside_ids = [
-        requirement.id for requirement in guide_requirements if not individual_status.get(requirement.id, False)
+        requirement.id
+        for requirement in guide_requirements
+        if not individual_status.get(requirement.id, False)
     ]
     findings: list[dict[str, object]] = []
     if hard_impossible_ids:
-        findings.append({
-            "severity": "error",
-            "code": "HARD_LOCK_OUTSIDE_CAPABILITY",
-            "message": "One or more hard force locks lie outside the architecture capability.",
-            "requirement_ids": hard_impossible_ids,
-        })
+        findings.append(
+            {
+                "severity": "error",
+                "code": "HARD_LOCK_OUTSIDE_CAPABILITY",
+                "message": "One or more hard force locks lie outside the architecture capability.",
+                "requirement_ids": hard_impossible_ids,
+            }
+        )
     elif hard_requirements and not jointly_feasible:
-        findings.append({
-            "severity": "error",
-            "code": "HARD_LOCKS_JOINTLY_INCOMPATIBLE",
-            "message": "The hard force locks are individually attainable but cannot be satisfied by one complete ramp and one constant tip mass.",
-        })
+        findings.append(
+            {
+                "severity": "error",
+                "code": "HARD_LOCKS_JOINTLY_INCOMPATIBLE",
+                "message": "The hard force locks are individually attainable but cannot be satisfied by one complete ramp and one constant tip mass.",
+            }
+        )
     if guide_outside_ids:
-        findings.append({
-            "severity": "warning",
-            "code": "PROFILE_GUIDE_OUTSIDE_CAPABILITY",
-            "message": "One or more profile handles are outside the architecture capability; best-fit solutions will approach them as closely as possible.",
-            "requirement_ids": guide_outside_ids,
-        })
+        findings.append(
+            {
+                "severity": "warning",
+                "code": "PROFILE_GUIDE_OUTSIDE_CAPABILITY",
+                "message": "One or more profile handles are outside the architecture capability; best-fit solutions will approach them as closely as possible.",
+                "requirement_ids": guide_outside_ids,
+            }
+        )
 
     mass_values_seen: list[float] = []
     for row in node_masks:
         for mask in row.values():
             for first, last in _mask_runs(mask):
-                mass_values_seen.extend((
-                    _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                    _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count),
-                ))
+                mass_values_seen.extend(
+                    (
+                        _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                        _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count),
+                    )
+                )
 
     best_fit = None
     if representative_solutions:
@@ -478,7 +511,9 @@ def condition_path_domain_refined(
         "graph": {
             "viable_layer_edge_counts": [len(row) for row in conditioned_edges],
             "viable_node_counts": [len(row) for row in conditioned_nodes],
-            "station_projection": _station_projection(conditioned_nodes, compiled.states, station_count),
+            "station_projection": _station_projection(
+                conditioned_nodes, compiled.states, station_count
+            ),
         },
         "domain_projection": projection,
         "force_capability": {
@@ -496,7 +531,9 @@ def condition_path_domain_refined(
             "representative_solution_count": len(representative_solutions),
             "representative_solutions_preview_only": preview_only,
             "best_profile_rms_error_N": None if best_fit is None else best_fit.get("rms_error_N"),
-            "best_profile_max_error_N": None if best_fit is None else best_fit.get("max_abs_error_N"),
+            "best_profile_max_error_N": (
+                None if best_fit is None else best_fit.get("max_abs_error_N")
+            ),
         },
     }
 
@@ -535,7 +572,9 @@ def _profile_target_samples(
         return xs.copy(), ys.copy(), tolerances.copy()
     sample_x = np.linspace(float(xs[0]), float(xs[-1]), max(3, count))
     target = np.asarray(PchipInterpolator(xs, ys, extrapolate=False)(sample_x), dtype=float)
-    corridor = np.asarray(PchipInterpolator(xs, tolerances, extrapolate=False)(sample_x), dtype=float)
+    corridor = np.asarray(
+        PchipInterpolator(xs, tolerances, extrapolate=False)(sample_x), dtype=float
+    )
     return sample_x, target, np.maximum(1.0, corridor)
 
 
@@ -553,7 +592,9 @@ def _profile_edge_quadratics(
             (np.zeros(len(row)), np.zeros(len(row)), np.zeros(len(row)))
             for row in compiled.viable_edges
         ]
-    interpolator = PchipInterpolator(profile_x, profile_y, extrapolate=False) if len(profile_x) >= 2 else None
+    interpolator = (
+        PchipInterpolator(profile_x, profile_y, extrapolate=False) if len(profile_x) >= 2 else None
+    )
     omega2 = display_speed * display_speed
     layer_count = compiled.shift_station_count - 1
     dx = compiled.architecture.required_travel_m / layer_count
@@ -570,7 +611,11 @@ def _profile_edge_quadratics(
         x0 = layer_index * dx
         x1 = x0 + dx
         if len(profile_x) == 1:
-            samples = np.asarray([profile_x[0]]) if x0 - 1e-12 <= profile_x[0] <= x1 + 1e-12 else np.asarray([])
+            samples = (
+                np.asarray([profile_x[0]])
+                if x0 - 1e-12 <= profile_x[0] <= x1 + 1e-12
+                else np.asarray([])
+            )
             targets = np.asarray([profile_y[0]]) if samples.size else np.asarray([])
         else:
             left = max(x0, float(profile_x[0]))
@@ -623,10 +668,9 @@ def _profile_candidate_paths(
         if global_mask:
             for first, last in _mask_runs(global_mask):
                 probe_indices.update((first, (first + last) // 2, last))
-        mass_probes = np.asarray([
-            max_mass_kg * index / (mass_sample_count - 1)
-            for index in sorted(probe_indices)
-        ])
+        mass_probes = np.asarray(
+            [max_mass_kg * index / (mass_sample_count - 1) for index in sorted(probe_indices)]
+        )
     candidates: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
 
@@ -794,7 +838,9 @@ def _profile_ranked_representatives(
             seen.add(signature)
             candidate_paths.append(signature)
 
-    scored: list[tuple[float, float, float, tuple[float, float], tuple[int, ...], np.ndarray, np.ndarray]] = []
+    scored: list[
+        tuple[float, float, float, tuple[float, float], tuple[int, ...], np.ndarray, np.ndarray]
+    ] = []
     for path in candidate_paths:
         fit = _profile_fit_for_path(
             compiled,
@@ -1021,12 +1067,8 @@ def _edge_gains_at_shift(
     R = architecture.pivot_radius_m
     L = architecture.arm_length_m
     arm_mass = architecture.arm_mass_per_flyweight_kg
-    arm_gain = 0.5 * n * arm_mass * (
-        R * L * cos_q + (2.0 / 3.0) * L * L * sin_q * cos_q
-    ) * dq
-    tip_gain = 0.5 * n * (
-        2.0 * L * cos_q * (R + L * sin_q)
-    ) * dq
+    arm_gain = 0.5 * n * arm_mass * (R * L * cos_q + (2.0 / 3.0) * L * L * sin_q * cos_q) * dq
+    tip_gain = 0.5 * n * (2.0 * L * cos_q * (R + L * sin_q)) * dq
     active = (dq > 1.0e-8) & np.isfinite(arm_gain) & np.isfinite(tip_gain)
     result = (arm_gain, tip_gain, active)
     _REQUIREMENT_GAIN_CACHE[key] = result
@@ -1131,13 +1173,12 @@ def _edge_gain_samples(
             dq = qt / dx
             sin_q = np.sin(q)
             cos_q = np.cos(q)
-            d_j_d_q_arm = count * arm_mass * (
-                pivot_radius * length * cos_q
-                + (2.0 / 3.0) * length * length * sin_q * cos_q
+            d_j_d_q_arm = (
+                count
+                * arm_mass
+                * (pivot_radius * length * cos_q + (2.0 / 3.0) * length * length * sin_q * cos_q)
             )
-            d_j_d_q_tip = count * (
-                2.0 * length * cos_q * (pivot_radius + length * sin_q)
-            )
+            d_j_d_q_tip = count * (2.0 * length * cos_q * (pivot_radius + length * sin_q))
             arm_gain = 0.5 * d_j_d_q_arm * dq
             tip_gain = 0.5 * d_j_d_q_tip * dq
             active = (dq > 1.0e-8) & np.isfinite(arm_gain) & np.isfinite(tip_gain)
@@ -1176,9 +1217,15 @@ def _full_force_projection_cached(
         stations.append(
             {
                 **row,
-                "force_min_N": None if row["force_min_N"] is None else float(row["force_min_N"]) * scale,
-                "force_max_N": None if row["force_max_N"] is None else float(row["force_max_N"]) * scale,
-                "force_intervals_N": [[float(lo) * scale, float(hi) * scale] for lo, hi in intervals],
+                "force_min_N": (
+                    None if row["force_min_N"] is None else float(row["force_min_N"]) * scale
+                ),
+                "force_max_N": (
+                    None if row["force_max_N"] is None else float(row["force_max_N"]) * scale
+                ),
+                "force_intervals_N": [
+                    [float(lo) * scale, float(hi) * scale] for lo, hi in intervals
+                ],
             }
         )
     return {
@@ -1217,7 +1264,10 @@ def _unrestricted_condition_result(
     graph = compiled.document["graph"]
     assert isinstance(graph, dict)
     return {
-        "validity": {"valid": bool(compiled.viable_nodes and compiled.viable_nodes[0]), "findings": []},
+        "validity": {
+            "valid": bool(compiled.viable_nodes and compiled.viable_nodes[0]),
+            "findings": [],
+        },
         "requirements": [],
         "mass": {
             "maximum_tip_mass_per_flyweight_kg": max_tip_mass_per_flyweight_kg,
@@ -1246,6 +1296,7 @@ def _unrestricted_condition_result(
         },
     }
 
+
 def _node_force_interval_projection(
     compiled: CompiledPathDomain,
     *,
@@ -1268,10 +1319,7 @@ def _node_force_interval_projection(
     stations: list[dict[str, object]] = []
 
     for station in range(station_count):
-        shift_m = (
-            station / max(1, station_count - 1)
-            * architecture.required_travel_m
-        )
+        shift_m = station / max(1, station_count - 1) * architecture.required_travel_m
         force_lows: list[float] = []
         force_highs: list[float] = []
         mass_lows: list[float] = []
@@ -1289,12 +1337,8 @@ def _node_force_interval_projection(
             )
             active_count += 1
             for first, last in _mask_runs(mask):
-                low_mass = _mass_from_index(
-                    first, max_tip_mass_per_flyweight_kg, mass_sample_count
-                )
-                high_mass = _mass_from_index(
-                    last, max_tip_mass_per_flyweight_kg, mass_sample_count
-                )
+                low_mass = _mass_from_index(first, max_tip_mass_per_flyweight_kg, mass_sample_count)
+                high_mass = _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count)
                 a = omega2 * (arm_gain + low_mass * tip_gain)
                 b = omega2 * (arm_gain + high_mass * tip_gain)
                 force_lows.append(min(a, b))
@@ -1363,11 +1407,13 @@ def _force_interval_projection(
                         _mass_from_index(last, max_tip_mass_per_flyweight_kg, mass_sample_count)
                     )
             if edge_indices:
-                run_data.append((
-                    np.asarray(edge_indices, dtype=np.int64),
-                    np.asarray(mass_lows, dtype=float),
-                    np.asarray(mass_highs, dtype=float),
-                ))
+                run_data.append(
+                    (
+                        np.asarray(edge_indices, dtype=np.int64),
+                        np.asarray(mass_lows, dtype=float),
+                        np.asarray(mass_highs, dtype=float),
+                    )
+                )
             else:
                 run_data.append(None)
 
@@ -1448,6 +1494,7 @@ def _merge_numpy_intervals(lows: np.ndarray, highs: np.ndarray) -> list[tuple[fl
             merged.append([low, high])
     return [(low, high) for low, high in merged]
 
+
 def _unconditioned_representatives(
     compiled: CompiledPathDomain,
     *,
@@ -1477,6 +1524,7 @@ def _unconditioned_representatives(
             }
         )
     return solutions
+
 
 def _conditioned_preview_representatives(
     compiled: CompiledPathDomain,
@@ -1774,7 +1822,11 @@ def _candidate_state_paths(
                 choices = outgoing[layer].get(current, [])
                 compatible: list[tuple[LayerEdge, int | None, int | None]] = []
                 for edge, mask in choices:
-                    next_mask = None if mask is None else (mask if carried_mask is None else carried_mask & mask)
+                    next_mask = (
+                        None
+                        if mask is None
+                        else (mask if carried_mask is None else carried_mask & mask)
+                    )
                     if next_mask == 0:
                         continue
                     compatible.append((edge, mask, next_mask))
@@ -1818,7 +1870,9 @@ def _diverse_path_order(
         for index in range(len(paths)):
             if index in selected:
                 continue
-            distance = min(float(np.linalg.norm(features[index] - features[other])) for other in selected)
+            distance = min(
+                float(np.linalg.norm(features[index] - features[other])) for other in selected
+            )
             if distance > best_distance:
                 best_distance = distance
                 best_index = index

@@ -177,6 +177,7 @@ class FixedPivotOperatingResponse(ApiModel):
     operating: dict[str, float]
     loads: dict[str, Any]
 
+
 class ForceCurvePointRequest(ApiModel):
     shift_m: float = Field(ge=0.0)
     force_N: float = Field(ge=0.0)
@@ -214,6 +215,7 @@ class FixedPivotPathDomainCompareResponse(ApiModel):
     witnesses: dict[str, Any]
     summary: dict[str, Any]
 
+
 class ForceShapePointRequest(ApiModel):
     shift_fraction: float = Field(ge=0.0, le=1.0)
     relative_force: float = Field(gt=0.0)
@@ -234,4 +236,3 @@ class FixedPivotPathDomainCompareTargetResponse(ApiModel):
     architecture_a: dict[str, Any] | None
     architecture_b: dict[str, Any] | None
     summary: dict[str, Any]
-

@@ -4,7 +4,10 @@ from math import pi
 
 import numpy as np
 
-from app.engineering.fixed_pivot_primary.architecture_compare import _directional_witnesses, _legendre_coefficient
+from app.engineering.fixed_pivot_primary.architecture_compare import (
+    _directional_witnesses,
+    _legendre_coefficient,
+)
 from app.engineering.fixed_pivot_primary.inverse_design import (
     ForceTargetPoint,
     _build_target,
@@ -54,8 +57,7 @@ def test_force_denominator_is_half_Jq_derivative_factor() -> None:
     H = _force_denominator(architecture, moments, q)
     eps = 1.0e-7
     numerical = (
-        _potential(architecture, moments, q + eps)
-        - _potential(architecture, moments, q - eps)
+        _potential(architecture, moments, q + eps) - _potential(architecture, moments, q - eps)
     ) / (2.0 * eps)
     assert np.max(np.abs(H - numerical)) < 1.0e-8
 

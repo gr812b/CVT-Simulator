@@ -16,12 +16,14 @@ from .cinder_adapter import (
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
 from .architecture_compare import compare_compiled_domains, match_target_shape
-from .inverse_design import ForceTargetPoint, inverse_design_force_curve as solve_force_curve_inverse
+from .inverse_design import (
+    ForceTargetPoint,
+    inverse_design_force_curve as solve_force_curve_inverse,
+)
 from .path_domain_packaging import compile_path_domain_cached_packaging
 from .path_domain import (
     CompiledPathDomain,
     ForceRequirement,
-    compile_path_domain,
 )
 from .path_domain_refinement import (
     condition_path_domain_refined,
@@ -164,7 +166,9 @@ class FixedPivotPrimaryDesignService:
             )
             refresh_compiled_domain_views(
                 compiled,
-                representative_count=(12 if representative_path_count >= 8 else representative_path_count),
+                representative_count=(
+                    12 if representative_path_count >= 8 else representative_path_count
+                ),
             )
         except (TypeError, ValueError, RuntimeError) as error:
             raise PrimaryDesignError(
@@ -345,7 +349,9 @@ class FixedPivotPrimaryDesignService:
             "ramp_tangent_deg": [point.ramp_tangent_deg for point in geometry.points],
             "ramp_normal_x": [point.ramp_normal_x for point in geometry.points],
             "ramp_normal_r": [point.ramp_normal_r for point in geometry.points],
-            "admissible": [1 if point.angle_rad <= 0.5 * pi + 1.0e-10 else 0 for point in geometry.points],
+            "admissible": [
+                1 if point.angle_rad <= 0.5 * pi + 1.0e-10 else 0 for point in geometry.points
+            ],
         }
         units = {
             "arm_angle_deg": "deg",
@@ -366,13 +372,10 @@ class FixedPivotPrimaryDesignService:
         # only the remaining margin toward the far end is a useful endpoint
         # manufacturing diagnostic.
         endpoint_margins = [
-            geometry.ramp.x_max - point.contact_coordinate_m
-            for point in geometry.points
+            geometry.ramp.x_max - point.contact_coordinate_m for point in geometry.points
         ]
         max_q = (
-            max(degrees(point.angle_rad) for point in geometry.points)
-            if geometry.points
-            else None
+            max(degrees(point.angle_rad) for point in geometry.points) if geometry.points else None
         )
 
         return {
@@ -558,9 +561,7 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
             }
 
     max_q_deg = (
-        max(degrees(point.angle_rad) for point in geometry.points)
-        if geometry.points
-        else None
+        max(degrees(point.angle_rad) for point in geometry.points) if geometry.points else None
     )
     if max_q_deg is not None and max_q_deg >= 88.0:
         warnings.append(
@@ -573,8 +574,7 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
 
     if geometry.points:
         endpoint_margin = min(
-            geometry.ramp.x_max - point.contact_coordinate_m
-            for point in geometry.points
+            geometry.ramp.x_max - point.contact_coordinate_m for point in geometry.points
         )
         if endpoint_margin < 1.0e-3:
             warnings.append(
@@ -616,6 +616,7 @@ def _ramp_document(value: RampDesign) -> dict[str, object]:
         "circular_length_m": value.circular_length_m,
     }
 
+
 def _zone_document(value: PackagingZone) -> dict[str, object]:
     return {
         "id": value.id,
@@ -625,4 +626,3 @@ def _zone_document(value: PackagingZone) -> dict[str, object]:
         "polygon_m": [[point[0], point[1]] for point in value.polygon_m],
         "clearance_m": value.clearance_m,
     }
-

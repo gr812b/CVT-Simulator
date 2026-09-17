@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 from math import isfinite
-from typing import Iterable
 
 import numpy as np
 from shapely.geometry import LineString, Point, Polygon
@@ -133,20 +132,26 @@ def compile_path_domain_cached_packaging(
     document = deepcopy(base.document)
     document["validity"] = {
         "valid": bool(viable_nodes and viable_nodes[0]),
-        "findings": [] if viable_nodes and viable_nodes[0] else [
-            {
-                "severity": "error",
-                "code": "NO_COMPLETE_PATH",
-                "message": "The packaging mask removes every complete start-to-finish path.",
-            }
-        ],
+        "findings": (
+            []
+            if viable_nodes and viable_nodes[0]
+            else [
+                {
+                    "severity": "error",
+                    "code": "NO_COMPLETE_PATH",
+                    "message": "The packaging mask removes every complete start-to-finish path.",
+                }
+            ]
+        ),
     }
     graph = document.get("graph")
     if isinstance(graph, dict):
         graph["layer_edge_counts"] = [len(row) for row in masked_layers]
         graph["viable_layer_edge_counts"] = [len(row) for row in viable_edges]
         graph["viable_node_counts"] = [len(row) for row in viable_nodes]
-        graph["station_projection"] = _station_projection(viable_nodes, base.states, shift_station_count)
+        graph["station_projection"] = _station_projection(
+            viable_nodes, base.states, shift_station_count
+        )
         graph["packaging_reused_base_graph"] = True
     document["representative_paths"] = []
     document["domain_projection"] = _physical_domain_projection(
@@ -169,10 +174,7 @@ def compile_path_domain_cached_packaging(
 
     surviving_representative_paths: list[tuple[int, ...]] = []
     surviving_representative_documents: list[dict[str, object]] = []
-    edge_pairs = [
-        {(edge.start_state, edge.end_state) for edge in row}
-        for row in viable_edges
-    ]
+    edge_pairs = [{(edge.start_state, edge.end_state) for edge in row} for row in viable_edges]
     for state_path, representative_document in zip(
         base.representative_state_paths,
         base.representative_documents,
@@ -226,7 +228,9 @@ def _prepare_fast_zones(
             )
         else:
             allowed = polygon.buffer(-zone.clearance_m, quad_segs=8)
-            roller_allowed = allowed.buffer(-roller_radius_m, quad_segs=8) if not allowed.is_empty else allowed
+            roller_allowed = (
+                allowed.buffer(-roller_radius_m, quad_segs=8) if not allowed.is_empty else allowed
+            )
             prepared.append(
                 {
                     "zone": zone,
@@ -238,7 +242,9 @@ def _prepare_fast_zones(
     return tuple(prepared)
 
 
-def _bbox_disjoint(a: tuple[float, float, float, float], b: tuple[float, float, float, float], pad: float = 0.0) -> bool:
+def _bbox_disjoint(
+    a: tuple[float, float, float, float], b: tuple[float, float, float, float], pad: float = 0.0
+) -> bool:
     return a[2] + pad < b[0] or b[2] + pad < a[0] or a[3] + pad < b[1] or b[3] + pad < a[1]
 
 
@@ -292,7 +298,9 @@ def _segment_subject_bounds(
     return ramp, tuple(float(value) for value in flyweight)
 
 
-def _bbox_contains(outer: tuple[float, float, float, float], inner: tuple[float, float, float, float]) -> bool:
+def _bbox_contains(
+    outer: tuple[float, float, float, float], inner: tuple[float, float, float, float]
+) -> bool:
     return (
         outer[0] <= inner[0] + 1.0e-12
         and outer[1] <= inner[1] + 1.0e-12
@@ -390,4 +398,3 @@ def _segment_satisfies_packaging_fast(
                 if not surface.covers(arm):
                     return False
     return True
-

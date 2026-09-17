@@ -111,7 +111,9 @@ def test_packaging_can_remove_the_complete_path_domain() -> None:
     assert result["graph"]["viable_node_counts"][0] == 0 or result["validity"]["valid"] is False
 
 
-def test_history_allows_multiple_mathematical_roots_when_selected_branch_is_continuous(monkeypatch) -> None:
+def test_history_allows_multiple_mathematical_roots_when_selected_branch_is_continuous(
+    monkeypatch,
+) -> None:
     path = _simple_path()
 
     def roots_at_shift(_path: domain.PiecewiseRampPath, shift: float):
@@ -188,12 +190,14 @@ class _BowTiePath:
             SimpleNamespace(x0_m=2.0 / 3.0, x1_m=1.0),
         )
         self._knots = np.asarray([0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0])
-        self._points = np.asarray([
-            [0.0, 0.0],
-            [1.0, 1.0],
-            [0.0, 1.0],
-            [1.0, 0.0],
-        ])
+        self._points = np.asarray(
+            [
+                [0.0, 0.0],
+                [1.0, 1.0],
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ]
+        )
 
     def evaluate(self, s: float):
         s = float(min(max(s, 0.0), 1.0))
@@ -214,13 +218,18 @@ class _BowTiePath:
 
 def test_one_roller_pose_with_two_distinct_contacts_is_rejected() -> None:
     path = _BowTiePath()
-    certification = domain.certify_path_history(path, trace_sample_count=65, broad_phase_samples_per_segment=33)
+    certification = domain.certify_path_history(
+        path, trace_sample_count=65, broad_phase_samples_per_segment=33
+    )
     assert certification.valid is False
     assert certification.failure is not None
     assert certification.failure.code == "SECOND_SIMULTANEOUS_CONTACT"
     assert certification.failure.first_parameter_m is not None
     assert certification.failure.second_parameter_m is not None
-    assert abs(certification.failure.second_parameter_m - certification.failure.first_parameter_m) > 0.1
+    assert (
+        abs(certification.failure.second_parameter_m - certification.failure.first_parameter_m)
+        > 0.1
+    )
 
 
 def test_generated_path_has_exact_designed_contact_root_s_equal_x() -> None:
@@ -302,9 +311,7 @@ def test_normalized_force_gain_matches_finite_difference_of_mass_model() -> None
     architecture = _architecture()
     q = radians(22.0)
     dq_dx = 31.0
-    arm_gain, tip_gain_per_kg, total_gain = domain._normalized_force_gain(
-        architecture, q, dq_dx
-    )
+    arm_gain, tip_gain_per_kg, total_gain = domain._normalized_force_gain(architecture, q, dq_dx)
 
     count = architecture.number_of_flyweights
     pivot = architecture.pivot_radius_m
@@ -314,19 +321,15 @@ def test_normalized_force_gain_matches_finite_difference_of_mass_model() -> None
     def shaft_inertia(angle: float, tip_mass: float) -> float:
         # Uniform arm integrated along its length plus a point end mass.
         s = np.sin(angle)
-        arm = arm_mass * (
-            pivot * pivot
-            + pivot * length * s
-            + (length * length / 3.0) * s * s
-        )
+        arm = arm_mass * (pivot * pivot + pivot * length * s + (length * length / 3.0) * s * s)
         tip = tip_mass * (pivot + length * s) ** 2
         return count * (arm + tip)
 
     eps = 1.0e-7
     d_j_d_q_arm = (shaft_inertia(q + eps, 0.0) - shaft_inertia(q - eps, 0.0)) / (2.0 * eps)
-    d_j_d_q_with_unit_tip = (
-        shaft_inertia(q + eps, 1.0) - shaft_inertia(q - eps, 1.0)
-    ) / (2.0 * eps)
+    d_j_d_q_with_unit_tip = (shaft_inertia(q + eps, 1.0) - shaft_inertia(q - eps, 1.0)) / (
+        2.0 * eps
+    )
     expected_arm = 0.5 * d_j_d_q_arm * dq_dx
     expected_tip_per_kg = 0.5 * (d_j_d_q_with_unit_tip - d_j_d_q_arm) * dq_dx
 
@@ -365,7 +368,7 @@ def _force_on_path(
         row["q_rad"],
         row["dq_dx_rad_per_m"],
     )
-    return shaft_speed_rad_s ** 2 * (arm + tip_mass_kg * tip)
+    return shaft_speed_rad_s**2 * (arm + tip_mass_kg * tip)
 
 
 def test_force_conditioning_without_requirements_retains_complete_domain() -> None:
@@ -478,7 +481,10 @@ def test_individually_attainable_points_can_be_jointly_incompatible() -> None:
                     max_tip_mass_per_flyweight_kg=0.300,
                     mass_sample_count=257,
                 )
-                if all(row["individually_attainable"] for row in result["requirements"]) and not result["summary"]["jointly_feasible"]:
+                if (
+                    all(row["individually_attainable"] for row in result["requirements"])
+                    and not result["summary"]["jointly_feasible"]
+                ):
                     found = result
                     break
             if found is not None:

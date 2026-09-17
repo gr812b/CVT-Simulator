@@ -27,9 +27,7 @@ def _client() -> TestClient:
 
 def test_primary_design_concrete_round_trip() -> None:
     client = _client()
-    defaults_response = client.get(
-        "/api/v1/engineering/fixed-pivot-primary/defaults"
-    )
+    defaults_response = client.get("/api/v1/engineering/fixed-pivot-primary/defaults")
     assert defaults_response.status_code == 200
     defaults = defaults_response.json()
 
@@ -61,9 +59,7 @@ def test_primary_design_concrete_round_trip() -> None:
 
 def test_primary_design_architecture_workspace_round_trip() -> None:
     client = _client()
-    defaults = client.get(
-        "/api/v1/engineering/fixed-pivot-primary/defaults"
-    ).json()
+    defaults = client.get("/api/v1/engineering/fixed-pivot-primary/defaults").json()
     response = client.post(
         "/api/v1/engineering/fixed-pivot-primary/architecture/analyze",
         json={
@@ -81,7 +77,6 @@ def test_primary_design_architecture_workspace_round_trip() -> None:
     assert workspace["workspace"]["potential_ramp_surface"]
     q90_r = workspace["boundaries"]["q_max_flat_ramp"]["r_m"][0]
     potential_max_r = max(
-        max(polygon["r_m"])
-        for polygon in workspace["workspace"]["potential_ramp_surface"]
+        max(polygon["r_m"]) for polygon in workspace["workspace"]["potential_ramp_surface"]
     )
     assert abs(potential_max_r - q90_r) < 1.0e-9

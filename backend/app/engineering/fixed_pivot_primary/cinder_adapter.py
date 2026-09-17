@@ -290,9 +290,7 @@ def analyze_geometry(
         failure_code=failure_code,
         failure_message=failure_message,
         failure_shift_m=failure_shift,
-        double_contact_event=double_contact_event
-        if failure_code == "SECOND_CONTACT"
-        else None,
+        double_contact_event=double_contact_event if failure_code == "SECOND_CONTACT" else None,
         runtime_map_compiled=runtime_map_compiled,
         runtime_map_compile_error=runtime_map_compile_error,
         ramp_surface_open_x_m=open_x,
@@ -366,9 +364,7 @@ def evaluate_response(
             axial_speed=operating.shift_speed_m_s,
             shaft_speed=operating.shaft_speed_rad_s,
             shift_speed=operating.shift_speed_m_s,
-            axial_acceleration=AffineClosureScalar.constant(
-                operating.shift_acceleration_m_s2
-            ),
+            axial_acceleration=AffineClosureScalar.constant(operating.shift_acceleration_m_s2),
         )
         contributions = {
             contribution.key: contribution.relation.evaluate(unknowns)
@@ -411,11 +407,7 @@ def evaluate_response(
         d2r_dq2 = -r_rel
         com_x_accel = dx_dq * q_ddot + d2x_dq2 * q_dot**2
         com_r_dot = dr_dq * q_dot
-        com_r_accel = (
-            dr_dq * q_ddot
-            + d2r_dq2 * q_dot**2
-            - com_r * operating.shaft_speed_rad_s**2
-        )
+        com_r_accel = dr_dq * q_ddot + d2r_dq2 * q_dot**2 - com_r * operating.shaft_speed_rad_s**2
         com_theta_accel = 2.0 * com_r_dot * operating.shaft_speed_rad_s
 
         if per_ramp_radial is None:
@@ -441,34 +433,24 @@ def evaluate_response(
             float(contributions["fixed_pivot_flyweight_motion_ratio_curvature"])
         )
         output["flyweight_total_closing_force_N"].append(float(total))
-        output["ramp_force_normal_N"].append(
-            None if normal_force is None else float(normal_force)
-        )
+        output["ramp_force_normal_N"].append(None if normal_force is None else float(normal_force))
         output["ramp_force_axial_N"].append(float(per_ramp_axial))
         output["ramp_force_radial_N"].append(
             None if per_ramp_radial is None else float(per_ramp_radial)
         )
-        output["ramp_moment_about_anchor_Nm"].append(
-            None if moment is None else float(moment)
-        )
+        output["ramp_moment_about_anchor_Nm"].append(None if moment is None else float(moment))
         output["com_x_m"].append(float(com_x))
         output["com_r_m"].append(float(com_r))
         output["equivalent_centrifugal_force_N"].append(float(equivalent_centrifugal))
-        output["pivot_reaction_axial_N"].append(
-            None if pivot_x is None else float(pivot_x)
-        )
-        output["pivot_reaction_radial_N"].append(
-            None if pivot_r is None else float(pivot_r)
-        )
+        output["pivot_reaction_axial_N"].append(None if pivot_x is None else float(pivot_x))
+        output["pivot_reaction_radial_N"].append(None if pivot_r is None else float(pivot_r))
         output["pivot_reaction_tangential_N"].append(
             None if pivot_theta is None else float(pivot_theta)
         )
         output["pivot_reaction_resultant_N"].append(
             None if pivot_resultant is None else float(pivot_resultant)
         )
-        output["compressive_contact"].append(
-            bool(normal_force is not None and normal_force >= 0.0)
-        )
+        output["compressive_contact"].append(bool(normal_force is not None and normal_force >= 0.0))
 
     return output
 
@@ -522,12 +504,10 @@ def _sample_ramp_surface(
     for coordinate in coordinates:
         profile = ramp.evaluate(float(coordinate))
         xs.append(
-            spec.ramp_reference_axial_position
-            + spec.ramp_axial_direction * float(coordinate)
+            spec.ramp_reference_axial_position + spec.ramp_axial_direction * float(coordinate)
         )
         rs.append(spec.ramp_reference_radius + profile.value)
     return tuple(xs), tuple(rs)
-
 
 
 def _first_selected_double_contact_event(
@@ -815,6 +795,7 @@ def _cinder_confirms_selected_double_contact(
         return "second simultaneous physical ramp contact" in detail
     return False
 
+
 def _classify_branch_failure(error_message: str | None) -> tuple[str, str]:
     detail = (error_message or "").lower()
     if "no roller/ramp contact exists at the beginning" in detail:
@@ -904,10 +885,7 @@ def _ramp_reference_from_initial_angle(
     """
 
     q = radians(ramp_design.initial_flyweight_angle_deg)
-    center_x = (
-        architecture.pivot_axial_position_m
-        + architecture.arm_length_m * cos(q)
-    )
+    center_x = architecture.pivot_axial_position_m + architecture.arm_length_m * cos(q)
     center_r = architecture.pivot_radius_m + architecture.arm_length_m * sin(q)
 
     initial = ramp.evaluate(ramp.x_min)
@@ -1024,17 +1002,12 @@ def _validate_ramp_design(design: RampDesign) -> None:
             raise ValueError("constant_length_m must be positive for a constant ramp.")
         return
     if not 0.0 < design.circular_start_angle_deg < 90.0:
-        raise ValueError(
-            "circular_start_angle_deg must lie strictly between 0 and 90 degrees."
-        )
+        raise ValueError("circular_start_angle_deg must lie strictly between 0 and 90 degrees.")
     if not 0.0 < design.circular_end_angle_deg < 90.0:
-        raise ValueError(
-            "circular_end_angle_deg must lie strictly between 0 and 90 degrees."
-        )
+        raise ValueError("circular_end_angle_deg must lie strictly between 0 and 90 degrees.")
     if design.circular_start_angle_deg <= design.circular_end_angle_deg:
         raise ValueError(
-            "The Q2 circular section requires circular_start_angle_deg > "
-            "circular_end_angle_deg."
+            "The Q2 circular section requires circular_start_angle_deg > " "circular_end_angle_deg."
         )
     if design.linear_length_m <= 0.0:
         raise ValueError("linear_length_m must be positive for a progressive ramp.")
