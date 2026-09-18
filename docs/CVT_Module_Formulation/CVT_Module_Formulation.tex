@@ -10322,48 +10322,69 @@ provides the initial condition for the next interval of continuous motion.
 
 TODO: Roadmap
 
-\section{Computational Framework and Reproducibility}
+\section{Computational Implementation and Reproducibility}
 \label{sec:results_implementation_reproducibility}
 
-The formulation derived in \Cref{chap:derivation} is implemented in the
-open-source CINDER simulator. The studies reported in this chapter examine the
-resulting model at several scales, including local closure and invariant checks,
-controlled comparisons of retained dynamic terms, reconstructed benchmark
-cases, and complete transient operation. The numerical scope changes with the
-study, but the governing CVT mechanics do not.
+The formulation developed in \Cref{chap:derivation} is implemented in the
+open-source CINDER simulator.  The numerical details required to carry that
+formulation into an executable model are documented in
+\Cref{app:numerical_implementation}, including the solution of the implicit belt
+geometry, the coupled mechanical and traction closure, actuator assembly, and
+hybrid time integration.  The Results reported in this chapter are generated
+with the frozen CINDER release identified at the end of this section.
 
-The shaft-boundary definition in \Cref{sec:system_definition} keeps the CVT
-separate from the external systems that drive or load it. Engines, vehicles,
-flywheels, dynamometers, and other hosts couple through those interfaces, so a
-benchmark or isolated study can impose the boundary history required for the
-comparison, while complete operating cases allow the surrounding system to
-evolve with the CVT. Where a study intentionally replaces or suppresses a model
-contribution, that change is stated explicitly with the case.
+CINDER was developed around a Baja SAE-scale mechanically actuated CVT, and the
+reference configuration in \Cref{app:reference_configuration} is based closely
+on that physical system.  Much of the chapter therefore occupies the speed,
+torque, power, ratio, inertia, and loading scales of a small off-road vehicle
+rather than attempting a broad sweep over CVT applications.  The quantitative
+magnitudes reported for those cases are most directly supported within and near
+that operating regime; their extrapolation to substantially different machines
+is not established by the present Results.
 
-Unless stated otherwise, all studies use the reference CVT defined in
-\Cref{app:reference_configuration} and the common numerical settings listed in
-\Cref{tab:results_common_numerics}. The full physical parameter set and its
-provenance are given in \Cref{tab:results_common_parameters}. Each Results
-subsection therefore reports only the quantities intentionally changed for that
-study. The corresponding host or boundary definition and all explicit changes
-are collected in \Cref{tab:results_case_registry}.
+The supporting material is separated according to what it defines.
+\Cref{app:numerical_implementation} records the numerical implementation of the
+CVT equations, while \Cref{app:reference_configuration} collects the recurring
+physical configuration and parameter provenance.  The exact study and case
+definitions, including numerical settings and study-specific configurations,
+are indexed in \Cref{app:study_reproducibility}.  The same appendix traces the
+manuscript figures and tables to their archived source artifacts through
+\Cref{app:artifact_index}.
 
-All results use CINDER release \CINDERtag, pinned to commit \CINDERcommit. The
-tagged source is available from
-\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}. The numerical
-details used to implement the Chapter~3 equations are documented separately in
-\Cref{app:numerical_implementation}, including the belt-geometry root solves,
-the fixed-$\lambda$ mechanical closure, actuator assembly, static-traction
-solution, and hybrid time integration.
+The shaft-boundary models used by the Results are documented separately in
+\Cref{app:results_boundary_models}.  As established in
+\Cref{sec:system_definition}, the CVT model ends at the primary and secondary
+shafts; a complete simulation must additionally specify the mechanical systems
+acting through those interfaces.  The cases in this chapter use several such
+descriptions, ranging from simplified engine and vehicle models grounded in
+physical systems to prescribed torque or load histories and attached inertias
+used for controlled numerical experiments.  The boundary-model appendix records
+the equations, assumptions, parameters, and provenance of these external
+systems, keeping them explicit without folding them into the CVT formulation.
 
-The tagged CINDER release identifies the model implementation, while the frozen
-Results archive identifies the study definitions used to produce the reported
-results. The archive contains the configuration files, analysis scripts, and
-saved outputs used for the manuscript figures and tables and, at the final
-Results freeze, is identified by \ResultsTag, \ResultsCommit, and \ResultsDOI.
-The source for each reported figure or table is indexed in
-\Cref{tab:results_artifact_index}. Together, these records identify the exact
-code, inputs, scripts, and saved outputs behind each reported result.
+The simulator implementation and the Results record are frozen separately.
+The former identifies the exact CINDER source used to evaluate the model; the
+latter identifies the study definitions, analysis code, and archived outputs
+used in the manuscript.  Their publication records are
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{0.23\textwidth}p{0.68\textwidth}@{}}
+\toprule
+Record & Identifier \\ \midrule
+CINDER release & \CINDERtag\; (\texttt{\CINDERcommit}) \\
+Tagged CINDER source &
+\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2} \\
+Results release & \ResultsTag\; (\texttt{\ResultsCommit}) \\
+Results archive & \ResultsDOI \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The release tags identify the named frozen versions, the commits identify the
+exact repository revisions, and \ResultsDOI provides the persistent archival
+record of the published Results package.
 
 \section{Mathematical Closure and Verification}
 \label{sec:results_verification}
