@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "document_type": "cinder_composed_simulation_case",
+  "assembly": {
+    "schema_version": 1,
+    "document_type": "cinder_cvt_assembly",
+    "geometry": {
+      "belt": {
+        "height_m": 0.0155702,
+        "outer_width_m": 0.021335999999999997,
+        "inner_width_m": 0.0168148,
+        "cord_depth_from_outer_m": 0.00254
+      },
+      "belt_outer_length_m": 0.9532619999999999,
+      "primary_outer_radius_at_zero_shift_m": 0.036207699999999995,
+      "secondary_outer_radius_at_zero_shift_m": 0.1016,
+      "sheave_half_angle_rad": 0.2007128639793479,
+      "deadzone_shift_m": 0.0024891999999999996,
+      "max_shift_m": 0.019049999999999997
+    },
+    "contact": {
+      "static_friction_coefficient": 0.65,
+      "kinetic_friction_coefficient": 0.55
+    },
+    "inertias": {
+      "primary": {
+        "fixed_rotating_hardware_inertia_kg_m2": 0.0032202838346490647,
+        "movable_sheave_rotational_inertia_kg_m2": 0.0,
+        "moving_sheave_mass_kg": 1.0681
+      },
+      "secondary": {
+        "fixed_rotating_hardware_inertia_kg_m2": 0.0023262599999999997,
+        "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
+        "moving_sheave_mass_kg": 0.705141
+      },
+      "belt_density_kg_per_m3": 1100.0
+    },
+    "pulleys": {
+      "primary": {
+        "components": [
+          {
+            "kind": "fixed_pivot_roller_flyweight",
+            "geometry": {
+              "pivot_axial_position_m": 0.0,
+              "pivot_radius_m": 0.042545,
+              "arm_length_m": 0.0315214,
+              "roller_radius_m": 0.006500000000000001,
+              "ramp_reference_axial_position_m": 0.038099999999999995,
+              "ramp_reference_radius_m": 0.04959604,
+              "ramp_profile": {
+                "kind": "piecewise_ramp",
+                "segments": [
+                  {
+                    "kind": "linear_segment",
+                    "length_m": 0.005,
+                    "angle_rad": 0.6108652381980153
+                  },
+                  {
+                    "kind": "c3_transition_segment",
+                    "length_m": 0.003,
+                    "slope_start": 0.7002075382097097,
+                    "curvature_start_per_m": 0.0,
+                    "third_derivative_start_per_m2": 0.0,
+                    "slope_end": 0.7002075382097099,
+                    "curvature_end_per_m": -14.042414082433282,
+                    "third_derivative_end_per_m2": 277.9461266190616
+                  },
+                  {
+                    "kind": "circular_segment",
+                    "length_m": 0.03,
+                    "angle_start_rad": 0.6108652381980153,
+                    "angle_end_rad": 0.3490658503988659,
+                    "quadrant": 2
+                  }
+                ]
+              },
+              "ramp_axial_direction": -1,
+              "axial_position_min_m": 0.0,
+              "axial_position_max_m": 0.019049999999999997,
+              "roller_side_sign": 1,
+              "root_scan_points": 513,
+              "validation_positions": 129,
+              "root_residual_tolerance_m2": 1e-14,
+              "coordinate_tolerance_m": 1e-10,
+              "compilation_points": 257
+            },
+            "mass_geometry": {
+              "number_of_flyweights": 3,
+              "mass_per_flyweight_kg": 0.263646,
+              "first_moment_u_kg_m": 0.0080954205122,
+              "first_moment_v_kg_m": 0.0,
+              "second_moment_u_kg_m2": 0.00025291921358550735,
+              "second_moment_v_kg_m2": 0.0,
+              "product_moment_uv_kg_m2": 0.0,
+              "second_moment_z_kg_m2": 0.0
+            }
+          },
+          {
+            "kind": "axial_spring",
+            "stiffness_N_per_m": 12784.0,
+            "initial_compression_m": 0.09409049026972177,
+            "compression_per_axial_position": 1.0
+          }
+        ]
+      },
+      "secondary": {
+        "components": [
+          {
+            "kind": "axial_spring",
+            "stiffness_N_per_m": 3532.0,
+            "initial_compression_m": 0.11,
+            "compression_per_axial_position": -1.0
+          },
+          {
+            "kind": "helical_torque_reaction",
+            "torsional_stiffness_Nm_per_rad": 3.476,
+            "initial_twist_rad": 5.235987755982989,
+            "movable_member_torque_fraction": 0.5
+          }
+        ],
+        "helical_coupling": {
+          "profile": {
+            "kind": "helix_profile",
+            "circumferential_profile": {
+              "kind": "piecewise_ramp",
+              "segments": [
+                {
+                  "kind": "linear_segment",
+                  "length_m": 0.014406035859741255,
+                  "angle_rad": 1.2217304763960306
+                }
+              ]
+            },
+            "radius_m": 0.04445
+          },
+          "opening_per_axial_position": -1.0,
+          "opening_offset_m": 0.0
+        }
+      }
+    }
+  },
+  "shaft_boundaries": {
+    "primary": {
+      "kind": "full_throttle_engine",
+      "points": [
+        {
+          "angular_speed_rad_per_s": 104.71975511965977,
+          "torque_Nm": 0.0
+        },
+        {
+          "angular_speed_rad_per_s": 188.49555921538757,
+          "torque_Nm": 24.4047230694
+        },
+        {
+          "angular_speed_rad_per_s": 251.32741228718345,
+          "torque_Nm": 25.08263204355
+        },
+        {
+          "angular_speed_rad_per_s": 272.2713633111154,
+          "torque_Nm": 24.54030486423
+        },
+        {
+          "angular_speed_rad_per_s": 293.21531433504737,
+          "torque_Nm": 23.591232300419996
+        },
+        {
+          "angular_speed_rad_per_s": 314.1592653589793,
+          "torque_Nm": 22.50657794178
+        },
+        {
+          "angular_speed_rad_per_s": 335.1032163829112,
+          "torque_Nm": 20.87959640382
+        },
+        {
+          "angular_speed_rad_per_s": 356.0471674068432,
+          "torque_Nm": 19.659360250349998
+        },
+        {
+          "angular_speed_rad_per_s": 376.99111843077515,
+          "torque_Nm": 18.303542302049998
+        },
+        {
+          "angular_speed_rad_per_s": 418.87902047863906,
+          "torque_Nm": 0.0
+        }
+      ],
+      "low_speed_braking_torque_Nm": -5.0,
+      "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
+      "high_speed_braking_torque_Nm": -28.0,
+      "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
+      "equivalent_rotational_inertia_kg_m2": 0.05
+    },
+    "secondary": {
+      "kind": "locked_final_drive",
+      "vehicle": {
+        "mass_kg": 300.0,
+        "wheel_rotational_inertia_kg_m2": 1.10781744
+      },
+      "final_drive": {
+        "reduction_ratio": 7.556,
+        "wheel_radius_m": 0.2794
+      },
+      "road_load": {
+        "rolling_resistance_coefficient": 0.015,
+        "drag_coefficient": 0.6,
+        "frontal_area_m2": 1.11484,
+        "air_density_kg_per_m3": 1.225,
+        "gravity_m_per_s2": 9.80665,
+        "rolling_speed_regularization_m_per_s": 0.01
+      },
+      "road_profile": {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0
+      },
+      "direct_secondary_shaft_inertia_kg_m2": 0.002011338398044471
+    }
+  },
+  "host": {
+    "kind": "secondary_shaft_angle",
+    "initial_state": {
+      "secondary_shaft_angle_rad": 0.0
+    }
+  },
+  "scenario": {
+    "time_span_s": [
+      0.0,
+      5.0
+    ],
+    "initial_cvt_state": {
+      "primary_angular_speed_rad_per_s": 188.49555921538757,
+      "secondary_angular_speed_rad_per_s": 0.0,
+      "belt_speed_m_per_s": 0.0,
+      "shift_position_m": 0.0,
+      "shift_speed_m_per_s": 0.0
+    }
+  },
+  "execution": {
+    "integrator": {
+      "relative_tolerance": 0.01,
+      "absolute_tolerance": 1e-05,
+      "method": "LSODA",
+      "max_step": 0.05,
+      "first_step": null,
+      "maximum_transitions": 120,
+      "event_time_tolerance": 1e-10,
+      "retain_dense_output": true
+    },
+    "reporting": {
+      "grid": {
+        "kind": "uniform_time_step",
+        "count": null,
+        "step_seconds": 0.05
+      },
+      "include_contact": true,
+      "include_actuation": true,
+      "include_closure_audit": false,
+      "include_integrated_observers": true
+    }
+  }
+}

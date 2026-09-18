@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cinder-results-study-v1",
+  "title": "CINDER v1.1.2 common study manifest envelope",
+  "type": "object",
+  "required": [
+    "results_manifest_schema",
+    "study_slug",
+    "title",
+    "maintenance_status",
+    "paper_role",
+    "classification",
+    "cinder_release",
+    "scientific_question",
+    "reference_model",
+    "entrypoints",
+    "outputs"
+  ],
+  "properties": {
+    "results_manifest_schema": {
+      "const": 1
+    },
+    "study_slug": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "maintenance_status": {
+      "enum": [
+        "maintained",
+        "exploratory",
+        "historical"
+      ]
+    },
+    "paper_role": {
+      "enum": [
+        "undecided",
+        "main-text",
+        "supporting",
+        "supplementary",
+        "not-used"
+      ]
+    },
+    "classification": {
+      "enum": [
+        "verification",
+        "benchmark",
+        "mechanism",
+        "system",
+        "design"
+      ]
+    },
+    "cinder_release": {
+      "type": "object",
+      "required": [
+        "distribution",
+        "version",
+        "source_tag",
+        "source_commit_sha"
+      ]
+    },
+    "scientific_question": {
+      "type": "string"
+    },
+    "base_configuration": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reference_model": {
+      "type": "object",
+      "required": [
+        "policy",
+        "source"
+      ]
+    },
+    "entrypoints": {
+      "type": "object",
+      "required": [
+        "run",
+        "verify"
+      ]
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "directory",
+        "committed"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
