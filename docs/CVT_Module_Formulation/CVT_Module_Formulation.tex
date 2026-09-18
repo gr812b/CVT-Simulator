@@ -74,6 +74,22 @@
 \NewDocumentCommand{\Fig}{m}{\cref{#1}}
 
 % =========================
+% Versioned implementation / results references
+% =========================
+\newcommand{\CINDERtag}{\texttt{cinder-v1.1.2}}
+\newcommand{\CINDERcommit}{\texttt{7637a38b4fb9ec21dfb953c1c80a27ec5f389654}}
+\NewDocumentCommand{\CINDERcode}{m m}{%
+  \href{https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.2/#1}%
+       {\texttt{\detokenize{#2}}}%
+}
+
+% Populate these three identifiers when the Results archive is frozen.
+\newcommand{\ResultsTag}{\texttt{TBD-after-results-freeze}}
+\newcommand{\ResultsCommit}{\texttt{TBD-after-results-freeze}}
+\newcommand{\ResultsDOI}{\texttt{TBD-after-results-freeze}}
+
+
+% =========================
 % Theory / Law block (drop-in replacement that auto-numbers correctly)
 % =========================
 % \theory{th:key}{Title}{<equation>}{<description>}{<source>}[<derivation>]
@@ -10304,569 +10320,205 @@ provides the initial condition for the next interval of continuous motion.
 \chapter{Results and Discussion}
 \label{chap:results}
 
-\section{Simulation Results}
-\label{sec:results}
+TODO: Roadmap
 
-This section compares four launch simulations: a nominal baseline case, a
-lighter-flyweight case, a steeper-helix case with reduced secondary torque
-reactivity, and a combined case with both a shallower initial primary ramp and
-a steeper helix. The purpose of these results is not to match experimental
-vehicle data directly, but to show that the model produces mechanically
-interpretable launch behaviour and responds to tuning changes in physically
-sensible ways.
+% ==============================================================
+\section{Computational Implementation and Reproducibility}
+\label{sec:results_implementation_reproducibility}
 
-The results are organized around the launch shift curves of these four cases.
-These curves first provide an overall picture of the launch, including
-engagement, low-ratio operation, active upshift, and high-ratio behaviour. The
-ratio terminology follows \Sec{sec:cvt_ratio}: low ratio means larger $R$
-(greater speed reduction), and high ratio means smaller $R$.
-following subsections then explain those trends by examining the axial force
-balance across the CVT and the resulting torque-transfer and slip behaviour. In
-particular, the combined case is included to show a clearly slip-dominated
-launch, in which the model predicts loss of the low-ratio hold and sustained
-slip through the early portion of the launch.
+The formulation developed in \Cref{chap:derivation} is implemented in the
+open-source CINDER simulator.  All Results studies in this manuscript use
+CINDER release \CINDERtag, pinned to commit \CINDERcommit.  The tagged source
+is available from
+\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}.
+Implementation details that are required to reproduce the numerical realization
+of the analytical equations
+are documented separately in \Cref{app:numerical_implementation}.  In
+particular, that appendix records the exact belt-geometry root solves, the
+fixed-$\lambda$ algebraic closure, affine actuator assembly, the nonlinear
+static-traction solve, and the hybrid time-integration procedure.
 
-Taken together, the four cases are intended to show three things: first, that
-the baseline tuning produces a coherent and interpretable launch trajectory;
-second, that changes to primary and secondary tuning shift the launch behaviour
-in the expected direction; and third, that when the tuning is made
-sufficiently unfavorable, the model captures the transition to prolonged
+The Results are organized around two additional layers of reproducibility data.
+First, parameters that describe the common physical CVT rather than a particular
+experiment are collected in \Cref{app:reference_configuration}.  The master
+physical-configuration table, \Cref{tab:results_common_parameters}, records each
+quantity together with its value and provenance.  This keeps dimensions,
+material properties, inertias, friction parameters, and actuator definitions out
+of the individual Results sections unless a study deliberately changes one of
+them.  A study-specific deviation therefore has a precise meaning: it is an
+override of the reference configuration rather than an independent, partially
+specified model.
 
-slipping rather than continuing to predict an unrealistic no-slip response.
-The implementation used to generate these simulations, along with repository,
-release, and data-access details, is documented in
-\Sec{sec:implementation-and-reproducibility}.
+Second, execution settings and study definitions are indexed in
+\Cref{app:study_reproducibility}.  Common solver settings are recorded in
+\Cref{tab:results_common_numerics}, while the study and case registry in
+\Cref{tab:results_case_registry} identifies the scientific purpose, host or
+boundary condition, base configuration, and explicit overrides for every
+paper-facing case. Several verification
+studies contain many operating points or reference cases.
 
-\subsection{Simulation Cases and Phase Convention}
-\label{sec:results_setup}
+\subsection{Versioned software and archival boundary}
+\label{sec:results_versioned_software}
 
-The results section compares four full-throttle launch simulations from rest.
-One case is treated as the nominal baseline, while the remaining three are
-targeted tuning variations chosen to isolate specific changes in CVT behaviour.
-All cases use the same vehicle, gearbox, tire, and engine model parameters;
-they differ only in the clutch tuning parameters noted below.
-
-\begin{table}[H]
-\centering
-\caption{Launch cases considered in the results section. All parameters not listed remain equal to the nominal baseline.}
-\label{tab:results_cases}
-\small
-\begin{tabular}{@{}lll@{}}
-\toprule
-\textbf{Case} & \textbf{Description} & \textbf{Purpose in results section} \\
-\midrule
-D & Default tuning & Baseline reference case \\
-F & Lighter flyweights & Shows the effect of reduced primary centrifugal clamping \\
-H & Steeper helix & Shows the effect of reduced secondary torque reactivity \\
-C & Shallower initial primary ramp + steeper helix & Produces a strongly slip-dominated launch \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-To keep the discussion consistent across the different plots, the launch is
-described in terms of a small number of recurring operating phases. These
-phases are not introduced as separate events for each case, but as common
-regions of behaviour used to interpret the launch trajectories and their
-underlying force and torque balances.
-
-Throughout the following subsections, these phases will be indicated directly on
-the plots using low-opacity background shading. The same color convention is
-used wherever possible so that the reader can track the evolution of each case
-across the shift, clamping-force, and torque-transfer results.
-
-The phase colors are
+The simulator release and the Results archive are treated as separate
+reproducibility objects.  The simulator tag fixes the implementation of the
+mechanical model and numerical algorithms.  The Results archive fixes the
+study definitions, configuration files, analysis scripts, and the generated
+paper-facing artifacts.  At final Results freeze, the latter will be identified
+by the following versioned records:
 
 \begin{itemize}
-    \item \textbf{engagement} --- light blue,
-    \item \textbf{low-ratio operation} --- light green,
-    \item \textbf{active upshift} --- light yellow, and
-    \item \textbf{high-ratio operation} --- light red.
+    \item Results release/tag: \ResultsTag,
+    \item Results commit: \ResultsCommit,
+    \item archival DOI: \ResultsDOI.
 \end{itemize}
 
-Not every case is expected to exhibit all four phases equally clearly. The phase shading is therefore
-used as a visual guide to the dominant operating regime, rather than as a claim
-that every boundary is perfectly sharp.
+The placeholders above are deliberately centralized in the preamble so that the
+final archival identifiers can be inserted without editing the scientific text.
+The Git repository remains useful for inspection and development history, but
+the frozen commit and archival DOI will define the canonical source for
+reproducing the published Results.
+
+\subsection{Configuration hierarchy}
+\label{sec:results_configuration_hierarchy}
+
+Each Results study is defined relative to a common physical configuration and,
+where applicable, a common numerical configuration.  The reference physical
+model is given in \Cref{tab:results_common_parameters}; common integration,
+contact-solver, event, and reporting settings are given in
+\Cref{tab:results_common_numerics}.  A Results subsection therefore needs to
+state only the quantities that are scientifically varied or otherwise differ
+from those references.  Full values are retained in the appendices and archived
+configuration files so that the main text can focus on the question being
+tested rather than repeatedly restating the complete simulator input set.
+
+The same convention applies to external hosts.  Engine, vehicle, prescribed
+actuator, flywheel, or dynamometer-like systems are not folded into the CVT
+parameter table.  They are identified with the study that uses them in
+\Cref{tab:results_case_registry}, consistent with the shaft-boundary separation
+introduced in \Cref{sec:system_definition}.  Consequently, replacing a host or
+actuator for a benchmark does not create a second CVT formulation; it changes a
+specified component or boundary around the same mechanical plant.
+
+\subsection{Study artifacts and traceability}
+\label{sec:results_artifact_traceability}
+
+Every manuscript figure or table generated from simulation will be traceable to
+a frozen study definition and archived source artifact.  The final mapping is
+recorded in \Cref{tab:results_artifact_index}.  The intended publication path is
+therefore
+
+\begin{equation}
+    \text{tagged CINDER implementation}
+    \;\longrightarrow\;
+    \text{frozen study configuration}
+    \;\longrightarrow\;
+    \text{machine-readable result}
+    \;\longrightarrow\;
+    \text{paper-facing figure or table}.
+    \label{eq:results_reproducibility_chain}
+\end{equation}
+
+This separation is important during the exploratory stage of the work because a
+study directory may contain intermediate sweeps or diagnostic plots that do not
+survive into the paper.  The publication archive will retain the final
+configuration and evidence needed to reproduce each reported claim; exploratory
+material is not itself part of the manuscript evidence unless it is explicitly
+indexed in \Cref{tab:results_artifact_index}.
+
+% ==============================================================
+\section{Mathematical Closure and Verification}
+\label{sec:results_verification}
+
+% TODO after Results freeze: write claim-driving prose and insert final artifacts.
+
+\subsection{Nonlinear Traction-Closure Structure}
+\label{sec:results_closure_structure}
+% TODO: conditioning / root structure / local branch discussion.
+
+\subsection{Mechanical Invariants and Operating-Domain Audit}
+\label{sec:results_mechanical_invariants}
+% TODO: broad invariant/capability suite and coverage summary.
+
+\subsection{Energy Consistency}
+\label{sec:results_energy_consistency}
+% TODO: work, stored energy, dissipation, and event bookkeeping closure.
+
+\subsection{Solver Convergence}
+\label{sec:results_solver_convergence}
+% TODO: tolerance, maximum-step, event-sequence, and timing refinement.
+
+% ==============================================================
+\section{Independent Transient-Model Benchmark}
+\label{sec:results_ballew_benchmark}
+
+% TODO after Results freeze: independent model-to-model benchmark against Ballew.
+
+\subsection{Benchmark Reconstruction}
+\label{sec:results_ballew_reconstruction}
+% TODO: reconstructed geometry, inputs, and implementation assumptions.
+
+\subsection{Force-Replay Protocol}
+\label{sec:results_ballew_force_replay}
+% TODO: prescribed forcing comparison.
+
+\subsection{Reconstructed Closed-Loop Protocol}
+\label{sec:results_ballew_closed_loop}
+% TODO: closed-loop comparison using reconstructed external plant/actuator logic.
+
+% ==============================================================
+\section{Dynamic Mechanics Retained by CINDER}
+\label{sec:results_dynamic_mechanics}
+
+% TODO after Results freeze: quantify when retained transient terms matter.
+
+\subsection{Primary Actuation Dynamics}
+\label{sec:results_primary_actuator_dynamics}
+% TODO: quasi-static versus dynamic primary-actuation study.
+
+\subsection{Secondary Helix Dynamics and Contact Topology}
+\label{sec:results_secondary_helix}
+% TODO: dynamic helix terms and selected-flank / bilateral topology study.
+
+\subsection{Reduced-Belt Transient Mechanics}
+\label{sec:results_reduced_belt_mechanics}
+% TODO: belt acceleration, shift acceleration, curvature, moving-radius, density continuation.
+
+% ==============================================================
+\section{Coupled Operation Across Regimes}
+\label{sec:results_coupled_regimes}
+
+% TODO after Results freeze: use complete trajectories as the scientific result.
+
+\subsection{Launch and Upshift}
+\label{sec:results_launch_upshift}
+% TODO: engagement, low-ratio seat, launch, and active upshift trajectory.
+
+\subsection{Load-Induced Backshift}
+\label{sec:results_backshift}
+% TODO: external load -> contact/axial response -> ratio -> shaft/vehicle response.
+
+\subsection{Reverse-Power Operation and Engine Braking}
+\label{sec:results_engine_braking}
+% TODO: reverse-power sign handling, contact switching, and hybrid architecture.
+
+% ==============================================================
+\section{Design and Tuning Consequences}
+\label{sec:results_design_consequences}
+
+% Optional final section.  Populate only if the final Results scope supports a
+% compact comparison whose purpose is interpretation rather than optimization.
+
+\subsection{Representative Tune Comparison}
+\label{sec:results_tune_comparison}
+% TODO: small set of deliberately distinct tunes, if retained in final manuscript.
 
 
-\subsection{Launch Shift Curves}
-\label{sec:results_shift_curves}
-
-The overall launch behaviour of the four tuning cases is first compared in
-\Cref{fig:shift_curves}. Each trajectory is plotted in
-engine-speed--vehicle-speed coordinates, so that engagement, ratio change, and
-the final high-ratio condition can all be viewed on the same axes. All four
-simulations begin from the same launch initial conditions,
-\[
-\omega_p(0) = \SI{1800}{rpm},
-\qquad
-\omega_s(0)=0,
-\]
-where \(\omega_p\) is the primary angular speed and \(\omega_s\) is the driven
-angular speed corresponding to zero vehicle speed. From this state, the system
-is released into a full-throttle forward simulation using the complete coupled
-model developed in the preceding sections.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{illustrations/results/cvt_shift_curves_four_cases.png}
-\caption{Engine-speed--vehicle-speed launch trajectories for the four tuning
-cases. The green line is the low-ratio limit, corresponding to a fully
-unshifted CVT. The red line is the high-ratio limit, corresponding to a fully
-shifted CVT. The blue shaded region to the left of the low-ratio line
-corresponds to launch engagement, where slip must be present. The yellow region
-between the two limit lines is the no-slip shift region.}
-\label{fig:shift_curves}
-\end{figure}
-
-The two reference lines are the kinematic no-slip limits of the CVT. The
-\textbf{low-ratio line} represents the fully unshifted transmission, where the
-CVT is in its torque-multiplying launch condition. The \textbf{high-ratio line}
-represents the fully shifted transmission, where the CVT has reached its final
-speed-increasing condition. Between these two limits lies the admissible shift 
-region. A trajectory cannot move to the right of the high-ratio
-line, and any portion of a trajectory lying to the left of the low-ratio line
-must involve slip, since even the fully unshifted CVT cannot support such a low
-vehicle speed for the corresponding engine speed.
-
-Read from left to right, the figure therefore shows the full launch sequence.
-The launch begins in the blue engagement region, where the vehicle is still too
-slow for no-slip operation. After crossing the low-ratio boundary, the
-trajectory enters the shift region. In a well-behaved launch, the CVT
-then tends to move approximately horizontally across this region, increasing
-vehicle speed while holding engine speed near a preferred operating value. This
-nearly horizontal portion will be referred to here as the
-\emph{flat-shift region}. As the shift completes, the trajectory approaches the
-high-ratio line, which forms the final no-slip boundary of the launch.
-
-With that interpretation in place, the differences between the four tuning
-cases are already visible. The \textbf{default} case shows the clearest
-baseline behaviour: a short engagement region, a brief low-ratio hold, and then
-a relatively flat shift through the middle of the plot before approaching the
-high-ratio boundary. This is the most balanced of the four trajectories, since
-it neither leaves low ratio too early nor rises excessively in engine speed
-during the main shift.
-
-The \textbf{lighter-flyweight} case retains low ratio for longer before
-crossing into the shift region. Its flat-shift portion is also noticeably
-higher in engine speed than the default case, so the launch spends more of the
-main shift at elevated primary speed. The overall shape is still recognizable
-as a conventional launch trajectory, but the shift is delayed and carried out
-at a higher engine-speed level.
-
-The \textbf{steeper-helix} case behaves differently. It leaves the low-ratio
-boundary much earlier, so the launch shows little sustained low-ratio hold.
-Its shift path is also less flat: instead of moving nearly horizontally across
-the shift region, it climbs upward more strongly as vehicle speed increases.
-This indicates that the launch does not settle into the same nearly constant
-engine-speed shift seen in the default case.
-
-The \textbf{combined slip-dominated} case is the most extreme. It remains in
-the engagement region for much longer, showing no clear low-ratio hold before
-entering the shift region. Once it does cross into the no-slip range, its shift
-still occurs at a comparatively high engine speed, and the early launch is much
-more dominated by slip than by clean low-ratio operation.
-
-At this stage, \Cref{fig:shift_curves} is intended to establish the overall
-shape of the four launches and the main qualitative differences between them.
-The key observations are the amount of low-ratio retention, the height and
-flatness of the main shift segment, and the extent of the initial slip-dominated
-portion of the launch. The following subsections explain these differences in
-terms of the underlying axial force balance and torque-transfer behaviour of the
-CVT.
-
-
-\subsection{Axial Force Balance Through the Launch}
-\label{sec:results_axial_forces}
-
-The shift-curve trajectories of \Cref{fig:shift_curves} indicate when each case
-remains near low ratio, when it begins to upshift, and how quickly it reaches
-high ratio. To explain those differences mechanically,
-\Cref{fig:axial_force_panels} compares the total axial force acting on the
-primary and secondary pulleys for each tuning case, with the same launch phases
-shaded in the background.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.98\textwidth]{illustrations/results/cvt_pulley_axial_forces_2x2.png}
-\caption{Primary and secondary total axial forces during launch for the four
-tuning cases. Blue curves show total primary axial force, orange curves show
-total secondary axial force. Background shading indicates the clutching,
-low-ratio, shifting, and high-ratio phases defined earlier.}
-\label{fig:axial_force_panels}
-\end{figure}
-
-These plots should be read as force-balance diagrams for the shift. While the
-secondary axial force exceeds the primary axial force, the transmission is held
-toward low ratio. Once the primary force overtakes the secondary, the pulley
-pair is driven into upshift. The timing of that crossover therefore determines
-how long the launch remains near low ratio and how early the transmission begins
-moving through its ratio range.
-
-The \textbf{default} case shows the most balanced behaviour. During the initial
-clutching phase, the secondary force begins noticeably above the primary force,
-so the transmission is held near its low-ratio condition rather than shifting
-immediately. This produces the short but clear low-ratio hold seen previously
-in \Cref{fig:shift_curves}. As the launch progresses, the primary axial force
-rises and eventually overtakes the secondary, initiating the main upshift.
-Importantly, the secondary force does not remain fixed while this happens. It
-also rises throughout the shift, so the system continues to resist ratio change
-even after upshift begins. This is mechanically important: if the secondary
-force stayed nearly constant while the primary force rose rapidly, the
-transmission would sweep through the shift range much more abruptly. Instead,
-both sides grow together, giving the default case its smoother and more
-controlled shift.
-
-The \textbf{lighter-flyweight} case makes this point especially clear. Relative
-to the default case, the primary force is reduced in the early launch, while the
-secondary remains comparatively strong. The initial force gap is therefore
-larger, meaning the low-ratio condition is held more firmly and for longer.
-This matches the longer low-ratio segment seen in the shift curves. Later in
-the launch, the primary still rises enough to drive upshift, but it does so
-later and at a higher engine-speed level than in the default case. In other
-words, this case does not fundamentally change the character of the shift; it
-mainly delays it by weakening the primary closing tendency during engagement and
-early launch.
-
-The \textbf{steeper-helix} case behaves differently. Here, the initial
-difference between secondary and primary force is very small, and the primary
-overtakes the secondary much earlier. This explains why the corresponding shift
-curve showed little sustained low-ratio hold and entered the shifting region so
-quickly. We also see a differently shaped force evolution throughout the shift
-itself. In the default and lighter-flyweight cases, both forces continue rising
-together in a gradual way through the main shift region. In the steeper-helix
-case, both forces rise sharply early on and then level off much sooner. The two
-forces still remain relatively close to one another, but the overall shape they
-trace is different. This helps explain why the earlier shift curve did not
-display the same flat-shift behaviour as the default case. Rather than
-maintaining a long, nearly constant-speed shift, the transmission shows a more
-rising shift trajectory, consistent with this less gradual force evolution.
-
-The \textbf{slip-dominated} case is the most extreme. Its early launch is
-characterized by a prolonged clutching phase and no meaningful low-ratio hold.
-This is consistent with the earlier shift-curve figure, where the trajectory
-spent much longer in the slip-dominated region before entering the no-slip
-shift region. Importantly, the beginning of geometric shift does not imply that
-the system has already stopped slipping. It only indicates that the shift
-coordinate has begun to move away from its initial value. The more important
-feature in this case is the low magnitude of both axial forces in the early
-launch. Compared with the other cases, neither pulley develops a strong axial
-loading during the initial portion of the event. This weak overall clamping is
-a key reason why this case behaves poorly, and it will be seen more directly in
-the following torque-transfer plots where the associated slip remains elevated
-for much longer.
-
-One additional feature is visible near the beginning of each case. The early
-spike in secondary axial force is the torque-reactive contribution of the
-secondary. It appears most strongly during the initial launch when transmitted
-torque rises rapidly, and it provides an immediate resisting effect against
-premature upshift. This feature is especially useful because it shows that the
-secondary is responding dynamically to transmitted torque rather than acting as
-a static spring-only restraint. The influence of this torque reactivity will be
-seen more directly in the following torque-transfer results, but its signature
-is already visible here in the early force histories.
-
-Taken together, \Cref{fig:axial_force_panels} provides the mechanical
-explanation for the differences observed in \Cref{fig:shift_curves}. A larger
-initial gap between secondary and primary force corresponds to stronger
-low-ratio retention, as seen in the lighter-flyweight case. A very small gap
-corresponds to premature upshift, as seen in the steeper-helix case. The
-default case lies between these extremes and therefore produces the most
-balanced launch. Perhaps most importantly, the figure shows that the shift is
-not driven by the primary alone. The secondary rises with it throughout the
-launch, and the actual shift behaviour emerges from the evolving balance between
-the two rather than from either force in isolation. At the same time, this
-figure only explains the shift tendency and overall clamping levels; it has not
-yet quantified the resulting slip behaviour, which is addressed next.
-
-
-\subsection{Torque Bounds, No-Slip Demand, and Coupling Torque}
-\label{sec:results_torque_bounds}
-
-The force-balance results of \Cref{fig:axial_force_panels} explain when each
-case tends to remain at low ratio and when it begins to shift. However, force
-balance alone does not determine whether the belt is actually able to transmit
-the torque required for sticking. To examine that question,
-\Cref{fig:torque_bounds} compares four quantities during the launch: the
-primary and secondary traction bounds, the no-slip coupling torque
-\(\tau_{\mathrm{ns}}\), and the actual transmitted coupling torque
-\(\tau_c\).
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.98\textwidth]{illustrations/results/cvt_torque_bounds_2x2.png}
-\caption{Torque bounds, no-slip demand, and actual coupling torque for the four
-tuning cases. Blue and orange curves show the primary and secondary bounds,
-with the active bound drawn solid and the inactive bound dotted. The black curve
-shows the no-slip torque demand \(\tau_{\mathrm{ns}}\), and the red curve shows
-the actual transmitted coupling torque \(\tau_c\). Background shading indicates
-the clutching, low-ratio, shifting, and high-ratio phases defined earlier.}
-\label{fig:torque_bounds}
-\end{figure}
-
-These plots should be read as traction-capacity diagrams. At any instant, the
-belt can only remain in stick if the required no-slip torque lies inside the
-admissible interval defined by the active upper and lower bounds. When
-\(\tau_{\mathrm{ns}}\) lies inside that interval, the actual coupling torque
-can follow the no-slip demand closely. When \(\tau_{\mathrm{ns}}\) exceeds the
-available bounds, sticking is no longer admissible and the transmitted torque
-must saturate at the corresponding active limit.
-
-A first broad trend is immediately visible. The cases that settle out of slip
-early in the launch are precisely the cases with larger admissible positive
-torque capacity during the initial clutching and low-ratio phases. In the
-\textbf{default} and \textbf{lighter-flyweight} cases, the upper torque bound
-rises to a relatively large value early in the launch. This gives the system
-enough admissible coupling torque to reduce the belt-speed mismatch and recover
-toward sticking. By contrast, the \textbf{slip-dominated} case begins with
-essentially no admissible positive torque and only develops usable capacity
-more gradually. That lower early torque capacity directly explains why the
-slip-dominated case spends much longer in the clutching region.
-
-This same distinction appears in the evolution of \(\tau_c\). In the cases that
-recover stick early, the actual coupling torque relaxes toward and then tracks
-the no-slip demand through the end of clutching and into low-ratio operation.
-Once low-ratio launch is established, the red and black curves remain close,
-indicating that the required torque stays admissible and sustained slip is not
-reintroduced immediately.
-
-A second important pattern appears once the transmission begins to shift. In
-all four cases, the no-slip torque rises during the shift phase. This is
-consistent with the form of \(\tau_{\mathrm{ns}}\), in which the ratio-rate term
-becomes active once the CVT begins moving away from its initial ratio. In the
-\textbf{default} and \textbf{lighter-flyweight} cases, this rise remains below
-the admissible upper torque bound, so the actual coupling torque continues to
-follow the no-slip demand and large renewed slip does not occur. In the
-\textbf{steeper-helix} and \textbf{slip-dominated} cases, however,
-\(\tau_{\mathrm{ns}}\) rises above the admissible upper bound during the shift.
-At that point, sticking is no longer feasible, the actual coupling torque
-saturates at the active maximum, and renewed slip appears until the state
-returns closer to the sticking condition.
-
-The \textbf{steeper-helix} and \textbf{slip-dominated} cases also show visibly oscillatory
-behaviour in the no-slip torque during the shift onset. This is consistent with
-the oscillations already seen in the preceding axial-force plots. The most
-direct source is the ratio-rate contribution to \(\tau_{\mathrm{ns}}\): if the
-shift dynamics are not smooth, then the implied no-slip torque need not evolve
-smoothly either. In these two poorer tuning cases, the shift motion appears
-more weakly damped, so the no-slip torque exhibits stronger excursions during
-the transition into active shifting. A plausible reason is that the present
-model neglects parasitic losses and other non-critical frictional effects,
-which in a real system would provide additional damping and suppress some of
-this oscillatory behaviour. This is therefore a useful limitation to note: the
-model captures the overall stick--slip transitions and the active limiting
-mechanism, but the transient oscillations in the most aggressive cases are
-likely amplified by the intentionally idealized loss assumptions.
-
-Another common feature is the gradual relaxation of the actual coupling torque
-toward the no-slip demand rather than an instantaneous snap to it. This comes
-from the regularized transition law used in the simulation, discussed in
-Appendix \ref{sec:appendix-slip-regularization}, which replaces a discontinuous switch with a smooth \(\tanh\)-based
-approximation. Its purpose is numerical: it reduces chattering and improves
-stability near the stick--slip transition. The effect is visible here as a
-slight lag in the recovery of perfect sticking, but it does not change the main
-qualitative behaviour of the four cases. The same limiting patterns are still
-present, and the cases that lose admissibility remain clearly distinguishable
-from those that do not.
-
-Finally, each case shows a noticeable jump in the admissible torque bound once
-full sticking is re-established near the end of the launch. This reflects the
-change in limiting behaviour used by the model after slip is removed, together
-with the corresponding increase in effective friction behaviour assumed in the
-sticking regime. The important point for the present discussion is that this
-jump occurs only after the system has already relaxed back toward the no-slip
-state; it is therefore a consequence of stick recovery rather than its cause.
-
-Taken together, \Cref{fig:torque_bounds} closes the interpretation begun in the
-previous two subsections. The shift curves showed the overall launch behaviour,
-and the axial-force plots explained the tendency to hold or leave low ratio.
-The present figure then shows whether the required coupling torque is actually
-admissible throughout those phases. The default and lighter-flyweight cases
-maintain sufficient positive torque capacity to recover stick early and remain
-near the no-slip demand through the main shift. The steeper-helix and
-slip-dominated cases do not: in both, the no-slip torque exceeds the available
-upper bound during the shift, forcing the actual coupling torque to saturate and
-reintroducing slip. In this way, the torque plots both confirm the solid
-patterns seen earlier and reveal one of the model's clearest shortcomings: the
-most weakly damped cases display exaggerated oscillatory transients due to the
-idealized loss assumptions.
-
-\subsection{Launch Performance Comparison}
-\label{sec:results_performance}
-
-The preceding subsections established the mechanical differences between the
-four tuning cases. The shift-curve plots showed the overall launch trajectory,
-the axial-force plots explained the tendency to hold or leave low ratio, and
-the torque-bound plots showed whether the required coupling torque remained
-admissible throughout the launch. The final step is to compare how those
-differences affect overall launch performance.
-
-Two simple metrics are used here: the time required to travel
-\SI{50}{m}, and the time required to reach \SI{60}{km/h}. These are useful
-because they summarize the launch in two complementary ways. The
-\SI{50}{m} time reflects the integrated quality of the launch as a whole,
-while the \SI{60}{km/h} time emphasizes how quickly the drivetrain can build
-vehicle speed through the main acceleration phase.
-
-\begin{table}[H]
-\centering
-\caption{Launch performance metrics for the four tuning cases.}
-\label{tab:launch_performance}
-\small
-\begin{tabular}{@{}lcc@{}}
-\toprule
-\textbf{Case} & \textbf{Time to \SI{50}{m} [s]} & \textbf{Time to \SI{60}{km/h} [s]} \\
-\midrule
-Default & 3.93 & 2.27 \\
-Lighter flyweights & 4.26 & 2.78 \\
-Steeper helix & 4.19 & 2.82 \\
-Slip-dominated case & 4.41 & 2.98 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The default case performs best on both metrics, which is consistent with the
-earlier mechanism-level results. It develops enough admissible coupling torque
-to reduce slip early, retains low ratio long enough to launch effectively, and
-then transitions into a controlled shift without reintroducing large sustained
-slip. This is the most balanced use of the CVT: the transmission first allows a
-strong initial torque transfer into the driveline, and then continues
-accelerating the vehicle while keeping the shift progression smooth and
-admissible.
-
-This point is worth emphasizing. The coupling torque plays two roles at once.
-It is the torque that loads the engine through the transmission, limiting how
-freely the primary (and therefore the engine) can accelerate, and it is also the torque delivered through
-the CVT that accelerates the vehicle from rest. A strong early coupling torque
-is therefore beneficial when it is admissible, because it quickly pulls the
-belt-speed mismatch down and simultaneously applies useful drive torque to the
-vehicle. The default case benefits from exactly this behaviour: it uses the
-initial slip region to establish a relatively large transmitted torque early in
-the launch, which helps ``kick-start'' vehicle acceleration before the main
-shift begins.
-
-The lighter-flyweight case performs worse on both metrics, even though its
-shift remains comparatively well behaved. This matches the earlier
-interpretation that its main drawback is delayed primary loading during the
-early launch. By holding low ratio longer but developing less aggressive early
-coupling, it sacrifices initial acceleration and does not recover that loss
-later.
-
-The steeper-helix case shows a different trade-off. It leaves low ratio too
-early and re-enters slip during the shift, which degrades the quality of the
-launch. However, because it still develops appreciable coupling torque early in
-the event, its \SI{50}{m} time remains slightly better than the
-lighter-flyweight case. Its slower time to \SI{60}{km/h}, on the other hand, is
-consistent with the less stable shift behaviour and the renewed slip seen in
-the torque-bound plots.
-
-The slip-dominated case performs worst overall. This is the expected result from
-the earlier figures: its early clamping forces are weakest, its admissible
-torque rises too slowly, and its launch remains slip-dominated for too long.
-As a result, it spends too much of the start of the event establishing torque
-transfer rather than converting that torque cleanly into forward acceleration.
-
-Overall, these performance metrics support the mechanism-level interpretation
-developed throughout the section. The best launch is not produced by simply
-holding low ratio as long as possible, nor by shifting as early as possible.
-Instead, good performance requires a balance: sufficient early admissible
-coupling torque to accelerate the vehicle strongly from rest, enough low-ratio
-retention to avoid premature upshift, and a smooth enough shift that the
-required no-slip torque does not repeatedly exceed the available traction
-limits.
-
-\section{Implementation and Reproducibility}
-\label{sec:implementation-and-reproducibility}
-
-The source code for the CVT simulator used in this work is available at
-\url{https://github.com/gr812b/CVT-Simulator}.
-This implementation includes the mathematical model developed in the main
-derivation sections along with the practical numerical regularization strategy
-described in \Sec{sec:appendix-slip-regularization}.
-
-To support reproducibility, the exact version used to generate the figures and
-tables in this manuscript will be archived as a tagged release:
-\begin{itemize}
-    \item repository release (to be finalized):
-      \url{https://github.com/gr812b/CVT-Simulator/releases/tag/vX.Y.Z},
-    \item archival DOI landing page (placeholder):
-      \url{https://doi.org/XX.XXXX/zenodo.XXXXXXX}.
-\end{itemize}
-
-Unless otherwise stated, simulation cases in \Sec{sec:results} correspond to
-that archived release. The repository README and release notes describe the
-execution workflow, configuration files, and plotting scripts used to produce
-the reported results.
-
-An interactive web deployment of the simulator is also available for
-demonstration purposes:
-\url{https://cvt.kaiarseneau.dev}.
-This live endpoint is provided for accessibility and does not replace the
-archived release as the canonical reproducibility artifact.
-
-\section{Conclusion}
-\label{sec:conclusion}
-
-This work developed a unified first-principles dynamic model for a
-mechanically actuated dry rubber V-belt CVT and its coupling to the vehicle
-drivetrain. Starting from pulley geometry, belt-length closure, actuator
-mechanics, and rotational dynamics, the derivation produced a closed nonlinear
-state-space formulation in which ratio evolution, torque transmission, slip
-admissibility, and vehicle response are solved consistently in time.
-
-The completed formulation brings together several mechanisms that strongly
-govern mechanically actuated CVT behaviour: primary flyweight actuation,
-secondary torque-reactive helix clamping, belt geometric closure, axial shift
-dynamics, traction-limited torque transfer, and longitudinal drivetrain
-coupling. The main outcome is a single dynamic framework in which these effects
-interact directly, while remaining mechanically interpretable in terms of the
-underlying pulley forces, ratio change, and torque limits.
-
-The simulation results showed coherent launch behaviour across the tuning cases
-considered. The shift-curve results captured distinct differences in
-engagement, low-ratio retention, main-shift shape, and approach to high ratio.
-The axial-force results showed that these differences could be traced back to
-the evolving balance between primary and secondary clamping. The torque-bound
-results then showed when the no-slip coupling demand remained admissible and
-when renewed slip was forced by the available traction limits. Together, these
-results formed a consistent mechanism chain from tuning changes, to force
-balance, to torque admissibility, to overall launch behaviour.
-
-An important outcome of the study is that the model preserved physical
-intuition across multiple levels. Changes in tuning did not simply produce
-different output curves; they produced changes that remained understandable in
-mechanical terms. Stronger or weaker low-ratio retention appeared through the
-initial clamping-force gap, earlier or later upshift appeared through the
-timing of force crossover, and reintroduced slip appeared when the no-slip
-torque rose beyond the admissible coupling bounds. This consistency gives
-confidence that the formulation is capturing the dominant interactions it was
-intended to represent.
-
-The results also highlighted useful limitations of the present model. In the
-more aggressive cases, the no-slip torque demand exhibited visibly underdamped
-oscillatory transients during shift onset. These were consistent with
-irregular shift-rate evolution in the model and suggest that the idealized loss
-assumptions, particularly the neglect of parasitic losses and other
-non-critical frictional effects, leave the system with less damping than would
-be expected in real hardware. The formulation also remains limited to
-one-dimensional vehicle motion and does not yet include thermal effects, wear
-progression, or more detailed tribological contact evolution.
-
-Overall, the present work provides a physically transparent dynamic foundation
-for understanding mechanically actuated CVT behaviour during transient launch
-events. Its main value is not only that it closes the governing mechanisms into
-one consistent dynamical system, but also that the resulting behaviour remains
-traceable back to clear mechanical causes. With further parameter
-identification, experimental validation, and extension to include more
-realistic damping and loss mechanisms, the framework developed here can serve
-as a useful basis for both engineering interpretation and future
-design-oriented CVT simulation.
-
-\newpage
 \bibliographystyle{plainnat}
-\addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{../../refs/References}
+\bibliography{../../refs/References,CINDER_Appendix_References}
 
 \appendix
+
 
 \chapter{Belt Length Small-Angle Approximation}\label{sec:approximation-validation}
 
@@ -11279,230 +10931,580 @@ can still produce materially inaccurate dynamics near maximum shift.
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
 
-\chapter{Numerical Methods Summary}\label{sec:appendix-numerics}
+\chapter{Numerical Implementation}
+\label{app:numerical_implementation}
 
-This section documents the numerical algorithms used for belt-geometry root
-finding and dynamic simulation, including the specific tolerances, bracketing
-strategies, and solver configurations employed in the implementation.
+\noindent\textit{Implementation version: \CINDERtag\ (commit \CINDERcommit).}
 
-% --------------------------------------------------------------
-\section{Root Finding for Belt-Length Constraint}
+\section{Numerical Solution of Belt Geometry}
+\label{app:num_geometry}
 
-Given a known primary outer radius $r_1$ and fixed center-to-center distance
-$C$, the secondary outer radius $r_2$ is the unique root of the belt-length
-constraint. This scalar root problem is obtained by rearranging the exact belt
-length closure from \Eq{eq:belt_length_constraint} into the residual form:
+The exact belt geometry derived in
+\Cref{sec:belt_loop_geometry,sec:pulley_coordinate_mapping} is retained in the
+implementation.  The scalar belt-length roots are evaluated with SciPy's
+\texttt{scipy.optimize.brentq} routine \citep{Virtanen2020}.
+
+At construction time, the specified zero-shift radii $r_{p,0}$ and $r_{s,0}$
+are used to solve once for the fixed pulley centre distance $C$.  With
+$\Delta r_0=r_{s,0}-r_{p,0}$, the lower bound is
+
 \begin{equation}
-g(r_2;\,r_1)
-=
-\pi(r_1+r_2)
-+ 2(r_2-r_1)\arcsin\!\left(\frac{r_2-r_1}{C}\right)
-+ 2\sqrt{C^2-(r_2-r_1)^2}
-- L_b
-= 0,
-\label{eq:belt_constraint_g}
+    C_{\mathrm{lo}}=r_{p,0}+r_{s,0},
+    \label{eq:appendix_center_distance_lower_bound}
 \end{equation}
-where $L_b$ is the fixed belt length. A separate invocation solves for the
-center-to-center distance $C$ itself at initialization, using the same equation
-evaluated at the boundary radii $(r_{1,\min},\, r_{2,\max})$ with $C$ as the
-unknown; this is exactly the initialization step implied by
-\Eq{eq:belt_length_constraint} before the ratio law \Eq{eq:R_of_s_complete} can be
-evaluated over the shift range.
 
-\paragraph{Bracketing strategy.}
+which prevents overlap of the two outer belt envelopes.  The upper bound
+follows from the exact wrap geometry.  Since
 
-The $\arcsin$ term in \Eq{eq:belt_constraint_g} is real only when
-$|r_2 - r_1| \le C$, so the natural domain for $r_2$ is the open interval
-$(r_1 - C,\, r_1 + C)$. Within this interval a sign change is guaranteed:
-at the lower boundary $r_2 \to r_1 - C$, the $\arcsin$ saturates to $-\pi/2$
-and the square root vanishes, giving
-$g \to 2\pi r_1 - 2\pi C - L_b < 0$ for all physically valid parameters.
-At the upper boundary $r_2 \to r_1 + C$, by symmetry
-$g \to 2\pi r_1 + 2\pi C - L_b > 0$, satisfied whenever the belt length is
-less than the circumference subtended by the wider pulley pair --- a
-requirement any real CVT must satisfy. A small safety margin
-$\varepsilon = \num{e-9}$~m is applied at both ends to keep $\arcsin$ away
-from its domain boundary where the function becomes numerically steep.
-
-For center-to-center distance solving, the bracket is instead the interval
-$(\Delta r + \varepsilon,\; L_b/2)$, where $\Delta r = |r_{2,\mathrm{eff}} -
-r_{1,\mathrm{eff}}|$ is the effective-radius difference at the boundary
-configuration. The lower bound ensures $\arcsin$ is defined; the upper bound
-is a conservative geometric limit (a straight two-span belt cannot exceed
-$L_b$ across a gap of $L_b/2$). Both brackets are validated by an explicit
-sign-change check before invoking the solver, so any failure to bracket
-immediately identifies an infeasible geometry rather than producing a silent
-wrong answer.
-
-\paragraph{Brent's method.}
-
-Both roots are found using \texttt{scipy.optimize.brentq}, an implementation
-of Brent's algorithm~\cite{Brent1973}. The method combines three strategies:
-bisection (guaranteed bracket-halving), secant interpolation (superlinear
-convergence near smooth roots), and inverse quadratic interpolation
-(order-$\approx 1.84$ convergence when three previous iterates are
-well-conditioned). Whenever the faster interpolation steps would place the
-next iterate outside the current bracket, the algorithm falls back to
-bisection, preserving the worst-case $O(\log_2(1/\varepsilon))$ guarantee of
-pure bisection. Because the sign-change brackets described above are
-guaranteed for all valid CVT geometries, \texttt{brentq} is certain to
-converge. Both root solves use an absolute tolerance of $\num{e-9}$~m, well
-below any physically meaningful length precision.
-
-% --------------------------------------------------------------
-\section{ODE Integration for Dynamic Simulation}
-
-The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s}, v_b)$
-is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
-is written as a first-order ODE system in \Eq{eq:final_cvt_system_complete},
-with rotational sub-equations \Eq{eq:omega_p_dot_complete} and
-\Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, belt-speed
-dynamics for $v_b$, and algebraic geometry closures
-\Eq{eq:R_of_s_complete} and \Eq{eq:Rdot_of_states_complete}. Although
-\Eq{eq:s_ddot_complete} is second-order in $s$, introducing $(s,\dot s)$ as
-separate states converts the complete model to first-order form for time integration. The
-time integrator is used with the
-\texttt{RK45} method --- the Dormand--Prince explicit embedded Runge--Kutta
-pair~\cite{DormandPrince1980}. The method propagates the state with a
-5th-order formula and simultaneously computes a 4th-order companion estimate
-for local error control, using the same six function evaluations. The tableau
-is FSAL (first-same-as-last): the final stage of each accepted step is
-reused as the first stage of the next, so only five new evaluations are
-needed per step in steady operation.
-
-\paragraph{Adaptive step size control.}
-
-At each candidate step the per-component local error estimate $\hat{e}_i$
-is compared to a mixed tolerance threshold. A step is accepted when
 \begin{equation}
-\max_i \frac{|\hat{e}_i|}{\mathrm{atol} + \mathrm{rtol}\cdot|y_i|}
-\le 1,
+\begin{aligned}
+    r_p\phi_p+r_s\phi_s
+    & = \pi(r_p+r_s)
+      +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\\
+    & \geq \pi(r_p+r_s),
+\end{aligned}
+\label{eq:appendix_minimum_wrapped_length}
 \end{equation}
-and the next step size is scaled proportionally to $(\mathrm{tol}/\hat{e})^{1/5}$.
-The tolerances used in this work are $\mathrm{atol} = \num{e-6}$ and
-$\mathrm{rtol} = \num{e-4}$ (Table~\ref{tab:solver_tols}).
-The absolute floor prevents spurious step rejection when a state variable
-passes through zero (e.g.\ $\dot{s} \approx 0$ at shift equilibrium or
-$\omega_p \approx 0$ at engine start), where a purely relative criterion
-would demand unreachable accuracy.
+
+the two straight spans can use at most
+$L_b-\pi(r_{p,0}+r_{s,0})$ of the belt.  Therefore
+
+\begin{equation}
+    C_{\mathrm{hi}}
+    =
+    \sqrt{
+        \Delta r_0^2
+        +
+        \left[
+            \frac{L_b-\pi(r_{p,0}+r_{s,0})}{2}
+        \right]^2
+    }.
+    \label{eq:appendix_center_distance_upper_bound}
+\end{equation}
+
+The residual is checked at both endpoints before iteration.  An endpoint is
+accepted when the absolute belt-length residual is no greater than
+$10^{-12}\,\mathrm{m}$; otherwise a sign change is required and Brent iteration
+uses an absolute root-location tolerance of $10^{-12}\,\mathrm{m}$.  These
+physical bounds avoid a broad numerical search.
+
+Once $C$ is fixed, construction performs one additional broad solve at
+$s=s_{\max}$ to determine the opposite endpoint of the secondary travel.  The
+primary radius is explicit,
+
+\begin{equation}
+    r_{p,\max}
+    =
+    r_{p,0}
+    +
+    \frac{s_{\max}-s_{\mathrm{dz}}}{2\tan\beta},
+    \label{eq:appendix_primary_radius_max_shift}
+\end{equation}
+
+and the secondary endpoint is solved in
+
+\begin{equation}
+\begin{aligned}
+    r_{s,\mathrm{lo}}^{\mathrm{setup}} &= h_b,\\
+    r_{s,\mathrm{hi}}^{\mathrm{setup}}
+    &=
+    \min\!\left(
+        C-r_{p,\max},
+        \frac{L_b}{\pi}-r_{p,\max}
+    \right).
+\end{aligned}
+\label{eq:appendix_secondary_setup_bounds}
+\end{equation}
+
+The lower bound keeps the complete belt cross-section outside the pulley axis;
+the two upper bounds prevent envelope overlap and enforce
+\Cref{eq:appendix_minimum_wrapped_length}.  The solved maximum-shift radius and
+the specified zero-shift radius are then stored as the runtime bracket,
+
+\begin{equation}
+    r_s(s)\in\left[r_s(s_{\max}),\,r_s(0)\right].
+    \label{eq:appendix_secondary_runtime_bracket}
+\end{equation}
+
+Thus every ordinary geometry evaluation solves only one scalar radius root on
+a tight, precomputed physical interval.  Remaining radius references are fixed
+offsets, while first and second radius derivatives are evaluated analytically
+from the differentiated belt-length closure rather than by finite differences.
+At $s=s_{\mathrm{dz}}$, separate deadzone-side and engaged-side evaluations
+provide the appropriate one-sided derivative while preserving the common
+boundary position.
+
+\paragraph{Code reference}
+The geometry implementation is contained in
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_length.py}{belt_length.py},
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/spec.py}{spec.py}, and
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_pulley.py}{belt_pulley.py}.
+
+\section{Fixed-$\lambda$ Engaged Mechanical Closure}
+\label{app:num_fixed_lambda}
+
+For a proposed signed traction pair $(\lambda_p,\lambda_s)$,
+\Cref{sec:engaged_mechanical_core} presents the freely shifting engaged
+mechanics after eliminating the two pulley torques.  The implementation retains
+those torques as simultaneous unknowns,
+
+\begin{equation}
+    \vect{z}_{\mathrm{impl}}
+    =
+    \begin{bmatrix}
+        \dot\omega_p & \dot\omega_s & \dot v_b & \ddot s &
+        \tau_p & \tau_s & N_p & N_s
+    \end{bmatrix}^{\mathsf T},
+    \label{eq:appendix_eight_unknown_closure}
+\end{equation}
+
+and keeps the two traction rows explicit,
+
+\begin{equation}
+    \frac{\tau_p}{r_{p,\mathrm{eff}}}+\lambda_pN_p=0,
+    \qquad
+    \frac{\tau_s}{r_{s,\mathrm{eff}}}+\lambda_sN_s=0.
+    \label{eq:appendix_explicit_traction_rows}
+\end{equation}
+
+Eliminating $\tau_p$ and $\tau_s$ recovers the reduced six-variable system, so
+no physical degree of freedom is added.  Retaining torque keeps torque-reactive
+mechanisms coupled directly to the simultaneous solve and avoids ever needing
+to recover $N_j$ by dividing a solved torque by $\lambda_j$.  At
+$\lambda_j=0$, the explicit traction row simply requires $\tau_j=0$ while the
+remaining balances determine $N_j$.
+
+\subsection{Equilibrated linear solve}
+\label{app:num_equilibrated_solve}
+
+The closure mixes accelerations, torques, forces, and normal resultants, so the
+raw matrix contains substantially different coefficient scales.  CINDER
+therefore equilibrates the algebraically identical system before the dense
+solve.  For $\vect{A}\vect{z}=\vect{b}$,
+
+\begin{equation}
+    \vect{A}_s=\vect{D}_r\vect{A}\vect{D}_c,
+    \qquad
+    \vect{b}_s=\vect{D}_r\vect{b},
+    \qquad
+    \vect{z}=\vect{D}_c\vect{y}.
+    \label{eq:appendix_equilibrated_system}
+\end{equation}
+
+Each row scale is the reciprocal of the largest absolute magnitude in that row
+or its right-hand side; column scales are then formed from the row-scaled
+matrix.  The scaled system is solved directly and mapped back to physical
+unknowns.  Residuals are still evaluated against the unscaled equations.
+Diagnostic solves additionally expose rank and raw/equilibrated condition
+numbers.  The scaling changes numerical conditioning, not the mechanics.
+
+\subsection{Regular evaluation through zero traction}
+\label{app:num_zero_traction}
+
+The wrap solution is analytically regular at $\lambda_j=0$, as shown in
+\Cref{eq:wrap_zero_traction_solution}.  Zero signed traction is therefore not a
+new mechanical regime: a clamped contact may pass continuously through
+$\lambda_j=0$ while retaining $N_j>0$.  The implementation preserves that
+continuity and changes only how the limiting coefficients are evaluated.
+With $z=\lambda_j\phi_j/\sin\beta$,
+
+\begin{equation}
+    \Phi_-(z)=\frac{1-e^{-z}}{z},
+    \qquad
+    \Psi_-(z)=\frac{z-1+e^{-z}}{z^2}.
+    \label{eq:appendix_regular_wrap_functions}
+\end{equation}
+
+For $|z|<10^{-4}$, CINDER evaluates the local series
+
+\begin{equation}
+\begin{aligned}
+    \Phi_-(z)
+    &=1-\frac{z}{2}+\frac{z^2}{6}-\frac{z^3}{24}+\frac{z^4}{120},\\
+    \Psi_-(z)
+    &=\frac{1}{2}-\frac{z}{6}+\frac{z^2}{24}-\frac{z^3}{120}+\frac{z^4}{720},
+\end{aligned}
+\label{eq:appendix_regular_wrap_series}
+\end{equation}
+
+and uses \texttt{expm1}-based expressions outside that neighbourhood.  This
+uses the regularity already proved by the formulation rather than introducing
+an artificial zero-traction topology change.
+
+\paragraph{Code reference}
+The closure basis and linear solve are implemented in
+\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py} and
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/trial_system.py}{trial_system.py};
+row assembly is in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equations.py}{equations.py},
+and the regular wrap functions are evaluated in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equation_context.py}{equation_context.py}.
+
+\section{Affine Assembly of Mechanical Contributions}
+\label{app:num_affine_assembly}
+
+The actuator mechanics derived in
+\Cref{sec:axial_actuation_balances,sec:pulley_rotational_dynamics} must remain
+coupled to the simultaneous mechanical solve rather than being evaluated as
+external scalar forces.  Once the current state, geometry, and trial traction
+pair are frozen, the retained mechanism equations are affine in the
+instantaneous closure unknowns even though their coefficients may depend
+nonlinearly on position or speed.  A contribution is therefore represented as
+
+\begin{equation}
+    q(\vect{z}_{\mathrm{impl}})
+    =q_0+\vect{g}^{\mathsf T}\vect{z}_{\mathrm{impl}}.
+    \label{eq:appendix_affine_contribution}
+\end{equation}
+
+For example, if a mounted mechanism uses a local pulley coordinate $x_j(s)$,
+
+\begin{equation}
+    \ddot x_j=x_j''(s)\dot s^2+x_j'(s)\ddot s.
+    \label{eq:appendix_affine_local_acceleration}
+\end{equation}
+
+At a frozen state, the first term is a known bias and the second is a gain on
+the global shift-acceleration unknown.  The same interface allows force and
+torque contributions to depend on $\dot\omega_j$, $\tau_j$, or $N_j$ without
+an inner iteration or a lagged estimate.
+
+The particular primary flyweight, spring, secondary helix, and spring mechanics
+derived in \Cref{sec:axial_actuation_balances} are implemented through this
+interface; the abstraction does not replace those laws.  It permits additional
+mechanically compatible pulley elements while preserving their simultaneous
+coupling to the common closure channels.
+
+\paragraph{Code reference}
+The affine closure objects are defined in
+\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py}; the pulley
+element contract and local context are in
+\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/types.py}{actuation/types.py},
+and mounted contributions are combined by
+\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/pulley_actuator.py}{pulley_actuator.py}.
+
+\section{Numerical Solution of Tangential Contact}
+\label{app:num_tangential_contact}
+
+\Cref{sec:sticking_traction_closure} leaves the required static traction
+utilizations to be determined nonlinearly.  A trial traction pair is passed to
+the fixed-$\lambda$ solve of \Cref{app:num_fixed_lambda}; the resulting
+relative-acceleration residuals then close the contacts assumed to stick.  The
+same bounded routine is used in one or two dimensions: stick--stick frees both
+traction utilizations, a mixed branch frees only the sticking interface, and
+both-slip requires no nonlinear solve.
+
+\subsection{Search domain, Jacobian, and acceptance}
+\label{app:num_contact_search}
+
+The numerical search interval is deliberately wider than the physical static
+friction interval so that an over-capacity static requirement can be found and
+then rejected by the physical admissibility test in
+\Cref{sec:contact_admissibility_transitions}.  Absent continuation information,
+the initial guess is zero.  CINDER uses SciPy's bounded
+\texttt{scipy.optimize.least\_squares} routine \citep{Virtanen2020} with the
+trust-region reflective method, a three-point finite-difference residual
+Jacobian, and Jacobian-based scaling.  The tagged defaults use
+\texttt{ftol}=\texttt{xtol}=\texttt{gtol}=$10^{-12}$ and at most 100 residual
+evaluations.  A candidate is accepted only after a fresh mechanical evaluation
+satisfies the declared sticking residual tolerance.
+
+\subsection{Continuation between consecutive contact solves}
+\label{app:num_contact_continuation}
+
+Within one smooth contact topology, the required traction root normally changes
+continuously between nearby right-hand-side evaluations.  CINDER therefore
+stores the previous accepted root and local residual Jacobian.  One bounded
+Newton correction is attempted first; a successful step updates the Jacobian
+with a rank-one good-Broyden correction.  If the prediction is unavailable,
+reaches a search bound, fails mechanically, or misses the residual tolerance,
+the code falls back to the full bounded least-squares solve.  This reduces
+repeated nonlinear work and promotes tracking of the locally connected root in
+a residual map that need not be globally single-rooted; it does not add physical
+friction memory.
+
+\subsection{Numerical hysteresis at reattachment}
+\label{app:num_contact_hysteresis}
+
+The physical switching conditions remain those in
+\Cref{sec:contact_admissibility_transitions}.  Numerically, reusing exactly the
+same static-capacity surface for loss and regain of stick can produce event
+chatter.  The implementation therefore leaves stick loss at the physical
+zero-margin boundary but normally requires a positive restick reserve of
+$10^{-3}$ in traction-utilization margin.  If that reserve would create a
+no-successor condition, the transition logic retries the sticking candidate at
+the physical static boundary.
+
+\paragraph{Code reference}
+The nonlinear solve and continuation are implemented in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/engaged_contact.py}{engaged_contact.py};
+contact residuals and tolerances are in
+\CINDERcode{cvtModel/src/cinder/model/cvt/contact/relative_motion.py}{relative_motion.py}
+and
+\CINDERcode{cvtModel/src/cinder/model/cvt/contact/tolerances.py}{tolerances.py};
+hybrid switching is implemented in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_contact_switching.py}{cvt_contact_switching.py}.
+
+\section{Time Integration and Hybrid Boundary Events}
+\label{app:num_time_integration}
+
+\subsection{Continuous integration and host coupling}
+\label{app:num_continuous_integration}
+
+The software preserves the shaft boundary defined in
+\Cref{sec:system_definition}.  Engines, vehicles, dynamometers, controllers, or
+other host systems may carry states of their own and are evaluated from the
+current simulation state, but only the applied torque and equivalent referred
+inertia are returned to the CVT at each shaft.  The same CVT implementation can
+therefore be embedded in different surrounding systems without moving those
+systems inside the transmission formulation.
+
+Within a fixed regime, the resulting first-order initial-value problem is
+advanced through SciPy's \texttt{scipy.integrate.solve\_ivp} interface
+\citep{Virtanen2020}.  The generic runner is method-configurable.  The reported
+transient study drivers select LSODA, whose automatic selection between stiff
+and nonstiff multistep formulas follows the strategy of \citet{Petzold1983}.
+Relative and absolute tolerances and maximum-step limits are study settings and
+are therefore reported with the Results configuration rather than treated as
+mechanical-model constants.
+
+The integration mesh is adaptive: the right-hand side can be evaluated several
+times at internal trial states before one step is accepted.  A plotted sampling
+interval is therefore not an integration time step.
+
+\subsection{Hybrid segmentation and event localization}
+\label{app:num_hybrid_segmentation}
+
+The regime structure in \Cref{sec:shift_regime_dynamics} is implemented as a
+sequence of smooth \texttt{solve\_ivp} segments.  Each active regime exposes
+only its reachable terminal, direction-aware events.  When one is localized,
+the segment ends, the transition resolver selects the successor regime and any
+required successor state, and integration restarts at the same physical time.
+Events localized to the same endpoint within the configured association
+tolerance are resolved together.  Roundoff-scale boundary snapping and
+protected evaluation of rejected trial stages are used only to keep numerical
+probes inside valid geometry; they do not move the accepted physical event
+surface.
+
+\subsection{Finite-speed boundary updates}
+\label{app:num_finite_speed_update}
+
+The finite-speed event map derived in
+\Cref{sec:finite_speed_shift_boundary_arrival} is implemented directly.  CINDER
+assembles the event-specific $\vect{J}^{-}$, $\vect{J}^{+}$, $\vect{W}$, and
+$\vect{C}^{+}$ objects and solves the resulting dense linear or KKT system.  The
+outgoing velocity is inserted into the successor state.  Constraint and
+momentum residuals are checked afterward, and the perfectly inelastic kinetic-
+energy change is recorded with the transition.
+
+\subsection{Integration mesh and reported output}
+\label{app:num_reporting_grid}
+
+The adaptive native trajectory is preserved separately from the user-facing
+reporting grid.  Uniform reports use SciPy dense output separately within each
+smooth segment, with exact segment endpoints retained explicitly.  Interpolation
+is therefore never performed across a discrete state reset.
+
+\paragraph{Code reference}
+The shaft ports are implemented in
+\CINDERcode{cvtModel/src/cinder/model/system/ports.py}{ports.py}; segmented
+integration is in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/hybrid.py}{hybrid.py};
+finite-speed projection is in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_impact.py}{cvt_impact.py};
+and reporting materialization is in
+\CINDERcode{cvtModel/src/cinder/results/reporting.py}{reporting.py}.
+
+\section{Formulation-to-Implementation Correspondence}
+\label{app:num_correspondence}
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.37\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
+\endfirsthead
+\toprule
+Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Correspondence between the analytical formulation and numerical implementation choices.}
+\label{tab:appendix_numerical_correspondence}\\
+\endlastfoot
+Implicit exact belt geometry
+& SciPy \texttt{brentq}; construction-time bounds and cached runtime radius bracket
+& Preserve the exact geometry while keeping repeated solves tightly bounded. \\[5pt]
+Six-variable fixed-$\lambda$ closure
+& Eight-variable closure retaining pulley torques and explicit traction rows
+& Preserve torque coupling and regular zero-traction algebra. \\[5pt]
+$\vect{A}\vect{z}=\vect{b}$
+& Row/column equilibration and dense direct solve
+& Reduce avoidable mixed-unit scale sensitivity without changing the physical equations. \\[5pt]
+Continuous $\lambda_j\to0$ wrap limit
+& Regular $\Phi_-$/$\Psi_-$ evaluation using local series and \texttt{expm1}
+& Avoid cancellation without introducing a new regime. \\[5pt]
+Derived actuator equations
+& Affine bias-plus-gain component interface
+& Keep dynamic actuator coupling inside the simultaneous solve while allowing compatible elements. \\[5pt]
+Static-traction root
+& SciPy bounded trust-region \texttt{least\_squares}, local continuation, and residual acceptance
+& Solve mixed and stick--stick closure while tracking the nearby branch efficiently. \\[5pt]
+Continuous regime equations
+& Adaptive SciPy \texttt{solve\_ivp} segments with explicit hybrid transitions
+& Keep smooth integration separate from topology changes. \\[5pt]
+Finite-speed momentum projection
+& Direct event-specific linear/KKT solve with residual and energy audits
+& Apply the event relation derived in \Cref{sec:finite_speed_shift_boundary_arrival}. \\
+\end{longtable}
+\normalsize
+\end{center}
+
+
+\chapter{Reference Configuration and Parameter Provenance}
+\label{app:reference_configuration}
+
+This appendix will contain the physical parameters that define the common CVT
+used by the Results studies.  It is separated from the study registry so that a
+parameter appears once with its provenance even when many studies reuse it.
+Values in \Cref{tab:results_common_parameters} are intentionally left as
+placeholders until the Results branch and final paper-facing configurations are
+frozen.
+
+\section{Common Physical Configuration}
+\label{app:common_physical_configuration}
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+Group & Quantity & Symbol & Value & Source / provenance \\ \midrule
+\endfirsthead
+\toprule
+Group & Quantity & Symbol & Value & Source / provenance \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Common physical configuration for the Results chapter.  Populate from the frozen Results configuration and retain the provenance of each value.}
+\label{tab:results_common_parameters}\\
+\endlastfoot
+Belt geometry and material & \textit{TBD after Results freeze} & --- & --- & --- \\[5pt]
+Pulley geometry & \textit{TBD after Results freeze} & --- & --- & --- \\[5pt]
+Primary actuation and inertia & \textit{TBD after Results freeze} & --- & --- & --- \\[5pt]
+Secondary actuation and inertia & \textit{TBD after Results freeze} & --- & --- & --- \\[5pt]
+Contact and friction & \textit{TBD after Results freeze} & --- & --- & --- \\
+\end{longtable}
+\normalsize
+\end{center}
+
+% TODO after Results freeze:
+% - replace group placeholders with one row per frozen physical parameter;
+% - identify measured, manufacturer-specified, derived, or assumed provenance;
+% - keep host-specific quantities out of this table unless truly common.
+
+\chapter{Study Configurations and Reproducibility Index}
+\label{app:study_reproducibility}
+
+This appendix will index the numerical settings, study-specific configurations,
+and archived artifacts used by \Cref{chap:results}.  The schemas are frozen now
+so that Results cleanup becomes a population task rather than a redesign of the
+paper's reproducibility structure.
+
+\section{Common Numerical Configuration}
+\label{app:common_numerical_configuration}
 
 \begin{table}[H]
 \centering
-\begin{tabular}{llp{7cm}}
+\small
+\caption{Common numerical settings used by Results studies unless a study-specific override is listed in \Cref{tab:results_case_registry}.}
+\label{tab:results_common_numerics}
+\begin{tabular}{@{}p{0.34\textwidth}p{0.20\textwidth}p{0.36\textwidth}@{}}
 \toprule
-\textbf{Parameter} & \textbf{Value} & \textbf{Interpretation} \\
-\midrule
-\texttt{atol} & $\num{e-6}$ & absolute floor: \SI{1}{\micro\metre} on $s$,
-                               \SI{1}{\micro\radian\per\second} on $\omega$ \\
-\texttt{rtol} & $\num{e-4}$ & relative tolerance: 0.01\% of current state magnitude \\
-\texttt{t\_eval} & 10\,000 pts & uniform output grid over \SI{30}{\second} \\
+Setting & Value & Notes \\ \midrule
+Integration method & \textit{TBD} & Populate from frozen study configuration \\
+Relative tolerance & \textit{TBD} & --- \\
+Absolute tolerance & \textit{TBD} & --- \\
+Maximum step & \textit{TBD} & --- \\
+Reporting interval / grid & \textit{TBD} & Distinct from adaptive integration mesh \\
+Static-traction solver tolerances & \textit{TBD} & --- \\
+Hybrid event association tolerance & \textit{TBD} & --- \\
 \bottomrule
 \end{tabular}
-\caption{ODE solver tolerance parameters.}
-\label{tab:solver_tols}
 \end{table}
 
-\paragraph{Event detection.}
+\section{Study and Case Registry}
+\label{app:study_case_registry}
 
-Phase transitions (shift engagement, boundary contact, back-shift onset) are
-located using \texttt{solve\_ivp}'s event mechanism. These events correspond to
-qualitative changes in the dynamics around the bounded shift coordinate used in
-\Eq{eq:s_ddot_complete} and the full state evolution in
-\Eq{eq:final_cvt_system_complete}. After each accepted step
-the solver evaluates the event functions on a degree-4 dense-output
-interpolant and applies a root-finding pass to detect any sign change within
-the step. When a crossing is found it is bracketed at sub-tolerance precision
-before being reported, so transitions are located with the same accuracy as
-the integration tolerance rather than being snapped to the coarse output grid.
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.08\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\toprule
+Study & Case ID & Scientific purpose & Host / boundary & Overrides & Archive path \\ \midrule
+\endfirsthead
+\toprule
+Study & Case ID & Scientific purpose & Host / boundary & Overrides & Archive path \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Registry of paper-facing Results studies and cases.  Case identifiers and paths will be populated after the Results archive is frozen.}
+\label{tab:results_case_registry}\\
+\endlastfoot
+Closure structure & TBD & Required-$\lambda$ root structure and conditioning & TBD & TBD & TBD \\[5pt]
+Mechanical invariants & TBD & Operating-domain capability / invariant audit & TBD & TBD & TBD \\[5pt]
+Energy consistency & TBD & Work--energy bookkeeping closure & TBD & TBD & TBD \\[5pt]
+Solver convergence & TBD & Numerical refinement / hybrid-sequence stability & TBD & TBD & TBD \\[5pt]
+Independent benchmark & TBD & Ballew transient model-to-model benchmark & TBD & TBD & TBD \\[5pt]
+Primary dynamics & TBD & Effect of retained primary actuator inertia/dynamics & TBD & TBD & TBD \\[5pt]
+Secondary helix & TBD & Dynamic helix terms and contact topology & TBD & TBD & TBD \\[5pt]
+Reduced belt mechanics & TBD & Contribution of retained transient belt terms & TBD & TBD & TBD \\[5pt]
+Launch / upshift & TBD & Coupled forward launch trajectory & TBD & TBD & TBD \\[5pt]
+Backshift & TBD & Load-induced coupled backshift & TBD & TBD & TBD \\[5pt]
+Engine braking & TBD & Reverse-power coupled operation & TBD & TBD & TBD \\[5pt]
+Tune comparison & TBD & Optional compact design consequence study & TBD & TBD & TBD \\
+\end{longtable}
+\normalsize
+\end{center}
 
-\paragraph{Phase splitting at hard constraints.}
+\section{Manuscript Artifact Index}
+\label{app:artifact_index}
 
-The shift bounds $s \in [0, s_{\max}]$ with $\dot{s} = 0$ at both endpoints
-are handled by partitioning the trajectory into separate \texttt{solve\_ivp}
-calls rather than imposing inequality constraints inside the ODE. Each phase
---- normal shifting, clamped-at-maximum, and back-shifting --- presents a
-smooth right-hand side to the integrator, allowing RK45 to operate at full
-5th-order accuracy throughout. The terminal event of each phase supplies the
-initial condition of the next. This is numerically cleaner than directly
-clamping \Eq{eq:s_ddot_complete} inside a single solve because it preserves a
-smooth right-hand side within each phase. Up to ten alternating full-shift\,/\,back-shift
-cycles are supported before the simulation terminates, preventing unbounded
-phase loops for unusual parameter regimes.
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\toprule
+Manuscript item & Generating study / case & Archived source artifact & Generating script / notes \\ \midrule
+\endfirsthead
+\toprule
+Manuscript item & Generating study / case & Archived source artifact & Generating script / notes \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Traceability index from paper-facing figures and tables to frozen Results artifacts.}
+\label{tab:results_artifact_index}\\
+\endlastfoot
+\textit{TBD after Results freeze} & --- & --- & --- \\
+\end{longtable}
+\normalsize
+\end{center}
 
-% --------------------------------------------------------------
-\section{Slip-Law Regularization and Blend Parameter Selection}
-\label{sec:appendix-slip-regularization}
+% TODO after Results freeze:
+% - expand the case registry to the actual final paper-facing cases;
+% - populate exact host/boundary definitions and every study override;
+% - populate artifact paths only after exploratory/intermediate outputs are cleaned;
+% - include checksums or archive object identifiers if used in the final release.
 
-The traction law in \Eq{eq:tau_j_slip_saturated} is physically clear but
-discontinuous at $v_{\mathrm{rel}}=0$, which can induce step-size chatter near
-stick--slip transitions. A practical regularized formulation uses three ideas:
-a smooth saturation law, a clamped no-slip torque request, and a blending rule
-between those two limits.
-
-First define a smooth saturation torque
-\begin{equation}
-\tau_{\mathrm{sat}}
-=
-\tau_{\max}
-\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
-\label{eq:tau_tanh_regularized}
-\end{equation}
-where $v_{\mathrm{smooth}}>0$ sets the transition width in slip-speed units.
-For $|v_{\mathrm{rel}}| \gg v_{\mathrm{smooth}}$, this approaches the usual
-friction-limited value $\pm\tau_{\max}$, while near zero it removes the sharp
-sign discontinuity.
-
-Next, clamp the no-slip torque request:
-\begin{equation}
-\tau_{\mathrm{req}}
-=
-\mathrm{clip}\!\left(\tau_{\mathrm{ns}},\,-\tau_{\max},\,\tau_{\max}\right).
-\label{eq:tau_ns_clamped_impl}
-\end{equation}
-This is the largest admissible torque consistent with the no-slip request,
-without allowing the requested value to exceed traction capacity.
-
-Then define the blend factor
-\begin{equation}
-\alpha
-=
-\mathrm{clip}\!\left(\frac{|v_{\mathrm{rel}}|}{v_{\mathrm{blend}}},\,0,\,1\right),
-\label{eq:alpha_blend_impl}
-\end{equation}
-with $v_{\mathrm{blend}}>0$ defining the width of the blending region, and use
-the transmitted torque
-\begin{equation}
-\tau_c
-=
-(1-\alpha)\,\tau_{\mathrm{req}} + \alpha\,\tau_{\mathrm{sat}}.
-\label{eq:tau_blend_impl}
-\end{equation}
-
-This has a useful interpretation. For very small mismatch,
-$\alpha\approx 0$, so the model stays close to the clamped no-slip demand.
-For larger mismatch, $\alpha\to 1$, so the law transitions to the smooth
-Coulomb limit. In other words, the regularized model behaves like a requested
-no-slip torque near stick and like a friction-limited sliding law once the
-mismatch becomes appreciable.
-
-\paragraph{How to choose $v_{\mathrm{smooth}}$.}
-
-Choose the smoothing scale small enough that
-$\tanh(v_{\mathrm{rel}}/v_{\mathrm{smooth}})$ is close to a sign law
-through most of the slip regime, but not so small that the solver again sees an
-effectively discontinuous transition. A practical workflow is:
-\begin{enumerate}
-\item Start with $v_{\mathrm{smooth}}$ around 0.5--2\% of a representative
-  relative-speed magnitude seen during actual slip.
-\item Decrease it until predicted macro outputs (ratio trajectory, launch time,
-  peak speeds) stop changing materially.
-\item Increase it slightly if event localization or adaptive step-size behavior
-  becomes noisy near $v_{\mathrm{rel}}\approx 0$.
-\end{enumerate}
-
-The blend scale $v_{\mathrm{blend}}$ should generally be chosen greater than or
-equal to $v_{\mathrm{smooth}}$, so that the handoff from clamped demand to the
-smooth Coulomb limit is not sharper than the smoothing law itself.
 
 \chapter{Rate and Acceleration of the Geometric CVT Ratio}
 \label{app:ratio-rate}
