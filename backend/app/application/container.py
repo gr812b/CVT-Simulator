@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from app.application.cinder_gateway import CinderGateway
 from app.application.run_manager import RunManager
 from app.core.settings import Settings
+from app.engineering.fixed_pivot_primary import FixedPivotPrimaryDesignService
 from app.storage.preset_store import JsonPresetStore, PresetStore
 from app.storage.run_store import InMemoryRunStore, RunStore
 
@@ -15,6 +16,7 @@ from app.storage.run_store import InMemoryRunStore, RunStore
 class ApplicationContainer:
     settings: Settings
     gateway: CinderGateway
+    primary_design: FixedPivotPrimaryDesignService
     presets: PresetStore
     runs: RunManager
 
@@ -25,6 +27,7 @@ def build_container(settings: Settings) -> ApplicationContainer:
     return ApplicationContainer(
         settings=settings,
         gateway=gateway,
+        primary_design=FixedPivotPrimaryDesignService(),
         presets=JsonPresetStore(settings.resolved_preset_directory()),
         runs=RunManager(
             gateway=gateway,
