@@ -1,0 +1,78 @@
+.root { display: grid; gap: 16px; }
+.controls { display: grid; grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(145px, 190px)) auto; gap: 12px; align-items: end; padding: 14px; border: 1px solid var(--border-color, #323842); border-radius: 12px; background: rgba(255,255,255,.025); }
+.controls p { margin: 5px 0 0; opacity: .68; font-size: 12px; line-height: 1.45; }
+.controls label { display: grid; gap: 5px; font-size: 11px; opacity: .92; }
+.controls label > div { display: flex; align-items: center; gap: 6px; }
+.controls input, .controls select { width: 100%; box-sizing: border-box; padding: 7px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,.15); background: rgba(0,0,0,.18); color: inherit; }
+.controls em { font-size: 10px; white-space: nowrap; opacity: .6; font-style: normal; }
+.generate { min-height: 36px; padding: 0 16px; border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; background: var(--accent-color, #70a7ff); color: #0d1117; }
+.generate:disabled { opacity: .45; cursor: default; }
+.error { padding: 10px 12px; border-radius: 8px; background: rgba(220,70,70,.12); border: 1px solid rgba(220,70,70,.35); }
+.plotCard { border: 1px solid var(--border-color, #323842); border-radius: 12px; overflow: hidden; }
+.plotHeader, .inspectorHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; }
+.plotHeader > div:first-child, .inspectorHeader > div:first-child { display: grid; gap: 3px; }
+.plotHeader span, .inspectorHeader span { font-size: 11px; opacity: .62; }
+.plotActions { display: flex; gap: 7px; }
+.plotActions button { border: 1px solid rgba(255,255,255,.14); background: transparent; color: inherit; border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+.forcePlot { width: 100%; min-height: 360px; display: block; touch-action: none; user-select: none; }
+.plotBackground { fill: rgba(0,0,0,.08); }
+.grid { stroke: currentColor; opacity: .08; stroke-width: 1; }
+.axisText { fill: currentColor; opacity: .58; font-size: 11px; }
+.axisTitle { fill: currentColor; opacity: .72; font-size: 12px; }
+.capabilityBand { fill: currentColor; opacity: .055; stroke: none; }
+.targetLine { fill: none; stroke: #f1c75b; stroke-width: 3; }
+.solutionLine { fill: none; stroke: #7ed7a8; stroke-width: 3; }
+.handle { fill: #f1c75b; stroke: #111820; stroke-width: 2; cursor: grab; }
+.handle:active { cursor: grabbing; }
+.legend { display: flex; gap: 18px; padding: 0 14px 12px; font-size: 11px; opacity: .75; }
+.legend span::before { content: ''; display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 3px; }
+.legendTarget::before { background: #f1c75b; }.legendSolution::before { background: #7ed7a8; }.legendCapability::before { background: currentColor; opacity: .3; }
+.summary, .inspectorMetrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+.summary > div, .inspectorMetrics > div { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.10); border-radius: 8px; }
+.summary span, .inspectorMetrics span { font-size: 10px; opacity: .6; }.summary strong, .inspectorMetrics strong { font-size: 13px; }
+.solutionsSection { display: grid; gap: 12px; }
+.solutionStrip { display: flex; gap: 9px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
+.solutionCard, .solutionCardSelected { flex: 0 0 205px; display: grid; gap: 4px; text-align: left; padding: 10px; border-radius: 9px; color: inherit; cursor: pointer; }
+.solutionCard { background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.11); }.solutionCardSelected { background: rgba(126,215,168,.08); border: 1px solid rgba(126,215,168,.48); }
+.solutionCard span, .solutionCardSelected span { font-size: 11px; opacity: .72; }.solutionCard em, .solutionCardSelected em { font-size: 10px; opacity: .58; font-style: normal; }
+.inspector { border: 1px solid var(--border-color, #323842); border-radius: 12px; padding-bottom: 12px; }
+.inspector svg { width: 100%; height: 320px; background: rgba(0,0,0,.08); }
+.rollerPath { fill: none; stroke: currentColor; opacity: .28; stroke-width: 2; stroke-dasharray: 6 5; }.rampPath { fill: none; stroke: #7ed7a8; stroke-width: 3; }.pivot { fill: #f1c75b; }
+.inspectorMetrics { padding: 10px 12px 0; }
+.diagnostics { display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(255,255,255,.11); border-radius: 10px; }
+.diagnostics > div { display: grid; grid-template-columns: 230px 1fr auto; align-items: baseline; gap: 10px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.07); }
+.diagnostics span { font: 600 10px ui-monospace, monospace; }.diagnostics p { margin: 0; font-size: 12px; opacity: .75; }.diagnostics em { font-size: 10px; opacity: .55; font-style: normal; }
+@media (max-width: 1050px) { .controls { grid-template-columns: 1fr 1fr; }.summary, .inspectorMetrics { grid-template-columns: 1fr 1fr; } }
+
+.inspectionCursor { stroke: currentColor; opacity: .28; stroke-width: 1.5; stroke-dasharray: 4 5; pointer-events: none; }
+.solutionCursor { fill: #7ed7a8; stroke: #0d1117; stroke-width: 2; pointer-events: none; }
+.targetCursor { fill: #f1c75b; stroke: #0d1117; stroke-width: 1.5; pointer-events: none; }
+.cursorReadout { margin-left: auto; font-size: 11px; font-weight: 600; opacity: .82; }
+.inspectorForce { display: grid; justify-items: end; font-size: 16px; font-weight: 700; }
+.inspectorForce span { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; opacity: .5; }
+.scrubber { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 0 14px 12px; }
+.scrubber input { width: 100%; }
+.scrubber strong { font-size: 11px; white-space: nowrap; }
+.pivotTravel { stroke: currentColor; opacity: .15; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.flyArm { stroke: #f1c75b; stroke-width: 5; stroke-linecap: round; }
+.roller { fill: rgba(112,167,255,.16); stroke: #70a7ff; stroke-width: 2.4; }
+.contactPoint { fill: #f7f7f7; stroke: #0d1117; stroke-width: 1.5; }
+@media (max-width: 800px) {
+  .legend { flex-wrap: wrap; }
+  .cursorReadout { width: 100%; margin-left: 0; }
+  .scrubber { grid-template-columns: 1fr; }
+}
+.solutionCandidateLine { fill: none; stroke: #7ed7a8; stroke-width: 1.5; opacity: .16; pointer-events: none; }
+.legendCandidates::before { background: #7ed7a8; opacity: .25; }
+.localForcePlot { margin: 0 14px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; overflow: hidden; background: rgba(0,0,0,.055); }
+.localForceHeader { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.localForceHeader > div { display: grid; gap: 2px; }.localForceHeader span { font-size: 10px; opacity: .6; }.localForceHeader b { font-size: 13px; white-space: nowrap; }
+.localForcePlot svg { width: 100%; height: 240px; display: block; cursor: crosshair; }
+.localForceLegend { display: flex; gap: 14px; align-items: center; padding: 0 11px 9px; font-size: 10px; }.localForceLegend span::before { content:''; display:inline-block; width:18px; height:3px; margin-right:5px; vertical-align:middle; border-radius:3px; }.localForceLegend em { margin-left:auto; opacity:.55; font-style:normal; }
+.solutionCandidateLine { fill: none; stroke: #7ed7a8; stroke-width: 1.5; opacity: .16; pointer-events: none; }
+.legendCandidates::before { background: #7ed7a8; opacity: .25; }
+.localForcePlot { margin: 0 14px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; overflow: hidden; background: rgba(0,0,0,.055); }
+.localForceHeader { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.localForceHeader > div { display: grid; gap: 2px; }.localForceHeader span { font-size: 10px; opacity: .6; }.localForceHeader b { font-size: 13px; white-space: nowrap; }
+.localForcePlot svg { width: 100%; height: 240px; display: block; cursor: crosshair; }
+.localForceLegend { display: flex; gap: 14px; align-items: center; padding: 0 11px 9px; font-size: 10px; }.localForceLegend span::before { content:''; display:inline-block; width:18px; height:3px; margin-right:5px; vertical-align:middle; border-radius:3px; }.localForceLegend em { margin-left:auto; opacity:.55; font-style:normal; }

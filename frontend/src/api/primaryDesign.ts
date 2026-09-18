@@ -1,0 +1,677 @@
+import { ApiClientError } from './client';
+
+export type RampKind = 'progressive' | 'constant';
+export type PackagingZoneSubject = 'flyweight' | 'ramp';
+export type PackagingZoneRule = 'forbid' | 'contain';
+
+export interface FixedPivotArchitecture {
+  pivot_axial_position_m: number;
+  pivot_radius_m: number;
+  arm_length_m: number;
+  roller_radius_m: number;
+  required_travel_m: number;
+  number_of_flyweights: number;
+  arm_mass_per_flyweight_kg: number;
+  ramp_axial_direction: -1 | 1;
+  roller_side_sign: -1 | 1;
+  max_tip_mass_per_flyweight_kg: number;
+}
+
+export interface PackagingZone {
+  id: string;
+  label: string;
+  subject: PackagingZoneSubject;
+  rule: PackagingZoneRule;
+  polygon_m: Array<[number, number]>;
+  clearance_m: number;
+}
+
+export interface FixedPivotRamp {
+  kind: RampKind;
+  initial_flyweight_angle_deg: number;
+  linear_angle_deg: number;
+  circular_start_angle_deg: number;
+  circular_end_angle_deg: number;
+  constant_length_m: number;
+  linear_length_m: number;
+  blend_length_m: number;
+  circular_length_m: number;
+}
+
+export interface PrimaryDesignOperating {
+  tip_mass_per_flyweight_kg: number;
+  shaft_speed_rad_s: number;
+  shift_speed_m_s: number;
+  shift_acceleration_m_s2: number;
+}
+
+export interface PrimaryDesignDefaults {
+  architecture: FixedPivotArchitecture;
+  ramp: FixedPivotRamp;
+  packaging_zones: PackagingZone[];
+  operating: PrimaryDesignOperating;
+  ui_limits: {
+    tip_mass_per_flyweight_kg: [number, number];
+    shaft_speed_rad_s: [number, number];
+  };
+}
+
+export interface SampledFieldSet {
+  axis_key: string;
+  axis_unit: string;
+  axis_values: number[];
+  units: Record<string, string>;
+  fields: Record<string, Array<number | boolean | null>>;
+}
+
+export interface DoubleContactFailureGeometry {
+  kind: 'double_contact';
+  arm_angle_deg: number;
+  roller_center_x_m: number;
+  roller_center_r_m: number;
+  contacts: Array<{
+    label: 'C1' | 'C2';
+    contact_coordinate_m: number;
+    x_m: number;
+    r_m: number;
+  }>;
+}
+
+export interface DesignFailure {
+  code: string;
+  message: string;
+  shift_m: number | null;
+  geometry?: DoubleContactFailureGeometry;
+}
+
+export interface DesignWarning {
+  code: string;
+  message: string;
+  shift_m: number | null;
+  detail?: string;
+}
+
+export interface ConcreteDesignAnalysis {
+  analysis_id: string;
+  validity: {
+    valid: boolean;
+    failure: DesignFailure | null;
+    warnings: DesignWarning[];
+  };
+  architecture: FixedPivotArchitecture;
+  ramp: FixedPivotRamp;
+  requested_travel_m: number;
+  contact_valid_travel_m: number;
+  geometry: SampledFieldSet;
+  ramp_surface_open: {
+    x_m: number[];
+    r_m: number[];
+  };
+  summary: {
+    max_arm_angle_deg: number | null;
+    q90_margin_deg: number | null;
+    minimum_ramp_endpoint_margin_m: number | null;
+    contact_valid_fraction: number;
+    runtime_map_compiled: boolean;
+  };
+}
+
+export interface ConcreteDesignResponse {
+  analysis_id: string;
+  operating: PrimaryDesignOperating;
+  loads: SampledFieldSet;
+}
+
+export interface WorkspacePolygon {
+  x_m: number[];
+  r_m: number[];
+}
+
+export interface ArchitectureFinding {
+  severity: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+}
+
+export interface PackagingZoneDiagnostic {
+  zone_id: string;
+  label: string;
+  subject: PackagingZoneSubject;
+  rule: PackagingZoneRule;
+  status: 'pass' | 'restricts' | 'blocks';
+  retained_fraction: number;
+}
+
+export interface ArchitectureAnalysis {
+  architecture: FixedPivotArchitecture;
+  zones: PackagingZone[];
+  validity: {
+    valid: boolean;
+    findings: ArchitectureFinding[];
+  };
+  limits: {
+    q_min_deg: number;
+    q_max_deg: number;
+  };
+  workspace: {
+    roller_center: WorkspacePolygon[];
+    potential_ramp_surface: WorkspacePolygon[];
+    packaging_feasible_ramp_surface: WorkspacePolygon[];
+    open_roller_arc: { x_m: number[]; r_m: number[] };
+    full_shift_roller_arc: { x_m: number[]; r_m: number[] };
+  };
+  boundaries: {
+    q_min_flat_ramp: { x_m: number[]; r_m: number[] };
+    q_max_flat_ramp: { x_m: number[]; r_m: number[] };
+    pivot_travel: { x_m: number[]; r_m: number[] };
+  };
+  zone_diagnostics: PackagingZoneDiagnostic[];
+  viewport: {
+    x_min_m: number;
+    x_max_m: number;
+    r_min_m: number;
+    r_max_m: number;
+  };
+  summary: {
+    admissible_pose_fraction: number;
+    ramp_workspace_fraction: number;
+    zone_count: number;
+    ramp_zone_count: number;
+    flyweight_zone_count: number;
+    shift_sample_count: number;
+    q_sample_count: number;
+  };
+}
+
+
+export interface PathDomainStationProjection {
+  station: number;
+  viable_state_count: number;
+  q_min_deg: number | null;
+  q_max_deg: number | null;
+  active_q_min_deg: number | null;
+  active_q_max_deg: number | null;
+}
+
+export interface HistoryCertifiedRampPath {
+  state_indices: number[];
+  shift_m: number[];
+  q_deg: number[];
+  ramp_tangent_deg: number[];
+  roller_center: { x_m: number[]; r_m: number[] };
+  ramp_surface: { x_m: number[]; r_m: number[] };
+  capability: {
+    arm_force_per_omega2: number[];
+    tip_force_per_omega2_per_kg: number[];
+    max_tip_total_force_per_omega2: number[];
+  };
+  history: {
+    max_contact_root_count: number;
+    multiple_root_shift_count: number;
+    trace_shift_m: number[];
+    trace_parameter_m: number[];
+    trace_q_deg: number[];
+  };
+}
+
+export interface PrimaryPathDomainAnalysis {
+  domain_id: string;
+  architecture: FixedPivotArchitecture;
+  zones: PackagingZone[];
+  validity: { valid: boolean; findings: ArchitectureFinding[] };
+  graph: {
+    shift_station_count: number;
+    q_sample_count: number;
+    alpha_sample_count: number;
+    state_count: number;
+    local_transition_template_count: number;
+    layer_edge_counts: number[];
+    viable_layer_edge_counts: number[];
+    viable_node_counts: number[];
+    station_projection: PathDomainStationProjection[];
+  };
+  history: {
+    candidate_complete_path_count: number;
+    certified_representative_path_count: number;
+    history_rejection_count: number;
+    rejections: Array<Record<string, unknown>>;
+    selection_rule: string;
+  };
+  representative_paths: HistoryCertifiedRampPath[];
+  domain_projection: {
+    meaning: string;
+    ramp_surface_points: {
+      x_m: number[];
+      r_m: number[];
+      station: number[];
+      q_deg: number[];
+      ramp_tangent_deg: number[];
+    };
+    visual_radius_m: number;
+    point_count: number;
+  };
+  capability: {
+    definition: string;
+    units: {
+      arm_force_per_omega2: string;
+      tip_force_per_omega2_per_kg: string;
+      max_tip_total_force_per_omega2: string;
+    };
+    max_tip_mass_per_flyweight_kg: number;
+    stations: Array<{
+      station: number;
+      shift_m: number;
+      shift_fraction: number;
+      active_state_count: number;
+      arm_force_per_omega2_min: number | null;
+      arm_force_per_omega2_max: number | null;
+      tip_force_per_omega2_per_kg_min: number | null;
+      tip_force_per_omega2_per_kg_max: number | null;
+      max_tip_total_force_per_omega2_min: number | null;
+      max_tip_total_force_per_omega2_max: number | null;
+    }>;
+  };
+  deferred_checks: string[];
+  numerics: {
+    edge_audit_sample_count: number;
+    history_trace_sample_count: number;
+  };
+}
+
+
+export interface ForceRequirement {
+  id: string;
+  shift_m: number;
+  force_N: number;
+  shaft_speed_rad_s: number;
+  tolerance_N: number;
+}
+
+export interface ConditionedRampSolution extends HistoryCertifiedRampPath {
+  solution: {
+    tip_mass_min_kg: number;
+    tip_mass_max_kg: number;
+    example_tip_mass_kg: number;
+    force_N: {
+      shaft_speed_rad_s: number;
+      values: number[];
+    };
+  };
+}
+
+export interface ConditionedPathDomainAnalysis {
+  domain_id: string;
+  validity: { valid: boolean; findings: Array<Record<string, unknown>> };
+  requirements: Array<ForceRequirement & { individually_attainable: boolean }>;
+  mass: {
+    maximum_tip_mass_per_flyweight_kg: number;
+    mass_sample_count: number;
+    mass_resolution_kg: number;
+    surviving_mass_min_kg: number | null;
+    surviving_mass_max_kg: number | null;
+  };
+  graph: {
+    viable_layer_edge_counts: number[];
+    viable_node_counts: number[];
+    station_projection: PathDomainStationProjection[];
+  };
+  domain_projection: PrimaryPathDomainAnalysis['domain_projection'];
+  force_capability: {
+    reference_shaft_speed_rad_s: number;
+    full: AbsoluteForceCapability;
+    conditioned: AbsoluteForceCapability;
+  };
+  representative_solutions: ConditionedRampSolution[];
+  summary: {
+    requirement_count: number;
+    jointly_feasible: boolean;
+    conditioned_domain_point_count: number;
+    representative_solution_count: number;
+  };
+}
+
+export interface AbsoluteForceCapability {
+  shaft_speed_rad_s: number;
+  max_tip_mass_per_flyweight_kg: number;
+  stations: Array<{
+    station: number;
+    shift_m: number;
+    active_state_count: number;
+    force_min_N: number | null;
+    force_max_N: number | null;
+    force_intervals_N: Array<[number, number]>;
+    mass_min_kg: number | null;
+    mass_max_kg: number | null;
+  }>;
+}
+
+const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
+const PREFIX = '/api/v1/engineering/fixed-pivot-primary';
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (init?.body !== undefined) headers.set('Content-Type', 'application/json');
+  const response = await fetch(`${baseUrl}${PREFIX}${path}`, { ...init, headers });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) as unknown : null;
+  if (!response.ok) {
+    const message = extractMessage(payload) ?? 'The primary design service rejected the request.';
+    throw new ApiClientError(message, response.status, payload);
+  }
+  return payload as T;
+}
+
+function extractMessage(payload: unknown): string | null {
+  if (typeof payload !== 'object' || payload === null || !('error' in payload)) return null;
+  const error = (payload as { error?: unknown }).error;
+  if (typeof error !== 'object' || error === null || !('message' in error)) return null;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === 'string' ? message : null;
+}
+
+export function getPrimaryDesignDefaults(): Promise<PrimaryDesignDefaults> {
+  return request<PrimaryDesignDefaults>('/defaults');
+}
+
+export function analyzePrimaryArchitecture(
+  architecture: FixedPivotArchitecture,
+  zones: PackagingZone[],
+  reachSampleCount = 361,
+  shiftSampleCount = 41,
+): Promise<ArchitectureAnalysis> {
+  return request<ArchitectureAnalysis>('/architecture/analyze', {
+    method: 'POST',
+    body: JSON.stringify({
+      architecture,
+      zones,
+      reach_sample_count: reachSampleCount,
+      shift_sample_count: shiftSampleCount,
+    }),
+  });
+}
+
+export function analyzeConcretePrimaryDesign(
+  architecture: FixedPivotArchitecture,
+  ramp: FixedPivotRamp,
+  sampleCount = 161,
+): Promise<ConcreteDesignAnalysis> {
+  return request<ConcreteDesignAnalysis>('/concrete/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ architecture, ramp, sample_count: sampleCount }),
+  });
+}
+
+export function evaluateConcretePrimaryDesign(
+  analysisId: string,
+  operating: PrimaryDesignOperating,
+): Promise<ConcreteDesignResponse> {
+  return request<ConcreteDesignResponse>('/concrete/response', {
+    method: 'POST',
+    body: JSON.stringify({ analysis_id: analysisId, ...operating }),
+  });
+}
+
+
+export function analyzePrimaryPathDomain(
+  architecture: FixedPivotArchitecture,
+  zones: PackagingZone[],
+  options: Partial<{
+    shift_station_count: number;
+    q_sample_count: number;
+    alpha_sample_count: number;
+    representative_path_count: number;
+    edge_audit_sample_count: number;
+    history_trace_sample_count: number;
+  }> = {},
+): Promise<PrimaryPathDomainAnalysis> {
+  return request<PrimaryPathDomainAnalysis>('/architecture/path-domain', {
+    method: 'POST',
+    body: JSON.stringify({ architecture, zones, ...options }),
+  });
+}
+
+
+export function conditionPrimaryPathDomain(
+  domainId: string,
+  requirements: ForceRequirement[],
+  maxTipMassPerFlyweightKg: number,
+  options: Partial<{ mass_sample_count: number; representative_solution_count: number; reference_shaft_speed_rad_s: number }> = {},
+): Promise<ConditionedPathDomainAnalysis> {
+  return request<ConditionedPathDomainAnalysis>('/architecture/path-domain/condition', {
+    method: 'POST',
+    body: JSON.stringify({
+      domain_id: domainId,
+      requirements,
+      max_tip_mass_per_flyweight_kg: maxTipMassPerFlyweightKg,
+      ...options,
+    }),
+  });
+}
+
+export interface InverseDesignTargetPoint {
+  shift_m: number;
+  force_N: number;
+}
+
+export interface InverseRampSolution {
+  tip_mass_per_flyweight_kg: number;
+  initial_q_deg: number;
+  shift_m: number[];
+  q_deg: number[];
+  q_prime_rad_per_m: number[];
+  q_second_rad_per_m2: number[];
+  ramp_tangent_deg: number[];
+  roller_center: { x_m: number[]; r_m: number[] };
+  ramp_surface: { x_m: number[]; r_m: number[] };
+  force: { target_N: number[]; recovered_N: number[] };
+  metrics: {
+    rms_force_error_N: number;
+    max_force_error_N: number;
+    q_margin_deg: number;
+    ramp_tangent_margin_deg: number;
+    minimum_offset_factor: number;
+    minimum_roller_direction_margin: number;
+    minimum_packaging_margin_m: number | null;
+    robustness_score: number;
+  };
+  history: {
+    valid: boolean;
+    max_contact_root_count?: number;
+    multiple_root_shift_count?: number;
+  };
+}
+
+export interface InverseDesignAnalysis {
+  target: {
+    shaft_speed_rad_s: number;
+    shift_m: number[];
+    force_N: number[];
+    input_points: InverseDesignTargetPoint[];
+  };
+  solutions: InverseRampSolution[];
+  diagnostics: Array<{
+    severity: string;
+    code: string;
+    message: string;
+    count?: number;
+    shift_m?: number | null;
+    [key: string]: unknown;
+  }>;
+  summary: {
+    method: string;
+    candidate_pair_count: number;
+    geometry_candidate_count: number;
+    certified_solution_count: number;
+    best_rms_error_N: number | null;
+    best_max_error_N: number | null;
+    target_integrated_force_Nm: number;
+    maximum_integrated_force_Nm: number;
+    capacity_q_min_deg: number;
+    capacity_q_max_deg: number;
+    fixed_tip_mass_per_flyweight_kg: number | null;
+    max_tip_mass_per_flyweight_kg: number;
+    force_definition: string;
+  };
+}
+
+export interface ArchitectureShapePoint {
+  architecture: string;
+  path_index: number;
+  state_indices: number[];
+  mass_mix_fraction: number;
+  tip_to_arm_mass_ratio: number;
+  c1: number;
+  c2: number;
+  c3: number;
+  mean_specific_gain: number;
+  shift_fraction: number[];
+  specific_gain: number[];
+  normalized_shape: number[];
+  ramp: {
+    shift_m: number[];
+    q_deg: number[];
+    ramp_tangent_deg: number[];
+    roller_center: { x_m: number[]; r_m: number[] };
+    ramp_surface: { x_m: number[]; r_m: number[] };
+  };
+}
+
+export interface ArchitectureComparisonWitness {
+  source_architecture: string;
+  nearest_architecture: string;
+  shape_distance: number;
+  max_pointwise_shape_gap: number;
+  gap_shift_fraction: number;
+  source: ArchitectureShapePoint;
+  nearest: ArchitectureShapePoint;
+}
+
+export interface ArchitectureComparisonAnalysis {
+  definition: {
+    mass_agnostic: boolean;
+    specific_gain: string;
+    shape_normalization: string;
+    sampling_note: string;
+  };
+  architecture_a: {
+    domain_id: string;
+    certified_path_count: number;
+    shape_sample_count: number;
+    footprint: {
+      points: Array<Pick<ArchitectureShapePoint, 'c1' | 'c2' | 'c3' | 'path_index' | 'mass_mix_fraction' | 'mean_specific_gain'>>;
+      hull_c1_c2: number[][];
+    };
+    specific_leverage_envelope: { shift_fraction: number[]; min: number[]; max: number[]; median: number[] };
+  };
+  architecture_b: ArchitectureComparisonAnalysis['architecture_a'];
+  witnesses: {
+    a_not_b: ArchitectureComparisonWitness[];
+    b_not_a: ArchitectureComparisonWitness[];
+  };
+  summary: {
+    atlas_path_count_requested: number;
+    mass_mix_count: number;
+    a_to_b_median_shape_distance: number | null;
+    a_to_b_max_shape_distance: number | null;
+    b_to_a_median_shape_distance: number | null;
+    b_to_a_max_shape_distance: number | null;
+  };
+}
+
+export function inverseDesignPrimaryForceCurve(
+  architecture: FixedPivotArchitecture,
+  zones: PackagingZone[],
+  targetPoints: InverseDesignTargetPoint[],
+  shaftSpeedRadS: number,
+  maxTipMassPerFlyweightKg: number,
+  fixedTipMassPerFlyweightKg: number | null,
+  options: Partial<{ solution_count: number; sample_count: number }> = {},
+): Promise<InverseDesignAnalysis> {
+  return request<InverseDesignAnalysis>('/inverse-design', {
+    method: 'POST',
+    body: JSON.stringify({
+      architecture,
+      zones,
+      target_points: targetPoints,
+      shaft_speed_rad_s: shaftSpeedRadS,
+      max_tip_mass_per_flyweight_kg: maxTipMassPerFlyweightKg,
+      fixed_tip_mass_per_flyweight_kg: fixedTipMassPerFlyweightKg,
+      ...options,
+    }),
+  });
+}
+
+export function comparePrimaryPathDomains(
+  domainIdA: string,
+  domainIdB: string,
+  options: Partial<{ atlas_path_count: number; mass_mix_count: number }> = {},
+): Promise<ArchitectureComparisonAnalysis> {
+  return request<ArchitectureComparisonAnalysis>('/architecture/path-domain/compare', {
+    method: 'POST',
+    body: JSON.stringify({ domain_id_a: domainIdA, domain_id_b: domainIdB, ...options }),
+  });
+}
+
+export interface ForceShapeTargetPoint {
+  shift_fraction: number;
+  relative_force: number;
+}
+
+export interface ArchitectureTargetMatch {
+  architecture: 'A' | 'B' | string;
+  rms_shape_error: number;
+  max_shape_error: number;
+  max_error_shift_fraction: number;
+  mass_mix_fraction: number;
+  tip_to_arm_mass_ratio: number;
+  shift_fraction: number[];
+  normalized_shape: number[];
+  sampled_candidate_count: number;
+  ramp: {
+    shift_m: number[];
+    q_deg: number[];
+    ramp_tangent_deg: number[];
+    roller_center: { x_m: number[]; r_m: number[] };
+    ramp_surface: { x_m: number[]; r_m: number[] };
+  };
+}
+
+export interface ArchitectureTargetComparisonAnalysis {
+  definition: {
+    mass_scale_agnostic: boolean;
+    normalization: string;
+    distance: string;
+    sampling_note: string;
+  };
+  target: {
+    shift_fraction: number[];
+    normalized_shape: number[];
+    input_points: ForceShapeTargetPoint[];
+  };
+  architecture_a: ArchitectureTargetMatch | null;
+  architecture_b: ArchitectureTargetMatch | null;
+  summary: {
+    a_rms_shape_error: number | null;
+    b_rms_shape_error: number | null;
+    a_max_shape_error: number | null;
+    b_max_shape_error: number | null;
+  };
+}
+
+export function comparePrimaryPathDomainsToTarget(
+  domainIdA: string,
+  domainIdB: string,
+  targetPoints: ForceShapeTargetPoint[],
+  options: Partial<{ atlas_path_count: number; mass_mix_count: number; sample_count: number }> = {},
+): Promise<ArchitectureTargetComparisonAnalysis> {
+  return request<ArchitectureTargetComparisonAnalysis>('/architecture/path-domain/compare-target', {
+    method: 'POST',
+    body: JSON.stringify({
+      domain_id_a: domainIdA,
+      domain_id_b: domainIdB,
+      target_points: targetPoints,
+      ...options,
+    }),
+  });
+}
+

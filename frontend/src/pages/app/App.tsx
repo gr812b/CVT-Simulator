@@ -9,6 +9,7 @@ const Playback = lazy(() => import('@pages/playback/Playback').then(({ Playback:
 const GeometryStudy = lazy(() => import('@pages/geometry/GeometryStudy').then(({ GeometryStudy: Page }) => ({ default: Page })));
 const Validation = lazy(() => import('@pages/validation/Validation').then(({ Validation: Page }) => ({ default: Page })));
 const ValidationResults = lazy(() => import('@pages/validationResults/ValidationResults').then(({ ValidationResults: Page }) => ({ default: Page })));
+const PrimaryDesign = lazy(() => import('@pages/primaryDesign/PrimaryDesign').then(({ PrimaryDesign: Page }) => ({ default: Page })));
 
 /**
  * Keep the landing route light. Secondary pages load only after navigation, so
@@ -25,6 +26,7 @@ export const App = () => (
       <Route path="/geometry" element={<GeometryStudy />} />
       <Route path="/validation" element={<Validation />} />
       <Route path="/validation/runs/:runId" element={<ValidationResults />} />
+      <Route path="/primary-design" element={<PrimaryDesign />} />
       <Route path="*" element={<div>404 - Not found</div>} />
     </Routes>
   </Suspense>
