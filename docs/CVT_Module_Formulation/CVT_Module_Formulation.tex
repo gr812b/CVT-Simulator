@@ -10322,59 +10322,48 @@ provides the initial condition for the next interval of continuous motion.
 
 TODO: Roadmap
 
-\section{Numerical Study Framework and Reproducibility}
+\section{Computational Framework and Reproducibility}
 \label{sec:results_implementation_reproducibility}
 
-The derivation in \Cref{chap:derivation} closes the mechanics of the CVT so
-that its instantaneous response can be determined from the current state and
-the loading presented at the two shafts. The Results use the CINDER simulator
-both to check how those equations behave when solved numerically and to study
-the response that follows from them.
+The formulation derived in \Cref{chap:derivation} is implemented in the
+open-source CINDER simulator. The studies reported in this chapter examine the
+resulting model at several scales, including local closure and invariant checks,
+controlled comparisons of retained dynamic terms, reconstructed benchmark
+cases, and complete transient operation. The numerical scope changes with the
+study, but the governing CVT mechanics do not.
 
-Different questions naturally call for different numerical experiments. A
-question about the instantaneous mechanical closure can be examined at selected
-states or operating points. The effect of a particular dynamic term or
-mechanism is more clearly exposed by a controlled comparison in which that
-contribution is changed while the rest of the case is held fixed. Complete
-operating events, by contrast, require the coupled system to evolve through
-time. The studies in this chapter therefore range from local evaluations and
-controlled comparisons to full transient simulations, with the scope of each
-calculation chosen to match the question being tested.
+The shaft-boundary definition in \Cref{sec:system_definition} keeps the CVT
+separate from the external systems that drive or load it. Engines, vehicles,
+flywheels, dynamometers, and other hosts couple through those interfaces, so a
+benchmark or isolated study can impose the boundary history required for the
+comparison, while complete operating cases allow the surrounding system to
+evolve with the CVT. Where a study intentionally replaces or suppresses a model
+contribution, that change is stated explicitly with the case.
 
-The shaft interfaces defined in \Cref{sec:system_definition} allow the same CVT
-to be used across those experiments. An engine, vehicle, flywheel, or
-dynamometer can be attached through those interfaces, while a benchmark can
-instead prescribe the boundary conditions needed for the comparison. These
-choices change the experiment surrounding the transmission, not the CVT
-formulation between the two shaft interfaces.
-
-Comparisons across these experiments also require a common baseline. Unless
-stated otherwise, each study uses the reference CVT defined in
+Unless stated otherwise, all studies use the reference CVT defined in
 \Cref{app:reference_configuration} and the common numerical settings listed in
-\Cref{tab:results_common_numerics}. The complete physical parameter set and its
-provenance are given in \Cref{tab:results_common_parameters}. Individual
-Results sections therefore need to state only the physical or numerical
-quantities that are deliberately changed. The study and case registry in
-\Cref{tab:results_case_registry} records those changes together with the host or
-boundary used by each case.
+\Cref{tab:results_common_numerics}. The full physical parameter set and its
+provenance are given in \Cref{tab:results_common_parameters}. Each Results
+subsection therefore reports only the quantities intentionally changed for that
+study. The corresponding host or boundary definition and all explicit changes
+are collected in \Cref{tab:results_case_registry}.
 
-All results reported in this chapter use the open-source CINDER release
-\CINDERtag, pinned to commit \CINDERcommit. The tagged source is available from
-\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}. Details of
-how the analytical equations are solved in software are documented separately
-in \Cref{app:numerical_implementation}, including the belt-geometry root solves,
+All results use CINDER release \CINDERtag, pinned to commit \CINDERcommit. The
+tagged source is available from
+\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}. The numerical
+details used to implement the Chapter~3 equations are documented separately in
+\Cref{app:numerical_implementation}, including the belt-geometry root solves,
 the fixed-$\lambda$ mechanical closure, actuator assembly, static-traction
 solution, and hybrid time integration.
 
-Reproducing a reported result also requires the exact study definition used
-with that implementation. The frozen Results archive therefore contains the
-configuration files, analysis scripts, and saved outputs used to generate the
-figures and tables retained in the manuscript. At the final Results freeze, the
-archive is identified by \ResultsTag, \ResultsCommit, and \ResultsDOI. The
-mapping from each manuscript figure or table to its archived source is recorded
-in \Cref{tab:results_artifact_index}. Together, the tagged CINDER implementation
-and the frozen Results archive specify both the model that was executed and the
-numerical experiment that produced each reported result.
+The tagged CINDER release identifies the model implementation, while the frozen
+Results archive identifies the study definitions used to produce the reported
+results. The archive contains the configuration files, analysis scripts, and
+saved outputs used for the manuscript figures and tables and, at the final
+Results freeze, is identified by \ResultsTag, \ResultsCommit, and \ResultsDOI.
+The source for each reported figure or table is indexed in
+\Cref{tab:results_artifact_index}. Together, these records identify the exact
+code, inputs, scripts, and saved outputs behind each reported result.
 
 \section{Mathematical Closure and Verification}
 \label{sec:results_verification}
@@ -10936,7 +10925,7 @@ span.  The two straight spans can then use no more than
     \label{eq:appendix_maximum_straight_span_length}
 \end{equation}
 
-From the exact span geometry in \Cref{sec:belt_loop_geometry},
+From the exact span relation in \Cref{eq:belt_straight_span_length},
 
 \begin{equation}
     \ell_0^2=C^2-\Delta r_0^2,
@@ -11199,18 +11188,10 @@ and mounted contributions are combined by
 \section{Numerical Solution of Tangential Contact}
 \label{app:num_tangential_contact}
 
-For a contact assumed to stick, \Cref{sec:sticking_traction_closure} does not
-prescribe $\lambda_j$ in advance.  The required static traction is the value
-that makes the corresponding relative tangential acceleration vanish.  CINDER
-therefore proposes the unknown sticking traction, evaluates the fixed-$\lambda$
-mechanics from \Cref{app:num_fixed_lambda}, and uses the resulting relative-
-acceleration residual to update that traction.
-
-The same bounded nonlinear solve is used in either dimension required by the
-current contact state.  Stick--stick leaves both $\lambda_p$ and $\lambda_s$
-free, a mixed stick--slip state solves only for the traction at the sticking
-contact, and both-slip fixes both kinetic tractions and requires no nonlinear
-traction solve.
+Sticking introduces the nonlinear traction-root conditions in
+\Cref{eq:sticking_traction_root_condition,eq:stick_stick_root_condition}.
+CINDER solves these roots numerically around the fixed-$\lambda$ mechanical
+closure of \Cref{app:num_fixed_lambda}.
 
 \subsection{Search domain, Jacobian, and acceptance}
 \label{app:num_contact_search}
@@ -11220,7 +11201,7 @@ physical static-friction interval.  This separates two questions that are
 physically distinct: first, what traction would be required to enforce stick;
 second, whether the available static friction can supply it.  An
 above-capacity root can therefore be found numerically and then rejected by the
-admissibility test in \Cref{sec:contact_admissibility_transitions}, rather than
+static limit in \Cref{eq:sticking_admissibility}, rather than
 being hidden by the search bounds themselves.
 
 When no continuation estimate is available, the initial guess is zero.  CINDER
@@ -11255,11 +11236,10 @@ it does not represent physical friction memory.
 \subsection{Numerical hysteresis at reattachment}
 \label{app:num_contact_hysteresis}
 
-The physical switching conditions remain those in
-\Cref{sec:contact_admissibility_transitions}.  At finite numerical precision,
-however, using exactly the same zero-margin static-capacity surface for both
-loss and recovery of stick can cause repeated stick--slip switching at nearly
-the same state.  CINDER therefore leaves stick loss at the physical
+The physical static-capacity limit remains
+\Cref{eq:sticking_admissibility}.  At finite numerical precision, however,
+using exactly the same zero-margin capacity for both loss and recovery of stick
+can cause repeated stick--slip switching at nearly the same state.  CINDER therefore leaves stick loss at the physical
 zero-margin boundary but normally requires a positive restick reserve of
 $10^{-3}$ in traction-utilization margin.
 
@@ -11285,14 +11265,22 @@ hybrid switching is implemented in
 \subsection{Continuous integration and host coupling}
 \label{app:num_continuous_integration}
 
-The software preserves the shaft boundary defined in
-\Cref{sec:system_definition}.  An attached engine, vehicle, dynamometer,
-controller, or other host system may carry states of its own, but its mechanical
-interface to the CVT remains the applied torque and equivalent referred inertia
-at the corresponding shaft.  The shaft speeds remain states of the CVT
-simulation rather than prescribed host trajectories.
+CINDER is implemented as a CVT component within a host simulation.  The
+standard study configurations attach the surrounding engine, load, vehicle, or
+other required system through the shaft interfaces defined in
+\Cref{sec:system_definition}.  At each interface the host supplies the applied
+torque and equivalent referred inertia seen by the CVT, while the shaft speed
+remains part of the coupled dynamic response.
 
-Within any fixed mechanical regime, the resulting first-order initial-value
+The host layer is modular rather than fixed to those standard configurations.
+A different host can be attached without changing the internal CVT equations,
+and it may introduce additional states and boundary laws outside the
+transmission.  Those states can be advanced together with the CVT in the same
+initial-value problem, allowing the transmission to be embedded in a different
+engine, vehicle, dynamometer, flywheel, controller, or larger drivetrain model
+while retaining the same shaft-port contract.
+
+Within any fixed mechanical regime, the combined first-order initial-value
 problem is advanced through SciPy's \texttt{scipy.integrate.solve\_ivp}
 interface \citep{Virtanen2020}.  The generic runner is method-configurable.  The
 reported transient study drivers select LSODA, whose automatic selection
@@ -11322,22 +11310,6 @@ step.  Roundoff-scale boundary snapping and protected evaluation of these trial
 states keep such numerical probes inside valid geometry; they do not move the
 accepted physical event surface.
 
-\subsection{Finite-speed boundary updates}
-\label{app:num_finite_speed_update}
-
-When arrival at a shift boundary changes the velocity relations that may hold
-after the event, the finite-speed momentum map derived in
-\Cref{sec:finite_speed_shift_boundary_arrival} is applied rather than simply
-switching the continuous equations.  CINDER assembles the event-specific
-$\vect{J}^{-}$, $\vect{J}^{+}$, $\vect{W}$, and $\vect{C}^{+}$ objects and solves
-the resulting dense linear or KKT system.  The solved outgoing velocity is then
-written into the successor state.
-
-The event solve is checked against the momentum and post-event constraint
-relations from the formulation.  The associated perfectly inelastic kinetic-
-energy change is also recorded, so the discrete update can be audited separately
-from the continuous dynamics on either side of the event.
-
 \subsection{Integration mesh and reported output}
 \label{app:num_reporting_grid}
 
@@ -11350,10 +11322,8 @@ output is therefore never used to interpolate across a discrete state reset.
 The shaft ports are implemented in
 \CINDERcode{cvtModel/src/cinder/model/system/ports.py}{ports.py}; segmented
 integration is in
-\CINDERcode{cvtModel/src/cinder/execution/hybrid/hybrid.py}{hybrid.py};
-finite-speed projection is in
-\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_impact.py}{cvt_impact.py};
-and reporting materialization is in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/hybrid.py}{hybrid.py}; and
+reporting materialization is in
 \CINDERcode{cvtModel/src/cinder/results/reporting.py}{reporting.py}.
 
 \section{Formulation-to-Implementation Correspondence}
@@ -11397,9 +11367,6 @@ Static-traction root
 Continuous regime equations
 & Adaptive \texttt{solve\_ivp} segments with explicit hybrid transitions
 & Integrate smooth dynamics separately from changes in the active mechanical regime. \\[5pt]
-Finite-speed momentum update
-& Direct event-specific linear/KKT solve with momentum, constraint, and energy checks
-& Apply the discrete boundary relation derived in \Cref{sec:finite_speed_shift_boundary_arrival}. \\
 \end{longtable}
 \normalsize
 \end{center}
