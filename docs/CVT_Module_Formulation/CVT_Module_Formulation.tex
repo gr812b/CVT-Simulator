@@ -10322,111 +10322,60 @@ provides the initial condition for the next interval of continuous motion.
 
 TODO: Roadmap
 
-% ==============================================================
-\section{Computational Implementation and Reproducibility}
+\section{Numerical Study Framework and Reproducibility}
 \label{sec:results_implementation_reproducibility}
 
-The formulation developed in \Cref{chap:derivation} is implemented in the
-open-source CINDER simulator.  All Results studies in this manuscript use
-CINDER release \CINDERtag, pinned to commit \CINDERcommit.  The tagged source
-is available from
-\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}.
-Implementation details that are required to reproduce the numerical realization
-of the analytical equations
-are documented separately in \Cref{app:numerical_implementation}.  In
-particular, that appendix records the exact belt-geometry root solves, the
-fixed-$\lambda$ algebraic closure, affine actuator assembly, the nonlinear
-static-traction solve, and the hybrid time-integration procedure.
+The derivation in \Cref{chap:derivation} closes the mechanics of the CVT so
+that its instantaneous response can be determined from the current state and
+the loading presented at the two shafts. The Results use the CINDER simulator
+both to check how those equations behave when solved numerically and to study
+the response that follows from them.
 
-The Results are organized around two additional layers of reproducibility data.
-First, parameters that describe the common physical CVT rather than a particular
-experiment are collected in \Cref{app:reference_configuration}.  The master
-physical-configuration table, \Cref{tab:results_common_parameters}, records each
-quantity together with its value and provenance.  This keeps dimensions,
-material properties, inertias, friction parameters, and actuator definitions out
-of the individual Results sections unless a study deliberately changes one of
-them.  A study-specific deviation therefore has a precise meaning: it is an
-override of the reference configuration rather than an independent, partially
-specified model.
+Different questions naturally call for different numerical experiments. A
+question about the instantaneous mechanical closure can be examined at selected
+states or operating points. The effect of a particular dynamic term or
+mechanism is more clearly exposed by a controlled comparison in which that
+contribution is changed while the rest of the case is held fixed. Complete
+operating events, by contrast, require the coupled system to evolve through
+time. The studies in this chapter therefore range from local evaluations and
+controlled comparisons to full transient simulations, with the scope of each
+calculation chosen to match the question being tested.
 
-Second, execution settings and study definitions are indexed in
-\Cref{app:study_reproducibility}.  Common solver settings are recorded in
-\Cref{tab:results_common_numerics}, while the study and case registry in
-\Cref{tab:results_case_registry} identifies the scientific purpose, host or
-boundary condition, base configuration, and explicit overrides for every
-paper-facing case. Several verification
-studies contain many operating points or reference cases.
+The shaft interfaces defined in \Cref{sec:system_definition} allow the same CVT
+to be used across those experiments. An engine, vehicle, flywheel, or
+dynamometer can be attached through those interfaces, while a benchmark can
+instead prescribe the boundary conditions needed for the comparison. These
+choices change the experiment surrounding the transmission, not the CVT
+formulation between the two shaft interfaces.
 
-\subsection{Versioned software and archival boundary}
-\label{sec:results_versioned_software}
+Comparisons across these experiments also require a common baseline. Unless
+stated otherwise, each study uses the reference CVT defined in
+\Cref{app:reference_configuration} and the common numerical settings listed in
+\Cref{tab:results_common_numerics}. The complete physical parameter set and its
+provenance are given in \Cref{tab:results_common_parameters}. Individual
+Results sections therefore need to state only the physical or numerical
+quantities that are deliberately changed. The study and case registry in
+\Cref{tab:results_case_registry} records those changes together with the host or
+boundary used by each case.
 
-The simulator release and the Results archive are treated as separate
-reproducibility objects.  The simulator tag fixes the implementation of the
-mechanical model and numerical algorithms.  The Results archive fixes the
-study definitions, configuration files, analysis scripts, and the generated
-paper-facing artifacts.  At final Results freeze, the latter will be identified
-by the following versioned records:
+All results reported in this chapter use the open-source CINDER release
+\CINDERtag, pinned to commit \CINDERcommit. The tagged source is available from
+\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}. Details of
+how the analytical equations are solved in software are documented separately
+in \Cref{app:numerical_implementation}, including the belt-geometry root solves,
+the fixed-$\lambda$ mechanical closure, actuator assembly, static-traction
+solution, and hybrid time integration.
 
-\begin{itemize}
-    \item Results release/tag: \ResultsTag,
-    \item Results commit: \ResultsCommit,
-    \item archival DOI: \ResultsDOI.
-\end{itemize}
+Reproducing a reported result also requires the exact study definition used
+with that implementation. The frozen Results archive therefore contains the
+configuration files, analysis scripts, and saved outputs used to generate the
+figures and tables retained in the manuscript. At the final Results freeze, the
+archive is identified by \ResultsTag, \ResultsCommit, and \ResultsDOI. The
+mapping from each manuscript figure or table to its archived source is recorded
+in \Cref{tab:results_artifact_index}. Together, the tagged CINDER implementation
+and the frozen Results archive specify both the model that was executed and the
+numerical experiment that produced each reported result.
 
-The placeholders above are deliberately centralized in the preamble so that the
-final archival identifiers can be inserted without editing the scientific text.
-The Git repository remains useful for inspection and development history, but
-the frozen commit and archival DOI will define the canonical source for
-reproducing the published Results.
-
-\subsection{Configuration hierarchy}
-\label{sec:results_configuration_hierarchy}
-
-Each Results study is defined relative to a common physical configuration and,
-where applicable, a common numerical configuration.  The reference physical
-model is given in \Cref{tab:results_common_parameters}; common integration,
-contact-solver, event, and reporting settings are given in
-\Cref{tab:results_common_numerics}.  A Results subsection therefore needs to
-state only the quantities that are scientifically varied or otherwise differ
-from those references.  Full values are retained in the appendices and archived
-configuration files so that the main text can focus on the question being
-tested rather than repeatedly restating the complete simulator input set.
-
-The same convention applies to external hosts.  Engine, vehicle, prescribed
-actuator, flywheel, or dynamometer-like systems are not folded into the CVT
-parameter table.  They are identified with the study that uses them in
-\Cref{tab:results_case_registry}, consistent with the shaft-boundary separation
-introduced in \Cref{sec:system_definition}.  Consequently, replacing a host or
-actuator for a benchmark does not create a second CVT formulation; it changes a
-specified component or boundary around the same mechanical plant.
-
-\subsection{Study artifacts and traceability}
-\label{sec:results_artifact_traceability}
-
-Every manuscript figure or table generated from simulation will be traceable to
-a frozen study definition and archived source artifact.  The final mapping is
-recorded in \Cref{tab:results_artifact_index}.  The intended publication path is
-therefore
-
-\begin{equation}
-    \text{tagged CINDER implementation}
-    \;\longrightarrow\;
-    \text{frozen study configuration}
-    \;\longrightarrow\;
-    \text{machine-readable result}
-    \;\longrightarrow\;
-    \text{paper-facing figure or table}.
-    \label{eq:results_reproducibility_chain}
-\end{equation}
-
-This separation is important during the exploratory stage of the work because a
-study directory may contain intermediate sweeps or diagnostic plots that do not
-survive into the paper.  The publication archive will retain the final
-configuration and evidence needed to reproduce each reported claim; exploratory
-material is not itself part of the manuscript evidence unless it is explicitly
-indexed in \Cref{tab:results_artifact_index}.
-
-% ==============================================================
 \section{Mathematical Closure and Verification}
 \label{sec:results_verification}
 
@@ -10936,38 +10885,67 @@ geometric computations in this work.
 
 \noindent\textit{Implementation version: \CINDERtag\ (commit \CINDERcommit).}
 
+This appendix records the parts of the CINDER implementation that require a
+numerical procedure beyond the analytical equations themselves, together with
+cases where the implemented algebra differs from the form used in the
+formulation.  The discussion therefore focuses on root solves, conditioning,
+contact closure, event handling, and the equivalent equation forms used in the
+code.  Code references are included so that these numerical choices can be
+traced to the tagged implementation.
+
 \section{Numerical Solution of Belt Geometry}
 \label{app:num_geometry}
 
 The exact belt geometry derived in
 \Cref{sec:belt_loop_geometry,sec:pulley_coordinate_mapping} is retained in the
-implementation.  The scalar belt-length roots are evaluated with SciPy's
-\texttt{scipy.optimize.brentq} routine \citep{Virtanen2020}.
+implementation.  The quantities that remain implicit in the belt-length
+closure are found with SciPy's \texttt{scipy.optimize.brentq} routine
+\citep{Virtanen2020}.
 
-At construction time, the specified zero-shift radii $r_{p,0}$ and $r_{s,0}$
-are used to solve once for the fixed pulley centre distance $C$.  With
-$\Delta r_0=r_{s,0}-r_{p,0}$, the lower bound is
+The first such solve is performed once, during construction, to determine the
+fixed pulley centre distance $C$ from the specified zero-shift radii
+$r_{p,0}$ and $r_{s,0}$.  A physical bracket can be obtained directly from the
+same belt geometry.  The centre distance cannot be smaller than the sum of the
+two radii,
 
 \begin{equation}
     C_{\mathrm{lo}}=r_{p,0}+r_{s,0},
     \label{eq:appendix_center_distance_lower_bound}
 \end{equation}
 
-which prevents overlap of the two outer belt envelopes.  The upper bound
-follows from the exact wrap geometry.  Since
+because the two pulley circles would otherwise overlap.  The upper bound comes
+from the finite belt length. The total wrapped length is
 
 \begin{equation}
 \begin{aligned}
     r_p\phi_p+r_s\phi_s
     & = \pi(r_p+r_s)
       +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\\
-    & \geq \pi(r_p+r_s),
+    & \geq \pi(r_p+r_s).
 \end{aligned}
 \label{eq:appendix_minimum_wrapped_length}
 \end{equation}
 
-the two straight spans can use at most
-$L_b-\pi(r_{p,0}+r_{s,0})$ of the belt.  Therefore
+At the zero-shift geometry, let $\ell_0$ denote the length of either straight
+span.  The two straight spans can then use no more than
+
+\begin{equation}
+    2\ell_0
+    \leq
+    L_b-\pi(r_{p,0}+r_{s,0}).
+    \label{eq:appendix_maximum_straight_span_length}
+\end{equation}
+
+From the exact span geometry in \Cref{sec:belt_loop_geometry},
+
+\begin{equation}
+    \ell_0^2=C^2-\Delta r_0^2,
+    \qquad
+    \Delta r_0=r_{s,0}-r_{p,0}.
+    \label{eq:appendix_zero_shift_span_geometry}
+\end{equation}
+
+Combining these relations gives the upper bracket
 
 \begin{equation}
     C_{\mathrm{hi}}
@@ -10982,15 +10960,16 @@ $L_b-\pi(r_{p,0}+r_{s,0})$ of the belt.  Therefore
     \label{eq:appendix_center_distance_upper_bound}
 \end{equation}
 
-The residual is checked at both endpoints before iteration.  An endpoint is
-accepted when the absolute belt-length residual is no greater than
+The belt-length residual is checked at both endpoints before iteration.  An
+endpoint is accepted when its absolute residual is no greater than
 $10^{-12}\,\mathrm{m}$; otherwise a sign change is required and Brent iteration
-uses an absolute root-location tolerance of $10^{-12}\,\mathrm{m}$.  These
-physical bounds avoid a broad numerical search.
+uses an absolute root-location tolerance of $10^{-12}\,\mathrm{m}$.  The
+bracket is therefore set by the geometry itself rather than by an arbitrary
+numerical search interval.
 
-Once $C$ is fixed, construction performs one additional broad solve at
-$s=s_{\max}$ to determine the opposite endpoint of the secondary travel.  The
-primary radius is explicit,
+A second broad geometry solve is performed once at construction to make the
+repeated runtime solve cheaper.  At $s=s_{\max}$, the primary radius is known
+explicitly,
 
 \begin{equation}
     r_{p,\max}
@@ -11001,7 +10980,8 @@ primary radius is explicit,
     \label{eq:appendix_primary_radius_max_shift}
 \end{equation}
 
-and the secondary endpoint is solved in
+while the compatible secondary radius is still obtained from belt-length
+closure.  This one setup solve uses the broad physical bracket
 
 \begin{equation}
 \begin{aligned}
@@ -11016,23 +10996,31 @@ and the secondary endpoint is solved in
 \label{eq:appendix_secondary_setup_bounds}
 \end{equation}
 
-The lower bound keeps the complete belt cross-section outside the pulley axis;
-the two upper bounds prevent envelope overlap and enforce
-\Cref{eq:appendix_minimum_wrapped_length}.  The solved maximum-shift radius and
-the specified zero-shift radius are then stored as the runtime bracket,
+The lower limit keeps the full belt section outside the pulley axis.  The first
+upper limit leaves enough centre spacing for the primary and secondary radii to
+fit without intersecting, while the second follows from
+\Cref{eq:appendix_minimum_wrapped_length}: the two wrapped portions cannot by
+themselves require more belt than is available.
+
+Once the secondary radius at maximum shift has been found, the two travel
+endpoints are stored as
 
 \begin{equation}
     r_s(s)\in\left[r_s(s_{\max}),\,r_s(0)\right].
     \label{eq:appendix_secondary_runtime_bracket}
 \end{equation}
 
-Thus every ordinary geometry evaluation solves only one scalar radius root on
-a tight, precomputed physical interval.  Remaining radius references are fixed
-offsets, while first and second radius derivatives are evaluated analytically
-from the differentiated belt-length closure rather than by finite differences.
-At $s=s_{\mathrm{dz}}$, separate deadzone-side and engaged-side evaluations
-provide the appropriate one-sided derivative while preserving the common
-boundary position.
+Every ordinary geometry evaluation during integration can then solve for
+$r_s(s)$ on this much tighter interval instead of repeating the broad setup
+search.  The extra work is paid once at construction so that the geometry root
+solved throughout the run uses the smallest precomputed physical bracket.
+The other radius definitions used by the model follow from fixed offsets from
+these solved radii.  First and second radius derivatives are obtained directly from the differentiated belt-length closure,
+which avoids adding finite-difference error to quantities used by the dynamic
+equations.  At $s=s_{\mathrm{dz}}$, the radius itself is common to both sides
+of the boundary, but its governing branch changes; separate deadzone-side and
+engaged-side evaluations therefore provide the appropriate one-sided
+derivatives.
 
 \paragraph{Code reference}
 The geometry implementation is contained in
@@ -11045,8 +11033,8 @@ The geometry implementation is contained in
 
 For a proposed signed traction pair $(\lambda_p,\lambda_s)$,
 \Cref{sec:engaged_mechanical_core} presents the freely shifting engaged
-mechanics after eliminating the two pulley torques.  The implementation retains
-those torques as simultaneous unknowns,
+mechanics after eliminating the two pulley torques $\tau_p$ and $\tau_s$.  The implementation instead
+retains those torques as simultaneous unknowns,
 
 \begin{equation}
     \vect{z}_{\mathrm{impl}}
@@ -11058,7 +11046,7 @@ those torques as simultaneous unknowns,
     \label{eq:appendix_eight_unknown_closure}
 \end{equation}
 
-and keeps the two traction rows explicit,
+and keeps the two traction relations as explicit rows,
 
 \begin{equation}
     \frac{\tau_p}{r_{p,\mathrm{eff}}}+\lambda_pN_p=0,
@@ -11067,20 +11055,23 @@ and keeps the two traction rows explicit,
     \label{eq:appendix_explicit_traction_rows}
 \end{equation}
 
-Eliminating $\tau_p$ and $\tau_s$ recovers the reduced six-variable system, so
-no physical degree of freedom is added.  Retaining torque keeps torque-reactive
-mechanisms coupled directly to the simultaneous solve and avoids ever needing
-to recover $N_j$ by dividing a solved torque by $\lambda_j$.  At
-$\lambda_j=0$, the explicit traction row simply requires $\tau_j=0$ while the
-remaining balances determine $N_j$.
+Eliminating $\tau_p$ and $\tau_s$ from these rows recovers the reduced
+six-variable system used in the formulation, so the implementation does not
+add a physical degree of freedom.  This form has two practical advantages: torque-reactive mechanisms remain
+coupled directly to the same simultaneous solve, and the normal resultants
+never have to be recovered by
+dividing a solved torque by $\lambda_j$.  In particular, when
+$\lambda_j=0$, the corresponding traction row simply gives $\tau_j=0$ while
+the remaining balances continue to determine $N_j$.
 
 \subsection{Equilibrated linear solve}
 \label{app:num_equilibrated_solve}
 
-The closure mixes accelerations, torques, forces, and normal resultants, so the
-raw matrix contains substantially different coefficient scales.  CINDER
-therefore equilibrates the algebraically identical system before the dense
-solve.  For $\vect{A}\vect{z}=\vect{b}$,
+The closure combines accelerations, torques, forces, and normal resultants in
+one linear system.  These quantities have different units and can produce very
+different coefficient magnitudes even when the underlying equations are well
+posed.  Before the dense solve, CINDER therefore equilibrates the algebraically
+identical system.  For $\vect{A}\vect{z}=\vect{b}$,
 
 \begin{equation}
     \vect{A}_s=\vect{D}_r\vect{A}\vect{D}_c,
@@ -11093,19 +11084,23 @@ solve.  For $\vect{A}\vect{z}=\vect{b}$,
 
 Each row scale is the reciprocal of the largest absolute magnitude in that row
 or its right-hand side; column scales are then formed from the row-scaled
-matrix.  The scaled system is solved directly and mapped back to physical
-unknowns.  Residuals are still evaluated against the unscaled equations.
-Diagnostic solves additionally expose rank and raw/equilibrated condition
-numbers.  The scaling changes numerical conditioning, not the mechanics.
+matrix.  The scaled system is solved for $\vect{y}$ and mapped back to the
+physical unknowns.  Residuals are still evaluated against the original,
+unscaled equations.  Diagnostic solves additionally expose the rank
+and both raw and equilibrated condition numbers.  The scaling therefore changes
+only the numerical conditioning of the solve, not the mechanical equations
+being enforced.
 
 \subsection{Regular evaluation through zero traction}
 \label{app:num_zero_traction}
 
 The wrap solution is analytically regular at $\lambda_j=0$, as shown in
-\Cref{eq:wrap_zero_traction_solution}.  Zero signed traction is therefore not a
-new mechanical regime: a clamped contact may pass continuously through
-$\lambda_j=0$ while retaining $N_j>0$.  The implementation preserves that
-continuity and changes only how the limiting coefficients are evaluated.
+\Cref{eq:wrap_zero_traction_solution}.  A clamped contact can therefore pass
+continuously through zero signed traction while retaining $N_j>0$; zero
+traction is not a separate mechanical regime.  The direct coefficient formulas
+are nevertheless numerically awkward near this limit because they subtract
+nearly equal quantities.
+
 With $z=\lambda_j\phi_j/\sin\beta$,
 
 \begin{equation}
@@ -11127,9 +11122,9 @@ For $|z|<10^{-4}$, CINDER evaluates the local series
 \label{eq:appendix_regular_wrap_series}
 \end{equation}
 
-and uses \texttt{expm1}-based expressions outside that neighbourhood.  This
-uses the regularity already proved by the formulation rather than introducing
-an artificial zero-traction topology change.
+and uses \texttt{expm1}-based expressions outside that neighbourhood.  The
+change is only in how the same smooth analytical functions are evaluated; no
+artificial topology change is introduced at $\lambda_j=0$.
 
 \paragraph{Code reference}
 The closure basis and linear solve are implemented in
@@ -11140,16 +11135,31 @@ row assembly is in
 and the regular wrap functions are evaluated in
 \CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equation_context.py}{equation_context.py}.
 
-\section{Affine Assembly of Mechanical Contributions}
+\section{Actuator Contributions}
 \label{app:num_affine_assembly}
 
-The actuator mechanics derived in
-\Cref{sec:axial_actuation_balances,sec:pulley_rotational_dynamics} must remain
-coupled to the simultaneous mechanical solve rather than being evaluated as
-external scalar forces.  Once the current state, geometry, and trial traction
-pair are frozen, the retained mechanism equations are affine in the
-instantaneous closure unknowns even though their coefficients may depend
-nonlinearly on position or speed.  A contribution is therefore represented as
+The actuator forces and torques derived in
+\Cref{sec:axial_actuation_balances,sec:pulley_rotational_dynamics} enter the
+same coupled mechanical closure as the belt and pulley dynamics.  The
+implementation preserves that coupling, but separates the actuator law from
+the closure assembly.  A pulley actuator therefore supplies its contribution
+to the common force and torque balances through a shared interface rather than
+being built directly into those balances.
+
+This separation allows the same CVT mechanics to be used with different
+clamping mechanisms without changing the closure itself.  The derived flyweight, primary spring, secondary helix, and secondary spring
+models all use this interface, but so can a different mechanical actuator, a
+prescribed axial-force law, or a feedback-controlled actuator.  This also
+allows study configurations to replace the native mechanical clamping without
+defining a separate CVT model.  Only the actuator contribution changes; the
+belt, pulley, and contact equations continue to be solved as the same coupled
+system.
+
+The interface places one numerical restriction on those contributions.  Once
+the current state, geometry, and trial traction pair are fixed, each
+contribution must be affine in the instantaneous closure unknowns so that the
+common mechanical system remains linear.  Thus a contribution is represented
+as
 
 \begin{equation}
     q(\vect{z}_{\mathrm{impl}})
@@ -11157,23 +11167,26 @@ nonlinearly on position or speed.  A contribution is therefore represented as
     \label{eq:appendix_affine_contribution}
 \end{equation}
 
-For example, if a mounted mechanism uses a local pulley coordinate $x_j(s)$,
+The affine requirement applies to the closure unknowns, not to the state on
+which the actuator law depends.  Both $q_0$ and $\vect{g}$ may therefore depend
+nonlinearly on the current position and speed.  Centrifugal flyweight action,
+for example, may retain its $\omega_p^2$ dependence because $\omega_p$ is known
+when the instantaneous closure is assembled.
+
+Dependence on an unknown being solved at that instant is carried by
+$\vect{g}$.  If a mounted mechanism uses a local pulley coordinate $x_j(s)$,
+for example,
 
 \begin{equation}
     \ddot x_j=x_j''(s)\dot s^2+x_j'(s)\ddot s.
     \label{eq:appendix_affine_local_acceleration}
 \end{equation}
 
-At a frozen state, the first term is a known bias and the second is a gain on
-the global shift-acceleration unknown.  The same interface allows force and
-torque contributions to depend on $\dot\omega_j$, $\tau_j$, or $N_j$ without
-an inner iteration or a lagged estimate.
-
-The particular primary flyweight, spring, secondary helix, and spring mechanics
-derived in \Cref{sec:axial_actuation_balances} are implemented through this
-interface; the abstraction does not replace those laws.  It permits additional
-mechanically compatible pulley elements while preserving their simultaneous
-coupling to the common closure channels.
+At the current state, $x_j''(s)\dot s^2$ is known, while
+$x_j'(s)\ddot s$ contributes a coefficient on the unknown global shift
+acceleration.  The same interface can carry dependence on
+$\dot\omega_j$, $\tau_j$, or $N_j$ when those quantities appear in an actuator
+law, while preserving the linear simultaneous closure.
 
 \paragraph{Code reference}
 The affine closure objects are defined in
@@ -11186,54 +11199,75 @@ and mounted contributions are combined by
 \section{Numerical Solution of Tangential Contact}
 \label{app:num_tangential_contact}
 
-\Cref{sec:sticking_traction_closure} leaves the required static traction
-utilizations to be determined nonlinearly.  A trial traction pair is passed to
-the fixed-$\lambda$ solve of \Cref{app:num_fixed_lambda}; the resulting
-relative-acceleration residuals then close the contacts assumed to stick.  The
-same bounded routine is used in one or two dimensions: stick--stick frees both
-traction utilizations, a mixed branch frees only the sticking interface, and
-both-slip requires no nonlinear solve.
+For a contact assumed to stick, \Cref{sec:sticking_traction_closure} does not
+prescribe $\lambda_j$ in advance.  The required static traction is the value
+that makes the corresponding relative tangential acceleration vanish.  CINDER
+therefore proposes the unknown sticking traction, evaluates the fixed-$\lambda$
+mechanics from \Cref{app:num_fixed_lambda}, and uses the resulting relative-
+acceleration residual to update that traction.
+
+The same bounded nonlinear solve is used in either dimension required by the
+current contact state.  Stick--stick leaves both $\lambda_p$ and $\lambda_s$
+free, a mixed stick--slip state solves only for the traction at the sticking
+contact, and both-slip fixes both kinetic tractions and requires no nonlinear
+traction solve.
 
 \subsection{Search domain, Jacobian, and acceptance}
 \label{app:num_contact_search}
 
-The numerical search interval is deliberately wider than the physical static
-friction interval so that an over-capacity static requirement can be found and
-then rejected by the physical admissibility test in
-\Cref{sec:contact_admissibility_transitions}.  Absent continuation information,
-the initial guess is zero.  CINDER uses SciPy's bounded
-\texttt{scipy.optimize.least\_squares} routine \citep{Virtanen2020} with the
-trust-region reflective method, a three-point finite-difference residual
-Jacobian, and Jacobian-based scaling.  The tagged defaults use
-\texttt{ftol}=\texttt{xtol}=\texttt{gtol}=$10^{-12}$ and at most 100 residual
-evaluations.  A candidate is accepted only after a fresh mechanical evaluation
-satisfies the declared sticking residual tolerance.
+The numerical root search is deliberately allowed to extend beyond the
+physical static-friction interval.  This separates two questions that are
+physically distinct: first, what traction would be required to enforce stick;
+second, whether the available static friction can supply it.  An
+above-capacity root can therefore be found numerically and then rejected by the
+admissibility test in \Cref{sec:contact_admissibility_transitions}, rather than
+being hidden by the search bounds themselves.
+
+When no continuation estimate is available, the initial guess is zero.  CINDER
+uses SciPy's bounded \texttt{scipy.optimize.least\_squares} routine
+\citep{Virtanen2020} with the trust-region reflective method, a three-point
+finite-difference residual Jacobian, and Jacobian-based scaling.  The tagged
+defaults use \texttt{ftol}=\texttt{xtol}=\texttt{gtol}=$10^{-12}$ and at most
+100 residual evaluations.  A returned candidate is not accepted from the
+optimizer status alone: the mechanical system is evaluated once more at that
+traction, and the resulting sticking residual must satisfy the declared
+contact tolerance.
 
 \subsection{Continuation between consecutive contact solves}
 \label{app:num_contact_continuation}
 
-Within one smooth contact topology, the required traction root normally changes
-continuously between nearby right-hand-side evaluations.  CINDER therefore
-stores the previous accepted root and local residual Jacobian.  One bounded
-Newton correction is attempted first; a successful step updates the Jacobian
-with a rank-one good-Broyden correction.  If the prediction is unavailable,
-reaches a search bound, fails mechanically, or misses the residual tolerance,
-the code falls back to the full bounded least-squares solve.  This reduces
-repeated nonlinear work and promotes tracking of the locally connected root in
-a residual map that need not be globally single-rooted; it does not add physical
-friction memory.
+Successive right-hand-side evaluations within one smooth contact topology are
+normally close in state space, so the required sticking traction is normally
+close as well.  CINDER uses this local continuity to avoid restarting the full
+nonlinear solve from zero at every evaluation.  The previous accepted traction
+root and its local residual Jacobian are stored, and one bounded Newton
+correction is attempted first.  After a successful correction, the Jacobian is
+updated with a rank-one good-Broyden step.
+
+If the continuation estimate is unavailable, reaches a search bound, cannot be
+evaluated mechanically, or fails the sticking-residual tolerance, the code
+falls back to the full bounded least-squares solve.  Besides reducing repeated
+nonlinear work, following the nearby accepted solution helps the simulation
+remain on the locally connected traction branch if other roots exist elsewhere
+in the residual map.  The stored numerical information is only a solver aid;
+it does not represent physical friction memory.
 
 \subsection{Numerical hysteresis at reattachment}
 \label{app:num_contact_hysteresis}
 
 The physical switching conditions remain those in
-\Cref{sec:contact_admissibility_transitions}.  Numerically, reusing exactly the
-same static-capacity surface for loss and regain of stick can produce event
-chatter.  The implementation therefore leaves stick loss at the physical
+\Cref{sec:contact_admissibility_transitions}.  At finite numerical precision,
+however, using exactly the same zero-margin static-capacity surface for both
+loss and recovery of stick can cause repeated stick--slip switching at nearly
+the same state.  CINDER therefore leaves stick loss at the physical
 zero-margin boundary but normally requires a positive restick reserve of
-$10^{-3}$ in traction-utilization margin.  If that reserve would create a
-no-successor condition, the transition logic retries the sticking candidate at
-the physical static boundary.
+$10^{-3}$ in traction-utilization margin.
+
+This reserve is a numerical switching margin, not a change to the friction
+law.  If applying it would leave the event resolver with no admissible
+successor state, the sticking candidate is retried at the physical static
+boundary.  The extra margin therefore suppresses numerical chatter where it
+can do so without preventing an otherwise valid transition.
 
 \paragraph{Code reference}
 The nonlinear solve and continuation are implemented in
@@ -11252,58 +11286,65 @@ hybrid switching is implemented in
 \label{app:num_continuous_integration}
 
 The software preserves the shaft boundary defined in
-\Cref{sec:system_definition}.  Engines, vehicles, dynamometers, controllers, or
-other host systems may carry states of their own and are evaluated from the
-current simulation state, but only the applied torque and equivalent referred
-inertia are returned to the CVT at each shaft.  The same CVT implementation can
-therefore be embedded in different surrounding systems without moving those
-systems inside the transmission formulation.
+\Cref{sec:system_definition}.  An attached engine, vehicle, dynamometer,
+controller, or other host system may carry states of its own, but its mechanical
+interface to the CVT remains the applied torque and equivalent referred inertia
+at the corresponding shaft.  The shaft speeds remain states of the CVT
+simulation rather than prescribed host trajectories.
 
-Within a fixed regime, the resulting first-order initial-value problem is
-advanced through SciPy's \texttt{scipy.integrate.solve\_ivp} interface
-\citep{Virtanen2020}.  The generic runner is method-configurable.  The reported
-transient study drivers select LSODA, whose automatic selection between stiff
-and nonstiff multistep formulas follows the strategy of \citet{Petzold1983}.
-Relative and absolute tolerances and maximum-step limits are study settings and
-are therefore reported with the Results configuration rather than treated as
-mechanical-model constants.
+Within any fixed mechanical regime, the resulting first-order initial-value
+problem is advanced through SciPy's \texttt{scipy.integrate.solve\_ivp}
+interface \citep{Virtanen2020}.  The generic runner is method-configurable.  The
+reported transient study drivers select LSODA, whose automatic selection
+between stiff and nonstiff multistep formulas follows the strategy of
+\citet{Petzold1983}.  Relative and absolute tolerances and maximum-step limits
+are study settings and are therefore reported with the Results configuration
+rather than treated as constants of the mechanical model.
 
-The integration mesh is adaptive: the right-hand side can be evaluated several
-times at internal trial states before one step is accepted.  A plotted sampling
-interval is therefore not an integration time step.
+The integration mesh is adaptive.  The right-hand side may be evaluated at
+several internal trial states before a single step is accepted, so a plotted or
+reported sampling interval is not an integration time step.
 
 \subsection{Hybrid segmentation and event localization}
 \label{app:num_hybrid_segmentation}
 
-The regime structure in \Cref{sec:shift_regime_dynamics} is implemented as a
-sequence of smooth \texttt{solve\_ivp} segments.  Each active regime exposes
-only its reachable terminal, direction-aware events.  When one is localized,
-the segment ends, the transition resolver selects the successor regime and any
-required successor state, and integration restarts at the same physical time.
+The regime structure derived in \Cref{sec:shift_regime_dynamics} is integrated
+one smooth regime at a time.  Each active regime exposes only the boundary
+events that it can reach, together with the allowed crossing direction.  When
+an event is localized, the current \texttt{solve\_ivp} segment ends, the
+transition resolver determines the successor regime and any required state
+update, and integration restarts at the same physical time.
+
 Events localized to the same endpoint within the configured association
-tolerance are resolved together.  Roundoff-scale boundary snapping and
-protected evaluation of rejected trial stages are used only to keep numerical
-probes inside valid geometry; they do not move the accepted physical event
-surface.
+tolerance are resolved together.  The adaptive integrator can also probe a
+trial state slightly beyond a valid boundary while attempting or rejecting a
+step.  Roundoff-scale boundary snapping and protected evaluation of these trial
+states keep such numerical probes inside valid geometry; they do not move the
+accepted physical event surface.
 
 \subsection{Finite-speed boundary updates}
 \label{app:num_finite_speed_update}
 
-The finite-speed event map derived in
-\Cref{sec:finite_speed_shift_boundary_arrival} is implemented directly.  CINDER
-assembles the event-specific $\vect{J}^{-}$, $\vect{J}^{+}$, $\vect{W}$, and
-$\vect{C}^{+}$ objects and solves the resulting dense linear or KKT system.  The
-outgoing velocity is inserted into the successor state.  Constraint and
-momentum residuals are checked afterward, and the perfectly inelastic kinetic-
-energy change is recorded with the transition.
+When arrival at a shift boundary changes the velocity relations that may hold
+after the event, the finite-speed momentum map derived in
+\Cref{sec:finite_speed_shift_boundary_arrival} is applied rather than simply
+switching the continuous equations.  CINDER assembles the event-specific
+$\vect{J}^{-}$, $\vect{J}^{+}$, $\vect{W}$, and $\vect{C}^{+}$ objects and solves
+the resulting dense linear or KKT system.  The solved outgoing velocity is then
+written into the successor state.
+
+The event solve is checked against the momentum and post-event constraint
+relations from the formulation.  The associated perfectly inelastic kinetic-
+energy change is also recorded, so the discrete update can be audited separately
+from the continuous dynamics on either side of the event.
 
 \subsection{Integration mesh and reported output}
 \label{app:num_reporting_grid}
 
-The adaptive native trajectory is preserved separately from the user-facing
-reporting grid.  Uniform reports use SciPy dense output separately within each
-smooth segment, with exact segment endpoints retained explicitly.  Interpolation
-is therefore never performed across a discrete state reset.
+The native adaptive trajectory is retained separately from the user-facing
+reporting grid.  Uniform reports are generated with SciPy dense output within
+each smooth segment, and exact segment endpoints are kept explicitly.  Dense
+output is therefore never used to interpolate across a discrete state reset.
 
 \paragraph{Code reference}
 The shaft ports are implemented in
@@ -11332,37 +11373,36 @@ Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \mid
 \bottomrule
 \endfoot
 \bottomrule
-\caption{Correspondence between the analytical formulation and numerical implementation choices.}
+\caption{Correspondence between the analytical formulation and the numerical choices documented in this appendix.}
 \label{tab:appendix_numerical_correspondence}\\
 \endlastfoot
 Implicit exact belt geometry
-& SciPy \texttt{brentq}; construction-time bounds and cached runtime radius bracket
-& Preserve the exact geometry while keeping repeated solves tightly bounded. \\[5pt]
+& SciPy \texttt{brentq}; physical construction bounds and a cached runtime radius bracket
+& Retain the exact belt-length closure while keeping the repeated radius solve tightly bounded. \\[5pt]
 Six-variable fixed-$\lambda$ closure
 & Eight-variable closure retaining pulley torques and explicit traction rows
-& Preserve torque coupling and regular zero-traction algebra. \\[5pt]
+& Keep torque-dependent mechanisms simultaneous and remain regular through zero traction. \\[5pt]
 $\vect{A}\vect{z}=\vect{b}$
-& Row/column equilibration and dense direct solve
-& Reduce avoidable mixed-unit scale sensitivity without changing the physical equations. \\[5pt]
+& Row/column equilibration followed by a dense direct solve
+& Reduce avoidable mixed-scale conditioning problems without changing the physical equations. \\[5pt]
 Continuous $\lambda_j\to0$ wrap limit
 & Regular $\Phi_-$/$\Psi_-$ evaluation using local series and \texttt{expm1}
-& Avoid cancellation without introducing a new regime. \\[5pt]
-Derived actuator equations
-& Affine bias-plus-gain component interface
-& Keep dynamic actuator coupling inside the simultaneous solve while allowing compatible elements. \\[5pt]
+& Avoid cancellation while preserving the same smooth contact solution. \\[5pt]
+Actuator laws entering the coupled balances
+& Shared actuator interface with affine bias-plus-gain dependence on the closure unknowns
+& Allow actuator models to be exchanged without changing the CVT closure while preserving its linear simultaneous solve. \\[5pt]
 Static-traction root
-& SciPy bounded trust-region \texttt{least\_squares}, local continuation, and residual acceptance
-& Solve mixed and stick--stick closure while tracking the nearby branch efficiently. \\[5pt]
+& Bounded trust-region \texttt{least\_squares}, local continuation, and independent residual acceptance
+& Find the traction required for stick efficiently, then apply physical admissibility separately. \\[5pt]
 Continuous regime equations
-& Adaptive SciPy \texttt{solve\_ivp} segments with explicit hybrid transitions
-& Keep smooth integration separate from topology changes. \\[5pt]
-Finite-speed momentum projection
-& Direct event-specific linear/KKT solve with residual and energy audits
-& Apply the event relation derived in \Cref{sec:finite_speed_shift_boundary_arrival}. \\
+& Adaptive \texttt{solve\_ivp} segments with explicit hybrid transitions
+& Integrate smooth dynamics separately from changes in the active mechanical regime. \\[5pt]
+Finite-speed momentum update
+& Direct event-specific linear/KKT solve with momentum, constraint, and energy checks
+& Apply the discrete boundary relation derived in \Cref{sec:finite_speed_shift_boundary_arrival}. \\
 \end{longtable}
 \normalsize
 \end{center}
-
 
 \chapter{Reference Configuration and Parameter Provenance}
 \label{app:reference_configuration}
