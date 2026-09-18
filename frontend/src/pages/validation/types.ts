@@ -46,6 +46,14 @@ export interface MeasurementMetadata {
 
 export type ShaftValidationMode = 'physical' | 'replay_measured_speed';
 
+export interface SavedValidationDataset {
+  filename: string;
+  rawCsv: string;
+  cropStartS: number;
+  cropEndS: number;
+  channels: ChannelConfig[];
+}
+
 export interface ValidationWorkflowDefaults {
   /** `track_measured_speed` remains accepted as a legacy autosaved workspace value. */
   primaryMode?: ShaftValidationMode | 'track_measured_speed';
@@ -63,6 +71,7 @@ export interface ValidationWorkflowDefaults {
     primary?: MeasurementUncertainty;
     secondary?: MeasurementUncertainty;
   };
+  activeDataset?: SavedValidationDataset;
   manualInitialState?: {
     primaryAngularSpeedRadPerS: number;
     secondaryAngularSpeedRadPerS: number;

@@ -70,7 +70,7 @@ function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   const text = String(value);
   if (!/[",\r\n]/.test(text)) return text;
-  return `"${text.replaceAll('\"', '""')}"`;
+  return `"${text.split('"').join('""')}"`;
 }
 
 function cinderReportCsv(result: SimulationResult): string {

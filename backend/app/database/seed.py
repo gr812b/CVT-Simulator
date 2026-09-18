@@ -516,9 +516,7 @@ def _seed_validation_workspace(session: Session) -> None:
     )
 
     existing = session.scalar(
-        select(ValidationWorkspace).where(
-            ValidationWorkspace.account_id == SEED_ACCOUNT_ID
-        )
+        select(ValidationWorkspace).where(ValidationWorkspace.account_id == SEED_ACCOUNT_ID)
     )
     if existing is not None:
         _upgrade_workspace(existing)

@@ -58,11 +58,8 @@ from cinder.studies import (
     summarize_geometry_design,
 )
 
-
 DEFAULT_EXECUTION_PROFILE = "default"
-VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE = (
-    "validation_slotted_secondary_helix"
-)
+VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE = "validation_slotted_secondary_helix"
 
 
 class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):

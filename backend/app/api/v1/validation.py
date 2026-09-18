@@ -15,12 +15,14 @@ from app.database.validation import (
     create_validation_run,
     ensure_workspace,
     get_validation_run,
+    list_validation_runs,
     upsert_workspace,
 )
 from app.schemas.runs import CreateRunRequest, RunStatusResponse
 from app.schemas.validation import (
     ValidationRunCreate,
     ValidationRunResponse,
+    ValidationRunSummary,
     ValidationWorkspaceResponse,
     ValidationWorkspaceUpdate,
 )
@@ -37,6 +39,29 @@ def _workspace_response(workspace) -> ValidationWorkspaceResponse:
         controller_templates=workspace.controller_templates,
         workflow_defaults=workspace.workflow_defaults,
         updated_at=workspace.updated_at,
+    )
+
+
+def _run_summary(run) -> ValidationRunSummary:
+    result = run.result_snapshot if isinstance(run.result_snapshot, dict) else {}
+    metrics = result.get("metrics")
+    metrics = metrics if isinstance(metrics, dict) else {}
+    completed = metrics.get("completed") is True
+    termination_reason = metrics.get("termination_reason")
+    if not isinstance(termination_reason, str) or not termination_reason:
+        termination_reason = "unknown"
+    duration = metrics.get("duration_s")
+    duration_s = float(duration) if isinstance(duration, (int, float)) else 0.0
+    return ValidationRunSummary(
+        id=run.id,
+        source_filename=run.source_filename,
+        crop_start_s=run.crop_start_s,
+        crop_end_s=run.crop_end_s,
+        simulation_run_id=run.simulation_run_id,
+        cinder_completed=completed,
+        termination_reason=termination_reason,
+        duration_s=duration_s,
+        created_at=run.created_at,
     )
 
 
@@ -119,13 +144,23 @@ def create_validation_simulation_run(
     )
 
 
+@router.get("/runs", response_model=list[ValidationRunSummary])
+def recent_validation_runs(
+    limit: int = 20,
+    session: Session = Depends(get_database_session),
+) -> list[ValidationRunSummary]:
+    return [_run_summary(run) for run in list_validation_runs(session, limit=limit)]
+
+
 @router.post("/runs", response_model=ValidationRunResponse)
 def save_validation_run(
     request: ValidationRunCreate,
     session: Session = Depends(get_database_session),
 ) -> ValidationRunResponse:
     if request.crop_end_s <= request.crop_start_s:
-        raise ApiProblem(422, "validation_crop_invalid", "crop_end_s must be greater than crop_start_s.")
+        raise ApiProblem(
+            422, "validation_crop_invalid", "crop_end_s must be greater than crop_start_s."
+        )
     run = create_validation_run(session, **request.model_dump())
     return _run_response(run)
 
@@ -137,5 +172,7 @@ def validation_run(
 ) -> ValidationRunResponse:
     run = get_validation_run(session, run_id=run_id)
     if run is None:
-        raise ApiProblem(404, "validation_run_not_found", f"Validation run {run_id!r} was not found.")
+        raise ApiProblem(
+            404, "validation_run_not_found", f"Validation run {run_id!r} was not found."
+        )
     return _run_response(run)

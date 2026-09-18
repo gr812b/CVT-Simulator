@@ -37,12 +37,10 @@ def test_validation_integrator_is_replay_safe_without_changing_global_defaults()
 
     assert source["execution"]["integrator"]["relative_tolerance"] == 1.0e-2
     assert (
-        upgraded["execution"]["integrator"]["relative_tolerance"]
-        == VALIDATION_RELATIVE_TOLERANCE
+        upgraded["execution"]["integrator"]["relative_tolerance"] == VALIDATION_RELATIVE_TOLERANCE
     )
     assert (
-        upgraded["execution"]["integrator"]["absolute_tolerance"]
-        == VALIDATION_ABSOLUTE_TOLERANCE
+        upgraded["execution"]["integrator"]["absolute_tolerance"] == VALIDATION_ABSOLUTE_TOLERANCE
     )
     assert upgraded["execution"]["integrator"]["max_step"] == VALIDATION_MAX_STEP_S
 

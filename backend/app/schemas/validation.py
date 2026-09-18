@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from pydantic import Field
 
@@ -45,4 +44,16 @@ class ValidationRunCreate(ApiModel):
 
 class ValidationRunResponse(ValidationRunCreate):
     id: str
+    created_at: datetime
+
+
+class ValidationRunSummary(ApiModel):
+    id: str
+    source_filename: str
+    crop_start_s: float
+    crop_end_s: float
+    simulation_run_id: str | None = None
+    cinder_completed: bool
+    termination_reason: str
+    duration_s: float
     created_at: datetime

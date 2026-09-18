@@ -541,17 +541,18 @@ class ValidationWorkspace(StringUUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "validation_workspaces"
 
     account_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
-        nullable=False, unique=True, index=True,
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
     )
     setup_document: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
     metrology: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
     controller_templates: Mapped[list[JsonDict]] = mapped_column(
         JsonPayload, nullable=False, default=list
     )
-    workflow_defaults: Mapped[JsonDict] = mapped_column(
-        JsonPayload, nullable=False, default=dict
-    )
+    workflow_defaults: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
 
 
 class RunCacheEntry(StringUUIDPrimaryKeyMixin, Base):
@@ -645,11 +646,15 @@ class ValidationRun(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "validation_runs"
 
     account_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     simulation_run_id: Mapped[str | None] = mapped_column(
-        String(36), nullable=True, index=True,
+        String(36),
+        nullable=True,
+        index=True,
     )
     source_filename: Mapped[str] = mapped_column(String(512), nullable=False)
     raw_csv: Mapped[str] = mapped_column(Text, nullable=False)

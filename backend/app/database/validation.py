@@ -146,8 +146,12 @@ def _upgrade_workflow(workflow: JsonDict | None, setup_document: JsonDict) -> Js
 
     rpm_defaults_raw = raw.get("rpmMeasurementDefaults")
     rpm_defaults = rpm_defaults_raw if isinstance(rpm_defaults_raw, dict) else {}
+    active_dataset_raw = raw.get("activeDataset")
+    active_dataset = (
+        copy.deepcopy(active_dataset_raw) if isinstance(active_dataset_raw, dict) else None
+    )
 
-    return {
+    upgraded = {
         "primaryMode": _normalize_mode(raw.get("primaryMode")),
         "secondaryMode": _normalize_mode(raw.get("secondaryMode")),
         "speedReplay": {"trackingGainNmSPerRad": replay_gain},
@@ -174,6 +178,9 @@ def _upgrade_workflow(workflow: JsonDict | None, setup_document: JsonDict) -> Js
         },
         "manualInitialState": manual,
     }
+    if active_dataset is not None:
+        upgraded["activeDataset"] = active_dataset
+    return upgraded
 
 
 def _apply_validation_integrator(document: JsonDict) -> JsonDict:
@@ -295,6 +302,19 @@ def upsert_workspace(
         workspace.workflow_defaults = normalized_workflow
     session.flush()
     return workspace
+
+
+def list_validation_runs(
+    session: Session,
+    *,
+    limit: int = 20,
+) -> list[ValidationRun]:
+    bounded_limit = max(1, min(int(limit), 100))
+    return list(
+        session.scalars(
+            select(ValidationRun).order_by(ValidationRun.created_at.desc()).limit(bounded_limit)
+        )
+    )
 
 
 def get_validation_run(session: Session, *, run_id: str) -> ValidationRun | None:

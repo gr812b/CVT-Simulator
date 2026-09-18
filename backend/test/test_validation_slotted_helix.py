@@ -12,7 +12,6 @@ from app.application.cinder_gateway import (
     _apply_execution_profile,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PRESET = ROOT / "presets" / "baja-launch-baseline.json"
 

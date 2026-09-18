@@ -41,10 +41,7 @@ def _repair_legacy_ramp_quadrants(value: Any) -> tuple[Any, bool]:
             repaired_dict[key] = repaired
             changed = changed or item_changed
 
-        if (
-            repaired_dict.get("kind") == "circular_segment"
-            and repaired_dict.get("quadrant") == -1
-        ):
+        if repaired_dict.get("kind") == "circular_segment" and repaired_dict.get("quadrant") == -1:
             repaired_dict["quadrant"] = 2
             changed = True
 
@@ -62,17 +59,13 @@ def upgrade() -> None:
     )
 
     # ColumnCollection.values is a method, so access the JSON column by key.
-    rows = bind.execute(
-        sa.select(tunes.c.id, tunes.c["values"])
-    ).mappings().all()
+    rows = bind.execute(sa.select(tunes.c.id, tunes.c["values"])).mappings().all()
 
     for row in rows:
         repaired_values, changed = _repair_legacy_ramp_quadrants(row["values"])
         if changed:
             bind.execute(
-                sa.update(tunes)
-                .where(tunes.c.id == row["id"])
-                .values(values=repaired_values)
+                sa.update(tunes).where(tunes.c.id == row["id"]).values(values=repaired_values)
             )
 
 

@@ -58,7 +58,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_validation_runs_account_id", "validation_runs", ["account_id"])
-    op.create_index("ix_validation_runs_simulation_run_id", "validation_runs", ["simulation_run_id"])
+    op.create_index(
+        "ix_validation_runs_simulation_run_id", "validation_runs", ["simulation_run_id"]
+    )
 
 
 def downgrade() -> None:

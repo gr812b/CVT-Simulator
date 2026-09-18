@@ -1026,6 +1026,18 @@ export interface ValidationMetric {
   count: number;
 }
 
+export interface ValidationRunSummary {
+  id: string;
+  sourceFilename: string;
+  cropStartS: number;
+  cropEndS: number;
+  simulationRunId: string | null;
+  cinderCompleted: boolean;
+  terminationReason: string;
+  durationS: number;
+  createdAt: string;
+}
+
 export interface ValidationRunRecord {
   id: string;
   accountId: string;
@@ -1079,6 +1091,29 @@ function parseValidationRunRecord(raw: unknown): ValidationRunRecord {
     metrics,
     createdAt: string(item.created_at, 'validation run.created_at'),
   };
+}
+
+function parseValidationRunSummary(raw: unknown): ValidationRunSummary {
+  const item = object(raw, 'validation run summary');
+  return {
+    id: string(item.id, 'validation run summary.id'),
+    sourceFilename: string(item.source_filename, 'validation run summary.source_filename'),
+    cropStartS: number(item.crop_start_s, 'validation run summary.crop_start_s'),
+    cropEndS: number(item.crop_end_s, 'validation run summary.crop_end_s'),
+    simulationRunId: item.simulation_run_id === null || item.simulation_run_id === undefined
+      ? null
+      : string(item.simulation_run_id, 'validation run summary.simulation_run_id'),
+    cinderCompleted: item.cinder_completed === true,
+    terminationReason: string(item.termination_reason, 'validation run summary.termination_reason'),
+    durationS: number(item.duration_s, 'validation run summary.duration_s'),
+    createdAt: string(item.created_at, 'validation run summary.created_at'),
+  };
+}
+
+export async function listValidationRuns(limit = 20): Promise<ValidationRunSummary[]> {
+  const bounded = Math.max(1, Math.min(100, Math.trunc(limit)));
+  const raw = await apiJson<unknown>(`/api/v1/validation/runs?limit=${bounded}`);
+  return array(raw, 'validation run summaries').map(parseValidationRunSummary);
 }
 
 export async function getValidationRun(runId: string): Promise<ValidationRunRecord> {

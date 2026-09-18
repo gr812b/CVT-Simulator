@@ -9,12 +9,14 @@ import {
   DEMO_ACCOUNT_ID,
   getSimulationResult,
   getValidationWorkspace,
+  listValidationRuns,
   saveValidationRun,
   saveValidationWorkspace,
   submitValidationSimulationRun,
   waitForSimulationRun,
   type CompletedSimulationRun,
   type SimulationCaseDocument,
+  type ValidationRunSummary,
   type ValidationWorkspace,
 } from '@api/client';
 import { reportAxisTimes, reportColumn } from '@utils/reportTable';
@@ -433,6 +435,8 @@ export const Validation = () => {
   const [uncertaintyEditor, setUncertaintyEditor] = useState<string | null>(null);
   const [completed, setCompleted] = useState<CompletedSimulationRun | null>(null);
   const [metrics, setMetrics] = useState<Record<string, SignalMetric>>({});
+  const [recentRuns, setRecentRuns] = useState<ValidationRunSummary[]>([]);
+  const [recentRunsError, setRecentRunsError] = useState<string | null>(null);
   const initialWorkspaceRef = useRef(true);
 
   useEffect(() => {
@@ -442,6 +446,34 @@ export const Validation = () => {
         setWorkspace(loaded);
         setWorkspaceError(null);
         setWorkspaceStatus('Saved');
+
+        const saved = (loaded.workflowDefaults as ValidationWorkflowDefaults).activeDataset;
+        if (
+          saved !== undefined
+          && typeof saved.filename === 'string'
+          && typeof saved.rawCsv === 'string'
+          && saved.rawCsv.length > 0
+        ) {
+          try {
+            const restored = parseDynoCsv(saved.filename, saved.rawCsv);
+            const first = restored.timeS[0];
+            const last = restored.timeS[restored.timeS.length - 1];
+            const startS = Math.max(first, Math.min(saved.cropStartS, last));
+            const endS = Math.max(startS, Math.min(saved.cropEndS, last));
+            const restoredCrop = endS > startS
+              ? { startS, endS }
+              : { startS: first, endS: last };
+            const restoredChannels = Array.isArray(saved.channels) && saved.channels.length > 0
+              ? saved.channels
+              : defaultChannels(restored, loaded.workflowDefaults as ValidationWorkflowDefaults);
+
+            setData(restored);
+            setCrop(restoredCrop);
+            setChannels(restoredChannels);
+          } catch (cause) {
+            console.warn('Could not restore the saved validation dataset.', cause);
+          }
+        }
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
@@ -450,6 +482,18 @@ export const Validation = () => {
       })
       .finally(() => setLoading(false));
   }, [setLoading]);
+
+  useEffect(() => {
+    void listValidationRuns(20)
+      .then((runs) => {
+        setRecentRuns(runs);
+        setRecentRunsError(null);
+      })
+      .catch((cause) => {
+        setRecentRuns([]);
+        setRecentRunsError(cause instanceof Error ? cause.message : String(cause));
+      });
+  }, []);
 
   useEffect(() => {
     if (workspace === null) return;
@@ -472,6 +516,23 @@ export const Validation = () => {
     }, 550);
     return () => window.clearTimeout(handle);
   }, [workspace?.setupDocument, workspace?.metrology, workspace?.workflowDefaults, workspace?.controllerTemplates]);
+
+  useEffect(() => {
+    if (data === null) return;
+    setWorkspace((current) => current === null ? current : {
+      ...current,
+      workflowDefaults: {
+        ...current.workflowDefaults,
+        activeDataset: {
+          filename: data.filename,
+          rawCsv: data.rawCsv,
+          cropStartS: crop.startS,
+          cropEndS: crop.endS,
+          channels,
+        },
+      },
+    });
+  }, [data, crop.startS, crop.endS, channels]);
 
   const workflow = (workspace?.workflowDefaults ?? {}) as ValidationWorkflowDefaults;
   const manual = { ...DEFAULT_MANUAL_STATE, ...(workflow.manualInitialState ?? {}) };
@@ -782,6 +843,46 @@ export const Validation = () => {
             <strong>{data.filename}</strong>
             <span>{data.timeS.length} samples</span>
             <span>{(data.timeS.at(-1) ?? 0).toFixed(3)} s</span>
+          </div>
+        )}
+      </section>
+
+      <section className={styles.recentRunsCard}>
+        <div className={styles.sectionHeadingInline}>
+          <div>
+            <span className={styles.stepLabel}>Recent</span>
+            <h2>Saved validation runs</h2>
+          </div>
+          <p>Newest saved runs. Open any run to revisit its frozen data and CINDER result.</p>
+        </div>
+
+        {recentRunsError !== null ? (
+          <p className={styles.recentRunsMessage}>Recent runs unavailable: {recentRunsError}</p>
+        ) : recentRuns.length === 0 ? (
+          <p className={styles.recentRunsMessage}>No saved validation runs yet.</p>
+        ) : (
+          <div className={styles.recentRunList}>
+            {recentRuns.map((run) => (
+              <button
+                type="button"
+                key={run.id}
+                className={styles.recentRunRow}
+                onClick={() => navigate(`/validation/runs/${run.id}`)}
+              >
+                <div className={styles.recentRunIdentity}>
+                  <strong>{run.sourceFilename}</strong>
+                  <span>{new Date(run.createdAt).toLocaleString()}</span>
+                </div>
+                <div className={styles.recentRunMeta}>
+                  <span>crop {run.cropStartS.toFixed(2)}-{run.cropEndS.toFixed(2)} s</span>
+                  <span>{(run.cropEndS - run.cropStartS).toFixed(2)} s selected</span>
+                  <span className={run.cinderCompleted ? styles.runComplete : styles.runPartial}>
+                    {run.cinderCompleted ? 'Complete' : 'Partial'}
+                  </span>
+                  {!run.cinderCompleted && <span>{run.terminationReason}</span>}
+                </div>
+              </button>
+            ))}
           </div>
         )}
       </section>

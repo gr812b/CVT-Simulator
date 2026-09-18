@@ -564,3 +564,130 @@
   .runCard { display: grid; }
   .runButton { width: 100%; }
 }
+
+
+.recentRunsCard {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--border-color) 84%, var(--text-color) 16%);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--secondary) 96%, var(--text-color) 4%), var(--secondary));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
+}
+
+.recentRunsCard .sectionHeadingInline {
+  align-items: center;
+}
+
+.recentRunsCard .sectionHeadingInline p {
+  max-width: 660px;
+  text-align: right;
+  font-size: 0.82rem;
+}
+
+.recentRunsMessage {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 13px;
+  opacity: 0.68;
+}
+
+.recentRunList {
+  display: grid;
+  gap: 0.55rem;
+  max-height: clamp(360px, 48vh, 540px);
+  overflow-y: auto;
+  padding-right: 0.3rem;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.recentRunRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(300px, 1.4fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 0.82rem 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--background) 32%, transparent);
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.recentRunRow:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--primary) 8%, var(--background));
+}
+
+.recentRunIdentity {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.recentRunIdentity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recentRunIdentity span,
+.recentRunMeta {
+  font-size: 0.78rem;
+}
+
+.recentRunIdentity span {
+  opacity: 0.58;
+}
+
+.recentRunMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.recentRunMeta > span {
+  padding: 0.28rem 0.48rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  opacity: 0.76;
+}
+
+.recentRunMeta .runComplete {
+  border: 1px solid color-mix(in srgb, #50c878 55%, var(--border-color));
+  opacity: 1;
+}
+
+.recentRunMeta .runPartial {
+  border: 1px solid color-mix(in srgb, #e0a33a 65%, var(--border-color));
+  opacity: 1;
+}
+
+@media (max-width: 760px) {
+  .recentRunsCard .sectionHeadingInline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recentRunsCard .sectionHeadingInline p {
+    text-align: left;
+  }
+
+  .recentRunRow {
+    grid-template-columns: 1fr;
+  }
+
+  .recentRunMeta {
+    justify-content: flex-start;
+  }
+}
