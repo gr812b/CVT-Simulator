@@ -33,6 +33,8 @@ DEFAULT_REPLAY_GAIN_NM_S_PER_RAD = 400.0
 VALIDATION_RELATIVE_TOLERANCE = 1.0e-4
 VALIDATION_ABSOLUTE_TOLERANCE = 1.0e-7
 VALIDATION_MAX_STEP_S = 0.05
+VALIDATION_MINIMUM_TRANSITIONS = 60
+VALIDATION_TRANSITIONS_PER_SECOND = 25.0
 DEFAULT_REPLAY_SAMPLE_INTERVAL_S = 0.01
 
 
@@ -68,6 +70,8 @@ def _validation_integrator_defaults() -> JsonDict:
         "relativeTolerance": VALIDATION_RELATIVE_TOLERANCE,
         "absoluteTolerance": VALIDATION_ABSOLUTE_TOLERANCE,
         "maxStepS": VALIDATION_MAX_STEP_S,
+        "minimumTransitions": VALIDATION_MINIMUM_TRANSITIONS,
+        "transitionsPerSecond": VALIDATION_TRANSITIONS_PER_SECOND,
     }
 
 
@@ -179,6 +183,9 @@ def _apply_validation_integrator(document: JsonDict) -> JsonDict:
     integrator["relative_tolerance"] = VALIDATION_RELATIVE_TOLERANCE
     integrator["absolute_tolerance"] = VALIDATION_ABSOLUTE_TOLERANCE
     integrator["max_step"] = VALIDATION_MAX_STEP_S
+    # Crop duration is unknown at workspace creation time. The frontend
+    # resolves the final duration-scaled budget for each validation run.
+    integrator["maximum_transitions"] = VALIDATION_MINIMUM_TRANSITIONS
     return result
 
 

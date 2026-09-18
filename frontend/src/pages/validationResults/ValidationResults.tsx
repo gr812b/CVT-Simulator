@@ -52,6 +52,49 @@ interface ResultViews {
   efficiencyCinder: Array<[number, number]>;
 }
 
+interface CinderCompletion {
+  completed: boolean;
+  terminationReason: string;
+  durationS: number;
+}
+
+function cinderCompletion(result: SimulationResult): CinderCompletion {
+  return {
+    completed: result.metrics.completed,
+    terminationReason: result.metrics.termination_reason,
+    durationS: result.metrics.duration_s,
+  };
+}
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const text = String(value);
+  if (!/[",\r\n]/.test(text)) return text;
+  return `"${text.replaceAll('\"', '""')}"`;
+}
+
+function cinderReportCsv(result: SimulationResult): string {
+  const table = result.report_table;
+  const header = table.columns.map((column) => csvCell(column.key)).join(',');
+  const rows = Array.from({ length: table.row_count }, (_, index) => (
+    table.columns.map((column) => csvCell(column.values[index] ?? null)).join(',')
+  ));
+  return [header, ...rows].join('\r\n');
+}
+
+function downloadCinderReport(run: ValidationRunRecord): void {
+  const blob = new Blob([cinderReportCsv(run.resultSnapshot)], { type: 'text/csv;charset=utf-8' });
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const cinderRun = run.simulationRunId ?? run.id;
+  link.href = href;
+  link.download = `cinder-run-${cinderRun}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+}
+
 function channelConfigs(raw: Record<string, unknown>): ChannelConfig[] {
   return Object.values(raw).filter((value): value is ChannelConfig => (
     typeof value === 'object'
@@ -508,6 +551,11 @@ export const ValidationResults = () => {
         <div className={styles.headerActions}>
           <button type="button" onClick={() => navigate('/validation')}>← Validation setup</button>
           <button type="button" onClick={() => navigate('/')}>Home</button>
+          {run !== null && (
+            <button type="button" onClick={() => downloadCinderReport(run)}>
+              Download CINDER CSV
+            </button>
+          )}
         </div>
         <div>
           <h1>Dyno validation result</h1>
@@ -522,12 +570,43 @@ export const ValidationResults = () => {
 
       {error !== null && <section className={styles.errorCard}>{error}</section>}
 
+      {run !== null && !cinderCompletion(run.resultSnapshot).completed && (
+        <section className={styles.errorCard}>
+          CINDER terminated early after {cinderCompletion(run.resultSnapshot).durationS.toFixed(3)} s: {' '}
+          {cinderCompletion(run.resultSnapshot).terminationReason}. Partial results are shown for debugging.
+        </section>
+      )}
+
       {run !== null && views !== null && (
         <>
           <section className={styles.summaryCard}>
             <div><span>Validation run</span><strong>{run.id}</strong></div>
             <div><span>CINDER run</span><strong>{run.simulationRunId ?? 'snapshot only'}</strong></div>
             <div><span>Selected duration</span><strong>{(run.cropEndS - run.cropStartS).toFixed(3)} s</strong></div>
+            <div>
+              <span>CINDER integration</span>
+              <strong>{cinderCompletion(run.resultSnapshot).completed ? 'Complete' : 'Stopped early'}</strong>
+            </div>
+            <div>
+              <span>Simulated duration</span>
+              <strong>{cinderCompletion(run.resultSnapshot).durationS.toFixed(3)} s</strong>
+            </div>
+            <div>
+              <span>Termination</span>
+              <strong>{cinderCompletion(run.resultSnapshot).terminationReason}</strong>
+            </div>
+            <div>
+              <span>Hybrid transitions</span>
+              <strong>{run.resultSnapshot.metrics.transition_count}</strong>
+            </div>
+            <div>
+              <span>Transition density</span>
+              <strong>
+                {cinderCompletion(run.resultSnapshot).durationS > 0
+                  ? `${(run.resultSnapshot.metrics.transition_count / cinderCompletion(run.resultSnapshot).durationS).toFixed(1)} /s`
+                  : '—'}
+              </strong>
+            </div>
           </section>
 
           <section className={styles.sectionHeader}>
@@ -650,6 +729,10 @@ export const ValidationResults = () => {
                   simulated={views.efficiencyCinder}
                   measuredLabel="Derived experiment"
                   simulatedLabel="CINDER"
+                  xMin={0}
+                  xMax={6}
+                  yMin={0}
+                  yMax={120}
                   note="Both efficiencies use the centered five-sample secondary-power derivative at the measured timestamps; ratio is each side's own ωp / ωs"
                 />
               )}

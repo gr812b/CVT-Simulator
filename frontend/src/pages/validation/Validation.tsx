@@ -11,7 +11,7 @@ import {
   getValidationWorkspace,
   saveValidationRun,
   saveValidationWorkspace,
-  submitSimulationRun,
+  submitValidationSimulationRun,
   waitForSimulationRun,
   type CompletedSimulationRun,
   type SimulationCaseDocument,
@@ -59,6 +59,19 @@ const DEFAULT_VALIDATION_INTEGRATOR = {
   absoluteTolerance: 1e-7,
   maxStepS: 0.05,
 };
+
+const VALIDATION_MINIMUM_TRANSITIONS = 60;
+const VALIDATION_TRANSITIONS_PER_SECOND = 25;
+
+function validationTransitionBudget(durationS: number): number {
+  if (!(durationS > 0) || !Number.isFinite(durationS)) {
+    return VALIDATION_MINIMUM_TRANSITIONS;
+  }
+  return Math.max(
+    VALIDATION_MINIMUM_TRANSITIONS,
+    Math.ceil(VALIDATION_TRANSITIONS_PER_SECOND * durationS),
+  );
+}
 
 function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -329,7 +342,8 @@ function resolveDocument(
   const initial = resolveInitialState(workspace, data, crop, channels);
 
   const scenario = document.scenario as JsonObject;
-  scenario.time_span_s = [0, crop.endS - crop.startS];
+  const validationDurationS = crop.endS - crop.startS;
+  scenario.time_span_s = [0, validationDurationS];
   scenario.initial_cvt_state = {
     primary_angular_speed_rad_per_s: initial.primaryAngularSpeedRadPerS,
     secondary_angular_speed_rad_per_s: initial.secondaryAngularSpeedRadPerS,
@@ -346,6 +360,7 @@ function resolveDocument(
   integrator.relative_tolerance = validationIntegrator.relativeTolerance;
   integrator.absolute_tolerance = validationIntegrator.absoluteTolerance;
   integrator.max_step = validationIntegrator.maxStepS;
+  integrator.maximum_transitions = validationTransitionBudget(validationDurationS);
 
   const boundaries = document.shaft_boundaries as JsonObject;
   if (normalizeMode(workflow.primaryMode) === 'replay_measured_speed') {
@@ -538,11 +553,23 @@ export const Validation = () => {
     try {
       const document = resolveDocument(workspace, data, crop, channels);
       setLoading(true, 'Running CINDER validation case…');
-      const submitted = await submitSimulationRun(document);
+      const submitted = await submitValidationSimulationRun(document);
       const status = await waitForSimulationRun(submitted.id);
       if (status.status !== 'completed') throw new Error(status.error?.message ?? `Simulation ${status.status}.`);
       const result = await getSimulationResult(submitted.id);
       setCompleted(result);
+      if (!result.result.metrics.completed) {
+        const keepPartial = window.confirm(
+          `CINDER terminated early after ${result.result.metrics.duration_s.toFixed(3)} s:
+
+`
+          + `${result.result.metrics.termination_reason}
+
+`
+          + 'Continue anyway and save/open the partial result for debugging?',
+        );
+        if (!keepPartial) return;
+      }
 
       const nextMetrics: Record<string, SignalMetric> = {};
       const primary = findMapped(channels, 'primary_speed');
@@ -568,6 +595,9 @@ export const Validation = () => {
           manual,
           resolved_start_s: crop.startS,
           resolved: resolvedInitialState,
+          execution_policy: {
+            secondary_helix_topology: 'slotted_bilateral_zero_clearance',
+          },
         },
         workspaceSnapshot: workspace,
         resolvedDocument: document,
@@ -922,6 +952,7 @@ export const Validation = () => {
               <p>
                 {primaryMode === 'replay_measured_speed' ? 'Primary RPM replay' : 'Primary physical'} · {' '}
                 {secondaryMode === 'replay_measured_speed' ? 'Secondary RPM replay' : 'Secondary physical'}
+                {' · '}Slotted secondary helix
               </p>
             </div>
             <button type="button" className={styles.runButton} disabled={workspace === null} onClick={() => void runValidation()}>

@@ -12,6 +12,10 @@ interface Props {
   measuredLabel?: string;
   simulatedLabel?: string;
   note?: string;
+  xMin?: number;
+  xMax?: number;
+  yMin?: number;
+  yMax?: number;
 }
 
 
@@ -65,6 +69,10 @@ export function ValidationXYChart({
   measuredLabel = 'Measured',
   simulatedLabel = 'CINDER',
   note,
+  xMin,
+  xMax,
+  yMin,
+  yMax,
 }: Props) {
   const option = useMemo<EChartsOption>(() => {
     const text = cssColor('--text-color', '#ffffff');
@@ -136,6 +144,8 @@ export function ValidationXYChart({
       xAxis: {
         type: 'value',
         name: xLabel,
+        min: xMin,
+        max: xMax,
         nameLocation: 'middle',
         nameGap: 34,
         nameTextStyle: { color: text },
@@ -147,6 +157,8 @@ export function ValidationXYChart({
       yAxis: {
         type: 'value',
         name: yLabel,
+        min: yMin,
+        max: yMax,
         nameLocation: 'middle',
         nameGap: 50,
         nameTextStyle: { color: text },
@@ -157,7 +169,7 @@ export function ValidationXYChart({
       },
       series,
     };
-  }, [measured, measuredLabel, simulated, simulatedLabel, xLabel, yLabel]);
+  }, [measured, measuredLabel, simulated, simulatedLabel, xLabel, xMax, xMin, yLabel, yMax, yMin]);
 
   return (
     <section className={styles.card}>

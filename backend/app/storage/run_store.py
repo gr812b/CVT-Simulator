@@ -26,6 +26,7 @@ class RunRecord:
     input_fingerprint: str
     include_reported_segments: bool
     include_raw_trace: bool
+    execution_profile: str = "default"
     started_at: datetime | None = None
     completed_at: datetime | None = None
     result_snapshot: dict[str, Any] | None = None

@@ -33,6 +33,10 @@ from cinder.contracts import (
     simulation_result_json_schema,
     validate_simulation_case_document,
 )
+from cinder.model.cvt.actuation import (
+    HelicalTorqueReactionForce,
+    PulleyActuator,
+)
 from cinder.model.cvt.closure import ClosureUnknown, ClosureUnknowns
 from cinder.model.cvt.geometry import BeltSectionSpec
 from cinder.studies import (
@@ -53,6 +57,47 @@ from cinder.studies import (
     solve_geometry_from_target_ratios,
     summarize_geometry_design,
 )
+
+
+DEFAULT_EXECUTION_PROFILE = "default"
+VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE = (
+    "validation_slotted_secondary_helix"
+)
+
+
+class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):
+    """Signed zero-clearance helix law with support from either slot flank."""
+
+    compressive_contact_margin = None
+    has_compressive_contact = None
+
+
+def _apply_execution_profile(decoded: object, execution_profile: str) -> None:
+    """Apply backend-only execution policy without changing the frozen document."""
+
+    if execution_profile == DEFAULT_EXECUTION_PROFILE:
+        return
+    if execution_profile != VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE:
+        raise ValueError(f"Unsupported execution profile: {execution_profile!r}.")
+
+    plant = decoded.plant
+    laws = []
+    changed = 0
+    for law in plant.secondary_actuator.force_laws:
+        if isinstance(law, _BilateralHelicalTorqueReactionForce):
+            laws.append(law)
+        elif isinstance(law, HelicalTorqueReactionForce):
+            laws.append(_BilateralHelicalTorqueReactionForce(spec=law.spec))
+            changed += 1
+        else:
+            laws.append(law)
+
+    if changed != 1:
+        raise RuntimeError(
+            "Validation slotted-helix profile expected exactly one secondary "
+            f"HelicalTorqueReactionForce; found {changed}."
+        )
+    object.__setattr__(plant, "secondary_actuator", PulleyActuator(*laws))
 
 
 class CinderGateway:
@@ -95,10 +140,12 @@ class CinderGateway:
         *,
         include_reported_segments: bool = False,
         include_raw_trace: bool = False,
+        execution_profile: str = DEFAULT_EXECUTION_PROFILE,
     ) -> dict[str, Any]:
         """Run one complete CINDER document and return its public projection."""
 
         decoded = decode_simulation_case_document(document)
+        _apply_execution_profile(decoded, execution_profile)
         system = decoded.build_system()
         result = system.run(
             time_span=decoded.time_span,

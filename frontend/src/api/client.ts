@@ -884,6 +884,19 @@ export async function submitSimulationRun(document: SimulationCaseDocument): Pro
   return parseRunStatus(data);
 }
 
+
+export async function submitValidationSimulationRun(document: SimulationCaseDocument): Promise<RunStatus> {
+  const data = await apiJson<unknown>('/api/v1/validation/simulation-runs', {
+    method: 'POST',
+    body: JSON.stringify({
+      simulation_case: wireDocument(document),
+      include_raw_trace: false,
+      include_reported_segments: false,
+    }),
+  });
+  return parseRunStatus(data);
+}
+
 export async function getSimulationRun(runId: string): Promise<RunStatus> {
   return parseRunStatus(dataOrThrow(await client.GET('/api/v1/runs/{run_id}', {
     params: { path: { run_id: runId } },

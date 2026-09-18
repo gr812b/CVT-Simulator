@@ -50,6 +50,7 @@ class RunManager:
         *,
         include_reported_segments: bool = False,
         include_raw_trace: bool = False,
+        execution_profile: str = "default",
     ) -> RunRecord:
         """Validate and enqueue a reproducible simulation document."""
 
@@ -71,6 +72,7 @@ class RunManager:
             input_fingerprint=_fingerprint(snapshot),
             include_reported_segments=include_reported_segments,
             include_raw_trace=include_raw_trace,
+            execution_profile=execution_profile,
         )
         self._store.create(record)
         if self._executor_mode == "inline":
@@ -102,6 +104,7 @@ class RunManager:
                 record.input_document_snapshot,
                 include_reported_segments=record.include_reported_segments,
                 include_raw_trace=record.include_raw_trace,
+                execution_profile=record.execution_profile,
             )
         except Exception as error:
             self._mark_failed(run_id, error)
@@ -118,6 +121,7 @@ class RunManager:
                 "include_reported_segments": record.include_reported_segments,
                 "include_raw_trace": record.include_raw_trace,
                 "result_queue": result_queue,
+                "execution_profile": record.execution_profile,
             },
             daemon=True,
         )

@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.v1.dependencies import get_database_session
+from app.api.v1.dependencies import get_container, get_database_session
+from app.application.cinder_gateway import (
+    VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
+)
+from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem
 from app.database.validation import (
     create_validation_run,
@@ -13,6 +17,7 @@ from app.database.validation import (
     get_validation_run,
     upsert_workspace,
 )
+from app.schemas.runs import CreateRunRequest, RunStatusResponse
 from app.schemas.validation import (
     ValidationRunCreate,
     ValidationRunResponse,
@@ -83,6 +88,35 @@ def save_validation_workspace(
         workflow_defaults=request.workflow_defaults,
     )
     return _workspace_response(workspace)
+
+
+@router.post(
+    "/simulation-runs",
+    response_model=RunStatusResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_validation_simulation_run(
+    request: CreateRunRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> RunStatusResponse:
+    """Run validation with the zero-clearance bilateral/slotted secondary helix."""
+
+    record = container.runs.submit(
+        request.simulation_case,
+        include_reported_segments=request.include_reported_segments,
+        include_raw_trace=request.include_raw_trace,
+        execution_profile=VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
+    )
+    return RunStatusResponse(
+        id=record.id,
+        status=record.status,
+        submitted_at=record.submitted_at,
+        started_at=record.started_at,
+        completed_at=record.completed_at,
+        error=record.error,
+        source="direct",
+        contract_hash=record.input_fingerprint,
+    )
 
 
 @router.post("/runs", response_model=ValidationRunResponse)
