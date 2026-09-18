@@ -94,6 +94,7 @@ def test_progressive_profile_keeps_linear_and_circular_start_tangents_independen
     _, ramp, _ = _design_from_defaults(service)
     changed = replace(
         ramp,
+        kind="progressive",
         linear_angle_deg=32.0,
         circular_start_angle_deg=38.0,
         circular_end_angle_deg=20.0,

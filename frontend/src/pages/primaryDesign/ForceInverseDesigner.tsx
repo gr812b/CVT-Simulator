@@ -30,7 +30,7 @@ export function ForceInverseDesigner({
   const [massMode, setMassMode] = useState<'free' | 'fixed'>('free');
   const [massKg, setMassKg] = useState(Math.min(0.250, architecture.max_tip_mass_per_flyweight_kg));
   const [maxMassKg, setMaxMassKg] = useState(Math.min(0.350, architecture.max_tip_mass_per_flyweight_kg));
-  const [points, setPoints] = useState<InverseDesignTargetPoint[]>(() => initialTarget(architecture, domain, 3800));
+  const [points, setPoints] = useState<InverseDesignTargetPoint[]>(() => initialTarget(architecture, 3800));
   const [result, setResult] = useState<InverseDesignAnalysis | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -41,12 +41,12 @@ export function ForceInverseDesigner({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    setPoints(initialTarget(architecture, domain, rpm));
+    setPoints(initialTarget(architecture, rpm));
     setResult(null);
     setSelectedIndex(0);
     setYRange(null);
     setInspectionShiftM(0);
-  }, [architecture.pivot_radius_m, architecture.arm_length_m, architecture.roller_radius_m, architecture.required_travel_m, domain?.domain_id]);
+  }, [architecture.pivot_radius_m, architecture.arm_length_m, architecture.roller_radius_m, architecture.required_travel_m]);
 
   const selected = result?.solutions[selectedIndex] ?? null;
   useEffect(() => {
@@ -382,16 +382,33 @@ function ForceMatchPlot({ solution, shiftM, onShiftChange }: { solution: Inverse
 
 function Metric({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><strong>{value}</strong></div>; }
 
-function initialTarget(architecture: FixedPivotArchitecture, domain: PrimaryPathDomainAnalysis | null, rpm: number): InverseDesignTargetPoint[] {
-  const path = domain?.representative_paths[0];
-  if (!path || path.shift_m.length < 2) return [];
+function initialTarget(architecture: FixedPivotArchitecture, rpm: number): InverseDesignTargetPoint[] {
+  // Seed the editor from a simple physically meaningful q(x) progression, not
+  // from the discrete path-domain graph. The graph is optional visual context
+  // only; running Path-domain Explorer later must never change the user's force
+  // target or make Force → Ramp appear graph-dependent.
+  const travel = Math.max(1e-9, architecture.required_travel_m);
+  const q0 = 8 * Math.PI / 180;
+  const q1 = 44 * Math.PI / 180;
+  const qPrime = (q1 - q0) / travel;
+  const tipMass = Math.min(0.250, architecture.max_tip_mass_per_flyweight_kg);
+  const armMass = architecture.arm_mass_per_flyweight_kg;
+  const L = architecture.arm_length_m;
+  const Mu = armMass * L / 2 + tipMass * L;
+  const Su = armMass * L * L / 3 + tipMass * L * L;
   const omega2 = (rpm * RAD_S_PER_RPM) ** 2;
-  const mass = Math.min(0.250, architecture.max_tip_mass_per_flyweight_kg);
-  const indices = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * (path.shift_m.length - 1)));
-  return indices.map((index) => ({
-    shift_m: path.shift_m[index],
-    force_N: omega2 * (path.capability.arm_force_per_omega2[index] + mass * path.capability.tip_force_per_omega2_per_kg[index]),
-  }));
+  const fractions = [0, 0.25, 0.5, 0.75, 1];
+
+  return fractions.map((fraction) => {
+    const q = q0 + fraction * (q1 - q0);
+    const leverage = architecture.number_of_flyweights
+      * Math.cos(q)
+      * (architecture.pivot_radius_m * Mu + Su * Math.sin(q));
+    return {
+      shift_m: fraction * travel,
+      force_N: Math.max(0, omega2 * leverage * qPrime),
+    };
+  });
 }
 
 function contextualCapability(domain: PrimaryPathDomainAnalysis | null, rpm: number): { shift_m: number[]; min_N: number[]; max_N: number[] } | null {

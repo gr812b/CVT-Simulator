@@ -83,10 +83,15 @@ class FixedPivotPrimaryDesignService:
             roller_side_sign=1,
             max_tip_mass_per_flyweight_kg=0.650,
         )
+        # Keep the shipped Concrete Design example deliberately simple and
+        # history-valid. The previous progressive reference developed a genuine
+        # second simultaneous finite-roller contact near 11.43 mm of closure.
+        # A straight 30 deg ramp has a monotone selected branch over the full
+        # 19.05 mm default travel and leaves generous physical ramp length.
         ramp = RampDesign(
-            kind="progressive",
+            kind="constant",
             initial_flyweight_angle_deg=7.091059977,
-            linear_angle_deg=35.0,
+            linear_angle_deg=30.0,
             circular_start_angle_deg=35.0,
             circular_end_angle_deg=20.0,
             constant_length_m=38.0 * MM,

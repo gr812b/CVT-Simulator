@@ -8,14 +8,23 @@ arm contribution by arm mass and mixing it with B through a dimensionless mass
 fraction produces a specific-force family that is independent of overall
 flyweight mass scale and shaft speed.
 
-The curve shape is normalized by its shift-average magnitude and projected onto
-the first three shifted Legendre modes.  The resulting sampled footprint is an
-exploratory complete-path capability map, not a formal proof of the entire
-continuous feasible set.  Witness ramps are returned for the most separated
-sampled behaviours in both directions.
+Two complementary comparisons live here:
+
+* target matching uses the continuous Appendix-D inverse and therefore asks
+  whether each architecture can directly realize a user-requested normalized
+  force shape;
+* discovery uses a sampled atlas of history-certified complete paths to find
+  behaviours that expose large architecture-to-architecture differences.
+
+The sampled atlas is intentionally *not* used for target matching.  Keeping
+those questions separate avoids presenting a poor atlas neighbour as the
+architecture's best achievable response to a requested force curve.
 """
 
 from __future__ import annotations
+
+from dataclasses import replace
+from math import degrees
 
 import numpy as np
 from scipy.spatial import ConvexHull
@@ -27,6 +36,15 @@ from .path_domain import (
     certify_path_history,
 )
 from .path_domain_refinement import _candidate_state_paths, _diverse_path_order
+from .inverse_design import (
+    Q_MAX_DESIGN,
+    _Candidate,
+    _check_generated_packaging,
+    _evaluate_candidate,
+    _mass_moments,
+    _piecewise_path_from_candidate,
+    _potential,
+)
 
 _ATLAS_CACHE: dict[tuple[int, int], list[tuple[tuple[int, ...], dict[str, object]]]] = {}
 
@@ -381,30 +399,95 @@ def match_target_shape(
     mass_mix_count: int = 11,
     sample_count: int = 121,
 ) -> dict[str, object]:
-    """Find each architecture's closest complete normalized force-shape match.
+    """Continuously invert one requested force *shape* for both architectures.
 
-    ``target_points`` are (shift_fraction, relative_force) pairs.  Their overall
-    magnitude is intentionally irrelevant: the target and every architecture
-    curve are normalized to unit shift-average before whole-curve RMS distance
-    is evaluated.  Thus RPM and overall flyweight mass scale do not influence
-    the result; only the shape freedom of the architecture and mass distribution
-    mix do.
+    This deliberately does **not** search the sampled path atlas.  Overall force
+    magnitude is free, so for a chosen mass distribution, q(0), and q(L), the
+    Appendix-D static relation determines the force scale that makes the target
+    shape integrate exactly between those two angles.  The analytic Force -> Ramp
+    inverse then reconstructs q(x), the finite-radius roller locus, and the
+    physical ramp.  Candidates are rejected only by the real geometry,
+    packaging, or nonlocal contact-history checks.
+
+    ``atlas_path_count`` is retained in the API signature for backwards
+    compatibility with Phase 3.9 callers but is intentionally unused here.
     """
-    if atlas_path_count < 8:
-        raise ValueError("atlas_path_count must be at least 8")
+    del atlas_path_count
     if mass_mix_count < 3:
         raise ValueError("mass_mix_count must be at least 3")
-    if sample_count < 41:
-        raise ValueError("sample_count must be at least 41")
+    if sample_count < 81:
+        # The continuous finite-roller checker is intentionally denser than the
+        # old atlas interpolation.
+        sample_count = 81
     if len(target_points) < 2:
         raise ValueError("at least two target shape points are required")
 
+    xs, ys, xi, target = _normalized_target_shape(target_points, sample_count)
+    result_a, diag_a = _continuous_shape_match(
+        compiled_a,
+        xs,
+        ys,
+        xi,
+        target,
+        mass_mix_count=mass_mix_count,
+        sample_count=sample_count,
+        label="A",
+    )
+    result_b, diag_b = _continuous_shape_match(
+        compiled_b,
+        xs,
+        ys,
+        xi,
+        target,
+        mass_mix_count=mass_mix_count,
+        sample_count=sample_count,
+        label="B",
+    )
+
+    return {
+        "definition": {
+            "mass_scale_agnostic": True,
+            "normalization": (
+                "Target and generated curves are divided by their own shift-average force. "
+                "100% therefore means that curve's own average force."
+            ),
+            "distance": "Whole-curve RMS difference in normalized force over the complete shift.",
+            "sampling_note": (
+                "Target matching uses the continuous Appendix-D analytic inverse, not the sampled path atlas. "
+                "The search varies assembly angle, flyweight mass distribution, and force scale, then checks "
+                "finite-roller geometry, packaging, and complete contact history."
+            ),
+        },
+        "target": {
+            "shift_fraction": xi.tolist(),
+            "normalized_shape": target.tolist(),
+            "input_points": [
+                {"shift_fraction": float(x), "relative_force": float(y)} for x, y in target_points
+            ],
+        },
+        "architecture_a": result_a,
+        "architecture_b": result_b,
+        "summary": {
+            "a_rms_shape_error": None if result_a is None else result_a["rms_shape_error"],
+            "b_rms_shape_error": None if result_b is None else result_b["rms_shape_error"],
+            "a_max_shape_error": None if result_a is None else result_a["max_shape_error"],
+            "b_max_shape_error": None if result_b is None else result_b["max_shape_error"],
+            "a_diagnostics": diag_a,
+            "b_diagnostics": diag_b,
+        },
+    }
+
+
+def _normalized_target_shape(
+    target_points: list[tuple[float, float]],
+    sample_count: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     cleaned = sorted((float(x), float(y)) for x, y in target_points)
     if cleaned[0][0] < -1e-12 or cleaned[-1][0] > 1.0 + 1e-12:
         raise ValueError("target shift fractions must lie in [0, 1]")
     if any(y <= 0.0 or not np.isfinite(y) for _, y in cleaned):
         raise ValueError("target relative force values must be finite and positive")
-    # Merge duplicate x entries by keeping the last supplied value.
+
     dedup: dict[float, float] = {}
     for x, y in cleaned:
         dedup[round(x, 12)] = y
@@ -422,74 +505,207 @@ def match_target_shape(
     from scipy.interpolate import PchipInterpolator
 
     xi = np.linspace(0.0, 1.0, sample_count)
-    target_raw = np.asarray(PchipInterpolator(xs, ys, extrapolate=False)(xi), dtype=float)
+    raw_interp = PchipInterpolator(xs, ys, extrapolate=False)
+    target_raw = np.asarray(raw_interp(xi), dtype=float)
     if np.any(~np.isfinite(target_raw)) or np.any(target_raw <= 0.0):
         raise ValueError("target interpolation produced a non-positive or non-finite force shape")
     target_mean = float(np.trapezoid(target_raw, xi))
     if target_mean <= 1e-12:
         raise ValueError("target shape has zero average")
+    ys_normalized = ys / target_mean
     target = target_raw / target_mean
+    return xs, ys_normalized, xi, target
 
+
+def _continuous_shape_match(
+    compiled: CompiledPathDomain,
+    target_x: np.ndarray,
+    target_y_normalized: np.ndarray,
+    output_xi: np.ndarray,
+    output_target: np.ndarray,
+    *,
+    mass_mix_count: int,
+    sample_count: int,
+    label: str,
+) -> tuple[dict[str, object] | None, list[dict[str, object]]]:
+    """Find a certified continuous inverse realization of one normalized shape."""
+    architecture = compiled.architecture
+    travel = float(architecture.required_travel_m)
+    if travel <= 0.0:
+        raise ValueError("architecture travel must be positive")
+
+    # The comparison is deliberately weight-scale agnostic.  Use one arbitrary
+    # unit of total mass per flyweight and vary only how that unit is distributed
+    # between a uniform arm and the tip package.  Any common mass multiplier (or
+    # RPM multiplier) merely rescales force and cannot change the normalized
+    # shape being compared.
     mixes = np.linspace(0.0, 0.98, mass_mix_count)
-    atlas_a = _certified_atlas(compiled_a, atlas_path_count)
-    atlas_b = _certified_atlas(compiled_b, atlas_path_count)
-    points_a = _shape_points(compiled_a, atlas_a, mixes, label="A")
-    points_b = _shape_points(compiled_b, atlas_b, mixes, label="B")
+    q0_values = np.deg2rad(np.linspace(-27.0, 74.0, 18))
+    span_values_deg = np.asarray([2.5, 4.0, 6.5, 10.0, 15.0, 22.0, 31.0, 42.0, 56.0])
 
-    def best(rows: list[dict[str, object]], label: str) -> dict[str, object] | None:
-        if not rows:
-            return None
-        scored: list[tuple[float, float, int, dict[str, object], np.ndarray]] = []
-        for index, row in enumerate(rows):
-            source_x = np.asarray(row["shift_fraction"], dtype=float)
-            source_y = np.asarray(row["normalized_shape"], dtype=float)
-            if source_x.size < 2 or source_x.size != source_y.size:
+    from scipy.interpolate import PchipInterpolator
+
+    geometry_candidates: list[tuple[float, _Candidate, float, float]] = []
+    failure_counts: dict[str, int] = {}
+
+    for mix in mixes:
+        # unit total mass per flyweight: arm=(1-w), tip=w
+        solve_architecture = replace(
+            architecture,
+            arm_mass_per_flyweight_kg=float(1.0 - mix),
+            max_tip_mass_per_flyweight_kg=max(float(mix), 1.0),
+        )
+        moments = _mass_moments(solve_architecture, float(mix))
+
+        for q0 in q0_values:
+            max_span_deg = degrees(Q_MAX_DESIGN - q0) - 0.35
+            if max_span_deg <= 1.0:
                 continue
-            curve = np.interp(xi, source_x, source_y)
-            delta = curve - target
-            rms = float(np.sqrt(np.mean(delta * delta)))
-            max_gap = float(np.max(np.abs(delta)))
-            scored.append((rms, max_gap, index, row, curve))
-        if not scored:
-            return None
-        scored.sort(key=lambda item: (item[0], item[1]))
-        rms, max_gap, _index, row, curve = scored[0]
-        gap_index = int(np.argmax(np.abs(curve - target)))
-        return {
-            "architecture": label,
-            "rms_shape_error": rms,
-            "max_shape_error": max_gap,
-            "max_error_shift_fraction": float(xi[gap_index]),
-            "mass_mix_fraction": row["mass_mix_fraction"],
-            "tip_to_arm_mass_ratio": row["tip_to_arm_mass_ratio"],
-            "shift_fraction": xi.tolist(),
-            "normalized_shape": curve.tolist(),
-            "ramp": row["ramp"],
-            "sampled_candidate_count": len(scored),
-        }
+            spans = span_values_deg[span_values_deg < max_span_deg]
+            if spans.size == 0:
+                spans = np.asarray([max(1.25, 0.55 * max_span_deg)])
 
-    match_a = best(points_a, "A")
-    match_b = best(points_b, "B")
+            u0 = float(_potential(solve_architecture, moments, float(q0)))
+            for span_deg in spans:
+                q1 = float(q0 + np.deg2rad(float(span_deg)))
+                if q1 >= Q_MAX_DESIGN:
+                    continue
+                du = float(_potential(solve_architecture, moments, q1)) - u0
+                if not np.isfinite(du) or du <= 1e-12:
+                    continue
+
+                # The normalized target has mean 1 over shift fraction, so an
+                # arbitrary force scale A = du/L makes its integrated generalized
+                # work exactly equal U(q1)-U(q0) for omega=1.
+                force_scale = du / travel
+                target = PchipInterpolator(
+                    target_x * travel,
+                    target_y_normalized * force_scale,
+                    extrapolate=False,
+                )
+                candidate, failure = _evaluate_candidate(
+                    solve_architecture,
+                    (),  # packaging is screened after the cheap geometry search
+                    target,
+                    1.0,
+                    float(q0),
+                    float(mix),
+                    max(81, sample_count),
+                )
+                if candidate is None:
+                    code = failure[0] if failure is not None else "GEOMETRY_REJECTED"
+                    failure_counts[code] = failure_counts.get(code, 0) + 1
+                    continue
+
+                # Compare in the actual normalized-force coordinates the user sees.
+                curve_mean = float(
+                    np.trapezoid(candidate.recovered_force_N, candidate.shift_m) / travel
+                )
+                if not np.isfinite(curve_mean) or curve_mean <= 1e-14:
+                    continue
+                normalized = candidate.recovered_force_N / curve_mean
+                source_fraction = candidate.shift_m / travel
+                sampled = np.interp(output_xi, source_fraction, normalized)
+                delta = sampled - output_target
+                normalized_rms = float(np.sqrt(np.mean(delta * delta)))
+                geometry_candidates.append(
+                    (normalized_rms, candidate, float(mix), float(force_scale))
+                )
+
+    # For exact inverse candidates the force error is generally numerical noise;
+    # robustness decides which physical realization is worth certifying first.
+    geometry_candidates.sort(key=lambda row: (row[0], -row[1].score))
+
+    packaging_rejections = 0
+    history_rejections = 0
+    certified_considered = 0
+    best: tuple[float, _Candidate, float, float] | None = None
+    for normalized_rms, candidate, mix, force_scale in geometry_candidates[:180]:
+        packaging_ok, _margin, _failure = _check_generated_packaging(
+            architecture,
+            compiled.zones,
+            candidate.shift_m,
+            candidate.roller_x,
+            candidate.roller_r,
+            candidate.contact_x,
+            candidate.contact_r,
+        )
+        if not packaging_ok:
+            packaging_rejections += 1
+            continue
+
+        path = _piecewise_path_from_candidate(architecture, candidate, node_count=25)
+        certification = certify_path_history(
+            path,
+            trace_sample_count=max(129, compiled.history_trace_sample_count),
+            broad_phase_samples_per_segment=25,
+        )
+        certified_considered += 1
+        if not certification.valid:
+            history_rejections += 1
+            continue
+
+        candidate.history = {
+            "valid": True,
+            "max_contact_root_count": certification.max_contact_root_count,
+            "multiple_root_shift_count": certification.multiple_root_shift_count,
+        }
+        best = (normalized_rms, candidate, mix, force_scale)
+        break
+
+    diagnostics = [
+        {"label": "continuous geometry candidates", "value": len(geometry_candidates)},
+        {"label": "packaging rejections before certification", "value": packaging_rejections},
+        {"label": "history-certified candidates checked", "value": certified_considered},
+        {"label": "history rejections", "value": history_rejections},
+    ]
+    if failure_counts:
+        for code, count in sorted(failure_counts.items(), key=lambda item: item[1], reverse=True)[
+            :5
+        ]:
+            diagnostics.append({"label": code, "value": count})
+
+    if best is None:
+        return None, diagnostics
+
+    _rms_hint, candidate, mix, force_scale = best
+    curve_mean = float(np.trapezoid(candidate.recovered_force_N, candidate.shift_m) / travel)
+    normalized = candidate.recovered_force_N / curve_mean
+    source_fraction = candidate.shift_m / travel
+    sampled = np.interp(output_xi, source_fraction, normalized)
+    delta = sampled - output_target
+    rms = float(np.sqrt(np.mean(delta * delta)))
+    abs_delta = np.abs(delta)
+    gap_index = int(np.argmax(abs_delta))
+
     return {
-        "definition": {
-            "mass_scale_agnostic": True,
-            "normalization": "Target and architecture curves are divided by their own shift-average force before matching. 100% therefore means that curve's own average force.",
-            "distance": "Whole-curve RMS difference in normalized force over the complete shift.",
-            "sampling_note": "Matches are selected from sampled history-certified complete ramps and mass-ratio mixes, not from pointwise force envelopes.",
+        "architecture": label,
+        "rms_shape_error": rms,
+        "max_shape_error": float(abs_delta[gap_index]),
+        "max_error_shift_fraction": float(output_xi[gap_index]),
+        "mass_mix_fraction": float(mix),
+        "tip_to_arm_mass_ratio": float(mix / max(1.0 - mix, 1e-12)),
+        "shift_fraction": output_xi.tolist(),
+        "normalized_shape": sampled.tolist(),
+        "ramp": {
+            "shift_m": candidate.shift_m.tolist(),
+            "q_deg": np.degrees(candidate.q_rad).tolist(),
+            "ramp_tangent_deg": candidate.tangent_deg.tolist(),
+            "roller_center": {
+                "x_m": candidate.roller_x.tolist(),
+                "r_m": candidate.roller_r.tolist(),
+            },
+            "ramp_surface": {
+                "x_m": candidate.contact_x.tolist(),
+                "r_m": candidate.contact_r.tolist(),
+            },
         },
-        "target": {
-            "shift_fraction": xi.tolist(),
-            "normalized_shape": target.tolist(),
-            "input_points": [
-                {"shift_fraction": float(x), "relative_force": float(y)} for x, y in target_points
-            ],
-        },
-        "architecture_a": match_a,
-        "architecture_b": match_b,
-        "summary": {
-            "a_rms_shape_error": None if match_a is None else match_a["rms_shape_error"],
-            "b_rms_shape_error": None if match_b is None else match_b["rms_shape_error"],
-            "a_max_shape_error": None if match_a is None else match_a["max_shape_error"],
-            "b_max_shape_error": None if match_b is None else match_b["max_shape_error"],
-        },
-    }
+        # Retain the old field name so the Phase 3.9 frontend/API contract stays
+        # compatible.  It now counts continuous geometry realizations searched,
+        # not atlas curves.
+        "sampled_candidate_count": len(geometry_candidates),
+        "continuous_inverse": True,
+        "force_scale_arbitrary_units": float(force_scale),
+        "q0_deg": degrees(candidate.q0_rad),
+        "q1_deg": float(np.degrees(candidate.q_rad[-1])),
+    }, diagnostics

@@ -29,7 +29,7 @@ const G = 1000;
 const RPM_PER_RAD_S = 60 / (2 * Math.PI);
 const RAD_S_PER_RPM = 2 * Math.PI / 60;
 
-type DesignMode = 'architecture' | 'compare' | 'requirements' | 'concrete';
+type DesignMode = 'architecture' | 'compare' | 'inverse' | 'concrete';
 
 function interpolateNullable(
   axis: number[],
@@ -84,7 +84,6 @@ export const PrimaryDesign = () => {
   const [response, setResponse] = useState<ConcreteDesignResponse | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [selectedRepresentativeIndex, setSelectedRepresentativeIndex] = useState(0);
-  const [comparisonBaseline, setComparisonBaseline] = useState<PrimaryPathDomainAnalysis | null>(null);
   const [showPhase2Workspace, setShowPhase2Workspace] = useState(false);
   const [shiftM, setShiftM] = useState(0);
   const [architectureDirty, setArchitectureDirty] = useState(false);
@@ -271,8 +270,8 @@ export const PrimaryDesign = () => {
         </button>
         <button
           type="button"
-          className={mode === 'requirements' ? styles.modeTabActive : styles.modeTab}
-          onClick={() => setMode('requirements')}
+          className={mode === 'inverse' ? styles.modeTabActive : styles.modeTab}
+          onClick={() => setMode('inverse')}
         >
           Force → Ramp
         </button>
@@ -295,24 +294,22 @@ export const PrimaryDesign = () => {
           pathDomainLoading={pathDomainLoading}
           selectedZoneId={selectedZoneId}
           selectedRepresentativeIndex={selectedRepresentativeIndex}
-          comparisonBaseline={comparisonBaseline}
           showPhase2Workspace={showPhase2Workspace}
           onArchitectureChange={updateArchitecture}
           onZonesChange={updateZones}
           onZoneChange={updateZone}
           onSelectedZoneChange={setSelectedZoneId}
           onSelectedRepresentativeIndexChange={setSelectedRepresentativeIndex}
-          onComparisonBaselineChange={setComparisonBaseline}
           onShowPhase2WorkspaceChange={setShowPhase2Workspace}
           onAnalyze={() => void analyzeArchitecture(architecture, zones)}
           onAnalyzePathDomain={() => void analyzePathDomain(architecture, zones)}
-          onContinueToRequirements={() => setMode('requirements')}
+          onContinueToInverse={() => setMode('inverse')}
         />
       ) : mode === 'compare' && pathDomain ? (
         <main className={styles.requirementsPage}>
           <ArchitectureCompareExplorer architecture={architecture} zones={zones} domain={pathDomain} />
         </main>
-      ) : mode === 'requirements' ? (
+      ) : mode === 'inverse' ? (
         <main className={styles.requirementsPage}>
           <section className={styles.card}>
             <div className={styles.cardTitleRow}>
@@ -356,7 +353,6 @@ function ArchitectureMode({
   pathDomainLoading,
   selectedZoneId,
   selectedRepresentativeIndex,
-  comparisonBaseline,
   showPhase2Workspace,
   onArchitectureChange,
   onZonesChange,
@@ -366,7 +362,7 @@ function ArchitectureMode({
   onShowPhase2WorkspaceChange,
   onAnalyze,
   onAnalyzePathDomain,
-  onContinueToRequirements,
+  onContinueToInverse,
 }: {
   architecture: FixedPivotArchitecture;
   zones: PackagingZone[];
@@ -378,18 +374,16 @@ function ArchitectureMode({
   pathDomainLoading: boolean;
   selectedZoneId: string | null;
   selectedRepresentativeIndex: number;
-  comparisonBaseline: PrimaryPathDomainAnalysis | null;
   showPhase2Workspace: boolean;
   onArchitectureChange: (patch: Partial<FixedPivotArchitecture>) => void;
   onZonesChange: (zones: PackagingZone[]) => void;
   onZoneChange: (zoneId: string, patch: Partial<PackagingZone>) => void;
   onSelectedZoneChange: (zoneId: string | null) => void;
   onSelectedRepresentativeIndexChange: (value: number) => void;
-  onComparisonBaselineChange: (value: PrimaryPathDomainAnalysis | null) => void;
   onShowPhase2WorkspaceChange: (value: boolean) => void;
   onAnalyze: () => void;
   onAnalyzePathDomain: () => void;
-  onContinueToRequirements: () => void;
+  onContinueToInverse: () => void;
 }) {
   const selectedPath = pathDomain?.representative_paths[selectedRepresentativeIndex] ?? null;
   const selectedQRange = selectedPath ? minmax(selectedPath.q_deg) : null;
@@ -473,7 +467,7 @@ function ArchitectureMode({
                 <input type="checkbox" checked={showPhase2Workspace} onChange={(event) => onShowPhase2WorkspaceChange(event.target.checked)} />
                 <span>Show Phase-2 local geometric superset behind the domain</span>
               </label>
-              <p className={styles.helpText}>Architecture Compare now uses complete history-certified paths, mass-scale-agnostic force-shape coordinates, and witness ramps rather than overlaying pointwise force envelopes.</p>
+              <p className={styles.helpText}>Architecture Compare uses the continuous inverse for a force shape you explicitly draw. The complete-path atlas is retained only for the optional strongest-differences discovery search.</p>
             </div>
           )}
           {pathDomain && (
@@ -506,7 +500,7 @@ function ArchitectureMode({
                   <Readout label="Multi-root shifts" value={String(selectedPath.history.multiple_root_shift_count)} />
                 </div>
               )}
-              <button type="button" className={styles.primaryButton} onClick={onContinueToRequirements}>Continue to Force → Ramp →</button>
+              <button type="button" className={styles.primaryButton} onClick={onContinueToInverse}>Continue to Force → Ramp →</button>
             </>
           )}
         </section>
@@ -546,7 +540,6 @@ function ArchitectureMode({
               <div className={styles.legendRow}>
                 <span><i className={styles.legendReach} />roller-centre workspace</span>
                 {pathDomain ? <span><i className={styles.legendDomain} />current complete-path-viable physical ramp states</span> : <span><i className={styles.legendAdmissible} />Phase-2 packaging-feasible ramp surface</span>}
-                {comparisonBaseline && <span><i className={styles.legendBaselineDomain} />pinned baseline physical domain</span>}
                 {showPhase2Workspace && <span><i className={styles.legendRamp} />Phase-2 local geometric superset</span>}
               </div>
             </>
@@ -611,7 +604,7 @@ function ArchitectureMode({
                 })}
               </div>
             )}
-            <p className={styles.helpText}><strong>Planned workflows:</strong> reference-design force targets, architecture comparison mode, and a constrained freeform physical Ramp Builder. The Ramp Builder will use this domain as guidance but validate the complete edited curve rather than assuming any arbitrary curve through the green projection is valid.</p>
+            <p className={styles.helpText}><strong>Current workflows:</strong> Force → Ramp uses the continuous Appendix-D inverse; Architecture Compare uses that same continuous inverse for requested shapes and the complete-path atlas only for difference discovery. <strong>Future:</strong> reference-design import and a constrained freeform Ramp Builder, with complete-curve validation rather than assuming any arbitrary curve through the projected domain is valid.</p>
             <ul className={styles.deferredList}>
               {pathDomain.deferred_checks.map((item, index) => <li key={index}>{item}</li>)}
             </ul>

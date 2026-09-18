@@ -72,7 +72,6 @@ export function ArchitectureCompareExplorer({
     try {
       const b = await ensureCandidateDomain();
       const next = await comparePrimaryPathDomainsToTarget(domain.domain_id, b.domain_id, targetPoints, {
-        atlas_path_count: 40,
         mass_mix_count: 11,
         sample_count: 121,
       });
@@ -134,8 +133,8 @@ export function ArchitectureCompareExplorer({
         </div>
         <TargetShapePicker points={targetPoints} onChange={(next) => { setTargetPoints(normalizePoints(next)); setTargetMatch(null); }} comparison={targetMatch} />
         <div className={styles.compareActions}>
-          <button type="button" className={styles.primary} disabled={loading} onClick={() => void compareTarget()}>{loading ? 'Finding closest complete ramps…' : 'Compare this force shape'}</button>
-          <span>Lower mismatch means the architecture can reproduce your requested progression more closely.</span>
+          <button type="button" className={styles.primary} disabled={loading} onClick={() => void compareTarget()}>{loading ? 'Solving both architectures continuously…' : 'Compare this force shape'}</button>
+          <span>The continuous inverse should sit on top of gold whenever the shape is physically realizable. A visible gap means geometry, packaging, or contact history blocked an exact realization.</span>
         </div>
       </section>
 
@@ -211,8 +210,8 @@ function TargetShapePicker({
     </svg>
     <div className={styles.legend}>
       <span className={styles.legendTarget}>requested shape</span>
-      {comparison?.architecture_a && <span className={styles.legendA}>Architecture A · closest complete ramp</span>}
-      {comparison?.architecture_b && <span className={styles.legendB}>Architecture B · closest complete ramp</span>}
+      {comparison?.architecture_a && <span className={styles.legendA}>Architecture A · continuous inverse ramp</span>}
+      {comparison?.architecture_b && <span className={styles.legendB}>Architecture B · continuous inverse ramp</span>}
       <strong>100% line = each curve's own average force</strong>
     </div>
   </>;
@@ -222,7 +221,7 @@ function TargetComparisonResult({ analysis }: { analysis: ArchitectureTargetComp
   const a = analysis.architecture_a;
   const b = analysis.architecture_b;
   return <section className={styles.card}>
-    <div className={styles.cardHeader}><div><strong>What the comparison says</strong><span>These errors are measured over the entire force curve, not at a few chosen points.</span></div></div>
+    <div className={styles.cardHeader}><div><strong>What the comparison says</strong><span>These are continuous inverse solutions. A near-zero mismatch means the requested shape was reproduced directly, not selected from a sampled ramp atlas.</span></div></div>
     <div className={styles.resultMetrics}>
       <MatchMetric label="Architecture A" match={a} />
       <MatchMetric label="Architecture B" match={b} />
@@ -238,17 +237,17 @@ function TargetComparisonResult({ analysis }: { analysis: ArchitectureTargetComp
 function MatchMetric({ label, match }: { label: string; match: ArchitectureTargetMatch | null }) {
   return <div className={styles.matchMetric}>
     <strong>{label}</strong>
-    {match ? <><b>{(100 * match.rms_shape_error).toFixed(2)}% average mismatch</b><span>worst local miss {(100 * match.max_shape_error).toFixed(1)}% near {(100 * match.max_error_shift_fraction).toFixed(0)}% shift</span><em>best sampled mass distribution: tip fraction {(100 * match.mass_mix_fraction).toFixed(0)}%</em></> : <span>No complete sampled match returned.</span>}
+    {match ? <><b>{(100 * match.rms_shape_error).toFixed(2)}% average mismatch</b><span>worst local miss {(100 * match.max_shape_error).toFixed(1)}% near {(100 * match.max_error_shift_fraction).toFixed(0)}% shift</span><em>scale-free mass distribution: tip fraction {(100 * match.mass_mix_fraction).toFixed(0)}%</em></> : <span>No history-certified continuous inverse returned.</span>}
   </div>;
 }
 
 function PlainConclusion({ a, b }: { a: ArchitectureTargetMatch | null; b: ArchitectureTargetMatch | null }) {
-  if (!a && !b) return <div className={styles.conclusion}>Neither architecture returned a complete sampled ramp for this target-shape search.</div>;
-  if (!a) return <div className={styles.conclusion}>Architecture B returned a complete match; A did not in the sampled capability set.</div>;
-  if (!b) return <div className={styles.conclusion}>Architecture A returned a complete match; B did not in the sampled capability set.</div>;
+  if (!a && !b) return <div className={styles.conclusion}>Neither architecture produced a history-certified continuous inverse for this target shape.</div>;
+  if (!a) return <div className={styles.conclusion}>Architecture B produced a certified continuous inverse; A hit a geometry, packaging, or contact-history boundary.</div>;
+  if (!b) return <div className={styles.conclusion}>Architecture A produced a certified continuous inverse; B hit a geometry, packaging, or contact-history boundary.</div>;
   const better = a.rms_shape_error <= b.rms_shape_error ? 'A' : 'B';
   const worse = Math.max(a.rms_shape_error, b.rms_shape_error);
-  if (worse < .01) return <div className={styles.conclusion}><strong>For this requested shape, the architectures are functionally very similar.</strong> Both sampled domains reproduce it within 1% RMS after force scale is removed.</div>;
+  if (worse < .01) return <div className={styles.conclusion}><strong>For this requested shape, the architectures are functionally very similar.</strong> Both continuous inverses reproduce it within 1% RMS after force scale is removed.</div>;
   return <div className={styles.conclusion}><strong>For this requested shape, Architecture {better} reproduces the progression more closely.</strong> The smaller number is the whole-curve mismatch; the plot above shows exactly where the other architecture departs.</div>;
 }
 

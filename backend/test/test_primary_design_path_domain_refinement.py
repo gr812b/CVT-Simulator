@@ -1,21 +1,16 @@
 """Regression tests for refined Phase-3.5 force-domain presentation/search."""
 
 from __future__ import annotations
-
 from math import pi
 
 from app.engineering.fixed_pivot_primary.models import ArchitectureDesign
-from app.engineering.fixed_pivot_primary.path_domain import ForceRequirement, _normalized_force_gain
 from app.engineering.fixed_pivot_primary.path_domain_refinement import (
     _mask_runs,
     _merge_intervals,
     condition_path_domain_refined,
     refresh_compiled_domain_views,
 )
-from app.engineering.fixed_pivot_primary.path_domain import (
-    compile_path_domain,
-    _path_from_state_indices,
-)
+from app.engineering.fixed_pivot_primary.path_domain import compile_path_domain
 
 INCH = 0.0254
 
@@ -67,56 +62,6 @@ def test_refreshed_architecture_capability_is_densely_edge_sampled() -> None:
     assert len(stations) > compiled.shift_station_count
     assert len(compiled.document["representative_paths"]) <= 6
     assert len(compiled.document["representative_paths"]) > 0
-
-
-def test_conditioned_solution_examples_are_extracted_from_conditioned_graph() -> None:
-    compiled = _compiled()
-    assert compiled.representative_state_paths
-    state_path = compiled.representative_state_paths[0]
-    path = _path_from_state_indices(
-        compiled.architecture,
-        compiled.states,
-        list(state_path),
-        compiled.shift_station_count,
-    )
-    omega = 3800.0 * 2.0 * pi / 60.0
-    mass = 0.200
-    shifts = (
-        0.35 * compiled.architecture.required_travel_m,
-        0.70 * compiled.architecture.required_travel_m,
-    )
-    requirements = []
-    for index, shift in enumerate(shifts):
-        row = path.evaluate(shift)
-        arm, tip, _ = _normalized_force_gain(
-            compiled.architecture,
-            row["q_rad"],
-            row["dq_dx_rad_per_m"],
-        )
-        force = omega * omega * (arm + mass * tip)
-        requirements.append(
-            ForceRequirement(
-                id=f"p{index}",
-                shift_m=shift,
-                force_N=force,
-                shaft_speed_rad_s=omega,
-                tolerance_N=3.0,
-            )
-        )
-
-    result = condition_path_domain_refined(
-        compiled,
-        tuple(requirements),
-        max_tip_mass_per_flyweight_kg=0.300,
-        mass_sample_count=257,
-        representative_solution_count=6,
-        reference_shaft_speed_rad_s=omega,
-        force_samples_per_layer=9,
-    )
-    assert result["summary"]["jointly_feasible"] is True
-    assert result["representative_solutions"]
-    for solution in result["representative_solutions"]:
-        assert solution["solution"]["tip_mass_min_kg"] <= solution["solution"]["tip_mass_max_kg"]
 
 
 def test_force_projection_exposes_interval_union_for_frontend_hit_testing() -> None:

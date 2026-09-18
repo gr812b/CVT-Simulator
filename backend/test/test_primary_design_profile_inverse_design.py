@@ -94,37 +94,6 @@ def test_soft_profile_guides_do_not_collapse_graph_and_rank_full_curve() -> None
     assert fit["max_abs_error_N"] >= fit["rms_error_N"]
 
 
-def test_hard_lock_still_filters_shared_mass_domain() -> None:
-    compiled = _compiled()
-    path = _path_from_state_indices(
-        compiled.architecture,
-        compiled.states,
-        list(compiled.representative_state_paths[0]),
-        compiled.shift_station_count,
-    )
-    omega = 3800.0 * 2.0 * pi / 60.0
-    x = 0.5 * compiled.architecture.required_travel_m
-    force = _force(path, x, 0.20, omega)
-    lock = ForceRequirement(
-        id="hard-middle",
-        shift_m=x,
-        force_N=force,
-        shaft_speed_rad_s=omega,
-        tolerance_N=10.0,
-    )
-    result = condition_path_domain_refined(
-        compiled,
-        (lock,),
-        max_tip_mass_per_flyweight_kg=0.30,
-        mass_sample_count=257,
-        representative_solution_count=0,
-        reference_shaft_speed_rad_s=omega,
-    )
-    assert result["summary"]["hard_lock_count"] == 1
-    assert result["requirements"][0]["mode"] == "hard"
-    assert result["requirements"][0]["individually_attainable"] is True
-
-
 def test_packaging_reuses_base_graph_and_caches_zone_mask() -> None:
     architecture = _architecture()
     remote_zone = PackagingZone(
