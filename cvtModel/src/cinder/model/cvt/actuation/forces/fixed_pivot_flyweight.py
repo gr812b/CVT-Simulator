@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
+from sys import float_info
 
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
@@ -18,6 +19,11 @@ from ..types import (
     PulleyElementContribution,
     PulleyKineticMode,
 )
+
+# Match CINDER's existing roundoff guard convention used by impact and
+# relative-motion consistency checks. This is a numerical resolution
+# multiplier, not a physical force threshold.
+_CONTACT_ROUNDOFF_MULTIPLIER = 4096.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,9 +183,32 @@ class FixedPivotFlyweightForce:
         context: PulleyActuationContext,
         unknowns: ClosureUnknowns,
     ) -> float:
-        """Return signed force carried by the selected roller/ramp branch."""
+        """Return signed force carried by the selected roller/ramp branch.
 
-        return float(self.evaluate(context).evaluate(unknowns))
+        A force assembled from cancelling affine terms can land a few floating-
+        point ulps below zero even when the exact reaction is zero. Snap only
+        that arithmetic dust to zero using the same ``4096 * eps * scale``
+        convention already used by CINDER's other consistency checks. The
+        scale is the sum of absolute evaluated force contributions, so the
+        tolerance follows the arithmetic being cancelled rather than imposing
+        a fixed physical-force deadband.
+        """
+
+        raw_margin = float(self.evaluate(context).evaluate(unknowns))
+        contribution_values = tuple(
+            float(contribution.relation.evaluate(unknowns))
+            for contribution in self.inspect(context)
+        )
+        calculation_scale = max(
+            1.0,
+            sum(abs(value) for value in contribution_values),
+        )
+        roundoff_tolerance = (
+            _CONTACT_ROUNDOFF_MULTIPLIER * float_info.epsilon * calculation_scale
+        )
+        if abs(raw_margin) <= roundoff_tolerance:
+            return 0.0
+        return raw_margin
 
 
 def _require_axial_acceleration(
