@@ -9,3 +9,4 @@
 # patterns (e.g. *.[1-9]) in the root .gitignore; un-ignore the folder itself
 # (contents still subject to the exclude rules above, e.g. .venv/, __pycache__/).
 !cinder-*/
+**/artifacts/

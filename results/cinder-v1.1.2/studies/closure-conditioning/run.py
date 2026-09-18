@@ -2,6 +2,26 @@
 
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 from dataclasses import dataclass, replace
 from types import SimpleNamespace
 import argparse
@@ -48,8 +68,8 @@ from cinder.hosts import NoHost
 from cinder.results.fields import recover_belt_tension_boundaries
 from cinder.results.inspection import inspect_cvt_state
 
-from conditioning_math import finite_difference_jacobian
-from case_library import load_case_library, search_named_stick_case
+from infrastructure.conditioning_math import finite_difference_jacobian
+from infrastructure.case_library import load_case_library, search_named_stick_case
 
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]

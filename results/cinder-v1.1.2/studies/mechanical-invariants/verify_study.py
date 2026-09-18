@@ -52,7 +52,7 @@ assert not any(key in spec for key in ("bench_search","extended_contact_search",
 assert {item["id"] for item in case_library["free_shift_direction_requests"]} == {"free_shift_closing","free_shift_opening"}
 assert len(case_library["structural_boundary_requests"]) == 4
 assert case_library["deadzone_free_snapshot"]["id"] == "deadzone_free_static_snapshot"
-assert (HERE/"run_reference.py").is_file()
+assert (HERE/"run.py").is_file()
 assert (HERE/"CAPABILITY_INTERPRETATION.md").is_file()
 print("PASS mechanical-invariants operating-domain preflight")
 print(f"Shared cases: {case_library_path}")

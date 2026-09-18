@@ -76,7 +76,7 @@ Paper-facing figures can be regenerated from the frozen artifacts without
 rerunning CINDER:
 
 ```powershell
-python .\studies\solver-convergence\publication_plots.py
+python .\studies\solver-convergence\analysis/publication_plots.py
 ```
 
 A separate exploratory dense sweep is available for high-resolution heatmaps,
@@ -84,8 +84,8 @@ contours, breakdown-boundary exploration, and high-density cost plots. It is
 **never called by `run.py`** and writes only beneath `artifacts/dense-overnight/`:
 
 ```powershell
-python .\studies\solver-convergence\overnight_dense.py --plan-only
-python .\studies\solver-convergence\overnight_dense.py
+python .\studies\solver-convergence\exploration/overnight_dense.py --plan-only
+python .\studies\solver-convergence\exploration/overnight_dense.py
 ```
 
 The dense explorer is supplementary/exploratory and does not replace the frozen

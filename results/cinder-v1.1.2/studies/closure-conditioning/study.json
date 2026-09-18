@@ -1,5 +1,5 @@
 {
-  "name": "Closure conditioning \u2014 operating-domain and lambda-map audit",
+  "name": "Closure conditioning — operating-domain and lambda-map audit",
   "description": "Separate conditioning and uniqueness audit for the production 8x8 mechanical closure and 2x2 stick-root map. Actual-root states are drawn from the nominal launch and the shared verification operating-case library; expensive lambda-plane maps are reserved for a smaller representative/worst subset.",
   "cinder_release": {
     "distribution": "cinder-cvt",
@@ -68,5 +68,43 @@
   "generated_artifacts": {
     "directory": "artifacts",
     "committed_results_in_clean_study": false
+  },
+  "results_manifest_schema": 1,
+  "study_slug": "closure-conditioning",
+  "title": "Closure conditioning — operating-domain and lambda-map audit",
+  "maintenance_status": "maintained",
+  "paper_role": "undecided",
+  "classification": "verification",
+  "scientific_question": "Separate conditioning and uniqueness audit for the production 8x8 mechanical closure and 2x2 stick-root map. Actual-root states are drawn from the nominal launch and the shared verification operating-case library; expensive lambda-plane maps are reserved for a smaller representative/worst subset.",
+  "base_configuration": "../../defaults/baja/simulation_case.json",
+  "reference_model": {
+    "policy": "bilateral-slotted",
+    "source": "../../defaults/reference_model/policy.json"
+  },
+  "entrypoints": {
+    "run": "run.py",
+    "verify": "verify_study.py"
+  },
+  "run_contract": "Canonical maintained-study reproduction entry point. It excludes exploration/ and must regenerate the maintained candidate outputs that could later support the manuscript.",
+  "outputs": {
+    "directory": "artifacts",
+    "committed": false
+  },
+  "runtime_scope": {
+    "requires": [
+      "cinder-cvt==1.1.2",
+      "release-scoped Results defaults"
+    ],
+    "forbids": [
+      "cvtModel/launchTools",
+      "cvtModel/examples",
+      "editable cvtModel/src",
+      "runtime Git materialization"
+    ]
+  },
+  "source_ownership": {
+    "shared_cross_study": "../../defaults",
+    "study_specific": "infrastructure/, experiments/, analysis/",
+    "exploration_excluded_from_run": true
   }
 }

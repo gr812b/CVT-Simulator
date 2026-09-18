@@ -120,11 +120,11 @@ resolution, conditioning diagnostics, root-census logic, and map selection.
 ## Optional singular-vector ridge diagnostic
 
 After a normal closure-conditioning run has produced the expanded `.npz` maps,
-`singular_vector_diagnostics.py` can interrogate the weak direction of the
+`analysis/singular_vector_diagnostics.py` can interrogate the weak direction of the
 8×8 closure without repeating any lambda-plane sweep:
 
 ```powershell
-python .\studies\closure-conditioning\singular_vector_diagnostics.py
+python .\studies\closure-conditioning\analysis/singular_vector_diagnostics.py
 ```
 
 By default it analyzes `upper_stop` and `mid_shift`.  For each state it compares

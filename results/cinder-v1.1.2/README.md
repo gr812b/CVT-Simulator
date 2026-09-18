@@ -140,3 +140,8 @@ road programme and end time.
 Each CINDER release owns a separate sibling under `results/`. Existing release
 artifacts are immutable historical results; a new CINDER version gets fresh
 study executions and fresh generated artifacts.
+
+## Maintained-study repository contract
+
+Study layout and manifest rules are defined in `STUDY_STRUCTURE.md`. The root `run.py` in each maintained study is the canonical reproduction entry point; exploration tooling is excluded from that contract. `verify_all_studies.py` validates the common manifest envelope and then runs each available study-local verifier.
+

@@ -1,5 +1,25 @@
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 import math
 import sys
 import unittest
@@ -9,7 +29,7 @@ STUDY_ROOT = Path(__file__).resolve().parents[1]
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
-from equation_sensitivity import (
+from analysis.equation_sensitivity import (
     contact_coefficients_from_lambda,
     driver_thresholds,
     transient_coefficients,

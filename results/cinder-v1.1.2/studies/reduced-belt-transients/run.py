@@ -6,6 +6,26 @@ secondary-load rises to separate disturbance *magnitude* from disturbance
 """
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 import argparse
 import copy
 import json
@@ -18,33 +38,33 @@ from typing import Any
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
-REPO_ROOT = STUDY_ROOT.parents[3]
-RELEASE_DEFAULT_CASE = RELEASE_ROOT / "defaults" / "baja_reference_simulation_case.json"
-REPO_EXAMPLE_CASE = REPO_ROOT / "cvtModel" / "examples" / "baja_baseline_simulation_case.json"
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RELEASE_ROOT))
+RELEASE_DEFAULT_CASE = RELEASE_ROOT / "defaults" / "baja" / "simulation_case.json"
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
-from audit_simulation_case import run_case
-from belt_terms import inventory
-from closure_design import (
+from infrastructure.audit_simulation_case import run_case
+from infrastructure.belt_terms import inventory
+from experiments.closure_design import (
     apply_belt_density_scale,
     apply_contact_stress,
     build_contact_stress_cases,
     build_inertia_continuations,
 )
-from closure_synthesis import synthesize_closure
-from envelope_design import apply_tune_variant, build_baja_envelope
-from equation_sensitivity import build_equation_sensitivity
-from protocol_support import (
+from analysis.closure_synthesis import synthesize_closure
+from experiments.envelope_design import apply_tune_variant, build_baja_envelope
+from analysis.equation_sensitivity import build_equation_sensitivity
+from infrastructure.protocol_support import (
     SmoothGradeProgram,
     SmoothOverrunProgram,
     install_global_transport_inertia_scale,
     make_overrun_boundaries,
     make_time_programmed_boundary,
 )
-from sensitivity_synthesis import synthesize_sensitivity_connections
-from study_support import ARTIFACTS, write_json, write_rows
+from analysis.sensitivity_synthesis import synthesize_sensitivity_connections
+from infrastructure.study_support import ARTIFACTS, write_json, write_rows
 
 BROAD_PROTOCOLS = (
     {
@@ -121,15 +141,11 @@ def _resolve_base_case(requested: Path | None) -> Path:
         if not candidate.is_file():
             raise FileNotFoundError(f"Explicit --base-case does not exist: {candidate}")
         return candidate
-    for candidate in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE):
-        if candidate.is_file():
-            return candidate.resolve()
-    searched = "\n  - ".join(str(path) for path in (RELEASE_DEFAULT_CASE, REPO_EXAMPLE_CASE))
-    raise FileNotFoundError(
-        "Could not locate the executable Baja baseline. Searched:\n  - "
-        + searched
-        + "\nPass --base-case PATH to an equivalent cinder_composed_simulation_case JSON."
-    )
+    if not RELEASE_DEFAULT_CASE.is_file():
+        raise FileNotFoundError(
+            "Frozen Results Baja input is missing: " + str(RELEASE_DEFAULT_CASE)
+        )
+    return RELEASE_DEFAULT_CASE.resolve()
 
 
 def _broad_document(base: dict[str, Any], protocol: dict[str, Any]) -> dict[str, Any]:

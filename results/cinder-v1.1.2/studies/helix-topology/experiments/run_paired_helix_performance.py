@@ -19,6 +19,26 @@ the helical kinematic constraint and permit signed/slotted helix reaction.
 """
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 import argparse
 from dataclasses import dataclass, replace
 import json
@@ -39,7 +59,7 @@ for path in (STUDY_ROOT, HERE):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from study_support import (  # noqa: E402
+from infrastructure.study_support import (  # noqa: E402
     ARTIFACTS,
     AddedTorqueBoundary,
     BlendToTorqueBoundary,
@@ -48,7 +68,7 @@ from study_support import (  # noqa: E402
     build_slotted_system,
     flat_programme,
     integrate_system,
-    load_tagged_modules,
+    load_study_modules,
     run_flat_slotted_reference_with_constants,
     select_restart,
     verify_environment,
@@ -642,7 +662,7 @@ def main() -> int:
     verify_environment()
     study = json.loads((STUDY_ROOT / "study.json").read_text(encoding="utf-8"))
     cfg = study["experiments"]["paired_helix_performance"]
-    _, ab, route = load_tagged_modules()
+    _, ab, route = load_study_modules()
 
     _, resolved, _, _, _ = build_reference_components(
         route, duration_s=float(cfg["conditioning_duration_s"])

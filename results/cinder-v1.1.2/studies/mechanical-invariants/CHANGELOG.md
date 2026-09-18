@@ -23,7 +23,7 @@ exploration:
   operating-case defaults as deterministic reproduction anchors:
   `secondary_slip_plus` (exploration attempt 2535) and `both_slip_mp`
   (attempt 3951);
-- `run_reference.py` tries those anchors first, but still requires the production
+- `run.py` tries those anchors first, but still requires the production
   classifier, full hard-invariant audit, real hybrid continuation and exact
   successor checks; it falls back to the ordinary deterministic search if an
   anchor fails;
@@ -32,7 +32,7 @@ exploration:
 - `CAPABILITY_INTERPRETATION.md` freezes the assumption-to-consequence framing
   and the next local-neighbourhood refinement needed to turn coverage into a
   defensible broad/easy vs constrained/extreme operating-domain map;
-- `build_capability_map.py` produces a preliminary artifact-level diagnostic
+- `analysis/build_capability_map.py` produces a preliminary artifact-level diagnostic
   table without treating its provisional labels as publication-grade claims.
 
 - `run_capability_probes.py` directly replays the two states that previously terminated only on unilateral helix lift-off under the slotted policy; these probes are descriptive and do not gate invariant PASS.

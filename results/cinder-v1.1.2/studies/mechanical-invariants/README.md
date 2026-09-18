@@ -7,14 +7,14 @@ Run:
 
 ```bash
 python verify_study.py
-python run_reference.py
-python build_capability_map.py
+python run.py
+python analysis/build_capability_map.py
 ```
 
 `run.py` is the core audit implementation and now decodes the shared Baja input
 through `defaults.reference_model.decode_reference_case`, so the bilateral
 secondary helix is part of the study's starting reference model rather than a
-study-local overlay. `run_reference.py` adds the deterministic rare-contact
+study-local overlay. `run.py` adds the deterministic rare-contact
 reproduction anchors and writes reference-model provenance beside the artifacts.
 
 ## Reference topology

@@ -57,7 +57,7 @@ This split is central to the study. A contribution may be small because its resp
 
 ## Equation-level sensitivity
 
-`equation_sensitivity.py` evaluates the final-equation coefficients without integrating a trajectory.
+`analysis/equation_sensitivity.py` evaluates the final-equation coefficients without integrating a trajectory.
 
 The radial coefficients are mapped over the full engaged shift range. The traction-sensitive coefficients are mapped over static-contact utilization using the exact regular wrap functions. Three representative active shift fractions (0.1, 0.5, 0.9) are evaluated, and an independent primary/secondary traction-demand grid prevents a symmetric-contact path from hiding asymmetric behavior.
 
@@ -113,7 +113,7 @@ The zero-rise case is now described as an **instantaneous road-load application*
 
 ## Smart Baja operating envelope
 
-`envelope_design.py` adds a deterministic low-discrepancy design instead of a Cartesian sweep.
+`experiments/envelope_design.py` adds a deterministic low-discrepancy design instead of a Cartesian sweep.
 
 The default design uses 18 Halton samples plus six mechanistic anchors and four preload-robustness anchors. Reference-tune samples span:
 
@@ -136,7 +136,7 @@ These are called lower/higher **secondary preload** variants, not assumed clamp-
 
 ## What the synthesis asks
 
-For every free-stick case, `sensitivity_synthesis.py` compares the actual kinematic driver with its equation-derived 10% threshold. The principal output is therefore not merely the largest force term but:
+For every free-stick case, `analysis/sensitivity_synthesis.py` compares the actual kinematic driver with its equation-derived 10% threshold. The principal output is therefore not merely the largest force term but:
 
 - which mechanisms ever cross their 10% threshold;
 - how often they do so;

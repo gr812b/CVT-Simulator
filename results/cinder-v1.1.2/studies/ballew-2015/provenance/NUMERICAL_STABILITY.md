@@ -10,7 +10,7 @@ fresh outputs beneath `artifacts/`.
 
 ## Four-case refinement check
 
-`run_convergence.py` evaluates the reconstructed closed-loop case at:
+`analysis/run_convergence.py` evaluates the reconstructed closed-loop case at:
 
 | label | rtol | atol | max step |
 |---|---:|---:|---:|
@@ -26,7 +26,7 @@ refinement.
 
 ## Broad stability sweep
 
-`run_stability_sweep.py` asks a different question: over what solver-control
+`exploration/run_stability_sweep.py` asks a different question: over what solver-control
 region does CINDER reproduce its own tightly resolved closed-loop trajectory?
 
 The tight **CINDER-only** reference is:

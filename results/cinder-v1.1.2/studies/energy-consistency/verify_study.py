@@ -1,5 +1,4 @@
 """Static checks for the CINDER 1.1.2 mechanical-energy results study."""
-
 from __future__ import annotations
 
 import json
@@ -16,9 +15,9 @@ def main() -> int:
         ROOT / "README.md",
         ROOT / "study.json",
         ROOT / "run.py",
-        ROOT / "energy_accounting.py",
+        ROOT / "infrastructure" / "energy_accounting.py",
         RELEASE_ROOT / "verify_environment.py",
-        RELEASE_ROOT / "defaults" / "simulation_case.json",
+        RELEASE_ROOT / "defaults" / "baja" / "simulation_case.json",
     ]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
@@ -46,12 +45,12 @@ def main() -> int:
         "missing_power_candidate",
         "circular_traction_first_reference",
     )
-    for path in (ROOT / "run.py", ROOT / "energy_accounting.py"):
+    for path in (ROOT / "run.py", ROOT / "infrastructure" / "energy_accounting.py"):
         text = path.read_text(encoding="utf-8")
         for token in forbidden:
             if token in text:
                 print(
-                    f"{path.name} contains forbidden diagnostic/source dependency {token!r}.",
+                    f"{path.relative_to(ROOT)} contains forbidden diagnostic/source dependency {token!r}.",
                     file=sys.stderr,
                 )
                 return 1

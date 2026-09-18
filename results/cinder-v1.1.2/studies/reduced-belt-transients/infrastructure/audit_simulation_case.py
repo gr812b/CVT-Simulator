@@ -1,0 +1,147 @@
+"""Run one unchanged CINDER case and build the final-equation belt atlas."""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+from typing import Any, Callable
+
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+RELEASE_ROOT = STUDY_ROOT.parents[1]
+VERIFY = RELEASE_ROOT / "verify_environment.py"
+for _path in (str(STUDY_ROOT), str(RELEASE_ROOT)):
+    while _path in sys.path:
+        sys.path.remove(_path)
+sys.path.insert(0, str(RELEASE_ROOT))
+sys.path.insert(0, str(STUDY_ROOT))
+
+from infrastructure.study_support import ARTIFACTS, write_json
+from infrastructure.trajectory_audit import write_atlas
+from defaults.reference_model import decode_reference_case
+
+EXPECTED_CINDER_VERSION = "1.1.2"
+
+
+def _protocol_context(
+    document: dict[str, Any],
+    *,
+    name: str,
+    protocol: dict[str, Any] | None,
+) -> dict[str, Any]:
+    result = dict(protocol or {})
+    result.setdefault("name", name)
+    result.setdefault("title", name.replace("_", " ").title())
+    geometry = document["assembly"]["geometry"]
+    contact = document["assembly"]["contact"]
+    result.setdefault("max_shift_m", float(geometry["max_shift_m"]))
+    result.setdefault(
+        "static_friction_coefficient",
+        float(contact["static_friction_coefficient"]),
+    )
+    return result
+
+
+def run_case(
+    *,
+    case_path: Path,
+    name: str,
+    max_samples: int,
+    skip_environment_check: bool = False,
+    protocol: dict[str, Any] | None = None,
+    configure_system: Callable[[Any], None] | None = None,
+):
+    if not skip_environment_check:
+        subprocess.run([sys.executable, str(VERIFY)], check=True)
+
+    import cinder
+    from cinder.contracts import validate_simulation_case_document
+
+    if cinder.__version__ != EXPECTED_CINDER_VERSION:
+        raise RuntimeError(
+            f"Expected CINDER {EXPECTED_CINDER_VERSION}, found {cinder.__version__}."
+        )
+
+    document = json.loads(case_path.read_text(encoding="utf-8"))
+    validation = validate_simulation_case_document(document)
+    if not validation.is_valid:
+        raise RuntimeError(
+            "Simulation case failed CINDER validation: "
+            + "; ".join(f.message for f in validation.findings)
+        )
+
+    # Results studies share the release-scoped bilateral/slotted reference
+    # interpretation.  Study-specific configure_system callbacks are applied
+    # only after that common reference model has been decoded.
+    decoded = decode_reference_case(document)
+    cleanup = None
+    if configure_system is not None:
+        cleanup = configure_system(decoded.system)
+
+    try:
+        result = decoded.system.run(
+            time_span=decoded.time_span,
+            initial_state=decoded.initial_state,
+            initial_mode=decoded.initial_mode,
+            settings=decoded.integrator_settings,
+            reporting_settings=decoded.reporting_settings,
+        )
+        output = ARTIFACTS / name
+        if output.exists():
+            shutil.rmtree(output)
+        output.mkdir(parents=True)
+        (output / "simulation_case.json").write_text(
+            json.dumps(document, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        protocol_context = _protocol_context(document, name=name, protocol=protocol)
+        protocol_context["source"] = str(case_path)
+        write_json(output / "protocol.json", protocol_context)
+
+        # Keep any experimental equation continuation installed through
+        # post-processing so accepted-state closure reconstruction is performed
+        # with exactly the same equations that generated the trajectory.
+        summary = write_atlas(
+            system=decoded.system,
+            trace=result.trace,
+            output_dir=output,
+            protocol=protocol_context,
+            maximum_samples=max_samples,
+        )
+        write_json(
+            output / "run_summary.json",
+            {
+                "completed": bool(result.completed),
+                "termination_reason": result.termination_reason,
+                "transition_count": len(result.transitions),
+                "final_time_s": float(result.final_time),
+                "engaged_sample_count": summary["overall"]["engaged_sample_count"],
+            },
+        )
+        return summary
+    finally:
+        if callable(cleanup):
+            cleanup()
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--case", type=Path, required=True)
+    parser.add_argument("--name", required=True)
+    parser.add_argument("--max-samples", type=int, default=6000)
+    parser.add_argument("--skip-environment-check", action="store_true")
+    args = parser.parse_args()
+    run_case(
+        case_path=args.case.resolve(),
+        name=args.name,
+        max_samples=args.max_samples,
+        skip_environment_check=args.skip_environment_check,
+    )
+    print(f"Artifacts: {ARTIFACTS / args.name}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

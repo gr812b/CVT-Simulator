@@ -9,7 +9,7 @@
   "scientific_question": "How important are the retained primary flyweight and secondary helical axial-rotational dynamics in the Baja baseline, which individual terms cause those corrections, when is a quasi-static actuator approximation justified, and can physically existing commercial secondary hardware occupy a regime where the retained helix dynamics are materially non-negligible?",
   "experiments": {
     "baseline_ablation": {
-      "role": "official",
+      "role": "maintained",
       "question": "At the actual Baja baseline, how much do the retained dynamic actuator terms change same-state force predictions and independently integrated trajectories?",
       "scenario": "launch",
       "duration_s": 10.0,
@@ -23,7 +23,7 @@
       }
     },
     "coupling_energy": {
-      "role": "official",
+      "role": "maintained",
       "question": "Which kinetic, potential, configuration-power, and reflected-inertia channels explain the baseline actuator-dynamics corrections?",
       "duration_s": 10.0,
       "report_step_s": 0.001,
@@ -35,7 +35,7 @@
       }
     },
     "validity_envelopes": {
-      "role": "official",
+      "role": "maintained",
       "question": "What exact dimensionless correction measures follow from the actuator equations, and where do 1%, 5%, 10%, and 20% departures from quasi-static force prediction occur?",
       "shift_percent_samples": [
         10.0,
@@ -60,7 +60,7 @@
       "secondary_belt_torque_samples": 281
     },
     "controlled_transients": {
-      "role": "official",
+      "role": "maintained",
       "question": "When controlled shaft-torque ramps drive the exact dynamic correction measures through low-to-material values, how much does the full model response differ from the corresponding quasi-static reduction?",
       "restart_shift_percents": [
         20.0,
@@ -160,5 +160,48 @@
     "Sourced facts, derived quantities, and engineering assumptions are stored separately.",
     "The commercial case is deliberately selected for sensitivity to the secondary dynamic terms rather than as a population-average CVT.",
     "The commercial trajectory demo is a mechanism transplant into the frozen Baja host, not a Sidewinder reconstruction."
-  ]
+  ],
+  "results_manifest_schema": 1,
+  "study_slug": "actuator-dynamics",
+  "description": null,
+  "maintenance_status": "maintained",
+  "paper_role": "undecided",
+  "classification": "mechanism",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_configuration": null,
+  "reference_model": {
+    "policy": "bilateral-slotted",
+    "source": "../../defaults/reference_model/policy.json"
+  },
+  "entrypoints": {
+    "run": "run.py",
+    "verify": "verify_study.py"
+  },
+  "run_contract": "Canonical maintained-study reproduction entry point. It excludes exploration/ and must regenerate the maintained candidate outputs that could later support the manuscript.",
+  "outputs": {
+    "directory": "artifacts",
+    "committed": false
+  },
+  "runtime_scope": {
+    "requires": [
+      "cinder-cvt==1.1.2",
+      "release-scoped Results defaults"
+    ],
+    "forbids": [
+      "cvtModel/launchTools",
+      "cvtModel/examples",
+      "editable cvtModel/src",
+      "runtime Git materialization"
+    ]
+  },
+  "source_ownership": {
+    "shared_cross_study": "../../defaults",
+    "study_specific": "infrastructure/, experiments/, analysis/",
+    "exploration_excluded_from_run": true
+  }
 }

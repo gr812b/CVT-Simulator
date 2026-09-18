@@ -20,6 +20,26 @@ replayed on low/nominal/high hardware estimates.
 
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 from dataclasses import replace
 import csv
 import json
@@ -39,7 +59,7 @@ STUDY_ROOT = HERE.parent
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
-from study_support import load_tagged_modules, materialize_tagged_upstream, verify_environment, write_rows  # noqa: E402
+from infrastructure.study_support import load_study_modules, verify_environment, write_rows  # noqa: E402
 
 EXPERIMENTS = STUDY_ROOT / "experiments"
 if str(EXPERIMENTS) not in sys.path:
@@ -500,8 +520,7 @@ def plot_uncertainty(rows, metric, ylabel, title, path):
 
 def main() -> int:
     verify_environment()
-    materialize_tagged_upstream(clean=True)
-    _, ab, route = load_tagged_modules()
+    ab, route = load_study_modules()
 
     cfg = load_json(CONFIG)
     derived = ensure_commercial_derivation()

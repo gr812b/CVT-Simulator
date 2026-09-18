@@ -41,3 +41,21 @@ A normal study should:
 A mechanism study may use release-internal inspection where quantities are not
 part of the ordinary serialized report contract, provided the hook is documented
 and the frozen published package is not altered.
+
+## Common study contract
+
+The maintained v1.1.2 studies use the same repository vocabulary:
+
+- `run.py` — canonical maintained-study entry point. A complete run must generate the maintained result set and every candidate figure/table that could later be selected for the manuscript. It does not run `exploration/`.
+- `verify_study.py` — study-local health/provenance checks.
+- `study.json` — common outer manifest schema plus study-specific payload.
+- `infrastructure/` — reusable support code; not a standalone scientific run.
+- `experiments/` — maintained protocol/case-family implementations.
+- `analysis/` — maintained synthesis, metrics, and candidate figure/table generation.
+- `exploration/` — discovery history intentionally excluded from the canonical run.
+- `provenance/` — external-source, reconstruction, or source-registration material.
+- `tests/` — study-local automated tests.
+- `artifacts/` — generated outputs; not source-controlled.
+
+Interpretation/recap PDFs remain at study root until the corresponding Chapter 4 section is frozen. `analysis/` means maintained, **not paper-official**. All study manifests therefore use `paper_role: "undecided"` until figure/table selection is complete. Any older study-local use of words such as `official` continues to mean maintained within that study; it does not select an item for the manuscript.
+

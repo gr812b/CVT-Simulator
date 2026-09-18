@@ -2,6 +2,26 @@
 
 from __future__ import annotations
 
+# --- results study-local import bootstrap ---
+from pathlib import Path as _ResultsPath
+import sys as _results_sys
+
+_results_file = _ResultsPath(__file__).resolve()
+_results_study_root = next(
+    (parent for parent in _results_file.parents if (parent / "study.json").is_file()),
+    None,
+)
+if _results_study_root is None:
+    raise RuntimeError(f"Could not locate study root for {_results_file}")
+_results_release_root = _results_study_root.parents[1]
+for _results_path in (str(_results_study_root), str(_results_release_root)):
+    while _results_path in _results_sys.path:
+        _results_sys.path.remove(_results_path)
+_results_sys.path.insert(0, str(_results_release_root))
+_results_sys.path.insert(0, str(_results_study_root))
+# --- end results study-local import bootstrap ---
+
+
 import argparse
 import csv
 import json
@@ -19,21 +39,21 @@ from cinder.contracts import (
     validate_assembly,
 )
 
-from benchmark.constants import resolved_parameter_document
-from benchmark.metrics import (
+from infrastructure.benchmark.constants import resolved_parameter_document
+from infrastructure.benchmark.metrics import (
     compute_error_metrics,
     metric_document,
     plot_protocol,
     plot_protocol_full_scale,
     write_comparison_csv,
 )
-from benchmark.reference import (
+from infrastructure.benchmark.reference import (
     build_reference_ratio,
     load_series,
     reference_hash_document,
     validate_reference_data,
 )
-from benchmark.simulation import (
+from infrastructure.benchmark.simulation import (
     build_closed_loop_setup,
     build_force_replay_setup,
     controller_force_for_sample,

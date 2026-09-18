@@ -38,7 +38,7 @@ equation. The source-constrained reconstruction documented in
 `provenance/RECONSTRUCTION.md` is applied around unchanged CINDER. Figure 45 is
 then an **output reference**, never an input to the controller.
 
-`run_controller_reconstruction.py` separately audits the controller sign and
+`analysis/run_controller_reconstruction.py` separately audits the controller sign and
 error-unit interpretation against the digitized Ballew traces. Diagnostic fitted
 gains reported by that audit are never fed back into the benchmark.
 
@@ -50,11 +50,11 @@ ballew-2015/
 ├── study.json
 ├── verify_study.py
 ├── run.py
-├── run_controller_reconstruction.py
-├── run_convergence.py
-├── run_stability_sweep.py
+├── analysis/run_controller_reconstruction.py
+├── analysis/run_convergence.py
+├── exploration/run_stability_sweep.py
 │
-├── benchmark/
+├── infrastructure/benchmark/
 │   ├── constants.py        # published values + explicit reconstructed constants
 │   ├── belt.py             # A4 equivalent-belt/geometry bridge
 │   ├── actuation.py        # constant and tabulated axial-force extensions
@@ -154,14 +154,14 @@ Optional audits/studies:
 
 ```powershell
 # Source-only audit of the incompletely published PI controller equation.
-python studies/ballew-2015/run_controller_reconstruction.py
+python studies/ballew-2015/analysis/run_controller_reconstruction.py
 
 # Four-point refinement check around the nominal closed-loop settings.
-python studies/ballew-2015/run_convergence.py
+python studies/ballew-2015/analysis/run_convergence.py
 
 # Broader numerical operating-envelope study.
-python studies/ballew-2015/run_stability_sweep.py --preset smoke
-python studies/ballew-2015/run_stability_sweep.py --preset quick
+python studies/ballew-2015/exploration/run_stability_sweep.py --preset smoke
+python studies/ballew-2015/exploration/run_stability_sweep.py --preset quick
 ```
 
 All generated files are written beneath `artifacts/`. Re-running the canonical
