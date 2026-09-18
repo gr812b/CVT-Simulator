@@ -358,8 +358,8 @@ export function ValidationTraceChart({
         option={option}
         onEvents={onEvents}
         onChartReady={(instance) => {
-          chartRef.current = instance as ChartInstance;
-          activateSelection(instance as ChartInstance, true);
+          chartRef.current = instance as unknown as ChartInstance;
+          activateSelection(instance as unknown as ChartInstance, true);
         }}
         className={styles.chart}
         notMerge

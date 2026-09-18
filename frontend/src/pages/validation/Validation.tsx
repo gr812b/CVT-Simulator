@@ -173,7 +173,7 @@ function defaultChannels(data: ParsedDynoData, workflow: ValidationWorkflowDefau
       };
       return {
         key,
-        label: key.replaceAll('_', ' '),
+        label: key.replace(/_/g, ' '),
         unit: '',
         enabled: false,
         role: 'unused' as const,
@@ -419,7 +419,7 @@ function boundaryKindLabel(kind: string): string {
   if (kind === 'fixed_shaft') return 'Fixed torque / inertia';
   if (kind === 'locked_final_drive') return 'Locked final-drive vehicle';
   if (kind === 'speed_replay_shaft') return 'Measured RPM replay';
-  return kind.replaceAll('_', ' ');
+  return kind.replace(/_/g, ' ');
 }
 
 export const Validation = () => {
