@@ -14,7 +14,10 @@ interface Props {
   onCropChange?: (startS: number, endS: number) => void;
   simulated?: Array<[number, number]>;
   simulatedLabel?: string;
+  /** Legacy constant uncertainty band. */
   uncertaintyAbsolute?: number;
+  /** Preferred per-sample uncertainty band. Null values suppress the band locally. */
+  uncertaintyBySample?: Array<number | null>;
 }
 
 interface ChartInstance {
@@ -33,7 +36,6 @@ function cssColor(name: string, fallback: string): string {
   if (typeof window === 'undefined') return fallback;
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
-
 
 function interpolateSeries(series: Array<[number, number]> | undefined, target: number): number | null {
   if (series === undefined || series.length === 0) return null;
@@ -98,6 +100,7 @@ export function ValidationTraceChart({
   simulated,
   simulatedLabel = 'CINDER',
   uncertaintyAbsolute,
+  uncertaintyBySample,
 }: Props) {
   const minTime = timeS[0] ?? 0;
   const maxTime = timeS[timeS.length - 1] ?? 1;
@@ -148,11 +151,25 @@ export function ValidationTraceChart({
     const simulatedColor = cssColor('--line1', '#bb0808');
     const tooltipBackground = cssColor('--tooltip-bg', '#2a2a2a');
     const measuredPoints = timeS.map((time, index): [number, number] => [time, measured[index]]);
+
+    const uncertaintyValues = timeS.map((_, index): number | null => {
+      const pointwise = uncertaintyBySample?.[index];
+      if (typeof pointwise === 'number' && Number.isFinite(pointwise) && pointwise >= 0) return pointwise;
+      if (uncertaintyAbsolute !== undefined && Number.isFinite(uncertaintyAbsolute) && uncertaintyAbsolute >= 0) return uncertaintyAbsolute;
+      return null;
+    });
+    const uncertaintyPoints = timeS.flatMap((time, index): Array<[number, number]> => {
+      const value = uncertaintyValues[index];
+      return value === null ? [] : [[time, value]];
+    });
+    const hasUncertainty = uncertaintyPoints.length > 0;
+
     const tooltipFormatter = (params: unknown): string => {
       const time = tooltipAxisValue(params);
       if (time === null) return '';
       const measuredValue = interpolateSeries(measuredPoints, time);
       const simulatedValue = interpolateSeries(simulated, time);
+      const uncertaintyValue = interpolateSeries(uncertaintyPoints, time);
       const lines = [
         `<strong>${time.toFixed(3)} s</strong>`,
         `${measuredLabel}: ${formatTooltipNumber(measuredValue)} ${unit}`,
@@ -160,8 +177,8 @@ export function ValidationTraceChart({
       if (simulated !== undefined) {
         lines.push(`${simulatedLabel}: ${formatTooltipNumber(simulatedValue)} ${unit}`);
       }
-      if (uncertaintyAbsolute !== undefined && uncertaintyAbsolute > 0) {
-        lines.push(`Uncertainty: ±${formatTooltipNumber(uncertaintyAbsolute)} ${unit}`);
+      if (uncertaintyValue !== null) {
+        lines.push(`Uncertainty: ±${formatTooltipNumber(uncertaintyValue)} ${unit}`);
       }
       return lines.join('<br/>');
     };
@@ -188,24 +205,34 @@ export function ValidationTraceChart({
         },
       },
     ];
-    if (uncertaintyAbsolute !== undefined && uncertaintyAbsolute > 0) {
+
+    if (hasUncertainty) {
       measuredSeries.push(
         {
           name: `${measuredLabel} + uncertainty`,
           type: 'line',
           symbol: 'none',
-          lineStyle: { color: measuredColor, opacity: 0.45, type: 'dashed' },
-          data: timeS.map((time, index) => [time, measured[index] + uncertaintyAbsolute]),
+          connectNulls: false,
+          lineStyle: { color: measuredColor, opacity: 0.4, type: 'dashed' },
+          data: timeS.map((time, index) => {
+            const uncertainty = uncertaintyValues[index];
+            return uncertainty === null ? [time, null] : [time, measured[index] + uncertainty];
+          }),
         },
         {
           name: `${measuredLabel} - uncertainty`,
           type: 'line',
           symbol: 'none',
-          lineStyle: { color: measuredColor, opacity: 0.45, type: 'dashed' },
-          data: timeS.map((time, index) => [time, measured[index] - uncertaintyAbsolute]),
+          connectNulls: false,
+          lineStyle: { color: measuredColor, opacity: 0.4, type: 'dashed' },
+          data: timeS.map((time, index) => {
+            const uncertainty = uncertaintyValues[index];
+            return uncertainty === null ? [time, null] : [time, measured[index] - uncertainty];
+          }),
         },
       );
     }
+
     if (simulated !== undefined) {
       measuredSeries.push({
         name: simulatedLabel,
@@ -282,7 +309,7 @@ export function ValidationTraceChart({
       },
       series: measuredSeries,
     };
-  }, [cropEndS, cropStartS, maxTime, measured, measuredLabel, minTime, onCropChange, simulated, simulatedLabel, timeS, uncertaintyAbsolute, unit]);
+  }, [cropEndS, cropStartS, maxTime, measured, measuredLabel, minTime, onCropChange, simulated, simulatedLabel, timeS, uncertaintyAbsolute, uncertaintyBySample, unit]);
 
   const commitPendingBrush = useCallback(() => {
     if (onCropChange === undefined || pendingBrushRangeRef.current === null) return;
@@ -307,14 +334,9 @@ export function ValidationTraceChart({
       if (!Array.isArray(range) || range.length < 2 || typeof range[0] !== 'number' || typeof range[1] !== 'number') return;
       pendingBrushRangeRef.current = [range[0], range[1]];
     },
-    // ECharts documents this interaction event as brushEnd.  Register the
-    // lower-case alias as well because generic event adapters commonly
-    // normalize ECharts event names before subscribing.
     brushEnd: commitPendingBrush,
     brushend: commitPendingBrush,
     datazoom: () => {
-      // Zoom is a separate viewing operation.  Once it finishes, direct dragging
-      // on the plot returns to selecting the validation interval.
       window.setTimeout(() => {
         if (chartRef.current !== null) activateSelection(chartRef.current, false);
       }, 0);

@@ -2,13 +2,21 @@ import type { SimulationCaseDocument } from '@api/client';
 
 export type ChannelRole = 'comparison' | 'boundary_input' | 'diagnostic' | 'unused';
 export type UncertaintyStatus = 'pending' | 'known' | 'not_applicable';
+export type UncertaintyModel = 'absolute' | 'rpm_tooth_timing';
 
 export interface MeasurementUncertainty {
   status: UncertaintyStatus;
+  model?: UncertaintyModel;
   absolute?: number;
   unit?: string;
   source?: string;
   notes?: string;
+  /** Number of evenly spaced teeth or trigger edges per mechanical revolution. */
+  teethPerRevolution?: number;
+  /** Conservative ± timestamp uncertainty for one recorded tooth hit, in seconds. */
+  timestampUncertaintyS?: number;
+  /** Uniform spacing used when constructing a replay reference, in seconds. */
+  replaySampleIntervalS?: number;
 }
 
 export interface ChannelConfig {
@@ -36,20 +44,24 @@ export interface MeasurementMetadata {
   date?: string;
 }
 
+export type ShaftValidationMode = 'physical' | 'replay_measured_speed';
+
 export interface ValidationWorkflowDefaults {
-  primaryMode?: 'physical' | 'track_measured_speed';
-  secondaryMode?: 'physical' | 'track_measured_speed';
-  axialMode?: 'physical' | 'track_measured_position';
-  speedTracking?: {
-    proportionalGainNmSPerRad: number | null;
-    torqueLimitNm: number | null;
-    equivalentInertiaKgM2: number | null;
-    feedforwardInertiaKgM2: number | null;
+  /** `track_measured_speed` remains accepted as a legacy autosaved workspace value. */
+  primaryMode?: ShaftValidationMode | 'track_measured_speed';
+  /** `track_measured_speed` remains accepted as a legacy autosaved workspace value. */
+  secondaryMode?: ShaftValidationMode | 'track_measured_speed';
+  speedReplay?: {
+    trackingGainNmSPerRad: number | null;
   };
-  axialTracking?: {
-    positionGainNPerM: number | null;
-    speedGainNSPerM: number | null;
-    forceLimitN: number | null;
+  validationIntegrator?: {
+    relativeTolerance: number;
+    absoluteTolerance: number;
+    maxStepS: number;
+  };
+  rpmMeasurementDefaults?: {
+    primary?: MeasurementUncertainty;
+    secondary?: MeasurementUncertainty;
   };
   manualInitialState?: {
     primaryAngularSpeedRadPerS: number;

@@ -1,8 +1,17 @@
-"""Persistence helpers for the temporary single-workspace validation UX."""
+"""Persistence helpers for the experimental validation workspace.
+
+The validation layer deliberately owns a few execution/workflow defaults that
+are stricter than ordinary interactive simulations.  In particular, measured
+shaft-speed replay uses CINDER's public ``speed_replay_shaft`` boundary and the
+validation page always resolves runs with the replay-audited integrator
+settings below.  These are validation-workflow defaults, not global CINDER
+settings.
+"""
 
 from __future__ import annotations
 
 import copy
+from math import isfinite
 from typing import Any
 
 from sqlalchemy import select
@@ -20,6 +29,12 @@ from .resolver import resolve_simulation_case
 
 JsonDict = dict[str, Any]
 
+DEFAULT_REPLAY_GAIN_NM_S_PER_RAD = 400.0
+VALIDATION_RELATIVE_TOLERANCE = 1.0e-4
+VALIDATION_ABSOLUTE_TOLERANCE = 1.0e-7
+VALIDATION_MAX_STEP_S = 0.05
+DEFAULT_REPLAY_SAMPLE_INTERVAL_S = 0.01
+
 
 def get_workspace(session: Session, *, account_id: str) -> ValidationWorkspace | None:
     return session.scalar(
@@ -28,23 +43,32 @@ def get_workspace(session: Session, *, account_id: str) -> ValidationWorkspace |
 
 
 def _default_controller_templates() -> list[JsonDict]:
+    """Return only controller/boundary helpers supported by validation now."""
+
     return [
         {
-            "kind": "speed_tracking_shaft",
-            "label": "Torque-limited shaft speed tracker",
-            "proportional_gain_Nm_s_per_rad": None,
-            "torque_limit_Nm": None,
-            "equivalent_inertia_kg_m2": 0.0,
-            "feedforward_inertia_kg_m2": 0.0,
-        },
-        {
-            "kind": "axial_motion_tracking",
-            "label": "Force-limited axial motion tracker",
-            "position_gain_N_per_m": None,
-            "speed_gain_N_s_per_m": 0.0,
-            "force_limit_N": None,
-        },
+            "kind": "speed_replay_shaft",
+            "label": "Measured RPM replay",
+            "tracking_gain_Nm_s_per_rad": DEFAULT_REPLAY_GAIN_NM_S_PER_RAD,
+        }
     ]
+
+
+def _default_rpm_measurement() -> JsonDict:
+    return {
+        "status": "pending",
+        "model": "rpm_tooth_timing",
+        "unit": "rpm",
+        "replaySampleIntervalS": DEFAULT_REPLAY_SAMPLE_INTERVAL_S,
+    }
+
+
+def _validation_integrator_defaults() -> JsonDict:
+    return {
+        "relativeTolerance": VALIDATION_RELATIVE_TOLERANCE,
+        "absoluteTolerance": VALIDATION_ABSOLUTE_TOLERANCE,
+        "maxStepS": VALIDATION_MAX_STEP_S,
+    }
 
 
 def _default_workflow(resolved: JsonDict) -> JsonDict:
@@ -52,17 +76,13 @@ def _default_workflow(resolved: JsonDict) -> JsonDict:
     return {
         "primaryMode": "physical",
         "secondaryMode": "physical",
-        "axialMode": "physical",
-        "speedTracking": {
-            "proportionalGainNmSPerRad": None,
-            "torqueLimitNm": None,
-            "equivalentInertiaKgM2": 0.0,
-            "feedforwardInertiaKgM2": 0.0,
+        "speedReplay": {
+            "trackingGainNmSPerRad": DEFAULT_REPLAY_GAIN_NM_S_PER_RAD,
         },
-        "axialTracking": {
-            "positionGainNPerM": None,
-            "speedGainNSPerM": 0.0,
-            "forceLimitN": None,
+        "validationIntegrator": _validation_integrator_defaults(),
+        "rpmMeasurementDefaults": {
+            "primary": _default_rpm_measurement(),
+            "secondary": _default_rpm_measurement(),
         },
         "manualInitialState": {
             "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
@@ -74,18 +94,112 @@ def _default_workflow(resolved: JsonDict) -> JsonDict:
     }
 
 
-def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspace:
-    """Return the autosaved workspace, lazily creating it from account defaults.
+def _normalize_mode(value: object) -> str:
+    if value in {"replay_measured_speed", "track_measured_speed"}:
+        return "replay_measured_speed"
+    return "physical"
 
-    Existing databases may already contain the account/library seed rows while
-    missing the validation-workspace seed added later.  The validation page
-    should still work after migration without requiring a manual reseed, so the
-    first GET can bootstrap the singleton from the account's default released
-    vehicle assembly and normal default run choices.
+
+def _positive_number(value: object, fallback: float) -> float:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        number = float(value)
+        if isfinite(number) and number > 0.0:
+            return number
+    return fallback
+
+
+def _upgrade_workflow(workflow: JsonDict | None, setup_document: JsonDict) -> JsonDict:
+    """Migrate an autosaved legacy tracking workspace to shaft replay.
+
+    Old validation workspaces can contain ``speedTracking``, axial tracker
+    fields, and the legacy ``track_measured_speed`` mode.  Those values are
+    intentionally collapsed into the current, smaller workflow rather than
+    retaining dead architecture indefinitely.
     """
+
+    raw = copy.deepcopy(workflow or {})
+    initial = copy.deepcopy(setup_document["scenario"]["initial_cvt_state"])
+    manual_default = {
+        "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
+        "secondaryAngularSpeedRadPerS": initial["secondary_angular_speed_rad_per_s"],
+        "beltSpeedMPerS": initial["belt_speed_m_per_s"],
+        "shiftPositionM": initial["shift_position_m"],
+        "shiftSpeedMPerS": initial["shift_speed_m_per_s"],
+    }
+    manual = copy.deepcopy(raw.get("manualInitialState") or manual_default)
+
+    replay = raw.get("speedReplay")
+    legacy_tracking = raw.get("speedTracking")
+    gain_candidate = None
+    if isinstance(replay, dict):
+        gain_candidate = replay.get("trackingGainNmSPerRad")
+    if gain_candidate is None and isinstance(legacy_tracking, dict):
+        gain_candidate = legacy_tracking.get("proportionalGainNmSPerRad")
+    replay_gain = _positive_number(
+        gain_candidate,
+        DEFAULT_REPLAY_GAIN_NM_S_PER_RAD,
+    )
+
+    rpm_defaults_raw = raw.get("rpmMeasurementDefaults")
+    rpm_defaults = rpm_defaults_raw if isinstance(rpm_defaults_raw, dict) else {}
+
+    return {
+        "primaryMode": _normalize_mode(raw.get("primaryMode")),
+        "secondaryMode": _normalize_mode(raw.get("secondaryMode")),
+        "speedReplay": {"trackingGainNmSPerRad": replay_gain},
+        # Always write the verified validation settings.  They are not a user
+        # tuning surface and should not drift with a stale workspace.
+        "validationIntegrator": _validation_integrator_defaults(),
+        "rpmMeasurementDefaults": {
+            "primary": {
+                **_default_rpm_measurement(),
+                **copy.deepcopy(
+                    rpm_defaults.get("primary")
+                    if isinstance(rpm_defaults.get("primary"), dict)
+                    else {}
+                ),
+            },
+            "secondary": {
+                **_default_rpm_measurement(),
+                **copy.deepcopy(
+                    rpm_defaults.get("secondary")
+                    if isinstance(rpm_defaults.get("secondary"), dict)
+                    else {}
+                ),
+            },
+        },
+        "manualInitialState": manual,
+    }
+
+
+def _apply_validation_integrator(document: JsonDict) -> JsonDict:
+    result = copy.deepcopy(document)
+    execution = result.setdefault("execution", {})
+    integrator = execution.setdefault("integrator", {})
+    integrator["relative_tolerance"] = VALIDATION_RELATIVE_TOLERANCE
+    integrator["absolute_tolerance"] = VALIDATION_ABSOLUTE_TOLERANCE
+    integrator["max_step"] = VALIDATION_MAX_STEP_S
+    return result
+
+
+def _upgrade_workspace(workspace: ValidationWorkspace) -> ValidationWorkspace:
+    setup_document = _apply_validation_integrator(workspace.setup_document)
+    workspace.setup_document = setup_document
+    workspace.controller_templates = _default_controller_templates()
+    workspace.workflow_defaults = _upgrade_workflow(
+        workspace.workflow_defaults,
+        setup_document,
+    )
+    return workspace
+
+
+def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspace:
+    """Return the autosaved workspace, creating/upgrading it when necessary."""
 
     workspace = get_workspace(session, account_id=account_id)
     if workspace is not None:
+        _upgrade_workspace(workspace)
+        session.flush()
         return workspace
 
     assembly = session.scalar(
@@ -95,7 +209,10 @@ def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspac
             VehicleAssembly.deleted_at.is_(None),
             VehicleAssembly.released_version_id.is_not(None),
         )
-        .order_by(VehicleAssembly.is_default.desc(), VehicleAssembly.catalog_priority.desc())
+        .order_by(
+            VehicleAssembly.is_default.desc(),
+            VehicleAssembly.catalog_priority.desc(),
+        )
     )
     if assembly is None or assembly.released_version_id is None:
         raise ValueError("No released vehicle assembly is available to initialize validation.")
@@ -127,6 +244,7 @@ def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspac
         load_case_id=load_case.id if load_case is not None else None,
         execution_preset_id=execution.id if execution is not None else None,
     )
+    resolved = _apply_validation_integrator(resolved)
 
     workspace = ValidationWorkspace(
         account_id=account_id,
@@ -149,29 +267,34 @@ def upsert_workspace(
     controller_templates: list[JsonDict],
     workflow_defaults: JsonDict,
 ) -> ValidationWorkspace:
+    del controller_templates  # The validation boundary template is canonical.
+
+    normalized_setup = _apply_validation_integrator(setup_document)
+    normalized_workflow = _upgrade_workflow(workflow_defaults, normalized_setup)
     workspace = get_workspace(session, account_id=account_id)
     if workspace is None:
         workspace = ValidationWorkspace(
             account_id=account_id,
-            setup_document=copy.deepcopy(setup_document),
+            setup_document=normalized_setup,
             metrology=copy.deepcopy(metrology),
-            controller_templates=copy.deepcopy(controller_templates),
-            workflow_defaults=copy.deepcopy(workflow_defaults),
+            controller_templates=_default_controller_templates(),
+            workflow_defaults=normalized_workflow,
         )
         session.add(workspace)
     else:
-        workspace.setup_document = copy.deepcopy(setup_document)
+        workspace.setup_document = normalized_setup
         workspace.metrology = copy.deepcopy(metrology)
-        workspace.controller_templates = copy.deepcopy(controller_templates)
-        workspace.workflow_defaults = copy.deepcopy(workflow_defaults)
+        workspace.controller_templates = _default_controller_templates()
+        workspace.workflow_defaults = normalized_workflow
     session.flush()
     return workspace
 
 
-
 def get_validation_run(session: Session, *, run_id: str) -> ValidationRun | None:
     """Return one immutable validation run by id."""
+
     return session.get(ValidationRun, run_id)
+
 
 def create_validation_run(
     session: Session,

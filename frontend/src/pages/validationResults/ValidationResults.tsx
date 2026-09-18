@@ -14,8 +14,10 @@ import {
   croppedIndices,
   errorMetrics,
   interpolate,
+  measurementUncertaintySeries,
   parseDynoCsv,
   RAD_PER_S_TO_RPM,
+  summarizeUncertainty,
 } from '@pages/validation/data';
 import type {
   ChannelConfig,
@@ -31,6 +33,8 @@ interface RpmComparison {
   measured: number[];
   simulated: Array<[number, number]>;
   metric: SignalMetric;
+  uncertainty: Array<number | null> | undefined;
+  uncertaintySummary: { minimum: number; median: number; maximum: number } | null;
   independent: boolean;
 }
 
@@ -328,6 +332,9 @@ function rpmComparison(
   if (values === undefined) return null;
   const times = indices.map((index) => data.timeS[index]);
   const measured = indices.map((index) => values[index]);
+  const uncertainty = channel === undefined
+    ? undefined
+    : measurementUncertaintySeries(measured, channel.uncertainty);
   const simulated = simulationSeries(result, signalKey, RAD_PER_S_TO_RPM, cropStartS);
   const simTime = simulated.map(([time]) => time);
   const simValue = simulated.map(([, value]) => value);
@@ -338,6 +345,8 @@ function rpmComparison(
     measured,
     simulated,
     metric: errorMetrics(measured, predicted),
+    uncertainty,
+    uncertaintySummary: summarizeUncertainty(uncertainty),
     independent,
   };
 }
@@ -346,10 +355,14 @@ function formatMetric(value: number): string {
   return Number.isFinite(value) ? value.toFixed(2) : '—';
 }
 
+function isReplayMode(mode: ValidationWorkflowDefaults['primaryMode']): boolean {
+  return mode === 'replay_measured_speed' || mode === 'track_measured_speed';
+}
+
 function MetricStrip({ comparison }: { comparison: RpmComparison }) {
   const unit = comparison.channel?.unit || 'rpm';
   if (!comparison.independent) {
-    return <p className={styles.diagnosticNote}>This RPM trace was used as a tracking input, so its error is diagnostic rather than independent validation evidence.</p>;
+    return <p className={styles.diagnosticNote}>This RPM trace was used as a shaft replay boundary, so its speed error is a replay diagnostic rather than independent validation evidence.</p>;
   }
   return (
     <dl className={styles.metrics}>
@@ -358,6 +371,12 @@ function MetricStrip({ comparison }: { comparison: RpmComparison }) {
       <div><dt>Bias</dt><dd>{formatMetric(comparison.metric.bias)} {unit}</dd></div>
       <div><dt>Max |error|</dt><dd>{formatMetric(comparison.metric.maxAbs)} {unit}</dd></div>
       <div><dt>Samples</dt><dd>{comparison.metric.count}</dd></div>
+      {comparison.uncertaintySummary !== null && (
+        <div>
+          <dt>Median meas. uncertainty</dt>
+          <dd>±{formatMetric(comparison.uncertaintySummary.median)} {unit}</dd>
+        </div>
+      )}
     </dl>
   );
 }
@@ -403,7 +422,7 @@ export const ValidationResults = () => {
       primaryChannel,
       'primary_rpm',
       'state.primary_angular_speed',
-      primaryChannel?.role === 'comparison' && workflow.primaryMode !== 'track_measured_speed',
+      primaryChannel?.role === 'comparison' && !isReplayMode(workflow.primaryMode),
     );
     const secondary = rpmComparison(
       data,
@@ -413,7 +432,7 @@ export const ValidationResults = () => {
       secondaryChannel,
       'secondary_rpm',
       'state.secondary_angular_speed',
-      secondaryChannel?.role === 'comparison' && workflow.secondaryMode !== 'track_measured_speed',
+      secondaryChannel?.role === 'comparison' && !isReplayMode(workflow.secondaryMode),
     );
 
     const shiftMeasured: Array<[number, number]> = [];
@@ -534,7 +553,7 @@ export const ValidationResults = () => {
                     cropEndS={run.cropEndS}
                     simulated={views.primary.simulated}
                     simulatedLabel="CINDER"
-                    uncertaintyAbsolute={views.primary.channel?.uncertainty.status === 'known' ? views.primary.channel.uncertainty.absolute : undefined}
+                    uncertaintyBySample={views.primary.uncertainty}
                   />
                   <MetricStrip comparison={views.primary} />
                 </>
@@ -556,7 +575,7 @@ export const ValidationResults = () => {
                     cropEndS={run.cropEndS}
                     simulated={views.secondary.simulated}
                     simulatedLabel="CINDER"
-                    uncertaintyAbsolute={views.secondary.channel?.uncertainty.status === 'known' ? views.secondary.channel.uncertainty.absolute : undefined}
+                    uncertaintyBySample={views.secondary.uncertainty}
                   />
                   <MetricStrip comparison={views.secondary} />
                 </>

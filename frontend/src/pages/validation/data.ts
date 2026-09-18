@@ -1,4 +1,8 @@
-import type { ParsedDynoData, SignalMetric } from './types';
+import type {
+  MeasurementUncertainty,
+  ParsedDynoData,
+  SignalMetric,
+} from './types';
 
 const RPM_TO_RAD_PER_S = (2 * Math.PI) / 60;
 export const RAD_PER_S_TO_RPM = 60 / (2 * Math.PI);
@@ -91,6 +95,95 @@ export function interpolate(x: number[], y: number[], query: number): number | n
   if (x[hi] === x[lo]) return y[lo];
   const alpha = (query - x[lo]) / (x[hi] - x[lo]);
   return y[lo] + alpha * (y[hi] - y[lo]);
+}
+
+export function resampleLinear(
+  timeS: number[],
+  values: number[],
+  startS: number,
+  endS: number,
+  intervalS: number,
+): Array<[number, number]> {
+  if (!(intervalS > 0) || !Number.isFinite(intervalS)) return [];
+  if (!(endS > startS)) return [];
+  const samples: Array<[number, number]> = [];
+  const epsilon = Math.max(1e-12, intervalS * 1e-9);
+  for (let index = 0; ; index += 1) {
+    const time = startS + index * intervalS;
+    if (time >= endS - epsilon) break;
+    const value = interpolate(timeS, values, time);
+    if (value !== null && Number.isFinite(value)) samples.push([time, value]);
+  }
+  const endValue = interpolate(timeS, values, endS);
+  if (endValue !== null && Number.isFinite(endValue)) samples.push([endS, endValue]);
+  return samples;
+}
+
+/**
+ * Conservative RPM uncertainty for a single-tooth-period estimate.
+ *
+ * If one tooth interval is Δt and each endpoint timestamp has a ±δt bound,
+ * the interval has a conservative ±2δt bound.  We propagate that bound through
+ * n = 60 / (N Δt) exactly, then report the larger of the upper/lower RPM errors.
+ */
+export function rpmToothTimingUncertainty(
+  rpm: number,
+  teethPerRevolution: number,
+  timestampUncertaintyS: number,
+): number | null {
+  const speed = Math.abs(rpm);
+  if (!Number.isFinite(speed)) return null;
+  if (speed === 0) return 0;
+  if (!(teethPerRevolution > 0) || !Number.isFinite(teethPerRevolution)) return null;
+  if (!(timestampUncertaintyS >= 0) || !Number.isFinite(timestampUncertaintyS)) return null;
+
+  const toothIntervalS = 60 / (teethPerRevolution * speed);
+  const intervalBoundS = 2 * timestampUncertaintyS;
+  if (!(toothIntervalS > intervalBoundS)) return null;
+
+  const fast = 60 / (teethPerRevolution * (toothIntervalS - intervalBoundS));
+  const slow = 60 / (teethPerRevolution * (toothIntervalS + intervalBoundS));
+  return Math.max(fast - speed, speed - slow);
+}
+
+export function measurementUncertaintySeries(
+  values: number[],
+  uncertainty: MeasurementUncertainty,
+): Array<number | null> | undefined {
+  if (uncertainty.status !== 'known') return undefined;
+
+  if (uncertainty.model === 'rpm_tooth_timing') {
+    const teeth = uncertainty.teethPerRevolution;
+    const timestamp = uncertainty.timestampUncertaintyS;
+    if (teeth === undefined || timestamp === undefined) return undefined;
+    return values.map((rpm) => rpmToothTimingUncertainty(rpm, teeth, timestamp));
+  }
+
+  if (uncertainty.absolute !== undefined && Number.isFinite(uncertainty.absolute) && uncertainty.absolute >= 0) {
+    return values.map(() => uncertainty.absolute ?? null);
+  }
+
+  return undefined;
+}
+
+export function summarizeUncertainty(values: Array<number | null> | undefined): {
+  minimum: number;
+  median: number;
+  maximum: number;
+} | null {
+  if (values === undefined) return null;
+  const finite = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  if (finite.length === 0) return null;
+  const sorted = [...finite].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 === 0
+    ? 0.5 * (sorted[middle - 1] + sorted[middle])
+    : sorted[middle];
+  return {
+    minimum: sorted[0],
+    median,
+    maximum: sorted[sorted.length - 1],
+  };
 }
 
 export function errorMetrics(reference: number[], predicted: Array<number | null>): SignalMetric {

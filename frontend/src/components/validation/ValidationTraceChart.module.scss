@@ -2,11 +2,14 @@
 @use '@styles/_fonts';
 
 .card {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.9rem;
-  background: var(--secondary);
+  border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+  border-radius: 16px;
+  padding: 0.9rem 0.95rem 0.75rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 58%, transparent), transparent 38%),
+    color-mix(in srgb, var(--secondary) 96%, white 1%);
   color: var(--text-color);
+  overflow: hidden;
 }
 
 .heading {
@@ -14,25 +17,26 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.35rem;
+  margin: 0.1rem 0 0.35rem;
 }
 
 .heading h3 {
   margin: 0;
   font-size: 1rem;
+  letter-spacing: -0.015em;
   color: var(--text-color);
 }
 
 .heading span {
   color: var(--text-color);
-  opacity: 0.64;
-  font-size: 0.76rem;
+  opacity: 0.56;
+  font-size: 0.73rem;
   text-align: right;
 }
 
 .chart {
   width: 100%;
-  height: 320px;
+  height: 330px;
 }
 
 @media (max-width: 720px) {
@@ -43,4 +47,5 @@
   }
 
   .heading span { text-align: left; }
+  .chart { height: 290px; }
 }

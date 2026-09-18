@@ -504,14 +504,27 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
 
 
 def _seed_validation_workspace(session: Session) -> None:
-    """Seed the temporary autosaved validation setup and controller templates."""
+    """Seed or upgrade the autosaved validation setup to RPM replay."""
+
+    # Import locally so seed.py remains independent of validation API startup,
+    # while sharing one canonical set of replay/workflow defaults.
+    from .validation import (
+        _apply_validation_integrator,
+        _default_controller_templates,
+        _default_workflow,
+        _upgrade_workspace,
+    )
+
     existing = session.scalar(
         select(ValidationWorkspace).where(
             ValidationWorkspace.account_id == SEED_ACCOUNT_ID
         )
     )
     if existing is not None:
+        _upgrade_workspace(existing)
+        session.flush()
         return
+
     resolved = resolve_simulation_case(
         session,
         vehicle_assembly_version_id=SEED_ASSEMBLY_VERSION_ID,
@@ -519,53 +532,15 @@ def _seed_validation_workspace(session: Session) -> None:
         load_case_id=SEED_LOAD_CASE_ID,
         execution_preset_id=SEED_EXECUTION_PRESET_ID,
     )
-    initial = copy.deepcopy(resolved["scenario"]["initial_cvt_state"])
+    resolved = _apply_validation_integrator(resolved)
     session.add(
         ValidationWorkspace(
             id=SEED_VALIDATION_WORKSPACE_ID,
             account_id=SEED_ACCOUNT_ID,
             setup_document=copy.deepcopy(resolved),
             metrology={},
-            controller_templates=[
-                {
-                    "kind": "speed_tracking_shaft",
-                    "label": "Torque-limited shaft speed tracker",
-                    "proportional_gain_Nm_s_per_rad": None,
-                    "torque_limit_Nm": None,
-                    "equivalent_inertia_kg_m2": 0.0,
-                    "feedforward_inertia_kg_m2": 0.0,
-                },
-                {
-                    "kind": "axial_motion_tracking",
-                    "label": "Force-limited axial motion tracker",
-                    "position_gain_N_per_m": None,
-                    "speed_gain_N_s_per_m": 0.0,
-                    "force_limit_N": None,
-                },
-            ],
-            workflow_defaults={
-                "primaryMode": "physical",
-                "secondaryMode": "physical",
-                "axialMode": "physical",
-                "speedTracking": {
-                    "proportionalGainNmSPerRad": None,
-                    "torqueLimitNm": None,
-                    "equivalentInertiaKgM2": 0.0,
-                    "feedforwardInertiaKgM2": 0.0,
-                },
-                "axialTracking": {
-                    "positionGainNPerM": None,
-                    "speedGainNSPerM": 0.0,
-                    "forceLimitN": None,
-                },
-                "manualInitialState": {
-                    "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
-                    "secondaryAngularSpeedRadPerS": initial["secondary_angular_speed_rad_per_s"],
-                    "beltSpeedMPerS": initial["belt_speed_m_per_s"],
-                    "shiftPositionM": initial["shift_position_m"],
-                    "shiftSpeedMPerS": initial["shift_speed_m_per_s"],
-                },
-            },
+            controller_templates=_default_controller_templates(),
+            workflow_defaults=_default_workflow(resolved),
         )
     )
 

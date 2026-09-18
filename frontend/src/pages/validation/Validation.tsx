@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
+import { MeasurementUncertaintyModal } from '@components/validation/MeasurementUncertaintyModal';
 import { SetupEditorModal } from '@components/validation/SetupEditorModal';
 import { ValidationTraceChart } from '@components/validation/ValidationTraceChart';
 import { useLoading } from '@contexts/LoadingContext';
@@ -21,22 +22,27 @@ import {
   croppedIndices,
   errorMetrics,
   interpolate,
+  measurementUncertaintySeries,
   nearestIndex,
   parseDynoCsv,
   RAD_PER_S_TO_RPM,
+  resampleLinear,
   rpmToRadPerS,
+  summarizeUncertainty,
 } from './data';
 import type {
   ChannelConfig,
   CropWindow,
-  ParsedDynoData,
   MeasurementMetadata,
+  ParsedDynoData,
+  ShaftValidationMode,
   SignalMetric,
   ValidationWorkflowDefaults,
 } from './types';
 import styles from './Validation.module.scss';
 
 type SetupSection = 'primary' | 'cvt' | 'secondary';
+type Shaft = 'primary' | 'secondary';
 type JsonObject = Record<string, unknown>;
 
 const DEFAULT_MANUAL_STATE = {
@@ -47,48 +53,108 @@ const DEFAULT_MANUAL_STATE = {
   shiftSpeedMPerS: 0,
 };
 
+const DEFAULT_REPLAY_GAIN_NM_S_PER_RAD = 400;
+const DEFAULT_VALIDATION_INTEGRATOR = {
+  relativeTolerance: 1e-4,
+  absoluteTolerance: 1e-7,
+  maxStepS: 0.05,
+};
+
 function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function defaultChannels(data: ParsedDynoData): ChannelConfig[] {
+function normalizeMode(mode: ValidationWorkflowDefaults['primaryMode']): ShaftValidationMode {
+  return mode === 'replay_measured_speed' || mode === 'track_measured_speed'
+    ? 'replay_measured_speed'
+    : 'physical';
+}
+
+function defaultRpmUncertainty(
+  saved: ChannelConfig['uncertainty'] | undefined,
+): ChannelConfig['uncertainty'] {
+  return {
+    status: 'pending',
+    model: 'rpm_tooth_timing',
+    unit: 'rpm',
+    replaySampleIntervalS: 0.01,
+    ...saved,
+  };
+}
+
+function defaultChannels(data: ParsedDynoData, workflow: ValidationWorkflowDefaults): ChannelConfig[] {
   return Object.keys(data.columns)
     .filter((key) => key !== 'timestamp_ms' && !/^time(_s)?$/i.test(key))
     .map((key) => {
       if (key === 'primary_rpm') return {
-        key, label: 'Primary RPM', unit: 'rpm', enabled: true, role: 'comparison' as const,
-        mapping: 'primary_speed' as const, initializeState: true,
-        uncertainty: { status: 'pending' as const, unit: 'rpm' },
+        key,
+        label: 'Primary RPM',
+        unit: 'rpm',
+        enabled: true,
+        role: 'comparison' as const,
+        mapping: 'primary_speed' as const,
+        initializeState: true,
+        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.primary),
       };
       if (key === 'secondary_rpm') return {
-        key, label: 'Secondary RPM', unit: 'rpm', enabled: true, role: 'comparison' as const,
-        mapping: 'secondary_speed' as const, initializeState: true,
-        uncertainty: { status: 'pending' as const, unit: 'rpm' },
+        key,
+        label: 'Secondary RPM',
+        unit: 'rpm',
+        enabled: true,
+        role: 'comparison' as const,
+        mapping: 'secondary_speed' as const,
+        initializeState: true,
+        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.secondary),
       };
       if (key === 'shift_position') return {
-        key, label: 'Shift position', unit: 'raw', enabled: false, role: 'unused' as const,
-        mapping: 'shift_position' as const, initializeState: false,
-        uncertainty: { status: 'pending' as const, unit: 'raw' },
+        key,
+        label: 'Shift position',
+        unit: 'raw',
+        enabled: false,
+        role: 'unused' as const,
+        mapping: 'shift_position' as const,
+        initializeState: false,
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const, unit: 'raw' },
       };
       if (key === 'primary_power_kw') return {
-        key, label: 'Primary power', unit: 'kW', enabled: false, role: 'unused' as const,
-        mapping: 'none' as const, initializeState: false,
-        uncertainty: { status: 'pending' as const, unit: 'kW' },
+        key,
+        label: 'Primary power',
+        unit: 'kW',
+        enabled: false,
+        role: 'unused' as const,
+        mapping: 'none' as const,
+        initializeState: false,
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const, unit: 'kW' },
       };
       if (key === 'secondary_power_kw') return {
-        key, label: 'Secondary power', unit: 'kW', enabled: false, role: 'unused' as const,
-        mapping: 'none' as const, initializeState: false,
-        uncertainty: { status: 'pending' as const, unit: 'kW' },
+        key,
+        label: 'Secondary power',
+        unit: 'kW',
+        enabled: false,
+        role: 'unused' as const,
+        mapping: 'none' as const,
+        initializeState: false,
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const, unit: 'kW' },
       };
       if (key === 'efficiency_percent') return {
-        key, label: 'Efficiency', unit: '%', enabled: false, role: 'unused' as const,
-        mapping: 'none' as const, initializeState: false,
-        uncertainty: { status: 'pending' as const, unit: '%' },
+        key,
+        label: 'Efficiency',
+        unit: '%',
+        enabled: false,
+        role: 'unused' as const,
+        mapping: 'none' as const,
+        initializeState: false,
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const, unit: '%' },
       };
       if (key === 'primary_torque' || key === 'secondary_torque') return {
-        key, label: key === 'primary_torque' ? 'Primary torque' : 'Secondary torque', unit: 'N·m',
-        enabled: false, role: 'unused' as const, mapping: 'none' as const, initializeState: false,
-        uncertainty: { status: 'pending' as const, unit: 'N·m' },
+        key,
+        label: key === 'primary_torque' ? 'Primary torque' : 'Secondary torque',
+        unit: 'N·m',
+        enabled: false,
+        role: 'unused' as const,
+        mapping: 'none' as const,
+        initializeState: false,
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const, unit: 'N·m' },
       };
       return {
         key,
@@ -98,7 +164,7 @@ function defaultChannels(data: ParsedDynoData): ChannelConfig[] {
         role: 'unused' as const,
         mapping: 'none' as const,
         initializeState: false,
-        uncertainty: { status: 'pending' as const },
+        uncertainty: { status: 'pending' as const, model: 'absolute' as const },
       };
     });
 }
@@ -117,6 +183,23 @@ function referencePoints(
 ): Array<{ time_s: number; value: number }> {
   const values = data.columns[channel.key];
   if (values === undefined) throw new Error(`Missing channel '${channel.key}'.`);
+
+  const interval = channel.uncertainty.replaySampleIntervalS;
+  if (
+    (channel.mapping === 'primary_speed' || channel.mapping === 'secondary_speed')
+    && interval !== undefined
+    && Number.isFinite(interval)
+    && interval > 0
+  ) {
+    const resampled = resampleLinear(data.timeS, values, crop.startS, crop.endS, interval);
+    if (resampled.length >= 2) {
+      return resampled.map(([time, value]) => ({
+        time_s: time - crop.startS,
+        value: convert(value),
+      }));
+    }
+  }
+
   return croppedIndices(data.timeS, crop.startS, crop.endS).map((index) => ({
     time_s: data.timeS[index] - crop.startS,
     value: convert(values[index]),
@@ -127,9 +210,8 @@ function findMapped(channels: ChannelConfig[], mapping: ChannelConfig['mapping']
   return channels.find((channel) => channel.enabled && channel.mapping === mapping);
 }
 
-function numeric(value: number | null | undefined, name: string): number {
-  if (value === null || value === undefined || !Number.isFinite(value)) throw new Error(`${name} must be set before running.`);
-  return value;
+function findMappingCandidate(channels: ChannelConfig[], mapping: ChannelConfig['mapping']): ChannelConfig | undefined {
+  return channels.find((channel) => channel.mapping === mapping);
 }
 
 interface ResolvedInitialState {
@@ -221,18 +303,16 @@ function resolveInitialState(
   };
 }
 
-function trackingBoundary(
+function replayBoundary(
   points: Array<{ time_s: number; value: number }>,
   workflow: ValidationWorkflowDefaults,
 ): JsonObject {
-  const settings = workflow.speedTracking;
+  const gain = workflow.speedReplay?.trackingGainNmSPerRad ?? DEFAULT_REPLAY_GAIN_NM_S_PER_RAD;
+  if (!(gain > 0) || !Number.isFinite(gain)) throw new Error('RPM replay gain must be positive and finite.');
   return {
-    kind: 'speed_tracking_shaft',
+    kind: 'speed_replay_shaft',
     speed_reference: { points },
-    proportional_gain_Nm_s_per_rad: numeric(settings?.proportionalGainNmSPerRad, 'Speed tracking gain'),
-    torque_limit_Nm: numeric(settings?.torqueLimitNm, 'Speed tracking torque limit'),
-    equivalent_inertia_kg_m2: numeric(settings?.equivalentInertiaKgM2 ?? 0, 'Speed tracking equivalent inertia'),
-    feedforward_inertia_kg_m2: numeric(settings?.feedforwardInertiaKgM2 ?? 0, 'Speed tracking feedforward inertia'),
+    tracking_gain_Nm_s_per_rad: gain,
   };
 }
 
@@ -246,7 +326,6 @@ function resolveDocument(
   const workflow = (workspace.workflowDefaults ?? {}) as ValidationWorkflowDefaults;
   const primary = findMapped(channels, 'primary_speed');
   const secondary = findMapped(channels, 'secondary_speed');
-  const shift = findMapped(channels, 'shift_position');
   const initial = resolveInitialState(workspace, data, crop, channels);
 
   const scenario = document.scenario as JsonObject;
@@ -259,37 +338,23 @@ function resolveDocument(
     shift_speed_m_per_s: initial.shiftSpeedMPerS,
   };
 
-  const boundaries = document.shaft_boundaries as JsonObject;
-  if (workflow.primaryMode === 'track_measured_speed') {
-    if (primary === undefined) throw new Error('Primary speed tracking requires an enabled primary-speed channel.');
-    boundaries.primary = trackingBoundary(referencePoints(data, crop, primary, rpmToRadPerS), workflow);
-  }
-  if (workflow.secondaryMode === 'track_measured_speed') {
-    if (secondary === undefined) throw new Error('Secondary speed tracking requires an enabled secondary-speed channel.');
-    boundaries.secondary = trackingBoundary(referencePoints(data, crop, secondary, rpmToRadPerS), workflow);
-  }
+  // Validation deliberately uses replay-safe tolerances for every run. These
+  // are validation-page execution defaults, not global CINDER defaults.
+  const validationIntegrator = DEFAULT_VALIDATION_INTEGRATOR;
+  const execution = objectValue(document.execution, 'execution');
+  const integrator = objectValue(execution.integrator, 'execution.integrator');
+  integrator.relative_tolerance = validationIntegrator.relativeTolerance;
+  integrator.absolute_tolerance = validationIntegrator.absoluteTolerance;
+  integrator.max_step = validationIntegrator.maxStepS;
 
-  if (workflow.axialMode === 'track_measured_position') {
-    if (shift === undefined || shift.unit !== 'm') throw new Error('Axial tracking requires an enabled shift-position channel calibrated in metres.');
-    const settings = workflow.axialTracking;
-    const assembly = document.assembly as JsonObject;
-    const pulleys = assembly.pulleys as JsonObject;
-    // The uploaded shift-position channel maps to CINDER's global shift / primary
-    // local axial coordinate.  Secondary local position is a nonlinear geometry
-    // mapping, so do not silently reuse this trace on the secondary.
-    const pulley = pulleys.primary as JsonObject;
-    const components = Array.isArray(pulley.components) ? pulley.components as JsonObject[] : [];
-    pulley.components = [
-      ...components.filter((component) => component.kind !== 'axial_motion_tracking'),
-      {
-        kind: 'axial_motion_tracking',
-        position_reference: { points: referencePoints(data, crop, shift, (value) => value) },
-        speed_reference: null,
-        position_gain_N_per_m: numeric(settings?.positionGainNPerM, 'Axial position gain'),
-        speed_gain_N_s_per_m: settings?.speedGainNSPerM ?? 0,
-        force_limit_N: numeric(settings?.forceLimitN, 'Axial force limit'),
-      },
-    ];
+  const boundaries = document.shaft_boundaries as JsonObject;
+  if (normalizeMode(workflow.primaryMode) === 'replay_measured_speed') {
+    if (primary === undefined) throw new Error('Primary RPM replay requires a mapped primary-speed measurement.');
+    boundaries.primary = replayBoundary(referencePoints(data, crop, primary, rpmToRadPerS), workflow);
+  }
+  if (normalizeMode(workflow.secondaryMode) === 'replay_measured_speed') {
+    if (secondary === undefined) throw new Error('Secondary RPM replay requires a mapped secondary-speed measurement.');
+    boundaries.secondary = replayBoundary(referencePoints(data, crop, secondary, rpmToRadPerS), workflow);
   }
 
   return document as unknown as SimulationCaseDocument;
@@ -325,6 +390,21 @@ function formatMetric(value: number): string {
   return Number.isFinite(value) ? value.toFixed(2) : '—';
 }
 
+function boundaryKind(document: SimulationCaseDocument, shaft: Shaft): string {
+  const root = document as unknown as JsonObject;
+  const boundaries = root.shaft_boundaries as JsonObject | undefined;
+  const boundary = boundaries?.[shaft] as JsonObject | undefined;
+  return typeof boundary?.kind === 'string' ? boundary.kind : 'unknown';
+}
+
+function boundaryKindLabel(kind: string): string {
+  if (kind === 'full_throttle_engine') return 'Full-throttle engine';
+  if (kind === 'fixed_shaft') return 'Fixed torque / inertia';
+  if (kind === 'locked_final_drive') return 'Locked final-drive vehicle';
+  if (kind === 'speed_replay_shaft') return 'Measured RPM replay';
+  return kind.replaceAll('_', ' ');
+}
+
 export const Validation = () => {
   const navigate = useNavigate();
   const { isLoading, loadingMessage, setLoading } = useLoading();
@@ -335,6 +415,7 @@ export const Validation = () => {
   const [channels, setChannels] = useState<ChannelConfig[]>([]);
   const [crop, setCrop] = useState<CropWindow>({ startS: 0, endS: 1 });
   const [editor, setEditor] = useState<SetupSection | null>(null);
+  const [uncertaintyEditor, setUncertaintyEditor] = useState<string | null>(null);
   const [completed, setCompleted] = useState<CompletedSimulationRun | null>(null);
   const [metrics, setMetrics] = useState<Record<string, SignalMetric>>({});
   const initialWorkspaceRef = useRef(true);
@@ -365,10 +446,6 @@ export const Validation = () => {
     const handle = window.setTimeout(() => {
       void saveValidationWorkspace(workspace)
         .then((saved) => {
-          // Keep the canonical local objects stable so the successful save does
-          // not trigger another autosave solely because the response was parsed
-          // into fresh object identities. updatedAt is intentionally excluded
-          // from the effect dependencies below.
           setWorkspace((current) => current === null ? current : {
             ...current,
             id: saved.id,
@@ -383,6 +460,8 @@ export const Validation = () => {
 
   const workflow = (workspace?.workflowDefaults ?? {}) as ValidationWorkflowDefaults;
   const manual = { ...DEFAULT_MANUAL_STATE, ...(workflow.manualInitialState ?? {}) };
+  const primaryMode = normalizeMode(workflow.primaryMode);
+  const secondaryMode = normalizeMode(workflow.secondaryMode);
 
   const updateWorkflow = (patch: Partial<ValidationWorkflowDefaults>) => {
     setWorkspace((current) => current === null ? current : {
@@ -394,8 +473,17 @@ export const Validation = () => {
   const handleFile = async (file: File) => {
     const raw = await file.text();
     const parsed = parseDynoCsv(file.name, raw);
+    const loadedChannels = defaultChannels(parsed, workflow).map((channel) => {
+      if (channel.mapping === 'primary_speed' && primaryMode === 'replay_measured_speed') {
+        return { ...channel, enabled: true, role: 'boundary_input' as const };
+      }
+      if (channel.mapping === 'secondary_speed' && secondaryMode === 'replay_measured_speed') {
+        return { ...channel, enabled: true, role: 'boundary_input' as const };
+      }
+      return channel;
+    });
     setData(parsed);
-    setChannels(defaultChannels(parsed));
+    setChannels(loadedChannels);
     setCrop({ startS: parsed.timeS[0], endS: parsed.timeS[parsed.timeS.length - 1] });
     setCompleted(null);
     setMetrics({});
@@ -403,6 +491,46 @@ export const Validation = () => {
 
   const updateChannel = (key: string, patch: Partial<ChannelConfig>) => {
     setChannels((current) => current.map((channel) => channel.key === key ? { ...channel, ...patch } : channel));
+  };
+
+  const setShaftMode = (shaft: Shaft, mode: ShaftValidationMode) => {
+    const mapping = shaft === 'primary' ? 'primary_speed' : 'secondary_speed';
+    if (mode === 'replay_measured_speed') {
+      const candidate = findMappingCandidate(channels, mapping);
+      if (candidate === undefined) return;
+      setChannels((current) => current.map((channel) => {
+        if (channel.key === candidate.key) return { ...channel, enabled: true, role: 'boundary_input' };
+        if (channel.mapping === mapping && channel.role === 'boundary_input') return { ...channel, role: 'comparison' };
+        return channel;
+      }));
+    } else {
+      setChannels((current) => current.map((channel) => (
+        channel.mapping === mapping && channel.role === 'boundary_input'
+          ? { ...channel, role: 'comparison' }
+          : channel
+      )));
+    }
+    updateWorkflow(shaft === 'primary' ? { primaryMode: mode } : { secondaryMode: mode });
+  };
+
+  const setChannelRole = (channel: ChannelConfig, role: ChannelConfig['role']) => {
+    const replayable = channel.mapping === 'primary_speed' || channel.mapping === 'secondary_speed';
+    if (role === 'boundary_input' && !replayable) return;
+
+    setChannels((current) => current.map((entry) => {
+      if (entry.key === channel.key) return { ...entry, enabled: role !== 'unused', role };
+      if (role === 'boundary_input' && entry.mapping === channel.mapping && entry.role === 'boundary_input') {
+        return { ...entry, role: 'comparison' };
+      }
+      return entry;
+    }));
+
+    if (channel.mapping === 'primary_speed' && (role === 'boundary_input' || channel.role === 'boundary_input')) {
+      updateWorkflow({ primaryMode: role === 'boundary_input' ? 'replay_measured_speed' : 'physical' });
+    }
+    if (channel.mapping === 'secondary_speed' && (role === 'boundary_input' || channel.role === 'boundary_input')) {
+      updateWorkflow({ secondaryMode: role === 'boundary_input' ? 'replay_measured_speed' : 'physical' });
+    }
   };
 
   const runValidation = async () => {
@@ -419,10 +547,10 @@ export const Validation = () => {
       const nextMetrics: Record<string, SignalMetric> = {};
       const primary = findMapped(channels, 'primary_speed');
       const secondary = findMapped(channels, 'secondary_speed');
-      if (primary?.role === 'comparison' && workflow.primaryMode !== 'track_measured_speed') {
+      if (primary?.role === 'comparison' && primaryMode !== 'replay_measured_speed') {
         nextMetrics[primary.key] = comparisonMetric(data, crop, primary, simSeries(result, 'state.primary_angular_speed', RAD_PER_S_TO_RPM));
       }
-      if (secondary?.role === 'comparison' && workflow.secondaryMode !== 'track_measured_speed') {
+      if (secondary?.role === 'comparison' && secondaryMode !== 'replay_measured_speed') {
         nextMetrics[secondary.key] = comparisonMetric(data, crop, secondary, simSeries(result, 'state.secondary_angular_speed', RAD_PER_S_TO_RPM));
       }
       setMetrics(nextMetrics);
@@ -462,6 +590,8 @@ export const Validation = () => {
   const mappedPrimary = findMapped(channels, 'primary_speed');
   const mappedSecondary = findMapped(channels, 'secondary_speed');
   const mappedShift = findMapped(channels, 'shift_position');
+  const primaryCandidate = findMappingCandidate(channels, 'primary_speed');
+  const secondaryCandidate = findMappingCandidate(channels, 'secondary_speed');
   const primaryInitial = data !== null && mappedPrimary?.initializeState
     ? measurementValueAtStart(data, crop, mappedPrimary)
     : null;
@@ -485,13 +615,17 @@ export const Validation = () => {
 
   const renderChannelCard = (channel: ChannelConfig) => {
     if (data === null) return null;
-    const uncertainty = channel.uncertainty.status === 'known' ? channel.uncertainty.absolute : undefined;
     const sim = channel.mapping === 'primary_speed' ? resultSeries.primary_speed
       : channel.mapping === 'secondary_speed' ? resultSeries.secondary_speed
       : channel.mapping === 'shift_position' ? resultSeries.shift_position
       : undefined;
+    const uncertainty = measurementUncertaintySeries(data.columns[channel.key], channel.uncertainty);
+    const uncertaintySummary = summarizeUncertainty(uncertainty);
+    const replayLocked = channel.role === 'boundary_input';
+    const replayable = channel.mapping === 'primary_speed' || channel.mapping === 'secondary_speed';
+
     return (
-      <div key={channel.key} className={styles.channelCard}>
+      <article key={channel.key} className={`${styles.channelCard} ${replayLocked ? styles.channelCardReplay : ''}`}>
         <ValidationTraceChart
           title={channel.label}
           unit={channel.unit}
@@ -501,36 +635,66 @@ export const Validation = () => {
           cropEndS={crop.endS}
           onCropChange={(startS, endS) => setCrop({ startS, endS })}
           simulated={completed === null || !channel.enabled ? undefined : sim}
-          uncertaintyAbsolute={uncertainty}
+          uncertaintyBySample={uncertainty}
         />
-        <div className={styles.channelControls}>
-          <label><input type="checkbox" checked={channel.enabled} onChange={(event) => updateChannel(channel.key, { enabled: event.target.checked, role: event.target.checked ? 'comparison' : 'unused' })} /> Enable</label>
-          <label>Use as
-            <select value={channel.role} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { role: event.target.value as ChannelConfig['role'] })}>
-              <option value="comparison">Comparison</option>
-              <option value="boundary_input">Boundary input</option>
-              <option value="diagnostic">Diagnostic</option>
-              <option value="unused">Unused</option>
-            </select>
-          </label>
-          <label>Mapping
-            <select value={channel.mapping} onChange={(event) => updateChannel(channel.key, { mapping: event.target.value as ChannelConfig['mapping'] })}>
-              <option value="none">None</option>
-              <option value="primary_speed">Primary speed</option>
-              <option value="secondary_speed">Secondary speed</option>
-              <option value="shift_position">Shift position</option>
-            </select>
-          </label>
-          <label>Unit <input value={channel.unit} onChange={(event) => updateChannel(channel.key, { unit: event.target.value })} /></label>
-          <label><input type="checkbox" checked={channel.initializeState} disabled={!channel.enabled} onChange={(event) => updateChannel(channel.key, { initializeState: event.target.checked })} /> Initialize state at crop start</label>
-          <label>Uncertainty
-            <select value={channel.uncertainty.status} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, status: event.target.value as ChannelConfig['uncertainty']['status'] } })}>
-              <option value="pending">Pending</option>
-              <option value="known">Known</option>
-              <option value="not_applicable">N/A</option>
-            </select>
-          </label>
-          {channel.uncertainty.status === 'known' && <label>± <input type="number" step="any" value={channel.uncertainty.absolute ?? 0} onChange={(event) => updateChannel(channel.key, { uncertainty: { ...channel.uncertainty, absolute: Number(event.target.value), unit: channel.unit } })} /> {channel.unit}</label>}
+        <div className={styles.channelToolbar}>
+          <div className={styles.channelControlGroup}>
+            <label className={styles.checkControl}>
+              <input
+                type="checkbox"
+                checked={channel.enabled}
+                disabled={replayLocked}
+                onChange={(event) => updateChannel(channel.key, {
+                  enabled: event.target.checked,
+                  role: event.target.checked ? 'comparison' : 'unused',
+                })}
+              />
+              Include
+            </label>
+            <label>
+              <span>Use as</span>
+              <select value={channel.role} onChange={(event) => setChannelRole(channel, event.target.value as ChannelConfig['role'])}>
+                <option value="comparison">Compare to model</option>
+                <option value="boundary_input" disabled={!replayable}>Replay as shaft boundary</option>
+                <option value="diagnostic">Diagnostic only</option>
+                <option value="unused">Ignore</option>
+              </select>
+            </label>
+            <label>
+              <span>Mapping</span>
+              <select
+                value={channel.mapping}
+                disabled={replayLocked}
+                onChange={(event) => updateChannel(channel.key, { mapping: event.target.value as ChannelConfig['mapping'] })}
+              >
+                <option value="none">None</option>
+                <option value="primary_speed">Primary speed</option>
+                <option value="secondary_speed">Secondary speed</option>
+                <option value="shift_position">Shift position</option>
+              </select>
+            </label>
+            <label>
+              <span>Unit</span>
+              <input value={channel.unit} onChange={(event) => updateChannel(channel.key, { unit: event.target.value })} />
+            </label>
+          </div>
+          <div className={styles.channelMetaRow}>
+            <label className={styles.checkControl}>
+              <input
+                type="checkbox"
+                checked={channel.initializeState}
+                disabled={!channel.enabled}
+                onChange={(event) => updateChannel(channel.key, { initializeState: event.target.checked })}
+              />
+              Initialize state at crop start
+            </label>
+            <button type="button" className={styles.metaButton} onClick={() => setUncertaintyEditor(channel.key)}>
+              Uncertainty · {uncertaintySummary === null
+                ? (channel.uncertainty.status === 'not_applicable' ? 'N/A' : 'Set up')
+                : `±${uncertaintySummary.median.toFixed(2)} ${channel.unit} median`}
+            </button>
+            {replayLocked && <span className={styles.lockBadge}>Locked to RPM replay</span>}
+          </div>
         </div>
         {metrics[channel.key] !== undefined && (
           <dl className={styles.metrics}>
@@ -540,37 +704,68 @@ export const Validation = () => {
             <div><dt>Max |error|</dt><dd>{formatMetric(metrics[channel.key].maxAbs)} {channel.unit}</dd></div>
           </dl>
         )}
-      </div>
+      </article>
     );
   };
 
   const primaryRpmChannel = channels.find((channel) => channel.key === 'primary_rpm');
   const secondaryRpmChannel = channels.find((channel) => channel.key === 'secondary_rpm');
   const otherChannels = channels.filter((channel) => channel.key !== 'primary_rpm' && channel.key !== 'secondary_rpm');
+  const uncertaintyChannel = uncertaintyEditor === null ? undefined : channels.find((channel) => channel.key === uncertaintyEditor);
+
+  const primaryPhysicalKind = workspace === null ? 'unknown' : boundaryKind(workspace.setupDocument, 'primary');
+  const secondaryPhysicalKind = workspace === null ? 'unknown' : boundaryKind(workspace.setupDocument, 'secondary');
+  const replayGain = workflow.speedReplay?.trackingGainNmSPerRad ?? DEFAULT_REPLAY_GAIN_NM_S_PER_RAD;
+  const validationIntegrator = DEFAULT_VALIDATION_INTEGRATOR;
 
   return (
     <main className={styles.page}>
       <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
       <header className={styles.header}>
         <div>
-          <button type="button" onClick={() => navigate('/')}>← Home</button>
+          <button type="button" className={styles.backButton} onClick={() => navigate('/')}>← Home</button>
+          <span className={styles.eyebrow}>Experimental validation</span>
           <h1>Dyno validation</h1>
-          <p>Experimental data remains independent of CINDER; this page resolves a frozen CINDER case and compares the prediction.</p>
+          <p>Replay measured shaft speed when it is a boundary input; compare the remaining measured signals against unchanged CINDER mechanics.</p>
         </div>
-        <span className={styles.saveStatus}>{workspaceStatus}</span>
+        <div className={styles.headerStatus}>
+          <span className={styles.statusDot} />
+          {workspaceStatus}
+        </div>
       </header>
 
       <section className={styles.uploadCard}>
-        <h2>1. Dyno data</h2>
-        <input type="file" accept=".csv,text/csv" onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file !== undefined) void handleFile(file);
-        }} />
-        {data !== null && <p>{data.filename} · {data.timeS.length} samples · {(data.timeS.at(-1) ?? 0).toFixed(3)} s</p>}
+        <div>
+          <span className={styles.stepLabel}>01 · Data</span>
+          <h2>Load dyno data</h2>
+          <p>CSV timestamps remain authoritative. Crop the traces below to define simulation t = 0.</p>
+        </div>
+        <label className={styles.filePicker}>
+          <span>{data === null ? 'Choose CSV' : 'Replace CSV'}</span>
+          <input type="file" accept=".csv,text/csv" onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file !== undefined) void handleFile(file);
+          }} />
+        </label>
+        {data !== null && (
+          <div className={styles.fileSummary}>
+            <strong>{data.filename}</strong>
+            <span>{data.timeS.length} samples</span>
+            <span>{(data.timeS.at(-1) ?? 0).toFixed(3)} s</span>
+          </div>
+        )}
       </section>
 
       {data !== null && (
         <>
+          <section className={styles.sectionHeading}>
+            <div>
+              <span className={styles.stepLabel}>02 · Measurements</span>
+              <h2>Measured traces</h2>
+            </div>
+            <p>Choose whether each signal validates CINDER, drives a replay boundary, or is kept only as a diagnostic.</p>
+          </section>
+
           <section className={styles.traceGrid}>
             {primaryRpmChannel !== undefined && renderChannelCard(primaryRpmChannel)}
             {secondaryRpmChannel !== undefined && renderChannelCard(secondaryRpmChannel)}
@@ -578,8 +773,8 @@ export const Validation = () => {
 
           {otherChannels.length > 0 && (
             <details className={styles.otherChannels}>
-              <summary>View all other data channels ({otherChannels.length})</summary>
-              <p>These channels stay available for mapping, provenance, and diagnostics without crowding the primary trimming view.</p>
+              <summary>Other imported channels <span>{otherChannels.length}</span></summary>
+              <p>Available for mapping, provenance, initialization, and later validation metrics without crowding the primary RPM workflow.</p>
               <section className={styles.traceGrid}>
                 {otherChannels.map((channel) => renderChannelCard(channel))}
               </section>
@@ -587,86 +782,151 @@ export const Validation = () => {
           )}
 
           <section className={styles.setupCard}>
-            <h2>2. Physical setup</h2>
-            <p>These are autosaved and reused on the next run. Every validation run still freezes its own snapshot.</p>
+            <div className={styles.sectionHeadingInline}>
+              <div>
+                <span className={styles.stepLabel}>03 · Run setup</span>
+                <h2>Boundaries and CVT</h2>
+                <p>The cards show the boundary that will actually reach CINDER. Physical boundaries remain the saved fallback when replay is off.</p>
+              </div>
+              <div className={styles.executionBadge}>
+                Validation solver · rtol {validationIntegrator.relativeTolerance.toExponential(0)} · atol {validationIntegrator.absoluteTolerance.toExponential(0)} · max {Math.round(validationIntegrator.maxStepS * 1000)} ms
+              </div>
+            </div>
             {workspaceError !== null && <p className={styles.setupError}>{workspaceError}</p>}
-            <div className={styles.setupButtons}>
-              <button type="button" disabled={workspace === null} onClick={() => setEditor('primary')}>Primary boundary · Edit</button>
-              <button type="button" disabled={workspace === null} onClick={() => setEditor('cvt')}>CVT setup · Edit</button>
-              <button type="button" disabled={workspace === null} onClick={() => setEditor('secondary')}>Secondary boundary · Edit</button>
+
+            <div className={styles.setupTiles}>
+              <article className={styles.setupTile}>
+                <div className={styles.tileHeader}>
+                  <div>
+                    <span className={styles.tileEyebrow}>Primary shaft</span>
+                    <strong>{primaryMode === 'replay_measured_speed' ? 'Measured RPM replay' : boundaryKindLabel(primaryPhysicalKind)}</strong>
+                  </div>
+                  <span className={`${styles.kindBadge} ${primaryMode === 'replay_measured_speed' ? styles.replayBadge : ''}`}>
+                    {primaryMode === 'replay_measured_speed' ? 'speed_replay_shaft' : primaryPhysicalKind}
+                  </span>
+                </div>
+                <label className={styles.modeField}>
+                  <span>Boundary used for this run</span>
+                  <select value={primaryMode} onChange={(event) => setShaftMode('primary', event.target.value as ShaftValidationMode)}>
+                    <option value="physical">Physical · {boundaryKindLabel(primaryPhysicalKind)}</option>
+                    <option value="replay_measured_speed" disabled={primaryCandidate === undefined}>
+                      Replay RPM{primaryCandidate === undefined ? ' · map a primary-speed channel first' : ` · ${primaryCandidate.label}`}
+                    </option>
+                  </select>
+                </label>
+                {primaryMode === 'replay_measured_speed' && (
+                  <p className={styles.replayNote}>Replay gain {replayGain} N·m·s/rad · physical fallback remains {boundaryKindLabel(primaryPhysicalKind)}.</p>
+                )}
+                <button type="button" className={styles.editButton} disabled={workspace === null} onClick={() => setEditor('primary')}>
+                  Edit physical primary setup
+                </button>
+              </article>
+
+              <article className={styles.setupTile}>
+                <div className={styles.tileHeader}>
+                  <div>
+                    <span className={styles.tileEyebrow}>CVT</span>
+                    <strong>Mechanical assembly</strong>
+                  </div>
+                  <span className={styles.kindBadge}>CINDER assembly</span>
+                </div>
+                <p className={styles.tileDescription}>Geometry, belt, friction, inertias, flyweights, springs, helix, and all ordinary CVT mechanics.</p>
+                <button type="button" className={styles.editButton} disabled={workspace === null} onClick={() => setEditor('cvt')}>
+                  Edit CVT setup
+                </button>
+              </article>
+
+              <article className={styles.setupTile}>
+                <div className={styles.tileHeader}>
+                  <div>
+                    <span className={styles.tileEyebrow}>Secondary shaft</span>
+                    <strong>{secondaryMode === 'replay_measured_speed' ? 'Measured RPM replay' : boundaryKindLabel(secondaryPhysicalKind)}</strong>
+                  </div>
+                  <span className={`${styles.kindBadge} ${secondaryMode === 'replay_measured_speed' ? styles.replayBadge : ''}`}>
+                    {secondaryMode === 'replay_measured_speed' ? 'speed_replay_shaft' : secondaryPhysicalKind}
+                  </span>
+                </div>
+                <label className={styles.modeField}>
+                  <span>Boundary used for this run</span>
+                  <select value={secondaryMode} onChange={(event) => setShaftMode('secondary', event.target.value as ShaftValidationMode)}>
+                    <option value="physical">Physical · {boundaryKindLabel(secondaryPhysicalKind)}</option>
+                    <option value="replay_measured_speed" disabled={secondaryCandidate === undefined}>
+                      Replay RPM{secondaryCandidate === undefined ? ' · map a secondary-speed channel first' : ` · ${secondaryCandidate.label}`}
+                    </option>
+                  </select>
+                </label>
+                {secondaryMode === 'replay_measured_speed' && (
+                  <p className={styles.replayNote}>Replay gain {replayGain} N·m·s/rad · physical fallback remains {boundaryKindLabel(secondaryPhysicalKind)}.</p>
+                )}
+                <button type="button" className={styles.editButton} disabled={workspace === null} onClick={() => setEditor('secondary')}>
+                  Edit physical secondary setup
+                </button>
+              </article>
             </div>
           </section>
 
-          <section className={styles.controllerCard}>
-              <h2>3. Experimental boundary / actuator mode</h2>
-              <fieldset className={styles.sectionFieldset} disabled={workspace === null}>
-              <div className={styles.controllerGrid}>
-                <label>Primary
-                  <select value={workflow.primaryMode ?? 'physical'} onChange={(event) => updateWorkflow({ primaryMode: event.target.value as ValidationWorkflowDefaults['primaryMode'] })}>
-                    <option value="physical">Physical boundary</option>
-                    <option value="track_measured_speed">Track measured primary speed</option>
-                  </select>
+          <section className={styles.stateCard}>
+            <div className={styles.sectionHeadingInline}>
+              <div>
+                <span className={styles.stepLabel}>04 · Initial state</span>
+                <h2>State at t = {crop.startS.toFixed(3)} s</h2>
+              </div>
+              <span className={styles.subtleBadge}>Crop start becomes CINDER t = 0</span>
+            </div>
+            <fieldset className={styles.sectionFieldset} disabled={workspace === null}>
+              <div className={styles.stateGrid}>
+                <label>Primary speed [rpm]
+                  <input disabled={primaryInitial !== null} value={primaryInitial ?? manual.primaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, primaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} />
                 </label>
-                <label>Secondary
-                  <select value={workflow.secondaryMode ?? 'physical'} onChange={(event) => updateWorkflow({ secondaryMode: event.target.value as ValidationWorkflowDefaults['secondaryMode'] })}>
-                    <option value="physical">Physical boundary</option>
-                    <option value="track_measured_speed">Track measured secondary speed</option>
-                  </select>
+                <label>Secondary speed [rpm]
+                  <input disabled={secondaryInitial !== null} value={secondaryInitial ?? manual.secondaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, secondaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} />
                 </label>
-                <label>Axial motion
-                  <select value={workflow.axialMode ?? 'physical'} onChange={(event) => updateWorkflow({ axialMode: event.target.value as ValidationWorkflowDefaults['axialMode'] })}>
-                    <option value="physical">Physical actuation</option>
-                    <option value="track_measured_position">Track measured shift position</option>
-                  </select>
+                <label>Belt speed [m/s]
+                  <input
+                    type="number"
+                    step="any"
+                    disabled={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'}
+                    value={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'
+                      ? resolvedInitial.beltSpeedMPerS
+                      : manual.beltSpeedMPerS}
+                    onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, beltSpeedMPerS: Number(event.target.value) } })}
+                  />
+                  {resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock' && (
+                    <small className={styles.derivedState}>
+                      Deadzone constraint: v_b = r_s ω_s, r_s = {resolvedInitial.beltSecondaryLockRadiusM?.toFixed(6)} m
+                    </small>
+                  )}
+                </label>
+                <label>Shift position [m]
+                  <input
+                    type="number"
+                    step="any"
+                    disabled={mappedShift?.initializeState === true && mappedShift.unit === 'm'}
+                    value={mappedShift?.initializeState === true && mappedShift.unit === 'm' && data !== null
+                      ? measurementValueAtStart(data, crop, mappedShift) ?? manual.shiftPositionM
+                      : manual.shiftPositionM}
+                    onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftPositionM: Number(event.target.value) } })}
+                  />
+                </label>
+                <label>Shift speed [m/s]
+                  <input type="number" step="any" value={manual.shiftSpeedMPerS} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftSpeedMPerS: Number(event.target.value) } })} />
                 </label>
               </div>
-              {(workflow.primaryMode === 'track_measured_speed' || workflow.secondaryMode === 'track_measured_speed') && (
-                <div className={styles.gainGrid}>
-                  <label>Speed gain [N·m/(rad/s)] <input type="number" step="any" value={workflow.speedTracking?.proportionalGainNmSPerRad ?? ''} onChange={(event) => updateWorkflow({ speedTracking: { proportionalGainNmSPerRad: Number(event.target.value), torqueLimitNm: workflow.speedTracking?.torqueLimitNm ?? null, equivalentInertiaKgM2: workflow.speedTracking?.equivalentInertiaKgM2 ?? 0, feedforwardInertiaKgM2: workflow.speedTracking?.feedforwardInertiaKgM2 ?? 0 } })} /></label>
-                  <label>Torque limit [N·m] <input type="number" step="any" value={workflow.speedTracking?.torqueLimitNm ?? ''} onChange={(event) => updateWorkflow({ speedTracking: { proportionalGainNmSPerRad: workflow.speedTracking?.proportionalGainNmSPerRad ?? null, torqueLimitNm: Number(event.target.value), equivalentInertiaKgM2: workflow.speedTracking?.equivalentInertiaKgM2 ?? 0, feedforwardInertiaKgM2: workflow.speedTracking?.feedforwardInertiaKgM2 ?? 0 } })} /></label>
-                </div>
-              )}
-              {workflow.axialMode === 'track_measured_position' && (
-                <div className={styles.gainGrid}>
-                  <label>Position gain [N/m] <input type="number" step="any" value={workflow.axialTracking?.positionGainNPerM ?? ''} onChange={(event) => updateWorkflow({ axialTracking: { positionGainNPerM: Number(event.target.value), speedGainNSPerM: workflow.axialTracking?.speedGainNSPerM ?? 0, forceLimitN: workflow.axialTracking?.forceLimitN ?? null } })} /></label>
-                  <label>Speed gain [N/(m/s)] <input type="number" step="any" value={workflow.axialTracking?.speedGainNSPerM ?? 0} onChange={(event) => updateWorkflow({ axialTracking: { positionGainNPerM: workflow.axialTracking?.positionGainNPerM ?? null, speedGainNSPerM: Number(event.target.value), forceLimitN: workflow.axialTracking?.forceLimitN ?? null } })} /></label>
-                  <label>Force limit [N] <input type="number" step="any" value={workflow.axialTracking?.forceLimitN ?? ''} onChange={(event) => updateWorkflow({ axialTracking: { positionGainNPerM: workflow.axialTracking?.positionGainNPerM ?? null, speedGainNSPerM: workflow.axialTracking?.speedGainNSPerM ?? 0, forceLimitN: Number(event.target.value) } })} /></label>
-                </div>
-              )}
-              </fieldset>
-            </section>
-
-          <section className={styles.stateCard}>
-            <h2>4. Initial state at t = {crop.startS.toFixed(3)} s</h2>
-            <fieldset className={styles.sectionFieldset} disabled={workspace === null}>
-            <div className={styles.stateGrid}>
-              <label>Primary speed [rpm]<input disabled={primaryInitial !== null} value={primaryInitial ?? manual.primaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, primaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} /></label>
-              <label>Secondary speed [rpm]<input disabled={secondaryInitial !== null} value={secondaryInitial ?? manual.secondaryAngularSpeedRadPerS * RAD_PER_S_TO_RPM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, secondaryAngularSpeedRadPerS: rpmToRadPerS(Number(event.target.value)) } })} /></label>
-              <label>Belt speed [m/s]
-                <input
-                  type="number"
-                  step="any"
-                  disabled={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'}
-                  value={resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock'
-                    ? resolvedInitial.beltSpeedMPerS
-                    : manual.beltSpeedMPerS}
-                  onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, beltSpeedMPerS: Number(event.target.value) } })}
-                />
-                {resolvedInitial?.beltSpeedSource === 'deadzone_secondary_lock' && (
-                  <small className={styles.derivedState}>
-                    Derived by deadzone constraint: v_b = r_s ω_s, r_s = {resolvedInitial.beltSecondaryLockRadiusM?.toFixed(6)} m
-                  </small>
-                )}
-              </label>
-              <label>Shift position [m]<input type="number" step="any" disabled={mappedShift?.initializeState === true && mappedShift.unit === 'm'} value={mappedShift?.initializeState === true && mappedShift.unit === 'm' && data !== null ? measurementValueAtStart(data, crop, mappedShift) ?? manual.shiftPositionM : manual.shiftPositionM} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftPositionM: Number(event.target.value) } })} /></label>
-              <label>Shift speed [m/s]<input type="number" step="any" value={manual.shiftSpeedMPerS} onChange={(event) => updateWorkflow({ manualInitialState: { ...manual, shiftSpeedMPerS: Number(event.target.value) } })} /></label>
-            </div>
             </fieldset>
           </section>
 
           <section className={styles.runCard}>
-            <div><strong>Selected experiment:</strong> {(crop.endS - crop.startS).toFixed(3)} s</div>
-            <button type="button" disabled={workspace === null} onClick={() => void runValidation()}>Run CINDER validation</button>
+            <div>
+              <span className={styles.stepLabel}>05 · Run</span>
+              <strong>{(crop.endS - crop.startS).toFixed(3)} s selected</strong>
+              <p>
+                {primaryMode === 'replay_measured_speed' ? 'Primary RPM replay' : 'Primary physical'} · {' '}
+                {secondaryMode === 'replay_measured_speed' ? 'Secondary RPM replay' : 'Secondary physical'}
+              </p>
+            </div>
+            <button type="button" className={styles.runButton} disabled={workspace === null} onClick={() => void runValidation()}>
+              Run CINDER validation
+            </button>
           </section>
         </>
       )}
@@ -676,8 +936,39 @@ export const Validation = () => {
           section={editor}
           document={workspace.setupDocument}
           metrology={workspace.metrology as unknown as Record<string, MeasurementMetadata>}
-          onChange={(setupDocument, metrology) => setWorkspace((current) => current === null ? current : ({ ...current, setupDocument, metrology: metrology as unknown as Record<string, Record<string, unknown>> }))}
+          onChange={(setupDocument, metrology) => setWorkspace((current) => current === null ? current : ({
+            ...current,
+            setupDocument,
+            metrology: metrology as unknown as Record<string, Record<string, unknown>>,
+          }))}
           onClose={() => setEditor(null)}
+        />
+      )}
+
+      {data !== null && uncertaintyChannel !== undefined && (
+        <MeasurementUncertaintyModal
+          channel={uncertaintyChannel}
+          values={data.columns[uncertaintyChannel.key]}
+          onSave={(uncertainty) => {
+            updateChannel(uncertaintyChannel.key, { uncertainty });
+            if (uncertaintyChannel.mapping === 'primary_speed') {
+              updateWorkflow({
+                rpmMeasurementDefaults: {
+                  ...workflow.rpmMeasurementDefaults,
+                  primary: uncertainty,
+                },
+              });
+            }
+            if (uncertaintyChannel.mapping === 'secondary_speed') {
+              updateWorkflow({
+                rpmMeasurementDefaults: {
+                  ...workflow.rpmMeasurementDefaults,
+                  secondary: uncertainty,
+                },
+              });
+            }
+          }}
+          onClose={() => setUncertaintyEditor(null)}
         />
       )}
     </main>
