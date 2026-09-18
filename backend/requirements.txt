@@ -1,6 +1,6 @@
 # Backend runtime dependencies.
 # Keep CINDER pinned exactly so persisted run provenance and cache identity are reproducible.
-cinder-cvt==1.1.1
+cinder-cvt==1.1.4
 
 fastapi>=0.116,<1.0
 uvicorn[standard]>=0.35,<1.0

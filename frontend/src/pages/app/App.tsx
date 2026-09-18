@@ -7,6 +7,8 @@ const Demo = lazy(() => import('@pages/demo/Demo').then(({ Demo: Page }) => ({ d
 const Input = lazy(() => import('@pages/input/Input').then(({ Input: Page }) => ({ default: Page })));
 const Playback = lazy(() => import('@pages/playback/Playback').then(({ Playback: Page }) => ({ default: Page })));
 const GeometryStudy = lazy(() => import('@pages/geometry/GeometryStudy').then(({ GeometryStudy: Page }) => ({ default: Page })));
+const Validation = lazy(() => import('@pages/validation/Validation').then(({ Validation: Page }) => ({ default: Page })));
+const ValidationResults = lazy(() => import('@pages/validationResults/ValidationResults').then(({ ValidationResults: Page }) => ({ default: Page })));
 const PrimaryDesign = lazy(() => import('@pages/primaryDesign/PrimaryDesign').then(({ PrimaryDesign: Page }) => ({ default: Page })));
 
 /**
@@ -22,6 +24,8 @@ export const App = () => (
       <Route path="/input" element={<Input />} />
       <Route path="/playback" element={<Playback />} />
       <Route path="/geometry" element={<GeometryStudy />} />
+      <Route path="/validation" element={<Validation />} />
+      <Route path="/validation/runs/:runId" element={<ValidationResults />} />
       <Route path="/primary-design" element={<PrimaryDesign />} />
       <Route path="*" element={<div>404 - Not found</div>} />
     </Routes>

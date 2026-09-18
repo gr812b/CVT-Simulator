@@ -72,6 +72,12 @@ export const Home = () => {
                         size="large"
                         onClick={() => navigate('/dashboard')}
                     />
+                    <Button
+                        text="Dyno Validation"
+                        icon={PlayOutline}
+                        size="large"
+                        onClick={() => navigate('/validation')}
+                    />
                 </div>
 
                 <div className={styles.scrollIndicator}>

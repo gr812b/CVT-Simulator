@@ -16,6 +16,7 @@ def execute_simulation_worker(
     include_reported_segments: bool,
     include_raw_trace: bool,
     result_queue: Queue,
+    execution_profile: str = "default",
 ) -> None:
     """Run in a child process and send only JSON-safe data back to the parent."""
 
@@ -24,6 +25,7 @@ def execute_simulation_worker(
             document,
             include_reported_segments=include_reported_segments,
             include_raw_trace=include_raw_trace,
+            execution_profile=execution_profile,
         )
         result_queue.put({"kind": "completed", "result": result})
     except Exception as error:  # Parent intentionally receives no traceback.
