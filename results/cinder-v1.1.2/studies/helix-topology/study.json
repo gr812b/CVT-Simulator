@@ -1,0 +1,673 @@
+{
+  "schema_version": 1,
+  "study": "helix-topology",
+  "title": "Secondary helix contact topology: reaction reversal and slotted-vs-selected-flank mechanics",
+  "status": "exploratory_mechanism_discovery",
+  "cinder_version": "1.1.2",
+  "release_tag": "cinder-v1.1.2",
+  "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "scientific_question": "When the required secondary helix reaction reverses sign, where does that occur, which physical terms cause it, and only after the mechanism is understood, does bilateral zero-clearance slotted support materially change transient CVT behavior relative to a physically released selected flank?",
+  "reference_topology": {
+    "name": "bilateral_zero_clearance_slot",
+    "policy": "Use the shared results reference model. Preserve the production signed helix torque/force law, torsional spring, movable-member inertia, shaft reaction, and kinematic coupling. Negative selected-flank reaction is carried by the opposite slot flank.",
+    "implementation": "../../defaults/reference_model/slotted_helix.py"
+  },
+  "primary_contact_quantity": {
+    "name": "helix_reacted_torque_margin_Nm",
+    "expression": "f*tau_s + k_theta*(theta_pre-theta) - I_M*(alpha_s + theta_ddot)",
+    "interpretation": "positive = selected flank compressive; zero = lift-off boundary; negative = opposite slot flank required by the slotted solution"
+  },
+  "experiments": {
+    "reaction_map": {
+      "stage": "E1",
+      "role": "exploratory",
+      "shift_percent_samples": 101,
+      "secondary_belt_torque_range_Nm": [
+        -500.0,
+        500.0
+      ],
+      "secondary_belt_torque_samples": 201,
+      "dynamic_terms": "zero",
+      "question": "Where is the quasi-static selected-flank zero-reaction boundary in shift-position / secondary-belt-torque space?"
+    },
+    "forward_control": {
+      "stage": "E2",
+      "role": "exploratory_control",
+      "scenario": "flat full-throttle reference launch",
+      "duration_s": 10.0,
+      "sample_step_s": 0.001,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      },
+      "question": "Does ordinary forward operation approach or cross the selected-flank reaction boundary under the slotted reference topology?"
+    },
+    "stress_screen": {
+      "stage": "E3",
+      "role": "exploratory_candidate_discovery",
+      "conditioning_duration_s": 10.0,
+      "restart_shift_percents": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "onset_s": 0.05,
+      "hold_s": 0.35,
+      "ramp_times_s": [
+        0.01,
+        0.1,
+        0.25
+      ],
+      "secondary_added_torques_Nm": [
+        -480.0,
+        -240.0,
+        -120.0,
+        -80.0,
+        -40.0,
+        0.0,
+        40.0,
+        80.0,
+        120.0,
+        240.0,
+        480.0
+      ],
+      "near_boundary_margin_Nm": 1.0,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.001,
+        "maximum_step_cap_s": 0.003
+      },
+      "question": "Which naturally reachable shift states and smooth signed secondary-torque ramps generate clean near-zero or sign-reversing helix reaction trajectories?"
+    },
+    "scenario_discovery": {
+      "stage": "E4",
+      "role": "broad_exploratory_mechanism_discovery",
+      "conditioning_duration_s": 10.0,
+      "ratio_restart_shift_percents": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "restart_maximum_error_percent": 1.0,
+      "onset_s": 0.05,
+      "hold_s": 0.5,
+      "near_boundary_margin_Nm": 1.0,
+      "bench_secondary_inertia_kg_m2": 0.3,
+      "hill_entry": {
+        "restart_keys": [
+          "s50",
+          "s90"
+        ],
+        "ramp_times_s": [
+          0.1,
+          0.5
+        ],
+        "grade_targets_deg": [
+          15.0,
+          30.0,
+          45.0
+        ],
+        "question": "Can a sudden road-load increase create or deepen opposite-flank demand under the ordinary Baja engine and vehicle boundary?"
+      },
+      "downhill_engine_braking": {
+        "restart_keys": [
+          "s50",
+          "s90"
+        ],
+        "ramp_s": 0.25,
+        "grade_targets_deg": [
+          0.0,
+          -15.0,
+          -30.0,
+          -45.0
+        ],
+        "primary_target_torques_Nm": [
+          -5.0,
+          -20.0,
+          -40.0
+        ],
+        "question": "When the vehicle can drive the CVT and the primary boundary transitions from full throttle to resisting torque, does M_h reverse and which term causes it?"
+      },
+      "bench_backdrive": {
+        "restart_keys": [
+          "s50",
+          "s90",
+          "dynamic"
+        ],
+        "ramp_s": 0.1,
+        "primary_target_torques_Nm": [
+          -5.0,
+          -25.0
+        ],
+        "secondary_drive_torques_Nm": [
+          20.0,
+          60.0,
+          120.0
+        ],
+        "question": "With the vehicle removed, can a driven secondary shaft cleanly force reverse power flow and a helix reaction reversal?"
+      },
+      "bench_resisting_load": {
+        "restart_keys": [
+          "s10",
+          "s50",
+          "s90",
+          "dynamic"
+        ],
+        "ramp_s": 0.1,
+        "secondary_load_torques_Nm": [
+          -20.0,
+          -60.0,
+          -120.0
+        ],
+        "question": "With the vehicle removed, how does a direct resisting secondary load approach the selected-flank boundary from different ratios and a high-dynamic natural state?"
+      },
+      "dynamic_restart": {
+        "selection": "Natural engaged sample maximizing |shaft-accel term| + |shift-accel term| + |curvature term|.",
+        "purpose": "Give helix inertial terms a deliberate chance to control the zero crossing rather than only belt torque."
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.001,
+        "maximum_step_cap_s": 0.003,
+        "minimum_max_step_s": 0.00025
+      },
+      "question": "Across road-load, reverse-power-flow, engine-braking, bench-drive, and high-dynamic initial states, which mechanisms produce clean and substantial opposite-flank demand?",
+      "legacy_hill_replays": {
+        "enabled": true,
+        "quick_mode": "skipped",
+        "cases": [
+          {
+            "case_id": "E4_L01_legacy_ablation_hill",
+            "kind": "tagged_route_default",
+            "description": "Exact physical grade programme used by run_dynamic_actuator_ablation.py --scenario hill: 10 s flat, 2 s rise to 30 deg, 10 s at 30 deg, then the tagged default continuation.",
+            "analysis_start_s": 10.0,
+            "analysis_end_s": 22.0
+          },
+          {
+            "case_id": "E4_L02_natural_45deg_hill",
+            "kind": "natural_hard_hill",
+            "description": "Full natural launch followed by a deliberately harder hill from the evolved vehicle/CVT state.",
+            "flat_runup_s": 10.0,
+            "ramp_s": 0.25,
+            "hold_s": 6.0,
+            "target_grade_deg": 45.0,
+            "analysis_start_s": 10.0
+          }
+        ],
+        "solver": {
+          "method": "LSODA",
+          "relative_tolerance": 0.0003,
+          "absolute_tolerance": 3e-07,
+          "sample_step_s": 0.001,
+          "max_step_s": 0.003,
+          "maximum_transitions": 500
+        },
+        "question": "Does a naturally evolved full-launch hill trajectory reproduce the unilateral helix lift-off condition seen in earlier hill studies, and if so where and why?"
+      }
+    },
+    "liftoff_envelope_refinement": {
+      "stage": "E5",
+      "role": "targeted_liftoff_threshold_and_dynamic_novelty_refinement",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "onset_s": 0.05,
+      "hold_s": 0.5,
+      "trace_retention_margin_Nm": 5.0,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0005,
+        "maximum_step_cap_s": 0.0015,
+        "minimum_max_step_s": 0.000125
+      },
+      "vehicle_envelope": {
+        "restart_shift_percents": [
+          30.0,
+          50.0,
+          70.0
+        ],
+        "grade_targets_deg": [
+          0.0,
+          -15.0,
+          -30.0,
+          -45.0
+        ],
+        "primary_target_torques_Nm": [
+          -5.0,
+          -15.0,
+          -25.0,
+          -28.0,
+          -32.0,
+          -36.0,
+          -40.0,
+          -44.0,
+          -48.0
+        ],
+        "ramp_s": 0.25,
+        "bisection_iterations": 4,
+        "reference_scale_definition": "Magnitude no larger than the pinned engine boundary configured maximum braking torque. This is an engine-scale bound, not a validated closed-throttle torque map at every speed.",
+        "question": "For naturally reached mid-range ratios and downhill grades, at what primary braking torque does the full dynamic selected-flank margin cross zero, and is that threshold inside the reference engine-scale braking magnitude?"
+      },
+      "dynamic_ramp_refinement": {
+        "near_qs_margin_upper_Nm": 5.0,
+        "ramp_times_s": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5
+        ],
+        "selection": "For each ratio/grade pair, choose a coarse vehicle point with positive quasi-static margin closest to the full boundary, preferring reference-scale braking when available.",
+        "strict_dynamic_only_definition": "minimum full M_h < 0 while minimum trajectory-frozen M_h,QS > 0 over the resolved post-onset case.",
+        "question": "Can transient helix inertia alone move an otherwise quasi-statically admissible vehicle case through the selected-flank boundary, preferably without belt-slip switching or travel-stop impact?"
+      },
+      "bench_dynamic_novelty": {
+        "restart": "natural sample maximizing helix dynamic-term magnitude",
+        "primary_target_torques_Nm": [
+          -20.0,
+          -25.0,
+          -30.0
+        ],
+        "secondary_drive_torques_Nm": [
+          10.0,
+          15.0,
+          20.0,
+          25.0
+        ],
+        "secondary_inertia_kg_m2": 0.3,
+        "ramp_times_s": [
+          0.05,
+          0.1,
+          0.2
+        ],
+        "hold_s": 0.5,
+        "question": "Around the E4 inertia-dominated back-drive discovery, is there a cleaner mechanism-isolation case where the full dynamic helix crosses zero while M_h,QS remains positive?"
+      },
+      "novelty_metrics": {
+        "M_h_QS": "belt reacted torque + torsional spring torque",
+        "M_h_dynamic": "shaft-acceleration + shift-acceleration + profile-curvature reacted torque",
+        "dynamic_only_duration_s": "measure(full M_h < 0 and M_h,QS > 0)",
+        "strict_dynamic_only_case": "minimum full M_h < 0 and minimum M_h,QS > 0 over the resolved post-onset case",
+        "dynamic_only_at_first_full_crossing": "M_h,QS > 0 at the linearly interpolated first full M_h crossing"
+      }
+    },
+    "selected_flank_comparator": {
+      "stage": "E6",
+      "role": "planned_physical_comparator",
+      "status": "not_implemented_until_detached_topology_is_derived",
+      "requirement": "Release both helix contact reaction and helix kinematic constraint at lift-off; introduce independent movable-member relative rotation during detachment.",
+      "forbidden_shortcut": "Do not use force clipping with theta=theta(s) as the primary physical comparator."
+    },
+    "topology_vehicle_cases": {
+      "stage": "E7",
+      "role": "planned_after_topology_closure",
+      "status": "not_implemented_until_E6",
+      "question": "For representative realistic and bench cases, what trajectory consequence follows from slotted support versus true selected-flank detachment?"
+    },
+    "dynamic_only_liftoff": {
+      "stage": "E5.5",
+      "role": "preload_and_transient_search_for_forward_power_stick_stick_dynamic_only_liftoff",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "preload_degrees": [
+        300.0,
+        270.0,
+        240.0,
+        210.0,
+        180.0
+      ],
+      "restart_shift_percents": [
+        30.0,
+        50.0,
+        70.0
+      ],
+      "onset_s": 0.05,
+      "hold_s": 0.45,
+      "coarse_ramp_s": 0.05,
+      "trace_retention_margin_Nm": 4.0,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.00025,
+        "maximum_step_cap_s": 0.00075,
+        "minimum_max_step_s": 0.0001,
+        "ramp_step_divisor": 10.0
+      },
+      "perturbations": {
+        "throttle_drop_scales": [
+          0.5,
+          0.0
+        ],
+        "secondary_load_steps_Nm": [
+          -10.0,
+          -20.0
+        ],
+        "throttle_raise_scales": [
+          1.5
+        ],
+        "secondary_assist_steps_Nm": [
+          20.0
+        ],
+        "note": "Target families seek rapid backshift without reverse power. Opposite-sign controls verify the sign of the shift-inertia contribution."
+      },
+      "refinement_ramp_times_s": [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25
+      ],
+      "maximum_refinement_perturbations_per_preload_restart": 2,
+      "refinement_selection": {
+        "full_margin_upper_Nm": 6.0,
+        "dynamic_correction_upper_Nm": -2.0,
+        "minimum_qs_margin_Nm": 0.25,
+        "note": "Refine cases that approach the full boundary or develop a sizeable negative dynamic correction while the torque+spring margin remains positive."
+      },
+      "success_criteria": {
+        "minimum_qs_margin_at_crossing_Nm": 0.25,
+        "lambda_guard": 0.649,
+        "interior_shift_guard_percent": 2.0
+      },
+      "success_definition": "Gold case: the full M_h crosses from positive to negative while the trajectory-frozen M_h,QS remains positive by at least 0.25 N m; secondary internal belt power is positive; both belt contacts remain stick-stick with |lambda|<0.649; no hybrid transition has occurred after forcing onset before the crossing; the crossing is more than 2% of shift travel from either travel boundary; and M_h,QS remains positive over the entire resolved post-onset case.",
+      "question": "Can a physically reconditioned, lower-preload secondary produce selected-flank lift-off during ordinary forward power flow solely because of retained movable-member dynamics, and which transient type / timescale makes the shift-acceleration term large enough to do it?"
+    },
+    "transient_severity_race": {
+      "stage": "E5.6",
+      "role": "transient_severity_boundary_race_between_helix_liftoff_and_belt_traction_saturation",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "core_preload_degrees": [
+        180.0,
+        210.0,
+        240.0
+      ],
+      "reference_preload_degrees": [
+        270.0,
+        300.0
+      ],
+      "restart_shift_percents": [
+        30.0,
+        50.0,
+        70.0
+      ],
+      "onset_s": 0.03,
+      "hold_s": 0.35,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0001,
+        "maximum_step_cap_s": 0.0005,
+        "minimum_max_step_s": 5e-05,
+        "ramp_step_divisor": 12.0,
+        "deadzone_lock_absolute_tolerance_m_s": 1e-06
+      },
+      "engine_target_torques_Nm": [
+        0.0,
+        -5.0,
+        -15.0,
+        -28.0
+      ],
+      "engine_ramp_times_s": [
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25
+      ],
+      "secondary_load_steps_Nm": [
+        -20.0,
+        -40.0,
+        -60.0,
+        -80.0,
+        -100.0,
+        -120.0
+      ],
+      "secondary_load_ramp_times_s": [
+        0.002,
+        0.01,
+        0.05,
+        0.25
+      ],
+      "reference_control_ramp_times_s": [
+        0.002,
+        0.01,
+        0.05
+      ],
+      "sign_controls": {
+        "preload_degrees": [
+          180.0,
+          240.0
+        ],
+        "restart_shift_percents": [
+          50.0
+        ],
+        "throttle_raise_scales": [
+          1.5,
+          2.0
+        ],
+        "secondary_assist_steps_Nm": [
+          40.0,
+          80.0
+        ],
+        "ramp_times_s": [
+          0.001,
+          0.005,
+          0.025,
+          0.1
+        ],
+        "note": "Sparse opposite-sign controls verify that upshift-favoring disturbances load the selected helix flank rather than mimic the target backshift mechanism."
+      },
+      "race": {
+        "simultaneous_tolerance_s": 0.0002,
+        "note": "Event ordering uses the first full M_h positive-to-negative crossing and the first sampled belt departure from stick-stick. With 0.1 ms reporting, events within 0.2 ms are intentionally labelled unresolved/simultaneous."
+      },
+      "success_criteria": {
+        "minimum_qs_margin_at_crossing_Nm": 0.25,
+        "lambda_guard": 0.649,
+        "interior_shift_guard_percent": 2.0
+      },
+      "trace_retention": {
+        "pretraction_full_margin_Nm": 4.0,
+        "shift_accel_term_Nm": -1.0
+      },
+      "success_definition": "Gold case: M_h crosses zero before belt traction leaves stick-stick, secondary belt power remains positive, M_h,QS remains positive by at least 0.25 N m, the shift coordinate is free and more than 2% from either travel stop, no earlier hybrid transition has occurred, and the torque+spring margin remains positive over the resolved post-onset transient.",
+      "question": "As forward-power disturbances are made faster and larger, does selected-flank helix inadmissibility occur before belt traction saturation? How do preload, ratio, disturbance magnitude, and ramp time set that event ordering, and how large can -I_M theta_prime s_ddot become while the belt is still stick-stick?",
+      "numerical_guard_note": "E5.6 uses a study-local 1e-6 m/s absolute belt-secondary deadzone-lock validation tolerance. The tagged production evaluator defaults to 1e-9 m/s; the relaxed guard only prevents tiny event-localization residuals during intentionally extreme sub-millisecond transients from aborting the severity sweep. It does not alter the deadzone equations or event-order success criteria. Any remaining per-case solver exception is recorded and the sweep continues."
+    },
+    "coupled_event_chronology": {
+      "stage": "E5.7",
+      "role": "postprocess_coupled_helix_clamp_traction_and_stock_dynamic_chronology",
+      "status": "implemented",
+      "source_stage": "transient_severity_race",
+      "reruns_cinder": false,
+      "stock_preload_deg": 300.0,
+      "static_friction_coefficient": 0.65,
+      "event_window_s": 0.015,
+      "selection": {
+        "reversal_exemplar": "Highest-preload completed simultaneous/unresolved E5.6 case whose first full M_h crossing is dynamic-only (M_h,QS > 0), then smallest helix/traction event-time separation.",
+        "stock_dynamic_exemplar": "At 300 deg preload, completed E5.6 case with the most negative pre-traction shift-acceleration helix torque term."
+      },
+      "question_clamp_traction": "Near reverse-power helix-flank reversal, does secondary helix unloading materially reduce total secondary closing force / normal resultant and thereby coincide with traction saturation or actual N_s=0 belt contact loss?",
+      "question_stock_dynamics": "With the stock 300 deg torsional preload, how large are the shaft-, shift-, and curvature-driven helix torque corrections while the belt is still sticking, and how do those terms evolve if slip follows?",
+      "outputs": [
+        "summary.json",
+        "helix_traction_event_coupling.csv",
+        "stock_preload_dynamic_summary.csv",
+        "reversal_coupled_chronology.png",
+        "stock_preload_dynamic_terms.png",
+        "normal_force_at_helix_crossing.png"
+      ]
+    },
+    "paired_helix_performance": {
+      "stage": "E5.8",
+      "role": "paired_full_dynamic_vs_quasi_static_helix_transient_performance",
+      "status": "implemented",
+      "reruns_cinder": true,
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "static_friction_coefficient": 0.65,
+      "comparison_grid_step_s": 0.0001,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0001,
+        "maximum_step_cap_s": 0.0005,
+        "minimum_max_step_s": 5e-05,
+        "ramp_step_divisor": 12.0,
+        "deadzone_lock_absolute_tolerance_m_s": 1e-06,
+        "maximum_transitions": 500
+      },
+      "comparator": {
+        "full": "Production full dynamic helix with movable-member shaft, shift-acceleration and curvature terms.",
+        "quasi_static_helix": "Study-local quasi_static_helix reduction. Static torque+spring helix law is retained; movable-sheave rotational inertia is returned to classical fixed secondary shaft inertia rather than deleted.",
+        "shared_topology": "Both use the signed/slotted helical kinematic constraint theta=theta(s). This is not a detached unilateral comparator."
+      },
+      "initial_state_policy": "Both variants start from the exact same naturally conditioned full-model state at the requested ratio. The quasi-static variant reclassifies the hybrid mode at that same state. E5.8 replays the original E5.6 timing exactly (30 ms onset and 350 ms post-ramp hold).",
+      "cases": [
+        {
+          "case_id": "E58_reversal_270_s30_engine_m28_r050",
+          "label": "270 deg reversal exemplar: engine torque -> -28 N m",
+          "preload_deg": 270.0,
+          "restart_shift_percent": 30.0,
+          "perturbation_family": "engine_target_torque",
+          "perturbation_value": -28.0,
+          "ramp_s": 0.05,
+          "onset_s": 0.03,
+          "hold_s": 0.35,
+          "purpose": "Exact E5.6/E5.7 reversal replay: same 30 ms onset, 50 ms ramp, and 350 ms hold, compared under full-dynamic and quasi-static helix formulations."
+        },
+        {
+          "case_id": "E58_stock_300_s30_output_m120_r002",
+          "label": "300 deg stock control: -120 N m output load step",
+          "preload_deg": 300.0,
+          "restart_shift_percent": 30.0,
+          "perturbation_family": "output_load_step",
+          "perturbation_value": -120.0,
+          "ramp_s": 0.002,
+          "onset_s": 0.03,
+          "hold_s": 0.35,
+          "purpose": "Exact E5.6 stock-preload control timing: same 30 ms onset, 2 ms ramp, and 350 ms hold, compared under full-dynamic and quasi-static helix formulations."
+        }
+      ],
+      "primary_outputs": [
+        "case_comparison_summary.csv",
+        "paired_trace.csv",
+        "trajectory performance plots",
+        "clamp/traction plots",
+        "helix topology plots",
+        "belt torque/power plots",
+        "full-minus-QS delta plots"
+      ],
+      "question": "For identical initial states and boundary transients, how much do the full dynamic helix terms change CVT shift/ratio, shaft speeds, clamp, normal force, traction regime and transmitted belt torque/power relative to the tagged quasi-static helix model?",
+      "terminal_outcome_policy": "Intentional hybrid termination such as contact_loss_normal_resultant_floor is retained as a valid performance outcome. Traces are compared over their common admissible interval and the termination reason/time are reported explicitly."
+    }
+  },
+  "discovery_metrics": {
+    "D_opp_case": "measure(M_h < 0) / total case duration",
+    "D_opp_engaged": "measure(M_h < 0) / time with a resolved engaged helix margin",
+    "I_opp_tau_Nm_s": "integral over M_h<0 of |M_h| dt",
+    "I_opp_force_N_s": "integral over M_h<0 of |F_h| dt",
+    "zero_crossing_count": "number of sign changes in M_h after duplicate event times are resolved",
+    "first_opposite_flank_time_s": "linearly interpolated first M_h=0 crossing into M_h<0",
+    "minimum_margin_Nm": "minimum signed M_h",
+    "minimum_absolute_margin_Nm": "minimum |M_h|"
+  },
+  "interpretation_boundaries": [
+    "The slotted reference is a results-programme topology, not a claim that every real CVT should use a slot.",
+    "A negative selected-flank margin in the slotted model means opposite-flank support, not a solver failure.",
+    "The released CINDER selected-flank topology detects inadmissible tensile reaction but does not model detached motion or opposite-flank capture.",
+    "Real backlash, free flight, contact impact, friction, and finite capture dynamics are outside the zero-clearance slotted idealization and the first-order detached comparator.",
+    "The exploration stages E1-E4 discover candidate mechanisms; E5 maps lift-off thresholds and explicitly separates full-dynamic from trajectory-frozen quasi-static admissibility.",
+    "A dynamic-only E5 event supports the mechanism statement that retained movable-member inertia changes selected-flank admissibility on the same trajectory. It is not by itself a literature-priority claim.",
+    "E5 cases use tighter tolerances and denser sampling than broad E4 discovery before any candidate is promoted to topology comparison."
+  ],
+  "results_manifest_schema": 1,
+  "study_slug": "helix-topology",
+  "description": null,
+  "maintenance_status": "maintained",
+  "paper_role": "undecided",
+  "classification": "design",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_configuration": null,
+  "reference_model": {
+    "policy": "explicit-topology-comparison",
+    "source": "../../defaults/reference_model/policy.json"
+  },
+  "entrypoints": {
+    "run": "run.py",
+    "verify": "verify_study.py"
+  },
+  "run_contract": "Canonical maintained-study reproduction entry point. It excludes exploration/ and must regenerate the maintained candidate outputs that could later support the manuscript.",
+  "outputs": {
+    "directory": "artifacts",
+    "committed": false
+  },
+  "runtime_scope": {
+    "requires": [
+      "cinder-cvt==1.1.2",
+      "release-scoped Results defaults"
+    ],
+    "forbids": [
+      "cvtModel/launchTools",
+      "cvtModel/examples",
+      "editable cvtModel/src",
+      "runtime Git materialization"
+    ]
+  },
+  "source_ownership": {
+    "shared_cross_study": "../../defaults",
+    "study_specific": "infrastructure/, experiments/, analysis/",
+    "exploration_excluded_from_run": true
+  }
+}

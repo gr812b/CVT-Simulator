@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "study": "ots-secondary-trajectory-demonstration",
+  "status": "official_provisional_system_level_demonstration",
+  "purpose": "Test whether the non-negligible secondary dynamic corrections suggested by the commercial hardware scaling can propagate into a tangible full-CVT trajectory difference without pretending to reconstruct a complete Sidewinder.",
+  "machine_definition": {
+    "host": "frozen CINDER v1.1.2 Baja CVT / engine / vehicle boundary",
+    "transplant": "replace only the secondary helix profile and movable-member rotational inertia with the provisional OTS values; retain the Baja secondary spring law, belt/pulley geometry, primary, vehicle, and all other machine data",
+    "headline_hardware_level": "nominal",
+    "uncertainty_levels": [
+      "low",
+      "nominal",
+      "high"
+    ],
+    "helix_angle_case": "YSR31 straight, 31 degrees"
+  },
+  "conditioning": {
+    "target_engaged_shift_percent": 50.0,
+    "duration_s": 10.0,
+    "maximum_restart_error_percent": 1.0
+  },
+  "disturbance_screen": {
+    "added_secondary_torques_Nm": [
+      -20.0,
+      -40.0,
+      -60.0,
+      -80.0,
+      -120.0,
+      -160.0,
+      -200.0,
+      -240.0
+    ],
+    "ramp_times_s": [
+      0.2,
+      0.15,
+      0.1,
+      0.075,
+      0.05,
+      0.025
+    ],
+    "onset_s": 0.05,
+    "hold_s": 0.35,
+    "target_peak_pi_total_band": [
+      0.1,
+      0.2
+    ],
+    "minimum_qs_torque_fraction_of_onset": 0.25,
+    "selection_policy": "Among clean-continuous cases whose quasi-static helix-torque magnitude never falls below 25% of its onset value, prefer cases with peak Pi_s,total between 10% and 20%. Choose the slowest qualifying torque ramp, then the smallest absolute torque step, then the point nearest the band centre. If the band is not reached, report the highest clean case explicitly as a fallback."
+  },
+  "screen_solver": {
+    "relative_tolerance": 0.0003,
+    "absolute_tolerance": 3e-07,
+    "sample_step_s": 0.001,
+    "maximum_step_s": 0.002
+  },
+  "validation_solver": {
+    "relative_tolerance": 0.0001,
+    "absolute_tolerance": 1e-07,
+    "sample_step_s": 0.0005,
+    "maximum_step_s": 0.001
+  },
+  "interpretation_boundaries": [
+    "This is a mechanism-transplant trajectory demonstration, not a Sidewinder reconstruction.",
+    "The commercial secondary spring law is not known and is not invented; the frozen Baja spring law is retained in both compared models.",
+    "The full and quasi-static comparisons use identical transplanted hardware and identical boundary disturbances.",
+    "The quasi-static comparator preserves the movable-member absolute rotational inertia by returning it to the rigid secondary-shaft inertia.",
+    "The selected disturbance is chosen by a preregistered clean-continuous rule, not by maximizing the final trajectory separation.",
+    "Low/nominal/high commercial inertia/radius estimates are rerun under the same selected disturbance to show sensitivity to the provisional hardware estimate."
+  ]
+}

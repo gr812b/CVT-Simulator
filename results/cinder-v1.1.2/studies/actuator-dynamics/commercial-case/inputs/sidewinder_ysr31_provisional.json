@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "case": "Yamaha Sidewinder YSRC + Dalton YSR31",
+  "status": "provisional engineering estimate",
+  "sourced": {
+    "helix_angle_deg": 31.0,
+    "alternate_progressive_terminal_angle_deg": 28.0,
+    "oem_power_hp_class": 180.0,
+    "aftermarket_context_hp": 250.0,
+    "aftermarket_target_rpm": 9000.0,
+    "sliding_sheave_part": "8KC-17670-00-00"
+  },
+  "estimates": {
+    "low": {
+      "outer_radius_m": 0.13,
+      "inner_radius_m": 0.045,
+      "effective_face_thickness_m": 0.01,
+      "material_fill_fraction": 0.4318534614,
+      "hub_mass_kg": 0.5,
+      "hub_radius_m": 0.04,
+      "helix_radius_m": 0.06
+    },
+    "nominal": {
+      "outer_radius_m": 0.1397,
+      "inner_radius_m": 0.04,
+      "effective_face_thickness_m": 0.012,
+      "material_fill_fraction": 0.6167540234,
+      "hub_mass_kg": 0.8,
+      "hub_radius_m": 0.05,
+      "helix_radius_m": 0.05
+    },
+    "high": {
+      "outer_radius_m": 0.142875,
+      "inner_radius_m": 0.035,
+      "effective_face_thickness_m": 0.016,
+      "material_fill_fraction": 0.6728160791,
+      "hub_mass_kg": 1.0,
+      "hub_radius_m": 0.055,
+      "helix_radius_m": 0.045
+    }
+  },
+  "assumptions": {
+    "material_density_kg_m3": 2700.0,
+    "model": "volume-equivalent annular aluminum face + compact cylindrical hub"
+  },
+  "baja_reference": {
+    "movable_member_inertia_kg_m2": 0.0025139,
+    "helix_radius_m": 0.04445,
+    "helix_angle_deg": 20.0
+  },
+  "prescribed_transient_sensitivity": {
+    "axial_travel_m": 0.02,
+    "secondary_speed_change_rpm": 1000.0,
+    "event_durations_s": [
+      0.05,
+      0.075,
+      0.1,
+      0.15,
+      0.2
+    ],
+    "quasi_static_helix_torque_scales_Nm": [
+      60.0,
+      120.0,
+      240.0
+    ]
+  },
+  "interpretation": "Prescribed transient values are sensitivity inputs, not measured Sidewinder kinematics."
+}
