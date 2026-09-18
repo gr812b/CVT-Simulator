@@ -147,6 +147,8 @@ class QuasiStaticFixedPivotFlyweightForce(FixedPivotFlyweightForce):
 class QuasiStaticHelicalTorqueReactionForce(HelicalTorqueReactionForce):
     """Classical torque-reactive helix with no dynamic movable-member term."""
 
+    contact_topology = "bilateral_zero_clearance_slot"
+
     compressive_contact_margin = None
     has_compressive_contact = None
 
@@ -458,6 +460,8 @@ def build_system_from_assembly(
     programme,
 ) -> ComposedCVTHybridSystem:
     plant = MechanicalCVTPlant.from_assembly(assembly)
+    from defaults.reference_model import use_bilateral_secondary_helix
+    use_bilateral_secondary_helix(plant)
     host = SecondaryShaftAngleHost()
     secondary_boundary = route.TimeProgrammedLockedFinalDriveBoundary(
         road_load=road_load,

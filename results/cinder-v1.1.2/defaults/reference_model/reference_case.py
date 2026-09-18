@@ -10,7 +10,8 @@ from cinder.contracts import decode_simulation_case_document
 from cinder.model.system import MechanicalCVTPlant
 
 from .slotted_helix import (
-    BilateralHelicalTorqueReactionForce,
+    BILATERAL_TOPOLOGY,
+    is_bilateral_helix_law,
     use_bilateral_secondary_helix,
 )
 
@@ -56,12 +57,12 @@ def decode_reference_case(document: Mapping[str, Any] | None = None):
 
 def reference_model_status(plant: MechanicalCVTPlant) -> ReferenceModelStatus:
     count = sum(
-        isinstance(law, BilateralHelicalTorqueReactionForce)
+        is_bilateral_helix_law(law)
         for law in plant.secondary_actuator.force_laws
     )
     return ReferenceModelStatus(
         secondary_helix_topology=(
-            "bilateral_zero_clearance_slot" if count else "not_reference_bilateral"
+            BILATERAL_TOPOLOGY if count else "not_reference_bilateral"
         ),
         policy_path=str(POLICY_PATH),
         changed_force_laws=int(count),

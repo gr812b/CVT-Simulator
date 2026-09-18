@@ -50,7 +50,7 @@ def main() -> int:
         STUDY_ROOT / "study.json",
         STUDY_ROOT / "infrastructure" / "study_support.py",
         STUDY_ROOT / "infrastructure" / "metrics.py",
-        STUDY_ROOT / "infrastructure" / "ablation_core.py",
+        STUDY_ROOT / "infrastructure" / "helix_mechanics.py",
         STUDY_ROOT / "experiments" / "run_reaction_map.py",
         STUDY_ROOT / "experiments" / "run_forward_control.py",
         STUDY_ROOT / "experiments" / "run_stress_screen.py",
@@ -66,6 +66,14 @@ def main() -> int:
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
         raise RuntimeError("Missing helix study files: " + ", ".join(missing))
+
+    old_core = STUDY_ROOT / "infrastructure" / "ablation_core.py"
+    if old_core.exists():
+        raise RuntimeError("helix-topology still contains the old duplicated actuator kernel")
+    from infrastructure import helix_mechanics as hm
+    variant_keys = {variant.key for variant in hm.VARIANTS}
+    if variant_keys != {"full", "quasi_static_helix"}:
+        raise RuntimeError(f"helix mechanics exposes unexpected variants: {variant_keys}")
 
     study = load_json(STUDY_ROOT / "study.json")
     if study["reference_topology"]["name"] != "bilateral_zero_clearance_slot":
@@ -97,6 +105,24 @@ def main() -> int:
     )
     if abs(partition.full_negative_qs_positive_s - 1.0) > 1.0e-12:
         raise RuntimeError("Dynamic-only sign partition smoke check failed")
+
+    # QS helix slot-topology preservation.
+    from cinder.model.cvt.actuation import HelicalTorqueReactionForce
+    from cinder.model.system import MechanicalCVTPlant
+    from defaults.baja import reference as baja_reference
+    from defaults.reference_model.slotted_helix import is_bilateral_helix_law, use_bilateral_secondary_helix
+
+    full_assembly, _engine, _road = baja_reference.build_components(baja_reference.reference_constants())
+    qs_variant = next(v for v in hm.VARIANTS if v.key == "quasi_static_helix")
+    qs_plant = MechanicalCVTPlant.from_assembly(hm.ablate_assembly(full_assembly, qs_variant))
+    changed = use_bilateral_secondary_helix(qs_plant)
+    helix_laws = [law for law in qs_plant.secondary_actuator.force_laws if isinstance(law, HelicalTorqueReactionForce)]
+    if len(helix_laws) != 1 or changed != 0:
+        raise RuntimeError("QS helix slot-topology preservation failed")
+    if type(helix_laws[0]).__name__ != "QuasiStaticHelicalTorqueReactionForce":
+        raise RuntimeError("QS helix was silently replaced by the dynamic law")
+    if not is_bilateral_helix_law(helix_laws[0]):
+        raise RuntimeError("QS helix does not declare bilateral slot topology")
 
     print(json.dumps({
         "status": "ok",

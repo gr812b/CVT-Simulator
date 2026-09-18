@@ -207,6 +207,8 @@ def build_perturbed_system(ab, route, variant, *, full_assembly, engine, road_lo
     assembly = ab.ablate_assembly(full_assembly, variant)
     programme = flat_programme(route, candidate.duration_s)
     plant = MechanicalCVTPlant.from_assembly(assembly)
+    from defaults.reference_model import use_bilateral_secondary_helix
+    use_bilateral_secondary_helix(plant)
     host = SecondaryShaftAngleHost()
 
     primary = FullThrottleEngineBoundary(

@@ -772,7 +772,7 @@ def main() -> int:
         "reruns_cinder": True,
         "common_initial_state": True,
         "comparator_definition": (
-            "Tagged CINDER quasi_static_helix ablation: removes helix movable-member "
+            "Study-local quasi_static_helix reduction: removes helix movable-member "
             "dynamic coupling while returning movable-sheave rotational inertia to "
             "the classical rigid secondary shaft inertia."
         ),

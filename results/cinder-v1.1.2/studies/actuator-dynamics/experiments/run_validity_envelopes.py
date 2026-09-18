@@ -86,6 +86,8 @@ def _build_baseline():
     )
     assembly, engine, road = route.build_components(resolved.constants)
     model = __import__("cinder.model.system", fromlist=["MechanicalCVTPlant"]).MechanicalCVTPlant.from_assembly(assembly)
+    from defaults.reference_model import use_bilateral_secondary_helix
+    use_bilateral_secondary_helix(model)
     return ab, route, resolved, model
 
 

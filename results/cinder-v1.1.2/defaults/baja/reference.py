@@ -242,6 +242,8 @@ def build_composed_system(
 ) -> tuple[ComposedCVTHybridSystem, object, RoadLoadModel]:
     assembly, engine, road_load = build_components(constants)
     plant = MechanicalCVTPlant.from_assembly(assembly)
+    from defaults.reference_model import use_bilateral_secondary_helix
+    use_bilateral_secondary_helix(plant)
     host = SecondaryShaftAngleHost()
     secondary = TimeProgrammedLockedFinalDriveBoundary(
         road_load=road_load,

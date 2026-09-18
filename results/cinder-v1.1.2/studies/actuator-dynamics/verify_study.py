@@ -47,6 +47,23 @@ def main() -> int:
             f"study.json CINDER version {release.get('version')!r} != {EXPECTED_VERSION!r}"
         )
 
+    def string_values(value):
+        if isinstance(value, dict):
+            for item in value.values():
+                yield from string_values(item)
+        elif isinstance(value, list):
+            for item in value:
+                yield from string_values(item)
+        elif isinstance(value, str):
+            yield value
+
+    stale_official = [value for value in string_values(spec) if value.startswith("official_")]
+    if stale_official:
+        raise RuntimeError(
+            "actuator-dynamics study.json retains stale 'official' semantics: "
+            + ", ".join(stale_official)
+        )
+
     required = (
         STUDY_ROOT / "run.py",
         STUDY_ROOT / "infrastructure" / "study_support.py",
@@ -75,6 +92,25 @@ def main() -> int:
     )
     for name in tests:
         subprocess.run([sys.executable, str(STUDY_ROOT / "tests" / name)], check=True)
+
+    # QS helix topology preservation: shared slot topology must not restore dynamics.
+    from cinder.model.cvt.actuation import HelicalTorqueReactionForce
+    from cinder.model.system import MechanicalCVTPlant
+    from defaults.baja import reference as baja_reference
+    from defaults.reference_model.slotted_helix import is_bilateral_helix_law, use_bilateral_secondary_helix
+    from infrastructure import ablation_core as ab
+
+    full_assembly, _engine, _road = baja_reference.build_components(baja_reference.reference_constants())
+    qs_variant = next(v for v in ab.VARIANTS if v.key == "quasi_static_helix")
+    qs_plant = MechanicalCVTPlant.from_assembly(ab.ablate_assembly(full_assembly, qs_variant))
+    changed = use_bilateral_secondary_helix(qs_plant)
+    helix_laws = [law for law in qs_plant.secondary_actuator.force_laws if isinstance(law, HelicalTorqueReactionForce)]
+    if len(helix_laws) != 1 or changed != 0:
+        raise RuntimeError("QS helix topology preservation failed")
+    if type(helix_laws[0]).__name__ != "QuasiStaticHelicalTorqueReactionForce":
+        raise RuntimeError("QS helix mechanism was silently replaced")
+    if not is_bilateral_helix_law(helix_laws[0]):
+        raise RuntimeError("QS helix no longer declares bilateral topology")
 
     print("PASS actuator-dynamics maintained-study verification")
     print(f"  CINDER: {EXPECTED_VERSION}")

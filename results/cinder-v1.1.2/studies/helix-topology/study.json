@@ -565,7 +565,7 @@
       },
       "comparator": {
         "full": "Production full dynamic helix with movable-member shaft, shift-acceleration and curvature terms.",
-        "quasi_static_helix": "Tagged CINDER quasi_static_helix ablation. Static torque+spring helix law is retained; movable-sheave rotational inertia is returned to classical fixed secondary shaft inertia rather than deleted.",
+        "quasi_static_helix": "Study-local quasi_static_helix reduction. Static torque+spring helix law is retained; movable-sheave rotational inertia is returned to classical fixed secondary shaft inertia rather than deleted.",
         "shared_topology": "Both use the signed/slotted helical kinematic constraint theta=theta(s). This is not a detached unilateral comparator."
       },
       "initial_state_policy": "Both variants start from the exact same naturally conditioned full-model state at the requested ratio. The quasi-static variant reclassifies the hybrid mode at that same state. E5.8 replays the original E5.6 timing exactly (30 ms onset and 350 ms post-ramp hold).",

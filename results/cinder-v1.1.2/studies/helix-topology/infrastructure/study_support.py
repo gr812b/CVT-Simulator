@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
-import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -26,16 +24,6 @@ if str(RELEASE_ROOT) not in sys.path:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-
-
-
-
-
-
-
-
 
 
 def verify_environment() -> None:
@@ -70,8 +58,6 @@ def write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
-
-
 
 
 def flat_programme(route, duration_s: float):
@@ -598,8 +584,6 @@ def run_flat_slotted_reference(
     )
 
 
-
-
 def run_flat_slotted_reference_with_constants(
     *,
     route,
@@ -974,7 +958,6 @@ def run_custom_restart_case(
     )
 
 
-
 def run_slotted_full_launch_programme(
     *,
     route,
@@ -1065,15 +1048,9 @@ def write_reference_provenance(directory: Path, *, plant, extra=None) -> Path:
     )
 
 
-
-
-
-
-
-
 def load_study_modules():
-    """Return study-local inspection/ablation code and shared Baja defaults."""
-    from . import ablation_core as ab
+    """Return helix-study mechanics and shared Baja defaults."""
+    from . import helix_mechanics as ab
     from defaults.baja import reference as route
     return ab, route
 

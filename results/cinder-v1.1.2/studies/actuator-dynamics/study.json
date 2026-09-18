@@ -2,7 +2,7 @@
   "schema_version": 4,
   "study": "actuator-dynamics",
   "title": "Dynamic flyweight and helix coupling: Baja consequence, quasi-static validity, and commercial secondary scaling",
-  "status": "official_release_scoped_results_study",
+  "status": "maintained_release_scoped_results_study",
   "cinder_version": "1.1.2",
   "release_tag": "cinder-v1.1.2",
   "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
@@ -121,14 +121,14 @@
       "maximum_relative_target_error": 0.25
     },
     "commercial_case": {
-      "role": "official_provisional_hardware_scaling",
+      "role": "provisional_hardware_scaling",
       "question": "Can a real high-performance OTS helix secondary have sufficiently large movable-member inertia and transient scales for the retained secondary dynamic terms to become materially non-negligible?",
       "selected_hardware": "Yamaha Sidewinder YSRC roller secondary with Dalton YSR31 straight helix",
       "alternate_local_angle_case": "Dalton YSR36/28 progressive helix, using the published 28 degree segment only as a local constant-angle sensitivity calculation",
       "status": "hardware identity/angle/power context sourced; mass properties, effective helix radius, and prescribed transient kinematics provisional"
     },
     "commercial_trajectory_demo": {
-      "role": "official_provisional_system_level_demonstration",
+      "role": "provisional_system_level_demonstration",
       "question": "Can the commercial-secondary dynamic correction produce a tangible difference in a complete CVT trajectory when only the secondary helix geometry and movable rotational inertia are transplanted into the frozen reference machine?",
       "configuration_file": "commercial-case/trajectory_demo.json",
       "status": "ready_to_run"

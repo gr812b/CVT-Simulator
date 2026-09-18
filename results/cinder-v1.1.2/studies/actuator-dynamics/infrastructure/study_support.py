@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -23,16 +21,6 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-
-
-
-
-
-
-
-
-
-
 def verify_environment() -> None:
     subprocess.run([sys.executable, str(VERIFY_ENVIRONMENT)], check=True)
     import cinder
@@ -47,8 +35,6 @@ def reset_artifacts() -> None:
     if ARTIFACTS.exists():
         shutil.rmtree(ARTIFACTS)
     ARTIFACTS.mkdir(parents=True)
-
-
 
 
 def write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -105,14 +91,6 @@ def percentile_abs(rows: list[dict[str, Any]], key: str, percentile: float, *, p
         if x is not None:
             vals.append(abs(x))
     return float(np.percentile(vals, percentile)) if vals else None
-
-
-
-
-
-
-
-
 
 
 def load_study_modules():
