@@ -11080,1238 +11080,6 @@ can still produce materially inaccurate dynamics near maximum shift.
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
 
-\chapter{Numerical Implementation}
-\label{app:numerical_implementation}
-
-\noindent\textit{Implementation version: \CINDERtag\ (commit \CINDERcommit).}
-
-This appendix records the parts of the CINDER implementation that require a
-numerical procedure beyond the analytical equations themselves, together with
-cases where the implemented algebra differs from the form used in the
-formulation.  The discussion therefore focuses on root solves, conditioning,
-contact closure, event handling, and the equivalent equation forms used in the
-code.  Code references are included so that these numerical choices can be
-traced to the tagged implementation.
-
-\section{Numerical Solution of Belt Geometry}
-\label{app:num_geometry}
-
-The exact belt geometry derived in
-\Cref{sec:belt_loop_geometry,sec:pulley_coordinate_mapping} is retained in the
-implementation.  The quantities that remain implicit in the belt-length
-closure are found with SciPy's \texttt{scipy.optimize.brentq} routine
-\citep{Virtanen2020}.
-
-The first such solve is performed once, during construction, to determine the
-fixed pulley centre distance $C$ from the specified zero-shift radii
-$r_{p,0}$ and $r_{s,0}$.  A physical bracket can be obtained directly from the
-same belt geometry.  The centre distance cannot be smaller than the sum of the
-two radii,
-
-\begin{equation}
-    C_{\mathrm{lo}}=r_{p,0}+r_{s,0},
-    \label{eq:appendix_center_distance_lower_bound}
-\end{equation}
-
-because the two pulley circles would otherwise overlap.  The upper bound comes
-from the finite belt length. The total wrapped length is
-
-\begin{equation}
-\begin{aligned}
-    r_p\phi_p+r_s\phi_s
-    & = \pi(r_p+r_s)
-      +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\\
-    & \geq \pi(r_p+r_s).
-\end{aligned}
-\label{eq:appendix_minimum_wrapped_length}
-\end{equation}
-
-At the zero-shift geometry, let $\ell_0$ denote the length of either straight
-span.  The two straight spans can then use no more than
-
-\begin{equation}
-    2\ell_0
-    \leq
-    L_b-\pi(r_{p,0}+r_{s,0}).
-    \label{eq:appendix_maximum_straight_span_length}
-\end{equation}
-
-From the exact span relation in \Cref{eq:belt_straight_span_length},
-
-\begin{equation}
-    \ell_0^2=C^2-\Delta r_0^2,
-    \qquad
-    \Delta r_0=r_{s,0}-r_{p,0}.
-    \label{eq:appendix_zero_shift_span_geometry}
-\end{equation}
-
-Combining these relations gives the upper bracket
-
-\begin{equation}
-    C_{\mathrm{hi}}
-    =
-    \sqrt{
-        \Delta r_0^2
-        +
-        \left[
-            \frac{L_b-\pi(r_{p,0}+r_{s,0})}{2}
-        \right]^2
-    }.
-    \label{eq:appendix_center_distance_upper_bound}
-\end{equation}
-
-The belt-length residual is checked at both endpoints before iteration.  An
-endpoint is accepted when its absolute residual is no greater than
-$10^{-12}\,\mathrm{m}$; otherwise a sign change is required and Brent iteration
-uses an absolute root-location tolerance of $10^{-12}\,\mathrm{m}$.  The
-bracket is therefore set by the geometry itself rather than by an arbitrary
-numerical search interval.
-
-A second broad geometry solve is performed once at construction to make the
-repeated runtime solve cheaper.  At $s=s_{\max}$, the primary radius is known
-explicitly,
-
-\begin{equation}
-    r_{p,\max}
-    =
-    r_{p,0}
-    +
-    \frac{s_{\max}-s_{\mathrm{dz}}}{2\tan\beta},
-    \label{eq:appendix_primary_radius_max_shift}
-\end{equation}
-
-while the compatible secondary radius is still obtained from belt-length
-closure.  This one setup solve uses the broad physical bracket
-
-\begin{equation}
-\begin{aligned}
-    r_{s,\mathrm{lo}}^{\mathrm{setup}} &= h_b,\\
-    r_{s,\mathrm{hi}}^{\mathrm{setup}}
-    &=
-    \min\!\left(
-        C-r_{p,\max},
-        \frac{L_b}{\pi}-r_{p,\max}
-    \right).
-\end{aligned}
-\label{eq:appendix_secondary_setup_bounds}
-\end{equation}
-
-The lower limit keeps the full belt section outside the pulley axis.  The first
-upper limit leaves enough centre spacing for the primary and secondary radii to
-fit without intersecting, while the second follows from
-\Cref{eq:appendix_minimum_wrapped_length}: the two wrapped portions cannot by
-themselves require more belt than is available.
-
-Once the secondary radius at maximum shift has been found, the two travel
-endpoints are stored as
-
-\begin{equation}
-    r_s(s)\in\left[r_s(s_{\max}),\,r_s(0)\right].
-    \label{eq:appendix_secondary_runtime_bracket}
-\end{equation}
-
-Every ordinary geometry evaluation during integration can then solve for
-$r_s(s)$ on this much tighter interval instead of repeating the broad setup
-search.  The extra work is paid once at construction so that the geometry root
-solved throughout the run uses the smallest precomputed physical bracket.
-The other radius definitions used by the model follow from fixed offsets from
-these solved radii.  First and second radius derivatives are obtained directly from the differentiated belt-length closure,
-which avoids adding finite-difference error to quantities used by the dynamic
-equations.  At $s=s_{\mathrm{dz}}$, the radius itself is common to both sides
-of the boundary, but its governing branch changes; separate deadzone-side and
-engaged-side evaluations therefore provide the appropriate one-sided
-derivatives.
-
-\paragraph{Code reference}
-The geometry implementation is contained in
-\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_length.py}{belt_length.py},
-\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/spec.py}{spec.py}, and
-\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_pulley.py}{belt_pulley.py}.
-
-\section{Fixed-$\lambda$ Engaged Mechanical Closure}
-\label{app:num_fixed_lambda}
-
-For a proposed signed traction pair $(\lambda_p,\lambda_s)$,
-\Cref{sec:engaged_mechanical_core} presents the freely shifting engaged
-mechanics after eliminating the two pulley torques $\tau_p$ and $\tau_s$.  The implementation instead
-retains those torques as simultaneous unknowns,
-
-\begin{equation}
-    \vect{z}_{\mathrm{impl}}
-    =
-    \begin{bmatrix}
-        \dot\omega_p & \dot\omega_s & \dot v_b & \ddot s &
-        \tau_p & \tau_s & N_p & N_s
-    \end{bmatrix}^{\mathsf T},
-    \label{eq:appendix_eight_unknown_closure}
-\end{equation}
-
-and keeps the two traction relations as explicit rows,
-
-\begin{equation}
-    \frac{\tau_p}{r_{p,\mathrm{eff}}}+\lambda_pN_p=0,
-    \qquad
-    \frac{\tau_s}{r_{s,\mathrm{eff}}}+\lambda_sN_s=0.
-    \label{eq:appendix_explicit_traction_rows}
-\end{equation}
-
-Eliminating $\tau_p$ and $\tau_s$ from these rows recovers the reduced
-six-variable system used in the formulation, so the implementation does not
-add a physical degree of freedom.  This form has two practical advantages: torque-reactive mechanisms remain
-coupled directly to the same simultaneous solve, and the normal resultants
-never have to be recovered by
-dividing a solved torque by $\lambda_j$.  In particular, when
-$\lambda_j=0$, the corresponding traction row simply gives $\tau_j=0$ while
-the remaining balances continue to determine $N_j$.
-
-\subsection{Equilibrated linear solve}
-\label{app:num_equilibrated_solve}
-
-The closure combines accelerations, torques, forces, and normal resultants in
-one linear system.  These quantities have different units and can produce very
-different coefficient magnitudes even when the underlying equations are well
-posed.  Before the dense solve, CINDER therefore equilibrates the algebraically
-identical system.  For $\vect{A}\vect{z}=\vect{b}$,
-
-\begin{equation}
-    \vect{A}_s=\vect{D}_r\vect{A}\vect{D}_c,
-    \qquad
-    \vect{b}_s=\vect{D}_r\vect{b},
-    \qquad
-    \vect{z}=\vect{D}_c\vect{y}.
-    \label{eq:appendix_equilibrated_system}
-\end{equation}
-
-Each row scale is the reciprocal of the largest absolute magnitude in that row
-or its right-hand side; column scales are then formed from the row-scaled
-matrix.  The scaled system is solved for $\vect{y}$ and mapped back to the
-physical unknowns.  Residuals are still evaluated against the original,
-unscaled equations.  Diagnostic solves additionally expose the rank
-and both raw and equilibrated condition numbers.  The scaling therefore changes
-only the numerical conditioning of the solve, not the mechanical equations
-being enforced.
-
-\subsection{Regular evaluation through zero traction}
-\label{app:num_zero_traction}
-
-The wrap solution is analytically regular at $\lambda_j=0$, as shown in
-\Cref{eq:wrap_zero_traction_solution}.  A clamped contact can therefore pass
-continuously through zero signed traction while retaining $N_j>0$; zero
-traction is not a separate mechanical regime.  The direct coefficient formulas
-are nevertheless numerically awkward near this limit because they subtract
-nearly equal quantities.
-
-With $z=\lambda_j\phi_j/\sin\beta$,
-
-\begin{equation}
-    \Phi_-(z)=\frac{1-e^{-z}}{z},
-    \qquad
-    \Psi_-(z)=\frac{z-1+e^{-z}}{z^2}.
-    \label{eq:appendix_regular_wrap_functions}
-\end{equation}
-
-For $|z|<10^{-4}$, CINDER evaluates the local series
-
-\begin{equation}
-\begin{aligned}
-    \Phi_-(z)
-    &=1-\frac{z}{2}+\frac{z^2}{6}-\frac{z^3}{24}+\frac{z^4}{120},\\
-    \Psi_-(z)
-    &=\frac{1}{2}-\frac{z}{6}+\frac{z^2}{24}-\frac{z^3}{120}+\frac{z^4}{720},
-\end{aligned}
-\label{eq:appendix_regular_wrap_series}
-\end{equation}
-
-and uses \texttt{expm1}-based expressions outside that neighbourhood.  The
-change is only in how the same smooth analytical functions are evaluated; no
-artificial topology change is introduced at $\lambda_j=0$.
-
-\paragraph{Code reference}
-The closure basis and linear solve are implemented in
-\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py} and
-\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/trial_system.py}{trial_system.py};
-row assembly is in
-\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equations.py}{equations.py},
-and the regular wrap functions are evaluated in
-\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equation_context.py}{equation_context.py}.
-
-\section{Actuator Contributions}
-\label{app:num_affine_assembly}
-
-The actuator forces and torques derived in
-\Cref{sec:axial_actuation_balances,sec:pulley_rotational_dynamics} enter the
-same coupled mechanical closure as the belt and pulley dynamics.  The
-implementation preserves that coupling, but separates the actuator law from
-the closure assembly.  A pulley actuator therefore supplies its contribution
-to the common force and torque balances through a shared interface rather than
-being built directly into those balances.
-
-This separation allows the same CVT mechanics to be used with different
-clamping mechanisms without changing the closure itself.  The derived flyweight, primary spring, secondary helix, and secondary spring
-models all use this interface, but so can a different mechanical actuator, a
-prescribed axial-force law, or a feedback-controlled actuator.  This also
-allows study configurations to replace the native mechanical clamping without
-defining a separate CVT model.  Only the actuator contribution changes; the
-belt, pulley, and contact equations continue to be solved as the same coupled
-system.
-
-The interface places one numerical restriction on those contributions.  Once
-the current state, geometry, and trial traction pair are fixed, each
-contribution must be affine in the instantaneous closure unknowns so that the
-common mechanical system remains linear.  Thus a contribution is represented
-as
-
-\begin{equation}
-    q(\vect{z}_{\mathrm{impl}})
-    =q_0+\vect{g}^{\mathsf T}\vect{z}_{\mathrm{impl}}.
-    \label{eq:appendix_affine_contribution}
-\end{equation}
-
-The affine requirement applies to the closure unknowns, not to the state on
-which the actuator law depends.  Both $q_0$ and $\vect{g}$ may therefore depend
-nonlinearly on the current position and speed.  Centrifugal flyweight action,
-for example, may retain its $\omega_p^2$ dependence because $\omega_p$ is known
-when the instantaneous closure is assembled.
-
-Dependence on an unknown being solved at that instant is carried by
-$\vect{g}$.  If a mounted mechanism uses a local pulley coordinate $x_j(s)$,
-for example,
-
-\begin{equation}
-    \ddot x_j=x_j''(s)\dot s^2+x_j'(s)\ddot s.
-    \label{eq:appendix_affine_local_acceleration}
-\end{equation}
-
-At the current state, $x_j''(s)\dot s^2$ is known, while
-$x_j'(s)\ddot s$ contributes a coefficient on the unknown global shift
-acceleration.  The same interface can carry dependence on
-$\dot\omega_j$, $\tau_j$, or $N_j$ when those quantities appear in an actuator
-law, while preserving the linear simultaneous closure.
-
-\paragraph{Code reference}
-The affine closure objects are defined in
-\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py}; the pulley
-element contract and local context are in
-\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/types.py}{actuation/types.py},
-and mounted contributions are combined by
-\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/pulley_actuator.py}{pulley_actuator.py}.
-
-\section{Numerical Solution of Tangential Contact}
-\label{app:num_tangential_contact}
-
-Sticking introduces the nonlinear traction-root conditions in
-\Cref{eq:sticking_traction_root_condition,eq:stick_stick_root_condition}.
-CINDER solves these roots numerically around the fixed-$\lambda$ mechanical
-closure of \Cref{app:num_fixed_lambda}.
-
-\subsection{Search domain, Jacobian, and acceptance}
-\label{app:num_contact_search}
-
-The numerical root search is deliberately allowed to extend beyond the
-physical static-friction interval.  This separates two questions that are
-physically distinct: first, what traction would be required to enforce stick;
-second, whether the available static friction can supply it.  An
-above-capacity root can therefore be found numerically and then rejected by the
-static limit in \Cref{eq:sticking_admissibility}, rather than
-being hidden by the search bounds themselves.
-
-When no continuation estimate is available, the initial guess is zero.  CINDER
-uses SciPy's bounded \texttt{scipy.optimize.least\_squares} routine
-\citep{Virtanen2020} with the trust-region reflective method, a three-point
-finite-difference residual Jacobian, and Jacobian-based scaling.  The tagged
-defaults use \texttt{ftol}=\texttt{xtol}=\texttt{gtol}=$10^{-12}$ and at most
-100 residual evaluations.  A returned candidate is not accepted from the
-optimizer status alone: the mechanical system is evaluated once more at that
-traction, and the resulting sticking residual must satisfy the declared
-contact tolerance.
-
-\subsection{Continuation between consecutive contact solves}
-\label{app:num_contact_continuation}
-
-Successive right-hand-side evaluations within one smooth contact topology are
-normally close in state space, so the required sticking traction is normally
-close as well.  CINDER uses this local continuity to avoid restarting the full
-nonlinear solve from zero at every evaluation.  The previous accepted traction
-root and its local residual Jacobian are stored, and one bounded Newton
-correction is attempted first.  After a successful correction, the Jacobian is
-updated with a rank-one good-Broyden step.
-
-If the continuation estimate is unavailable, reaches a search bound, cannot be
-evaluated mechanically, or fails the sticking-residual tolerance, the code
-falls back to the full bounded least-squares solve.  Besides reducing repeated
-nonlinear work, following the nearby accepted solution helps the simulation
-remain on the locally connected traction branch if other roots exist elsewhere
-in the residual map.  The stored numerical information is only a solver aid;
-it does not represent physical friction memory.
-
-\subsection{Numerical hysteresis at reattachment}
-\label{app:num_contact_hysteresis}
-
-The physical static-capacity limit remains
-\Cref{eq:sticking_admissibility}.  At finite numerical precision, however,
-using exactly the same zero-margin capacity for both loss and recovery of stick
-can cause repeated stick--slip switching at nearly the same state.  CINDER therefore leaves stick loss at the physical
-zero-margin boundary but normally requires a positive restick reserve of
-$10^{-3}$ in traction-utilization margin.
-
-This reserve is a numerical switching margin, not a change to the friction
-law.  If applying it would leave the event resolver with no admissible
-successor state, the sticking candidate is retried at the physical static
-boundary.  The extra margin therefore suppresses numerical chatter where it
-can do so without preventing an otherwise valid transition.
-
-\paragraph{Code reference}
-The nonlinear solve and continuation are implemented in
-\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/engaged_contact.py}{engaged_contact.py};
-contact residuals and tolerances are in
-\CINDERcode{cvtModel/src/cinder/model/cvt/contact/relative_motion.py}{relative_motion.py}
-and
-\CINDERcode{cvtModel/src/cinder/model/cvt/contact/tolerances.py}{tolerances.py};
-hybrid switching is implemented in
-\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_contact_switching.py}{cvt_contact_switching.py}.
-
-\section{Time Integration and Hybrid Boundary Events}
-\label{app:num_time_integration}
-
-\subsection{Continuous integration and host coupling}
-\label{app:num_continuous_integration}
-
-CINDER is implemented as a CVT component within a host simulation.  The
-standard study configurations attach the surrounding engine, load, vehicle, or
-other required system through the shaft interfaces defined in
-\Cref{sec:system_definition}.  At each interface the host supplies the applied
-torque and equivalent referred inertia seen by the CVT, while the shaft speed
-remains part of the coupled dynamic response.
-
-The host layer is modular rather than fixed to those standard configurations.
-A different host can be attached without changing the internal CVT equations,
-and it may introduce additional states and boundary laws outside the
-transmission.  Those states can be advanced together with the CVT in the same
-initial-value problem, allowing the transmission to be embedded in a different
-engine, vehicle, dynamometer, flywheel, controller, or larger drivetrain model
-while retaining the same shaft-port contract.
-
-Within any fixed mechanical regime, the combined first-order initial-value
-problem is advanced through SciPy's \texttt{scipy.integrate.solve\_ivp}
-interface \citep{Virtanen2020}.  The generic runner is method-configurable.  The
-reported transient study drivers select LSODA, whose automatic selection
-between stiff and nonstiff multistep formulas follows the strategy of
-\citet{Petzold1983}.  Relative and absolute tolerances and maximum-step limits
-are study settings and are therefore reported with the Results configuration
-rather than treated as constants of the mechanical model.
-
-The integration mesh is adaptive.  The right-hand side may be evaluated at
-several internal trial states before a single step is accepted, so a plotted or
-reported sampling interval is not an integration time step.
-
-\subsection{Hybrid segmentation and event localization}
-\label{app:num_hybrid_segmentation}
-
-The regime structure derived in \Cref{sec:shift_regime_dynamics} is integrated
-one smooth regime at a time.  Each active regime exposes only the boundary
-events that it can reach, together with the allowed crossing direction.  When
-an event is localized, the current \texttt{solve\_ivp} segment ends, the
-transition resolver determines the successor regime and any required state
-update, and integration restarts at the same physical time.
-
-Events localized to the same endpoint within the configured association
-tolerance are resolved together.  The adaptive integrator can also probe a
-trial state slightly beyond a valid boundary while attempting or rejecting a
-step.  Roundoff-scale boundary snapping and protected evaluation of these trial
-states keep such numerical probes inside valid geometry; they do not move the
-accepted physical event surface.
-
-\subsection{Integration mesh and reported output}
-\label{app:num_reporting_grid}
-
-The native adaptive trajectory is retained separately from the user-facing
-reporting grid.  Uniform reports are generated with SciPy dense output within
-each smooth segment, and exact segment endpoints are kept explicitly.  Dense
-output is therefore never used to interpolate across a discrete state reset.
-
-\paragraph{Code reference}
-The shaft ports are implemented in
-\CINDERcode{cvtModel/src/cinder/model/system/ports.py}{ports.py}; segmented
-integration is in
-\CINDERcode{cvtModel/src/cinder/execution/hybrid/hybrid.py}{hybrid.py}; and
-reporting materialization is in
-\CINDERcode{cvtModel/src/cinder/results/reporting.py}{reporting.py}.
-
-\section{Formulation-to-Implementation Correspondence}
-\label{app:num_correspondence}
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.37\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
-\toprule
-Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
-\endfirsthead
-\toprule
-Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Correspondence between the analytical formulation and the numerical choices documented in this appendix.}
-\label{tab:appendix_numerical_correspondence}\\
-\endlastfoot
-Implicit exact belt geometry
-& SciPy \texttt{brentq}; physical construction bounds and a cached runtime radius bracket
-& Retain the exact belt-length closure while keeping the repeated radius solve tightly bounded. \\[5pt]
-Six-variable fixed-$\lambda$ closure
-& Eight-variable closure retaining pulley torques and explicit traction rows
-& Keep torque-dependent mechanisms simultaneous and remain regular through zero traction. \\[5pt]
-$\vect{A}\vect{z}=\vect{b}$
-& Row/column equilibration followed by a dense direct solve
-& Reduce avoidable mixed-scale conditioning problems without changing the physical equations. \\[5pt]
-Continuous $\lambda_j\to0$ wrap limit
-& Regular $\Phi_-$/$\Psi_-$ evaluation using local series and \texttt{expm1}
-& Avoid cancellation while preserving the same smooth contact solution. \\[5pt]
-Actuator laws entering the coupled balances
-& Shared actuator interface with affine bias-plus-gain dependence on the closure unknowns
-& Allow actuator models to be exchanged without changing the CVT closure while preserving its linear simultaneous solve. \\[5pt]
-Static-traction root
-& Bounded trust-region \texttt{least\_squares}, local continuation, and independent residual acceptance
-& Find the traction required for stick efficiently, then apply physical admissibility separately. \\[5pt]
-Continuous regime equations
-& Adaptive \texttt{solve\_ivp} segments with explicit hybrid transitions
-& Integrate smooth dynamics separately from changes in the active mechanical regime. \\[5pt]
-\end{longtable}
-\normalsize
-\end{center}
-
-\chapter{Reference Configuration and Boundary Models}
-\label{app:reference_configuration}
-
-The numerical studies use a common Baja-class CVT and host configuration unless
-an individual study states an override.  This appendix records the physical
-parameters shared by that reference configuration and derives the shaft-boundary
-models used to drive and load the CVT.  Study-specific initial states, boundary
-overrides, search domains, and numerical settings are kept with the individual
-study definitions in \Cref{app:study_reproducibility}.
-
-The working Results configuration is stored in
-\ResultsCode{defaults/baja/simulation_case.json}{defaults/baja/simulation_case.json}.
-The parameter tables below summarize the quantities that are repeatedly used in
-the paper; the machine-readable document remains the complete definition.
-
-\section{Reference CVT Configuration}
-\label{app:common_physical_configuration}
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedleft\arraybackslash}p{0.17\textwidth}@{}}
-\toprule
-Group & Quantity & Symbol & Value \\ \midrule
-\endfirsthead
-\toprule
-Group & Quantity & Symbol & Value \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Common physical parameters of the Baja-class reference CVT.}
-\label{tab:results_common_parameters}\\
-\endlastfoot
-\multicolumn{4}{@{}l}{\textbf{Belt and pulley geometry}} \\
-Belt & Outer length & $L_b$ & \SI{0.953262}{\meter} \\[3pt]
-Belt & Radial thickness & $h_b$ & \SI{0.0155702}{\meter} \\[3pt]
-Belt & Outer-face width & $b_{\mathrm{out}}$ & \SI{0.021336}{\meter} \\[3pt]
-Belt & Inner-face width & $b_{\mathrm{in}}$ & \SI{0.0168148}{\meter} \\[3pt]
-Belt & Cord-layer depth from the outer surface & $d_{\mathrm{cord}}$ & \SI{0.00254}{\meter} \\[3pt]
-Belt & Material density & $\rho_b$ & \SI{1100}{\kilogram\per\meter\cubed} \\[3pt]
-Pulley geometry & Sheave half-angle & $\beta$ & \SI{0.200712864}{\radian} \\[3pt]
-Pulley geometry & Primary outer-surface radius at zero shift & $r_{p,\mathrm{outer},\min}$ & \SI{0.0362077}{\meter} \\[3pt]
-Pulley geometry & Secondary outer-surface radius at zero shift & $r_{s,\mathrm{outer},\max}$ & \SI{0.1016}{\meter} \\[3pt]
-Pulley geometry & Deadzone shift & $s_{\mathrm{dz}}$ & \SI{0.0024892}{\meter} \\[3pt]
-Pulley geometry & Maximum shift & $s_{\max}$ & \SI{0.01905}{\meter} \\[5pt]
-\multicolumn{4}{@{}l}{\textbf{Belt--pulley contact}} \\
-Contact & Static traction coefficient & $\mu_s$ & $0.65$ \\[3pt]
-Contact & Kinetic traction coefficient & $\mu_k$ & $0.55$ \\[5pt]
-\multicolumn{4}{@{}l}{\textbf{Primary actuation and inertia}} \\
-Primary & Number of flyweights & $n_f$ & $3$ \\[3pt]
-Primary & Mass per flyweight & $m_f$ & \SI{0.263646}{\kilogram} \\[3pt]
-Primary & Fixed rotating hardware inertia & --- & \SI{0.0032202838}{\kilogram\meter\squared} \\[3pt]
-Primary & Moving-sheave translational mass & $m_{p,m}$ & \SI{1.0681}{\kilogram} \\[3pt]
-Primary & Axial spring stiffness & $k_p$ & \SI{12784}{\newton\per\meter} \\[3pt]
-Primary & Axial spring initial compression & $x_{p,0}$ & \SI{0.09409049}{\meter} \\[5pt]
-\multicolumn{4}{@{}l}{\textbf{Secondary actuation and inertia}} \\
-Secondary & Fixed rotating hardware inertia & $I_{s,F}$ & \SI{0.00232626}{\kilogram\meter\squared} \\[3pt]
-Secondary & Movable-member rotational inertia & $I_{s,M}$ & \SI{0.0025139}{\kilogram\meter\squared} \\[3pt]
-Secondary & Moving-sheave translational mass & $m_{s,m}$ & \SI{0.705141}{\kilogram} \\[3pt]
-Secondary & Axial spring stiffness & $k_{s,x}$ & \SI{3532}{\newton\per\meter} \\[3pt]
-Secondary & Axial spring initial compression & $x_{s,0}$ & \SI{0.11}{\meter} \\[3pt]
-Secondary & Torsional stiffness & $k_{s,\theta}$ & \SI{3.476}{\newton\meter\per\radian} \\[3pt]
-Secondary & Initial torsional preload & $\theta_{s,0}$ & $300^\circ$ \\[3pt]
-Secondary & Helix reference radius & $r_h$ & \SI{0.04445}{\meter} \\[3pt]
-Secondary & Constant helix track angle & $\alpha_s$ & $70^\circ$ \\[3pt]
-Secondary & Movable-face share of belt torque & --- & $0.5$ \\
-\end{longtable}
-\normalsize
-\end{center}
-
-The full primary ramp and flyweight geometry is retained in the same reference
-configuration and is not duplicated in this table.  The primary flyweight
-mass-property construction is documented separately in the flyweight appendix.
-
-Maintained Results studies instantiate the reference configuration through the
-shared Results decoder in
-\ResultsCode{defaults/reference_model/reference_case.py}{defaults/reference_model/reference_case.py}.
-For the Results studies this decoder permits the signed secondary-helix reaction
-to pass through zero and be carried by the opposite slot flank.  The helix force,
-spring, inertia, and kinematic equations themselves are unchanged; this is an
-implementation detail of the study harness rather than an additional model
-equation.
-
-\section{Reference Shaft Boundary Models}
-\label{app:results_boundary_models}
-
-The CVT equations are closed at the primary and secondary shafts by boundary
-models that return a signed external torque and an equivalent inertia referred
-to that shaft.  The reference Baja configuration uses a full-throttle engine
-boundary on the primary and a rigid final-drive vehicle boundary on the
-secondary.  These definitions are external to the CVT mechanics and can be
-replaced study by study without changing the internal CVT equations.
-
-\subsection{Primary full-throttle engine boundary}
-\label{app:primary_engine_boundary}
-
-The primary boundary contributes the net crankshaft torque and the rotational
-inertia of the engine-side hardware directly at the primary shaft,
-
-\begin{equation}
-\tau_{p,\mathrm{ext}}
-=
-\tau_{\mathrm{eng}}(\omega_p),
-\qquad
-I_{p,\mathrm{ext}}
-=
-I_{\mathrm{eng}}.
-\label{eq:reference_primary_boundary}
-\end{equation}
-
-For the reference case,
-\(I_{\mathrm{eng}}=\SI{0.05}{\kilogram\meter\squared}\).
-The positive full-throttle torque curve is specified by the tabulated points in
-\Cref{tab:results_engine_curve}.  CINDER evaluates the curve with a
-shape-preserving piecewise cubic Hermite interpolant.  Two bounded braking tails
-allow the primary to be driven externally outside the positive-torque speed
-range: the low-speed extension passes through
-\((0,0)\), \((500~\mathrm{rpm},-5~\mathrm{N\,m})\), and
-\((1000~\mathrm{rpm},0)\); above the final zero-torque point at
-\(4000~\mathrm{rpm}\), the curve transitions to
-\(-28~\mathrm{N\,m}\) at \(5500~\mathrm{rpm}\) and remains at that value
-from \(7000~\mathrm{rpm}\) upward.  Non-positive shaft speed returns zero
-engine torque.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Positive-speed full-throttle torque points of the reference primary boundary.}
-\label{tab:results_engine_curve}
-\begin{tabular}{@{}rr@{}}
-\toprule
-Engine speed [rpm] & Torque [N\,m] \\ \midrule
-1000 & 0.0000 \\
-1800 & 24.4047 \\
-2400 & 25.0826 \\
-2600 & 24.5403 \\
-2800 & 23.5912 \\
-3000 & 22.5066 \\
-3200 & 20.8796 \\
-3400 & 19.6594 \\
-3600 & 18.3035 \\
-4000 & 0.0000 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The implementation of the interpolation and shaft boundary is given by
-\CINDERcode{cvtModel/src/cinder/model/boundaries/engine/torque_curve.py}{engine/torque_curve.py}
-and
-\CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{boundaries/shaft/__init__.py}.
-
-\subsection{Secondary locked-final-drive vehicle boundary}
-\label{app:secondary_vehicle_boundary}
-
-The reference secondary boundary assumes a rigid final drive and pure rolling at
-the wheel.  With the final-drive ratio defined by
-
-\begin{equation}
-G
-=
-\frac{\omega_s}{\omega_w},
-\label{eq:reference_final_drive_ratio}
-\end{equation}
-
-the wheel speed and vehicle speed are
-
-\begin{equation}
-\omega_w
-=
-\frac{\omega_s}{G},
-\qquad
-v
-=
-r_w\omega_w
-=
-\frac{r_w}{G}\omega_s.
-\label{eq:reference_vehicle_speed}
-\end{equation}
-
-The host retains the accumulated secondary-shaft angle \(\psi_s\),
-
-\begin{equation}
-\dot\psi_s=\omega_s,
-\qquad
-x
-=
-\frac{r_w}{G}\psi_s,
-\label{eq:reference_vehicle_distance}
-\end{equation}
-
-so a road profile may be evaluated as a function of vehicle distance.  Let
-\(\gamma(x)\) be the road angle, positive uphill.  The longitudinal force
-applied to the vehicle by grade, rolling resistance, and aerodynamic drag is
-
-\begin{align}
-F_{\mathrm{grade}}
-&=
--mg\sin\gamma,
-\\
-F_{\mathrm{roll}}
-&=
--C_{\mathrm{rr}}mg\cos\gamma\,
-\frac{v}{\sqrt{v^2+v_\epsilon^2}},
-\\
-F_{\mathrm{aero}}
-&=
--\frac{1}{2}\rho C_dA_f\lvert v\rvert v,
-\\
-F_{\mathrm{road}}
-&=
-F_{\mathrm{grade}}+F_{\mathrm{roll}}+F_{\mathrm{aero}}.
-\label{eq:reference_road_load}
-\end{align}
-
-The regularization speed \(v_\epsilon\) makes the rolling-resistance direction
-continuous through zero vehicle speed.  The corresponding torque applied to the
-secondary shaft is obtained by wheel-force and final-drive conversion,
-
-\begin{equation}
-\tau_{s,\mathrm{ext}}
-=
-\frac{r_w}{G}F_{\mathrm{road}}.
-\label{eq:reference_secondary_road_torque}
-\end{equation}
-
-Vehicle translation and wheel rotation are rigidly tied to \(\omega_s\), so
-their inertias are reflected to the secondary shaft.  Including the direct
-secondary-side drivetrain inertia \(I_{s,\mathrm{dir}}\), the equivalent
-boundary inertia is
-
-\begin{equation}
-I_{s,\mathrm{ext}}
-=
-I_{s,\mathrm{dir}}
-+
-\frac{I_{\mathrm{wheel}}}{G^2}
-+
-m\left(\frac{r_w}{G}\right)^2.
-\label{eq:reference_secondary_reflected_inertia}
-\end{equation}
-
-For the reference parameters in \Cref{tab:results_vehicle_boundary_parameters},
-this gives
-\(I_{s,\mathrm{ext}}=\SI{0.431610}{\kilogram\meter\squared}\).
-Because the translational mass already appears in this reflected inertia, the
-road-load expression in \Cref{eq:reference_road_load} contains only externally
-applied forces and no separate vehicle-acceleration term.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Parameters of the reference locked-final-drive vehicle boundary.}
-\label{tab:results_vehicle_boundary_parameters}
-\begin{tabular}{@{}p{0.50\textwidth}p{0.18\textwidth}r@{}}
-\toprule
-Quantity & Symbol & Value \\ \midrule
-Vehicle mass & $m$ & \SI{300}{\kilogram} \\
-Wheel rotational inertia & $I_{\mathrm{wheel}}$ & \SI{1.10781744}{\kilogram\meter\squared} \\
-Final-drive ratio & $G$ & $7.556$ \\
-Wheel rolling radius & $r_w$ & \SI{0.2794}{\meter} \\
-Rolling-resistance coefficient & $C_{\mathrm{rr}}$ & $0.015$ \\
-Aerodynamic drag coefficient & $C_d$ & $0.6$ \\
-Frontal area & $A_f$ & \SI{1.11484}{\meter\squared} \\
-Air density & $\rho$ & \SI{1.225}{\kilogram\per\meter\cubed} \\
-Gravitational acceleration & $g$ & \SI{9.80665}{\meter\per\second\squared} \\
-Rolling-speed regularization & $v_\epsilon$ & \SI{0.01}{\meter\per\second} \\
-Direct secondary-shaft inertia & $I_{s,\mathrm{dir}}$ & \SI{0.0020113384}{\kilogram\meter\squared} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The final-drive kinematics, road-load force model, and secondary boundary are
-implemented in
-\CINDERcode{cvtModel/src/cinder/model/boundaries/vehicle/final_drive.py}{vehicle/final_drive.py},
-\CINDERcode{cvtModel/src/cinder/model/boundaries/vehicle/road_load.py}{vehicle/road_load.py},
-and
-\CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{boundaries/shaft/__init__.py}.
-
-\chapter{Study Configurations and Reproducibility}
-\label{app:study_reproducibility}
-
-The Results archive contains study-specific case construction, numerical
-settings, and analysis code.  This appendix is therefore organized by study,
-rather than by one nominal configuration table that obscures differences among
-the verification problems.  The links below currently point to the working
-\texttt{develop} Results tree through the \verb|\ResultsCode| and
-\verb|\ResultsTree| helpers; they will be changed to the frozen Results revision
-when the paper-facing archive is finalized.
-
-The four internal-verification studies use CINDER \CINDERtag.  Their maintained
-entry points live under
-\ResultsTree{studies}{results/cinder-v1.1.2/studies}.
-
-\section{Mechanical-Invariant Operating-Domain Audit}
-\label{app:study_mechanical_invariants}
-
-The mechanical-invariant study combines one reference Baja trajectory with
-constructed fixed-boundary bench cases, structural-boundary arrivals, rare
-contact-state reproduction anchors, geometry checks, and negative controls.
-Its maintained definition and implementation are
-\ResultsCode{studies/mechanical-invariants/study.json}{mechanical-invariants/study.json},
-\ResultsCode{studies/mechanical-invariants/run.py}{mechanical-invariants/run.py},
-and
-\ResultsCode{studies/mechanical-invariants/REFERENCE.md}{mechanical-invariants/REFERENCE.md}.
-Reusable operating cases are owned by
-\ResultsCode{defaults/verification/operating_cases.json}{defaults/verification/operating_cases.json}.
-
-The constructed bench cases replace the engine and vehicle boundaries with the
-fixed shaft boundary
-
-\begin{equation}
-\tau_{j,\mathrm{ext}}=\bar\tau_j,
-\qquad
-I_{j,\mathrm{ext}}=\bar I_j,
-\label{eq:invariants_fixed_shaft_boundary}
-\end{equation}
-
-while leaving the CVT mechanics unchanged.  The implementation is
-\CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{FixedShaftBoundary}.
-
-\subsection{Numerical settings by case family}
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedleft\arraybackslash}p{0.10\textwidth}>{\raggedleft\arraybackslash}p{0.11\textwidth}>{\raggedleft\arraybackslash}p{0.11\textwidth}>{\raggedleft\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}@{}}
-\toprule
-Case family & Duration & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Audit / sampling \\ \midrule
-\endfirsthead
-\toprule
-Case family & Duration & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Audit / sampling \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Numerical settings used by the mechanical-invariant audit.}
-\label{tab:invariants_numerical_settings}\\
-\endlastfoot
-Reference Baja trajectory & \SI{10}{\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{10}{\milli\second} & \SI{2}{\milli\second} audit grid \\
-Standard contact search & \SI{30}{\milli\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{1}{\milli\second} & \SI{0.5}{\milli\second} audit grid \\
-Rare-state anchors & \SI{30}{\milli\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{0.5}{\milli\second} & \SI{0.25}{\milli\second} audit grid \\
-Free-shift search & \SI{20}{\milli\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{1}{\milli\second} & \SI{0.5}{\milli\second} audit grid \\
-Structural-boundary arrivals & \SI{30}{\milli\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{0.5}{\milli\second} & \SI{0.25}{\milli\second} audit grid \\
-Static-rest case & \SI{50}{\milli\second} & $3\times10^{-5}$ & $3\times10^{-8}$ & \SI{2}{\milli\second} & \SI{1}{\milli\second} audit grid \\
-Geometry-domain sweep & --- & --- & --- & --- & 401 shift points; \SI{1e-6}{\meter} finite-difference step \\
-\end{longtable}
-\normalsize
-\end{center}
-
-The contact-search and structural cases use an event-time tolerance of
-\(10^{-11}\,\mathrm{s}\); the 10-s reference trajectory uses
-\(10^{-10}\,\mathrm{s}\).
-
-\subsection{Requested tangential contact classes}
-
-The sign in \Cref{tab:invariants_contact_requests} is the sign of the represented
-belt--pulley relative velocity on a slipping interface.  A zero denotes a
-sticking interface.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Tangential contact classes requested by the mechanical-invariant audit.}
-\label{tab:invariants_contact_requests}
-\begin{tabular}{@{}p{0.32\textwidth}p{0.20\textwidth}p{0.20\textwidth}p{0.16\textwidth}@{}}
-\toprule
-Case ID & Primary & Secondary & Overall rotation \\ \midrule
-\texttt{stick\_stick\_forward} & stick & stick & forward \\
-\texttt{stick\_stick\_reverse} & stick & stick & reverse \\
-\texttt{primary\_slip\_plus} & slip $(+)$ & stick & forward \\
-\texttt{primary\_slip\_minus} & slip $(-)$ & stick & forward \\
-\texttt{secondary\_slip\_plus} & stick & slip $(+)$ & forward \\
-\texttt{secondary\_slip\_minus} & stick & slip $(-)$ & forward \\
-\texttt{both\_slip\_pp} & slip $(+)$ & slip $(+)$ & forward \\
-\texttt{both\_slip\_pm} & slip $(+)$ & slip $(-)$ & forward \\
-\texttt{both\_slip\_mp} & slip $(-)$ & slip $(+)$ & forward \\
-\texttt{both\_slip\_mm} & slip $(-)$ & slip $(-)$ & forward \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Bench search domain}
-
-The ordinary deterministic search draws from the standard domain first and
-expands only when required.  The fixed-boundary inertias used by the standard
-bench are \(\bar I_p=\SI{0.03}{\kilogram\meter\squared}\) and
-\(\bar I_s=\SI{0.05}{\kilogram\meter\squared}\).
-
-\begin{table}[H]
-\centering
-\small
-\caption{Standard and extended search domains used to construct contact states.}
-\label{tab:invariants_contact_search_domain}
-\begin{tabular}{@{}p{0.27\textwidth}p{0.33\textwidth}p{0.33\textwidth}@{}}
-\toprule
-Quantity & Standard search & Extended search \\ \midrule
-Engaged shift fraction & $0.25,\ 0.50,\ 0.75$ & $0.10,\ 0.90$ \\
-Belt speed [m/s] & $5,\ 8,\ 12,\ 16$ & $3,\ 20$ \\
-Slip-speed magnitude [m/s] & $0.3,\ 1,\ 3$ & $0.1,\ 5$ \\
-Primary boundary torque [N\,m] & $0,\ \pm5,\ \pm10,\ \pm20,\ \pm35$ & $0,\ \pm20,\ \pm35,\ \pm60$ \\
-Secondary boundary torque [N\,m] & $0,\ \pm5,\ \pm10,\ \pm20,\ \pm35$ & $0,\ \pm20,\ \pm35,\ \pm60$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Canonical stick, free-shift, and structural cases}
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedleft\arraybackslash}p{0.13\textwidth}>{\raggedleft\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.33\textwidth}@{}}
-\toprule
-Case ID & Shift fraction & $\dot s$ [m/s] & Purpose \\ \midrule
-\endfirsthead
-\toprule
-Case ID & Shift fraction & $\dot s$ [m/s] & Purpose \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Canonical engaged stick and free-shift cases in the shared verification library.}
-\label{tab:invariants_canonical_engaged_cases}\\
-\endlastfoot
-\texttt{stick\_mid\_forward} & $0.50$ & $0$ & Interior forward stick--stick \\
-\texttt{stick\_mid\_reverse} & $0.50$ & $0$ & Interior reverse-rotation stick--stick \\
-\texttt{stick\_low\_forward} & $0.20$ & $0$ & Low-ratio interior stick--stick \\
-\texttt{stick\_high\_forward} & $0.80$ & $0$ & High-ratio interior stick--stick \\
-\texttt{stick\_mid\_stressed} & $0.50$ & $0$ & Interior stick state searched with the largest admissible fixed-shaft loads \\
-\texttt{free\_shift\_closing\_30} & $0.30$ & $+0.02$ & Engaged closing / upshift \\
-\texttt{free\_shift\_closing\_50} & $0.50$ & $+0.02$ & Mid-ratio closing / upshift \\
-\texttt{free\_shift\_closing\_70} & $0.70$ & $+0.02$ & Late-ratio closing / upshift \\
-\texttt{free\_shift\_opening\_30} & $0.30$ & $-0.02$ & Engaged opening / backshift \\
-\texttt{free\_shift\_opening\_50} & $0.50$ & $-0.02$ & Mid-ratio opening / backshift \\
-\texttt{free\_shift\_opening\_70} & $0.70$ & $-0.02$ & Late-ratio opening / backshift \\
-\end{longtable}
-\normalsize
-\end{center}
-
-The structural-boundary search starts \SI{0.05}{\milli\meter} from the target
-boundary and uses shift-speed magnitudes of $0.01$, $0.02$, and
-$0.05~\mathrm{m/s}$.  The four requested arrivals are listed in
-\Cref{tab:invariants_structural_requests}.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Structural-boundary transitions explicitly requested by the invariant audit.}
-\label{tab:invariants_structural_requests}
-\begin{tabular}{@{}p{0.38\textwidth}p{0.34\textwidth}p{0.18\textwidth}@{}}
-\toprule
-Case ID & Target event & Approached side \\ \midrule
-\texttt{boundary\_lower\_stop\_arrival} & \texttt{cvt:lower\_stop\_reached} & lower stop \\
-\texttt{boundary\_engagement\_arrival} & \texttt{cvt:engagement\_reached} & engagement \\
-\texttt{boundary\_low\_ratio\_arrival} & \texttt{cvt:low\_ratio\_seat\_reached} & low-ratio seat \\
-\texttt{boundary\_upper\_stop\_arrival} & \texttt{cvt:upper\_stop\_reached} & upper stop \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The same audit also contains a true zero-speed, zero-external-torque static
-lower-stop case, an interior deadzone snapshot, invalid shift-domain and
-deadzone-lock negative controls, and the one-sided engagement classifier checks.
-
-\subsection{Rare deterministic reproduction anchors}
-
-Two contact classes were difficult to recover by the ordinary deterministic
-search and therefore retain exact release-scoped reproduction anchors.  These
-anchors do not bypass the production classifier or the mechanical audit; the
-state counts only if its requested branch is accepted and the subsequent hybrid
-continuation remains admissible.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Exact initial conditions of the two rare contact-state reproduction anchors.}
-\label{tab:invariants_rare_anchors}
-\begin{tabular}{@{}p{0.40\textwidth}rr@{}}
-\toprule
-Quantity & \texttt{secondary\_slip\_plus} & \texttt{both\_slip\_mp} \\ \midrule
-$\omega_p$ [rad/s] & 272.7864 & 536.8700 \\
-$\omega_s$ [rad/s] & 223.0145 & 173.9880 \\
-$v_b$ [m/s] & 17.21139 & 17.24540 \\
-$s$ [m] & 0.01446320 & 0.00292236 \\
-$\dot s$ [m/s] & 0 & 0 \\
-$\bar\tau_p$ [N\,m] & -38.5969 & -105.5810 \\
-$\bar\tau_s$ [N\,m] & -17.9844 & -282.0736 \\
-$\bar I_p$ [kg\,m$^2$] & 0.0127909 & 0.0646801 \\
-$\bar I_s$ [kg\,m$^2$] & 0.0412725 & 0.00250569 \\
-Initial requested-branch dwell [s] & $4.1444\times10^{-4}$ & $9.8232\times10^{-6}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Audit thresholds}
-
-Physical admissibility is defined by the model inequalities and active
-constraints themselves.  The thresholds in
-\Cref{tab:invariants_review_guards} are numerical/reporting tolerances used to
-decide whether a computed sample satisfies those relations to the required
-accuracy.
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.60\textwidth}>{\raggedleft\arraybackslash}p{0.30\textwidth}@{}}
-\toprule
-Guard quantity & Threshold \\ \midrule
-\endfirsthead
-\toprule
-Guard quantity & Threshold \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Numerical review guards used by the mechanical-invariant audit.}
-\label{tab:invariants_review_guards}\\
-\endlastfoot
-Fixed-belt-length residual & $10^{-9}$ m \\
-Row-scaled $8\times8$ closure residual & $10^{-10}$ \\
-Sticking relative-velocity drift & $10^{-3}$ m/s \\
-Sticking acceleration residual & $10^{-7}$ m/s$^2$ \\
-Allowed negative static-margin roundoff & $10^{-9}$ \\
-Allowed positive kinetic pair power & $10^{-3}$ W \\
-Allowed negative integrated normal load & $10^{-6}$ N \\
-Allowed negative belt tension & $10^{-6}$ N \\
-Allowed negative distributed normal load & $10^{-6}$ N/rad \\
-Wrap-field normal-integral residual & $10^{-6}$ N \\
-Allowed negative stop reaction & $10^{-6}$ N \\
-Fixed-shift speed residual & $10^{-8}$ m/s \\
-Fixed-shift acceleration residual & $10^{-7}$ m/s$^2$ \\
-Deadzone secondary-lock speed residual & $10^{-7}$ m/s \\
-Deadzone secondary-lock acceleration residual & $10^{-7}$ m/s$^2$ \\
-Static-rest state drift & $10^{-10}$ \\
-Deadzone radius-derivative residual & $10^{-12}$ \\
-Geometry first-derivative finite-difference residual & $10^{-7}$ \\
-Geometry second-derivative finite-difference residual & $5\times10^{-3}$ m$^{-1}$ \\
-\end{longtable}
-\normalsize
-\end{center}
-
-\section{Mechanical-Energy Consistency Study}
-\label{app:study_energy_consistency}
-
-The energy study uses the flat-road Baja reference for 10 s with no mechanical
-parameter changes.  Its maintained definition and implementation are
-\ResultsCode{studies/energy-consistency/study.json}{energy-consistency/study.json}
-and
-\ResultsCode{studies/energy-consistency/run.py}{energy-consistency/run.py}.
-The audited identity is
-
-\begin{equation}
-W_{\mathrm{ext}}
-=
-\Delta\!\left(E_{\mathrm{kin}}+E_{\mathrm{cons}}\right)
-+E_{\mathrm{slip}}
-+E_{\mathrm{capture}}
-+R_E,
-\label{eq:energy_audit_identity}
-\end{equation}
-
-where \(R_E\) is the residual reported by the audit.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Numerical configurations used by the mechanical-energy audit.}
-\label{tab:energy_study_numerics}
-\begin{tabular}{@{}p{0.28\textwidth}p{0.14\textwidth}p{0.14\textwidth}p{0.15\textwidth}p{0.20\textwidth}@{}}
-\toprule
-Case & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Purpose \\ \midrule
-Nominal audit & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & Primary reported energy balance \\
-Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & Final-state and residual sensitivity \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The continuous work integrals are independently evaluated at quadrature steps of
-5, 2.5, 1.25, and 0.625 ms.  The review criteria are collected in
-\Cref{tab:energy_acceptance_criteria}.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Acceptance criteria of the mechanical-energy audit.}
-\label{tab:energy_acceptance_criteria}
-\begin{tabular}{@{}p{0.67\textwidth}r@{}}
-\toprule
-Metric & Limit \\ \midrule
-$\lvert R_E\rvert/\lvert W_{\mathrm{ext}}\rvert$ at final time & $10^{-4}$ \\
-Maximum absolute event-energy defect & $10^{-8}$ J \\
-Maximum impact momentum residual & $10^{-7}$ \\
-Maximum impact constraint residual & $10^{-8}$ \\
-Normalized final-state difference, nominal vs. tight & $10^{-2}$ \\
-Allowed negative computed capture loss & $10^{-9}$ J \\
-Finest-to-previous continuous-defect ratio & $1.25$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Solver-Convergence Study}
-\label{app:study_solver_convergence}
-
-The solver-convergence study uses the same 10-s Baja reference trajectory but
-varies only numerical controls.  Its maintained definition and implementation
-are
-\ResultsCode{studies/solver-convergence/study.json}{solver-convergence/study.json}
-and
-\ResultsCode{studies/solver-convergence/run.py}{solver-convergence/run.py}.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Numerical reference, formal sweep, and retained comparison point of the solver-convergence study.}
-\label{tab:solver_convergence_design}
-\begin{tabular}{@{}p{0.23\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.25\textwidth}@{}}
-\toprule
-Component & Relative tolerance & Absolute tolerance & Maximum step \\ \midrule
-Tight numerical reference & $10^{-7}$ & $10^{-10}$ & 2.5 ms \\
-Canonical comparison point & $10^{-4}$ & $10^{-7}$ & 10 ms \\
-Formal main sweep & $10^{-2}$ to $3\times10^{-6}$, 8 values & $10^{-3}\,\mathrm{rtol}$ & 5, 10, 20, 50, 100 ms \\
-Independent $\mathrm{atol}$ sweep & $10^{-4}$ & $10^{-5}$ to $10^{-8}$, 7 values & 10 ms \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The eight relative tolerances in the formal grid are
-\(10^{-2}\), \(3\times10^{-3}\), \(10^{-3}\), \(3\times10^{-4}\),
-\(10^{-4}\), \(3\times10^{-5}\), \(10^{-5}\), and
-\(3\times10^{-6}\).  Candidate and reference trajectories are compared by
-corresponding hybrid segment; event timing and regime-history disagreement are
-reported separately.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Formal review guards used in the solver-convergence study.}
-\label{tab:solver_convergence_guards}
-\begin{tabular}{@{}p{0.66\textwidth}r@{}}
-\toprule
-Metric & Required value \\ \midrule
-Event-aligned normalized trajectory RMS & $\le10^{-4}$ \\
-Event-aligned normalized maximum error & $\le10^{-3}$ \\
-Maximum corresponding event-time error & $\le1$ ms \\
-Exact regime-history mismatch fraction & $\le10^{-3}$ \\
-Hybrid transition signature & exact match \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Closure-Conditioning and Root-Structure Study}
-\label{app:study_closure_conditioning}
-
-The closure study separates the conditioning of the fixed-traction
-\(8\times8\) mechanical solve from the conditioning and root structure of the
-stick residual map.  The maintained study definition and entry point are
-\ResultsCode{studies/closure-conditioning/study.json}{closure-conditioning/study.json}
-and
-\ResultsCode{studies/closure-conditioning/run.py}{closure-conditioning/run.py}.
-The shared operating-state vocabulary is again taken from
-\ResultsCode{defaults/verification/operating_cases.json}{defaults/verification/operating_cases.json}.
-
-The reference launch is integrated for 10 s with
-\(\mathrm{rtol}=10^{-4}\), \(\mathrm{atol}=10^{-7}\), and a 10 ms maximum
-step, with frozen states sampled every 2 ms.  The expensive traction-plane maps
-are then evaluated independently at selected frozen states.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Named frozen states selected for paper-facing closure maps in the maintained study configuration.}
-\label{tab:closure_named_states}
-\begin{tabular}{@{}p{0.34\textwidth}p{0.54\textwidth}@{}}
-\toprule
-Case ID & Role \\ \midrule
-\texttt{low\_ratio\_seat} & Engaged low-ratio support state \\
-\texttt{mid\_shift} & Interior shifting state and broad-map showcase \\
-\texttt{upper\_stop} & Engaged upper-travel support state \\
-\texttt{free\_shift\_opening\_70} & Late-ratio opening/backshift state from the shared verification library \\
-Worst actual $A$ state & Automatically selected largest encountered mechanical-closure condition number \\
-Worst actual $J_R$ state & Automatically selected largest encountered stick-root Jacobian condition number \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\small
-\caption{Traction domains used by the closure-conditioning maps.}
-\label{tab:closure_lambda_domains}
-\begin{tabular}{@{}p{0.20\textwidth}p{0.20\textwidth}p{0.52\textwidth}@{}}
-\toprule
-Domain & Grid & Definition \\ \midrule
-Physical static box & $241\times241$ & Exact static Coulomb-capacity intervals at the frozen state; mechanical/topology admissibility is overlaid separately \\
-Expanded & $321\times321$ & Signed half-width $\max(2.5,4\lambda_{\max,\mathrm{phys}})$; normally approximately $[-2.6,2.6]^2$ \\
-Broad diagnostic & $501\times501$ & $[-10,10]^2$; generated only for the configured showcase state \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The current working \texttt{develop} configuration uses a $7\times7$ multistart
-grid in the physical static box and a $9\times9$ grid in the expanded box, with
-a root-clustering tolerance of $10^{-6}$.  These settings will be frozen to the
-paper-facing Results revision together with the final regenerated artifacts.
-The physical stick-root Jacobian \(J_R\) used for conditioning is reconstructed
-with an independent central derivative of the frozen residual map rather than
-taking the solver's continuation Jacobian, which may contain Broyden updates.
-
-The follow-on fold searches are analysis products of this study rather than part
-of the ordinary production root solve.  Their generating scripts are maintained
-under
-\ResultsTree{studies/closure-conditioning/analysis}{closure-conditioning/analysis}.
-
-% Additional Results studies will be added here in the same study-local format
-% as their manuscript sections are finalized.
-
-\section{Manuscript Artifact Traceability}
-\label{app:artifact_index}
-
-The final figure-to-artifact index will be inserted here after the paper-facing
-figures are selected and regenerated.  Each entry will identify the manuscript
-item, exact study/case, archived source artifact, and generating script.  Until
-that figure set is frozen, the study-local definitions above are the
-reproducibility record for the internal-verification section.
-
-
 \chapter{Rate and Acceleration of the Geometric CVT Ratio}
 \label{app:ratio-rate}
 
@@ -13824,5 +12592,1227 @@ and configuration-dependent shaft angular momentum. The distinction is
 therefore dynamic coupling of the actuator to the shift and rotational
 equations, not the existence of curved ramps, finite rollers, or detailed
 flyweight geometry.
+
+\chapter{Numerical Implementation}
+\label{app:numerical_implementation}
+
+\noindent\textit{Implementation version: \CINDERtag\ (commit \CINDERcommit).}
+
+This appendix records the parts of the CINDER implementation that require a
+numerical procedure beyond the analytical equations themselves, together with
+cases where the implemented algebra differs from the form used in the
+formulation.  The discussion therefore focuses on root solves, conditioning,
+contact closure, event handling, and the equivalent equation forms used in the
+code.  Code references are included so that these numerical choices can be
+traced to the tagged implementation.
+
+\section{Numerical Solution of Belt Geometry}
+\label{app:num_geometry}
+
+The exact belt geometry derived in
+\Cref{sec:belt_loop_geometry,sec:pulley_coordinate_mapping} is retained in the
+implementation.  The quantities that remain implicit in the belt-length
+closure are found with SciPy's \texttt{scipy.optimize.brentq} routine
+\citep{Virtanen2020}.
+
+The first such solve is performed once, during construction, to determine the
+fixed pulley centre distance $C$ from the specified zero-shift radii
+$r_{p,0}$ and $r_{s,0}$.  A physical bracket can be obtained directly from the
+same belt geometry.  The centre distance cannot be smaller than the sum of the
+two radii,
+
+\begin{equation}
+    C_{\mathrm{lo}}=r_{p,0}+r_{s,0},
+    \label{eq:appendix_center_distance_lower_bound}
+\end{equation}
+
+because the two pulley circles would otherwise overlap.  The upper bound comes
+from the finite belt length. The total wrapped length is
+
+\begin{equation}
+\begin{aligned}
+    r_p\phi_p+r_s\phi_s
+    & = \pi(r_p+r_s)
+      +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\\
+    & \geq \pi(r_p+r_s).
+\end{aligned}
+\label{eq:appendix_minimum_wrapped_length}
+\end{equation}
+
+At the zero-shift geometry, let $\ell_0$ denote the length of either straight
+span.  The two straight spans can then use no more than
+
+\begin{equation}
+    2\ell_0
+    \leq
+    L_b-\pi(r_{p,0}+r_{s,0}).
+    \label{eq:appendix_maximum_straight_span_length}
+\end{equation}
+
+From the exact span relation in \Cref{eq:belt_straight_span_length},
+
+\begin{equation}
+    \ell_0^2=C^2-\Delta r_0^2,
+    \qquad
+    \Delta r_0=r_{s,0}-r_{p,0}.
+    \label{eq:appendix_zero_shift_span_geometry}
+\end{equation}
+
+Combining these relations gives the upper bracket
+
+\begin{equation}
+    C_{\mathrm{hi}}
+    =
+    \sqrt{
+        \Delta r_0^2
+        +
+        \left[
+            \frac{L_b-\pi(r_{p,0}+r_{s,0})}{2}
+        \right]^2
+    }.
+    \label{eq:appendix_center_distance_upper_bound}
+\end{equation}
+
+The belt-length residual is checked at both endpoints before iteration.  An
+endpoint is accepted when its absolute residual is no greater than
+$10^{-12}\,\mathrm{m}$; otherwise a sign change is required and Brent iteration
+uses an absolute root-location tolerance of $10^{-12}\,\mathrm{m}$.  The
+bracket is therefore set by the geometry itself rather than by an arbitrary
+numerical search interval.
+
+A second broad geometry solve is performed once at construction to make the
+repeated runtime solve cheaper.  At $s=s_{\max}$, the primary radius is known
+explicitly,
+
+\begin{equation}
+    r_{p,\max}
+    =
+    r_{p,0}
+    +
+    \frac{s_{\max}-s_{\mathrm{dz}}}{2\tan\beta},
+    \label{eq:appendix_primary_radius_max_shift}
+\end{equation}
+
+while the compatible secondary radius is still obtained from belt-length
+closure.  This one setup solve uses the broad physical bracket
+
+\begin{equation}
+\begin{aligned}
+    r_{s,\mathrm{lo}}^{\mathrm{setup}} &= h_b,\\
+    r_{s,\mathrm{hi}}^{\mathrm{setup}}
+    &=
+    \min\!\left(
+        C-r_{p,\max},
+        \frac{L_b}{\pi}-r_{p,\max}
+    \right).
+\end{aligned}
+\label{eq:appendix_secondary_setup_bounds}
+\end{equation}
+
+The lower limit keeps the full belt section outside the pulley axis.  The first
+upper limit leaves enough centre spacing for the primary and secondary radii to
+fit without intersecting, while the second follows from
+\Cref{eq:appendix_minimum_wrapped_length}: the two wrapped portions cannot by
+themselves require more belt than is available.
+
+Once the secondary radius at maximum shift has been found, the two travel
+endpoints are stored as
+
+\begin{equation}
+    r_s(s)\in\left[r_s(s_{\max}),\,r_s(0)\right].
+    \label{eq:appendix_secondary_runtime_bracket}
+\end{equation}
+
+Every ordinary geometry evaluation during integration can then solve for
+$r_s(s)$ on this much tighter interval instead of repeating the broad setup
+search.  The extra work is paid once at construction so that the geometry root
+solved throughout the run uses the smallest precomputed physical bracket.
+The other radius definitions used by the model follow from fixed offsets from
+these solved radii.  First and second radius derivatives are obtained directly from the differentiated belt-length closure,
+which avoids adding finite-difference error to quantities used by the dynamic
+equations.  At $s=s_{\mathrm{dz}}$, the radius itself is common to both sides
+of the boundary, but its governing branch changes; separate deadzone-side and
+engaged-side evaluations therefore provide the appropriate one-sided
+derivatives.
+
+\paragraph{Code reference}
+The geometry implementation is contained in
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_length.py}{belt_length.py},
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/spec.py}{spec.py}, and
+\CINDERcode{cvtModel/src/cinder/model/cvt/geometry/belt_pulley.py}{belt_pulley.py}.
+
+\section{Fixed-$\lambda$ Engaged Mechanical Closure}
+\label{app:num_fixed_lambda}
+
+For a proposed signed traction pair $(\lambda_p,\lambda_s)$,
+\Cref{sec:engaged_mechanical_core} presents the freely shifting engaged
+mechanics after eliminating the two pulley torques $\tau_p$ and $\tau_s$.  The implementation instead
+retains those torques as simultaneous unknowns,
+
+\begin{equation}
+    \vect{z}_{\mathrm{impl}}
+    =
+    \begin{bmatrix}
+        \dot\omega_p & \dot\omega_s & \dot v_b & \ddot s &
+        \tau_p & \tau_s & N_p & N_s
+    \end{bmatrix}^{\mathsf T},
+    \label{eq:appendix_eight_unknown_closure}
+\end{equation}
+
+and keeps the two traction relations as explicit rows,
+
+\begin{equation}
+    \frac{\tau_p}{r_{p,\mathrm{eff}}}+\lambda_pN_p=0,
+    \qquad
+    \frac{\tau_s}{r_{s,\mathrm{eff}}}+\lambda_sN_s=0.
+    \label{eq:appendix_explicit_traction_rows}
+\end{equation}
+
+Eliminating $\tau_p$ and $\tau_s$ from these rows recovers the reduced
+six-variable system used in the formulation, so the implementation does not
+add a physical degree of freedom.  This form has two practical advantages: torque-reactive mechanisms remain
+coupled directly to the same simultaneous solve, and the normal resultants
+never have to be recovered by
+dividing a solved torque by $\lambda_j$.  In particular, when
+$\lambda_j=0$, the corresponding traction row simply gives $\tau_j=0$ while
+the remaining balances continue to determine $N_j$.
+
+\subsection{Equilibrated linear solve}
+\label{app:num_equilibrated_solve}
+
+The closure combines accelerations, torques, forces, and normal resultants in
+one linear system.  These quantities have different units and can produce very
+different coefficient magnitudes even when the underlying equations are well
+posed.  Before the dense solve, CINDER therefore equilibrates the algebraically
+identical system.  For $\vect{A}\vect{z}=\vect{b}$,
+
+\begin{equation}
+    \vect{A}_s=\vect{D}_r\vect{A}\vect{D}_c,
+    \qquad
+    \vect{b}_s=\vect{D}_r\vect{b},
+    \qquad
+    \vect{z}=\vect{D}_c\vect{y}.
+    \label{eq:appendix_equilibrated_system}
+\end{equation}
+
+Each row scale is the reciprocal of the largest absolute magnitude in that row
+or its right-hand side; column scales are then formed from the row-scaled
+matrix.  The scaled system is solved for $\vect{y}$ and mapped back to the
+physical unknowns.  Residuals are still evaluated against the original,
+unscaled equations.  Diagnostic solves additionally expose the rank
+and both raw and equilibrated condition numbers.  The scaling therefore changes
+only the numerical conditioning of the solve, not the mechanical equations
+being enforced.
+
+\subsection{Regular evaluation through zero traction}
+\label{app:num_zero_traction}
+
+The wrap solution is analytically regular at $\lambda_j=0$, as shown in
+\Cref{eq:wrap_zero_traction_solution}.  A clamped contact can therefore pass
+continuously through zero signed traction while retaining $N_j>0$; zero
+traction is not a separate mechanical regime.  The direct coefficient formulas
+are nevertheless numerically awkward near this limit because they subtract
+nearly equal quantities.
+
+With $z=\lambda_j\phi_j/\sin\beta$,
+
+\begin{equation}
+    \Phi_-(z)=\frac{1-e^{-z}}{z},
+    \qquad
+    \Psi_-(z)=\frac{z-1+e^{-z}}{z^2}.
+    \label{eq:appendix_regular_wrap_functions}
+\end{equation}
+
+For $|z|<10^{-4}$, CINDER evaluates the local series
+
+\begin{equation}
+\begin{aligned}
+    \Phi_-(z)
+    &=1-\frac{z}{2}+\frac{z^2}{6}-\frac{z^3}{24}+\frac{z^4}{120},\\
+    \Psi_-(z)
+    &=\frac{1}{2}-\frac{z}{6}+\frac{z^2}{24}-\frac{z^3}{120}+\frac{z^4}{720},
+\end{aligned}
+\label{eq:appendix_regular_wrap_series}
+\end{equation}
+
+and uses \texttt{expm1}-based expressions outside that neighbourhood.  The
+change is only in how the same smooth analytical functions are evaluated; no
+artificial topology change is introduced at $\lambda_j=0$.
+
+\paragraph{Code reference}
+The closure basis and linear solve are implemented in
+\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py} and
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/trial_system.py}{trial_system.py};
+row assembly is in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equations.py}{equations.py},
+and the regular wrap functions are evaluated in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/equation_context.py}{equation_context.py}.
+
+\section{Actuator Contributions}
+\label{app:num_affine_assembly}
+
+The actuator forces and torques derived in
+\Cref{sec:axial_actuation_balances,sec:pulley_rotational_dynamics} enter the
+same coupled mechanical closure as the belt and pulley dynamics.  The
+implementation preserves that coupling, but separates the actuator law from
+the closure assembly.  A pulley actuator therefore supplies its contribution
+to the common force and torque balances through a shared interface rather than
+being built directly into those balances.
+
+This separation allows the same CVT mechanics to be used with different
+clamping mechanisms without changing the closure itself.  The derived flyweight, primary spring, secondary helix, and secondary spring
+models all use this interface, but so can a different mechanical actuator, a
+prescribed axial-force law, or a feedback-controlled actuator.  This also
+allows study configurations to replace the native mechanical clamping without
+defining a separate CVT model.  Only the actuator contribution changes; the
+belt, pulley, and contact equations continue to be solved as the same coupled
+system.
+
+The interface places one numerical restriction on those contributions.  Once
+the current state, geometry, and trial traction pair are fixed, each
+contribution must be affine in the instantaneous closure unknowns so that the
+common mechanical system remains linear.  Thus a contribution is represented
+as
+
+\begin{equation}
+    q(\vect{z}_{\mathrm{impl}})
+    =q_0+\vect{g}^{\mathsf T}\vect{z}_{\mathrm{impl}}.
+    \label{eq:appendix_affine_contribution}
+\end{equation}
+
+The affine requirement applies to the closure unknowns, not to the state on
+which the actuator law depends.  Both $q_0$ and $\vect{g}$ may therefore depend
+nonlinearly on the current position and speed.  Centrifugal flyweight action,
+for example, may retain its $\omega_p^2$ dependence because $\omega_p$ is known
+when the instantaneous closure is assembled.
+
+Dependence on an unknown being solved at that instant is carried by
+$\vect{g}$.  If a mounted mechanism uses a local pulley coordinate $x_j(s)$,
+for example,
+
+\begin{equation}
+    \ddot x_j=x_j''(s)\dot s^2+x_j'(s)\ddot s.
+    \label{eq:appendix_affine_local_acceleration}
+\end{equation}
+
+At the current state, $x_j''(s)\dot s^2$ is known, while
+$x_j'(s)\ddot s$ contributes a coefficient on the unknown global shift
+acceleration.  The same interface can carry dependence on
+$\dot\omega_j$, $\tau_j$, or $N_j$ when those quantities appear in an actuator
+law, while preserving the linear simultaneous closure.
+
+\paragraph{Code reference}
+The affine closure objects are defined in
+\CINDERcode{cvtModel/src/cinder/model/cvt/closure.py}{closure.py}; the pulley
+element contract and local context are in
+\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/types.py}{actuation/types.py},
+and mounted contributions are combined by
+\CINDERcode{cvtModel/src/cinder/model/cvt/actuation/pulley_actuator.py}{pulley_actuator.py}.
+
+\section{Numerical Solution of Tangential Contact}
+\label{app:num_tangential_contact}
+
+Sticking introduces the nonlinear traction-root conditions in
+\Cref{eq:sticking_traction_root_condition,eq:stick_stick_root_condition}.
+CINDER solves these roots numerically around the fixed-$\lambda$ mechanical
+closure of \Cref{app:num_fixed_lambda}.
+
+\subsection{Search domain, Jacobian, and acceptance}
+\label{app:num_contact_search}
+
+The numerical root search is deliberately allowed to extend beyond the
+physical static-friction interval.  This separates two questions that are
+physically distinct: first, what traction would be required to enforce stick;
+second, whether the available static friction can supply it.  An
+above-capacity root can therefore be found numerically and then rejected by the
+static limit in \Cref{eq:sticking_admissibility}, rather than
+being hidden by the search bounds themselves.
+
+When no continuation estimate is available, the initial guess is zero.  CINDER
+uses SciPy's bounded \texttt{scipy.optimize.least\_squares} routine
+\citep{Virtanen2020} with the trust-region reflective method, a three-point
+finite-difference residual Jacobian, and Jacobian-based scaling.  The tagged
+defaults use \texttt{ftol}=\texttt{xtol}=\texttt{gtol}=$10^{-12}$ and at most
+100 residual evaluations.  A returned candidate is not accepted from the
+optimizer status alone: the mechanical system is evaluated once more at that
+traction, and the resulting sticking residual must satisfy the declared
+contact tolerance.
+
+\subsection{Continuation between consecutive contact solves}
+\label{app:num_contact_continuation}
+
+Successive right-hand-side evaluations within one smooth contact topology are
+normally close in state space, so the required sticking traction is normally
+close as well.  CINDER uses this local continuity to avoid restarting the full
+nonlinear solve from zero at every evaluation.  The previous accepted traction
+root and its local residual Jacobian are stored, and one bounded Newton
+correction is attempted first.  After a successful correction, the Jacobian is
+updated with a rank-one good-Broyden step.
+
+If the continuation estimate is unavailable, reaches a search bound, cannot be
+evaluated mechanically, or fails the sticking-residual tolerance, the code
+falls back to the full bounded least-squares solve.  Besides reducing repeated
+nonlinear work, following the nearby accepted solution helps the simulation
+remain on the locally connected traction branch if other roots exist elsewhere
+in the residual map.  The stored numerical information is only a solver aid;
+it does not represent physical friction memory.
+
+\subsection{Numerical hysteresis at reattachment}
+\label{app:num_contact_hysteresis}
+
+The physical static-capacity limit remains
+\Cref{eq:sticking_admissibility}.  At finite numerical precision, however,
+using exactly the same zero-margin capacity for both loss and recovery of stick
+can cause repeated stick--slip switching at nearly the same state.  CINDER therefore leaves stick loss at the physical
+zero-margin boundary but normally requires a positive restick reserve of
+$10^{-3}$ in traction-utilization margin.
+
+This reserve is a numerical switching margin, not a change to the friction
+law.  If applying it would leave the event resolver with no admissible
+successor state, the sticking candidate is retried at the physical static
+boundary.  The extra margin therefore suppresses numerical chatter where it
+can do so without preventing an otherwise valid transition.
+
+\paragraph{Code reference}
+The nonlinear solve and continuation are implemented in
+\CINDERcode{cvtModel/src/cinder/model/cvt/dynamics/engaged_contact.py}{engaged_contact.py};
+contact residuals and tolerances are in
+\CINDERcode{cvtModel/src/cinder/model/cvt/contact/relative_motion.py}{relative_motion.py}
+and
+\CINDERcode{cvtModel/src/cinder/model/cvt/contact/tolerances.py}{tolerances.py};
+hybrid switching is implemented in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_contact_switching.py}{cvt_contact_switching.py}.
+
+\section{Time Integration and Hybrid Boundary Events}
+\label{app:num_time_integration}
+
+\subsection{Continuous integration and host coupling}
+\label{app:num_continuous_integration}
+
+CINDER is implemented as a CVT component within a host simulation.  The
+standard study configurations attach the surrounding engine, load, vehicle, or
+other required system through the shaft interfaces defined in
+\Cref{sec:system_definition}.  At each interface the host supplies the applied
+torque and equivalent referred inertia seen by the CVT, while the shaft speed
+remains part of the coupled dynamic response.
+
+The host layer is modular rather than fixed to those standard configurations.
+A different host can be attached without changing the internal CVT equations,
+and it may introduce additional states and boundary laws outside the
+transmission.  Those states can be advanced together with the CVT in the same
+initial-value problem, allowing the transmission to be embedded in a different
+engine, vehicle, dynamometer, flywheel, controller, or larger drivetrain model
+while retaining the same shaft-port contract.
+
+Within any fixed mechanical regime, the combined first-order initial-value
+problem is advanced through SciPy's \texttt{scipy.integrate.solve\_ivp}
+interface \citep{Virtanen2020}.  The generic runner is method-configurable.  The
+reported transient study drivers select LSODA, whose automatic selection
+between stiff and nonstiff multistep formulas follows the strategy of
+\citet{Petzold1983}.  Relative and absolute tolerances and maximum-step limits
+are study settings and are therefore reported with the Results configuration
+rather than treated as constants of the mechanical model.
+
+The integration mesh is adaptive.  The right-hand side may be evaluated at
+several internal trial states before a single step is accepted, so a plotted or
+reported sampling interval is not an integration time step.
+
+\subsection{Hybrid segmentation and event localization}
+\label{app:num_hybrid_segmentation}
+
+The regime structure derived in \Cref{sec:shift_regime_dynamics} is integrated
+one smooth regime at a time.  Each active regime exposes only the boundary
+events that it can reach, together with the allowed crossing direction.  When
+an event is localized, the current \texttt{solve\_ivp} segment ends, the
+transition resolver determines the successor regime and any required state
+update, and integration restarts at the same physical time.
+
+Events localized to the same endpoint within the configured association
+tolerance are resolved together.  The adaptive integrator can also probe a
+trial state slightly beyond a valid boundary while attempting or rejecting a
+step.  Roundoff-scale boundary snapping and protected evaluation of these trial
+states keep such numerical probes inside valid geometry; they do not move the
+accepted physical event surface.
+
+\subsection{Integration mesh and reported output}
+\label{app:num_reporting_grid}
+
+The native adaptive trajectory is retained separately from the user-facing
+reporting grid.  Uniform reports are generated with SciPy dense output within
+each smooth segment, and exact segment endpoints are kept explicitly.  Dense
+output is therefore never used to interpolate across a discrete state reset.
+
+\paragraph{Code reference}
+The shaft ports are implemented in
+\CINDERcode{cvtModel/src/cinder/model/system/ports.py}{ports.py}; segmented
+integration is in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/hybrid.py}{hybrid.py}; and
+reporting materialization is in
+\CINDERcode{cvtModel/src/cinder/results/reporting.py}{reporting.py}.
+
+\section{Formulation-to-Implementation Correspondence}
+\label{app:num_correspondence}
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.37\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
+\endfirsthead
+\toprule
+Analytical presentation & \CINDERtag\ implementation & Numerical purpose \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Correspondence between the analytical formulation and the numerical choices documented in this appendix.}
+\label{tab:appendix_numerical_correspondence}\\
+\endlastfoot
+Implicit exact belt geometry
+& SciPy \texttt{brentq}; physical construction bounds and a cached runtime radius bracket
+& Retain the exact belt-length closure while keeping the repeated radius solve tightly bounded. \\[5pt]
+Six-variable fixed-$\lambda$ closure
+& Eight-variable closure retaining pulley torques and explicit traction rows
+& Keep torque-dependent mechanisms simultaneous and remain regular through zero traction. \\[5pt]
+$\vect{A}\vect{z}=\vect{b}$
+& Row/column equilibration followed by a dense direct solve
+& Reduce avoidable mixed-scale conditioning problems without changing the physical equations. \\[5pt]
+Continuous $\lambda_j\to0$ wrap limit
+& Regular $\Phi_-$/$\Psi_-$ evaluation using local series and \texttt{expm1}
+& Avoid cancellation while preserving the same smooth contact solution. \\[5pt]
+Actuator laws entering the coupled balances
+& Shared actuator interface with affine bias-plus-gain dependence on the closure unknowns
+& Allow actuator models to be exchanged without changing the CVT closure while preserving its linear simultaneous solve. \\[5pt]
+Static-traction root
+& Bounded trust-region \texttt{least\_squares}, local continuation, and independent residual acceptance
+& Find the traction required for stick efficiently, then apply physical admissibility separately. \\[5pt]
+Continuous regime equations
+& Adaptive \texttt{solve\_ivp} segments with explicit hybrid transitions
+& Integrate smooth dynamics separately from changes in the active mechanical regime. \\[5pt]
+\end{longtable}
+\normalsize
+\end{center}
+
+\chapter{Reference Inputs and Shaft-Boundary Models}
+\label{app:reference_configuration}
+
+This appendix records the shared Baja reference inputs used by the Results
+campaign and the shaft-boundary models attached to CINDER in the different
+simulation cases.  Case-specific changes are listed with the corresponding
+study in \Cref{app:study_reproducibility}.
+
+The executable reference input is
+\ResultsCode{defaults/baja/simulation_case.json}{defaults/baja/simulation_case.json},
+with the human-readable tuning quantities collected in
+\ResultsCode{defaults/baja/tuning.json}{defaults/baja/tuning.json}.
+
+\section{Reference CVT Configuration}
+\label{app:common_physical_configuration}
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.39\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedleft\arraybackslash}p{0.16\textwidth}@{}}
+\toprule
+Group & Quantity & Symbol & Value \\ \midrule
+\endfirsthead
+\toprule
+Group & Quantity & Symbol & Value \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Geometry, belt, and contact parameters of the shared Baja reference configuration.}
+\label{tab:results_common_geometry_contact}\\
+\endlastfoot
+\multicolumn{4}{@{}l}{\textbf{Belt and pulley geometry}} \\
+Belt & Outer-path length & $L_b$ & \SI{0.953262}{\meter} \\[3pt]
+Belt & Radial thickness & $h_b$ & \SI{0.0155702}{\meter} \\[3pt]
+Belt & Outer-face width & $b_{\mathrm{out}}$ & \SI{0.021336}{\meter} \\[3pt]
+Belt & Inner-face width & $b_{\mathrm{in}}$ & \SI{0.0168148}{\meter} \\[3pt]
+Belt & Cord-layer depth from the outer surface & $d_{\mathrm{cord}}$ & \SI{0.00254}{\meter} \\[3pt]
+Belt & Material density & $\rho_b$ & \SI{1100}{\kilogram\per\meter\cubed} \\[3pt]
+Pulley geometry & Sheave half-angle & $\beta$ & \SI{0.200712864}{\radian} \\[3pt]
+Pulley geometry & Primary outer-surface radius at zero shift & $r_{p,\mathrm{outer},\min}$ & \SI{0.0362077}{\meter} \\[3pt]
+Pulley geometry & Secondary outer-surface radius at zero shift & $r_{s,\mathrm{outer},\max}$ & \SI{0.1016}{\meter} \\[3pt]
+Pulley geometry & Primary deadzone travel & $s_{\mathrm{dz}}$ & \SI{0.0024892}{\meter} \\[3pt]
+Pulley geometry & Maximum shift coordinate & $s_{\max}$ & \SI{0.01905}{\meter} \\[5pt]
+\multicolumn{4}{@{}l}{\textbf{Belt--pulley contact}} \\
+Contact & Static traction coefficient & $\mu_s$ & $0.65$ \\[3pt]
+Contact & Kinetic traction coefficient & $\mu_k$ & $0.55$ \\
+\end{longtable}
+\normalsize
+\end{center}
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.39\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedleft\arraybackslash}p{0.16\textwidth}@{}}
+\toprule
+Group & Quantity & Symbol & Value \\ \midrule
+\endfirsthead
+\toprule
+Group & Quantity & Symbol & Value \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Actuation and inertia parameters of the shared Baja reference configuration.}
+\label{tab:results_common_actuation_inertia}\\
+\endlastfoot
+\multicolumn{4}{@{}l}{\textbf{Primary}} \\
+Primary & Number of flyweights & $n_f$ & $3$ \\[3pt]
+Primary & Mass per flyweight & $m_f$ & \SI{0.263646}{\kilogram} \\[3pt]
+Primary & Flyweight pivot radius & --- & \SI{0.042545}{\meter} \\[3pt]
+Primary & Pivot-to-roller-center distance & --- & \SI{0.0315214}{\meter} \\[3pt]
+Primary & Roller radius & --- & \SI{0.0065}{\meter} \\[3pt]
+Primary & Linear ramp angle & --- & $35^\circ$ \\[3pt]
+Primary & Linear ramp span & --- & \SI{0.005}{\meter} \\[3pt]
+Primary & $C^3$ transition span & --- & \SI{0.003}{\meter} \\[3pt]
+Primary & Circular ramp angle range & --- & $35^\circ\rightarrow20^\circ$ \\[3pt]
+Primary & Circular ramp span & --- & \SI{0.03}{\meter} \\[3pt]
+Primary & Fixed rotating hardware inertia & --- & \SI{3.2202838e-3}{\kilogram\meter\squared} \\[3pt]
+Primary & Moving-sheave translational mass & $m_{p,m}$ & \SI{1.0681}{\kilogram} \\[3pt]
+Primary & Axial spring stiffness & $k_p$ & \SI{12784}{\newton\per\meter} \\[3pt]
+Primary & Axial spring initial compression & $x_{p,0}$ & \SI{0.09409049}{\meter} \\[5pt]
+\multicolumn{4}{@{}l}{\textbf{Secondary}} \\
+Secondary & Fixed rotating hardware inertia & $I_{s,F}$ & \SI{2.32626e-3}{\kilogram\meter\squared} \\[3pt]
+Secondary & Movable-member rotational inertia & $I_{s,M}$ & \SI{0.0025139}{\kilogram\meter\squared} \\[3pt]
+Secondary & Moving-sheave translational mass & $m_{s,m}$ & \SI{0.705141}{\kilogram} \\[3pt]
+Secondary & Axial spring stiffness & $k_{s,x}$ & \SI{3532}{\newton\per\meter} \\[3pt]
+Secondary & Axial spring initial compression & $x_{s,0}$ & \SI{0.11}{\meter} \\[3pt]
+Secondary & Torsional stiffness & $k_{s,\theta}$ & \SI{3.476}{\newton\meter\per\radian} \\[3pt]
+Secondary & Initial torsional preload & $\theta_{s,\mathrm{pre}}$ & $300^\circ$ \\[3pt]
+Secondary & Helix reference radius & $r_h$ & \SI{0.04445}{\meter} \\[3pt]
+Secondary & Helix angle from the circumferential direction & $\alpha_s$ & $20^\circ$ \\[3pt]
+Secondary & Movable-face share of belt torque & $\tau_{s,M}/\tau_s$ & $0.5$ \\
+\end{longtable}
+\normalsize
+\end{center}
+
+The shared reference launch begins from
+\begin{equation}
+\omega_p(0)=1800~\mathrm{rpm},\qquad
+\omega_s(0)=0,\qquad
+v_b(0)=0,\qquad
+s(0)=0,\qquad
+\dot s(0)=0.
+\label{eq:results_reference_initial_state}
+\end{equation}
+
+\subsection{Basis of the reference parameters}
+\label{app:reference_parameter_basis}
+
+The reference set is an engineering baseline representative of the custom CVT
+and vehicle used by McMaster Baja Racing.  Its inputs combine direct hardware
+measurements, CAD- or geometry-derived quantities, tuning choices, manufacturer
+or published data, and engineering estimates.  The principal basis of each parameter family is summarized in
+\Cref{tab:reference_parameter_basis}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Basis of the shared Baja reference parameters.}
+\label{tab:reference_parameter_basis}
+\begin{tabular}{@{}p{0.28\textwidth}p{0.64\textwidth}@{}}
+\toprule
+Parameter family & Basis used for the reference set \\ \midrule
+CVT and pulley dimensions & Based on the team's custom Baja CVT hardware, using direct measurements and derived geometry where available. \\
+Primary and secondary actuation & Based on the team's hardware and reference tune; preload and profile quantities are the values used by the frozen simulation input. \\
+Masses and inertias & Combination of known component masses, CAD/geometry-derived quantities, and engineering estimates where direct inertia measurements were unavailable. \\
+Belt density and traction coefficients & Engineering estimates based on generic rubber/V-belt material and contact data; these quantities were not measured for the exact belt used by the team. \\
+Engine torque curve & Based on the Kohler CH440 torque/power data used in \Cref{fig:kohler_engine_motivation} \citep{BajaSAEKohlerEngine2022}; interpolation and the out-of-range braking tails are numerical extensions described in \Cref{app:primary_engine_boundary}. \\
+Vehicle mass, wheel radius, and final drive & Team vehicle/reference-drivetrain values. \\
+Rolling resistance and aerodynamic parameters & Engineering estimates used to provide a representative longitudinal road load rather than an experimentally identified coast-down model. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Shaft-Boundary Interface}
+\label{app:results_boundary_models}
+
+At each shaft, the host boundary supplies the signed external torque and the
+rotational inertia referred to that shaft.  In the notation of the formulation,
+a boundary evaluation returns
+\begin{equation}
+\mathcal{B}_j(t,\vect{x},\vect{x}_h)
+\;\longmapsto\;
+\left(\tau_{j,\mathrm{ext}},I_{j,\mathrm{ext}}\right),
+\qquad j\in\{p,s\},
+\label{eq:shaft_boundary_interface}
+\end{equation}
+where \(\vect{x}_h\) denotes any additional host state required by the boundary.
+The shaft speed remains a CINDER state unless a separate kinematic constraint is
+introduced by the host.
+
+\Cref{tab:results_boundary_implementations} distinguishes boundary components
+provided by CINDER v1.1.2 from adapters defined in the Results code and attached
+through the same interface.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}@{}}
+\toprule
+Boundary used in the Results campaign & Origin & Implementation & Boundary quantity \\ \midrule
+\endfirsthead
+\toprule
+Boundary used in the Results campaign & Origin & Implementation & Boundary quantity \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Shaft-boundary implementations used by the Results studies.}
+\label{tab:results_boundary_implementations}\\
+\endlastfoot
+Full-throttle engine & CINDER v1.1.2 & \CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{engine boundary}; \CINDERcode{cvtModel/src/cinder/model/boundaries/engine/torque_curve.py}{torque curve} & Speed-dependent engine torque and constant referred engine-side inertia. \\[4pt]
+Locked final-drive vehicle & CINDER v1.1.2 & \CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{vehicle boundary}; \CINDERcode{cvtModel/src/cinder/model/boundaries/vehicle/road_load.py}{road load} & Vehicle road-load torque and reflected vehicle/wheel inertia. \\[4pt]
+Constant torque--inertia boundary & CINDER v1.1.2 & \CINDERcode{cvtModel/src/cinder/model/boundaries/shaft/__init__.py}{constant boundary} & Prescribed constant torque and referred inertia; shaft speed is not fixed. \\[4pt]
+Time-programmed final-drive vehicle & Results code & \ResultsCode{defaults/baja/reference.py}{time-programmed boundary} & Same vehicle and inertia as the decoded reference boundary, with grade supplied as \(\gamma(t)\). \\[4pt]
+Additive torque wrapper & Results code & \ResultsCode{studies/actuator-dynamics/experiments/run_controlled_transients.py}{actuator-study wrapper}; \ResultsCode{studies/helix-topology/infrastructure/study_support.py}{helix-study wrapper} & Adds a prescribed smooth torque perturbation while retaining the wrapped boundary inertia. \\[4pt]
+Blend-to-target / torque-scale wrappers & Results code & \ResultsCode{studies/helix-topology/infrastructure/study_support.py}{torque-blend wrappers} & Smoothly replaces or scales the torque returned by another boundary while retaining its inertia. \\[4pt]
+Prescribed torque bench boundary & Results code & \ResultsCode{studies/helix-topology/infrastructure/study_support.py}{prescribed-torque boundary} & Smooth transition between two prescribed torque values with a specified constant referred inertia. \\[4pt]
+Controlled overrun boundary pair & Results code & \ResultsCode{studies/reduced-belt-transients/infrastructure/protocol_support.py}{overrun boundary pair} & Blends primary torque toward a prescribed resisting value while independently programming secondary road grade. \\
+\end{longtable}
+\normalsize
+\end{center}
+
+\subsection{CINDER constant torque--inertia boundary}
+\label{app:fixed_shaft_boundary}
+
+The CINDER class named \texttt{FixedShaftBoundary} fixes the \emph{boundary
+inputs}, not the shaft speed.  It returns
+\begin{equation}
+\tau_{j,\mathrm{ext}}=\tau_{j,0},
+\qquad
+I_{j,\mathrm{ext}}=I_{j,0},
+\label{eq:fixed_shaft_boundary}
+\end{equation}
+while \(\omega_j\) remains part of the dynamically integrated CVT state.  This
+boundary is used for constructed bench states in the verification studies and
+for source-constrained external cases such as the independent Ballew benchmark;
+the selected \(\tau_{j,0}\) and \(I_{j,0}\) values are listed with those cases in
+\Cref{app:study_reproducibility}.
+
+\subsection{Primary full-throttle engine boundary}
+\label{app:primary_engine_boundary}
+
+The reference primary boundary uses the CINDER v1.1.2 full-throttle engine
+component,
+\begin{equation}
+\tau_{p,\mathrm{ext}}=\tau_{\mathrm{eng}}(\omega_p),
+\qquad
+I_{p,\mathrm{ext}}=I_{\mathrm{eng}},
+\label{eq:reference_primary_boundary}
+\end{equation}
+with \(I_{\mathrm{eng}}=\SI{0.05}{\kilogram\meter\squared}\).  The positive-drive
+points are based on the Kohler CH440 data used in
+\Cref{fig:kohler_engine_motivation} \citep{BajaSAEKohlerEngine2022} and are
+interpolated by CINDER using a shape-preserving piecewise cubic Hermite
+interpolant.  The numerical boundary adds bounded low- and high-speed braking
+tails so that externally driven states remain finite outside the positive-drive
+range.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Reference positive-drive engine torque points.}
+\label{tab:results_engine_curve}
+\begin{tabular}{@{}rr@{}}
+\toprule
+Engine speed [rpm] & Torque [N m] \\ \midrule
+1000 & 0.000 \\
+1800 & 24.405 \\
+2400 & 25.083 \\
+2600 & 24.540 \\
+2800 & 23.591 \\
+3000 & 22.507 \\
+3200 & 20.880 \\
+3400 & 19.659 \\
+3600 & 18.304 \\
+4000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The low-speed extension passes through
+\((0,0)\), \((500~\mathrm{rpm},-5~\mathrm{N\,m})\), and
+\((1000~\mathrm{rpm},0)\).  The high-speed extension begins at the final
+positive-drive point and transitions over \(1500~\mathrm{rpm}\) to a
+\(-28~\mathrm{N\,m}\) braking plateau; a second \(1500~\mathrm{rpm}\) interval is
+included in the PCHIP support before the plateau is held constant.  These tails
+are extrapolated boundary behaviour rather than CH440 measurements.
+
+\subsection{Secondary locked-final-drive vehicle boundary}
+\label{app:secondary_vehicle_boundary}
+
+The reference secondary boundary rigidly maps secondary-shaft speed to wheel
+speed through the final-drive reduction
+\begin{equation}
+G=\frac{\omega_s}{\omega_w},
+\qquad
+v=\frac{r_w}{G}\,\omega_s.
+\label{eq:reference_final_drive_kinematics}
+\end{equation}
+For grade angle \(\gamma\), the longitudinal forces are
+\begin{align}
+F_{\mathrm{grade}} &=-m_v g\sin\gamma,\\
+F_{\mathrm{roll}} &=-C_{rr}m_v g\cos\gamma\,
+\frac{v}{\sqrt{v^2+v_\epsilon^2}},\\
+F_{\mathrm{aero}} &=-\frac{1}{2}\rho C_d A_f\lvert v\rvert v,
+\end{align}
+and the external secondary torque is
+\begin{equation}
+\tau_{s,\mathrm{ext}}
+=
+\frac{r_w}{G}
+\left(F_{\mathrm{grade}}+F_{\mathrm{roll}}+F_{\mathrm{aero}}\right).
+\label{eq:reference_vehicle_torque}
+\end{equation}
+The vehicle translation and wheel rotation are reflected to the secondary as
+\begin{equation}
+I_{s,\mathrm{ext}}
+=
+I_{s,\mathrm{dir}}
++\frac{I_w}{G^2}
++m_v\left(\frac{r_w}{G}\right)^2.
+\label{eq:reference_vehicle_inertia}
+\end{equation}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Parameters of the reference vehicle boundary.}
+\label{tab:results_vehicle_boundary}
+\begin{tabular}{@{}p{0.55\textwidth}r@{}}
+\toprule
+Quantity & Value \\ \midrule
+Vehicle mass \(m_v\) & \SI{300}{\kilogram} \\
+Wheel rotational inertia \(I_w\) & \SI{1.10781744}{\kilogram\meter\squared} \\
+Wheel radius \(r_w\) & \SI{0.2794}{\meter} \\
+Final-drive reduction \(G\) & $7.556$ \\
+Direct secondary-shaft inertia \(I_{s,\mathrm{dir}}\) & \SI{0.0020113384}{\kilogram\meter\squared} \\
+Rolling-resistance coefficient \(C_{rr}\) & $0.015$ \\
+Aerodynamic drag coefficient \(C_d\) & $0.6$ \\
+Frontal area \(A_f\) & \SI{1.11484}{\meter\squared} \\
+Air density \(\rho\) & \SI{1.225}{\kilogram\per\meter\cubed} \\
+Gravity \(g\) & \SI{9.80665}{\meter\per\second\squared} \\
+Rolling-speed regularization \(v_\epsilon\) & \SI{0.01}{\meter\per\second} \\
+Total reflected secondary inertia from \Cref{eq:reference_vehicle_inertia} & \SI{0.431610}{\kilogram\meter\squared} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Results-side time-programmed and torque-modified boundaries}
+\label{app:results_boundary_adapters}
+
+Several studies retain a CINDER boundary's inertia and constitutive law while
+changing only the imposed external loading history.  The Results adapters use a
+smooth transition coordinate
+\begin{equation}
+u(t)=
+\begin{cases}
+0, & t\le t_0,\\
+3\xi^2-2\xi^3, & t_0<t<t_0+T_r,\\
+1, & t\ge t_0+T_r,
+\end{cases}
+\qquad
+\xi=\frac{t-t_0}{T_r}.
+\label{eq:results_boundary_smoothstep}
+\end{equation}
+The boundary forms used in the Results campaign include
+\begin{align}
+\tau_{\mathrm{add}}(t)
+&=\tau_{\mathrm{base}}(t)+u(t)\,\Delta\tau,\\
+\tau_{\mathrm{target}}(t)
+&=[1-u(t)]\tau_{\mathrm{base}}(t)+u(t)\tau_{\mathrm{target}},\\
+\tau_{\mathrm{scale}}(t)
+&=[1+u(t)(k_\tau-1)]\tau_{\mathrm{base}}(t),\\
+\tau_{\mathrm{prescribed}}(t)
+&=[1-u(t)]\tau_i+u(t)\tau_f.
+\label{eq:results_torque_boundary_family}
+\end{align}
+The additive, target, and scale forms retain the equivalent inertia returned by
+the wrapped boundary.  The standalone prescribed-torque form uses a
+case-specified constant inertia.  The time-programmed vehicle boundary retains
+\Cref{eq:reference_vehicle_torque,eq:reference_vehicle_inertia} and replaces the
+road profile by a prescribed \(\gamma(t)\).  Exact amplitudes, inertias, grades,
+and transition times are listed with the study cases that use them.
+
+
+\chapter{Results Configuration and Reproducibility}
+\label{app:study_reproducibility}
+
+This appendix collects the study-specific case definitions and numerical settings that support the Results chapter.  The working paper references the
+Results tree on \ResultsTag; the single ref used by \verb|\ResultsCode| and
+\verb|\ResultsTree| will be replaced by the frozen Results revision before
+publication.
+
+A shared Results decoder is used by the Baja-reference studies.  It keeps the
+secondary helix force, spring, inertia, and kinematics of CINDER v1.1.2 but
+allows the signed helix reaction to pass through zero to the opposite slot
+flank; see
+\ResultsCode{defaults/reference_model/reference_case.py}{defaults/reference_model/reference_case.py}
+and
+\ResultsCode{defaults/reference_model/slotted_helix.py}{defaults/reference_model/slotted_helix.py}.
+
+\section{Mechanical Invariants and Operating-Domain Audit}
+\label{app:study_mechanical_invariants}
+
+The results reported in \Cref{sec:results_mechanical_invariants} use the case
+set defined by
+\ResultsCode{studies/mechanical-invariants/study.json}{study.json}
+and the shared accepted-case library
+\ResultsCode{defaults/verification/operating_cases.json}{operating_cases.json}.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+Audited case family & Shaft-boundary environment & Case role \\ \midrule
+\endfirsthead
+\toprule
+Audited case family & Shaft-boundary environment & Case role \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Case families used by the mechanical-invariants audit.}
+\label{tab:invariants_case_families}\\
+\endlastfoot
+Reference Baja trajectory & Full-throttle engine + locked final-drive vehicle from \Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary} & Ten-second reference launch/shift and nominal trajectory coverage. \\[4pt]
+Static rest and deadzone states & Constant torque--inertia boundaries from \Cref{app:fixed_shaft_boundary} & Zero-speed rest, deadzone lock, and classifier checks. \\[4pt]
+Canonical engaged contact states & Constant torque--inertia boundaries on both shafts; no vehicle host & Stick--stick, both single-slip branches, and all four both-slip sign combinations. \\[4pt]
+Free-shift states & Constant torque--inertia boundaries on both shafts; no vehicle host & Positive and negative engaged shift speed. \\[4pt]
+Structural arrivals & Constant torque--inertia bench environment & Engagement, low-ratio-seat, upper-stop, and lower-stop arrivals with exact successor audit. \\[4pt]
+Geometry-domain audit & No dynamic shaft boundary required & Belt-length closure and radius derivatives over the physical shift domain. \\[4pt]
+Negative controls & Initial-state/classifier checks & Deliberately invalid states required to be rejected rather than projected into the admissible domain. \\
+\end{longtable}
+\normalsize
+\end{center}
+
+The standard constructed bench cases use constant referred inertias of
+$ I_{p,0}=\SI{0.03}{\kilogram\meter\squared}$ and
+$ I_{s,0}=\SI{0.05}{\kilogram\meter\squared}$.  The two targeted anchors
+use the explicit boundary values in \Cref{tab:invariants_rare_anchor_boundaries}.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.37\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+Required coverage class & Case family & Boundary environment \\ \midrule
+\endfirsthead
+\toprule
+Required coverage class & Case family & Boundary environment \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Required mechanical-invariant coverage classes and the case family used to exercise them.}
+\label{tab:invariants_coverage_classes}\\
+\endlastfoot
+Static zero-speed lower-stop rest & Static rest & Constant torque--inertia, zero applied torque \\
+Deadzone free & Deadzone state & Constant torque--inertia bench \\
+Engaged stick--stick & Canonical contact state & Constant torque--inertia bench \\
+Primary slip / secondary stick & Canonical contact state & Constant torque--inertia bench \\
+Primary stick / secondary slip & Canonical contact state & Constant torque--inertia bench \\
+Both slip & Canonical contact state & Constant torque--inertia bench \\
+Both-slip \((+,+)\) & Canonical contact state & Constant torque--inertia bench \\
+Both-slip \((+,-)\) & Canonical contact state & Constant torque--inertia bench \\
+Both-slip \((-,+)\) & Canonical contact state & Constant torque--inertia bench \\
+Both-slip \((-,-)\) & Canonical contact state & Constant torque--inertia bench \\
+Primary slip in both directions & Canonical contact states & Constant torque--inertia bench \\
+Secondary slip in both directions & Canonical contact states & Constant torque--inertia bench \\
+Forward and reverse rotation & Stick/contact states & Constant torque--inertia bench \\
+Free shift closing & Free-shift state & Constant torque--inertia bench \\
+Free shift opening & Free-shift state & Constant torque--inertia bench \\
+Low-ratio seat & Structural state & Constant torque--inertia bench \\
+Upper stop & Structural state & Constant torque--inertia bench \\
+Deadzone lower stop & Structural state & Constant torque--inertia bench \\
+Engagement transition & Structural arrival & Constant torque--inertia bench \\
+Low-ratio arrival & Structural arrival & Constant torque--inertia bench \\
+Upper-stop arrival & Structural arrival & Constant torque--inertia bench \\
+Lower-stop arrival & Structural arrival & Constant torque--inertia bench \\
+Negative controls & Invalid-state checks & No accepted dynamic case \\
+Engagement-side classifier & Classifier control & Constructed boundary state \\
+Nominal Baja reference & Reference trajectory & Full-throttle engine + locked final drive \\
+\end{longtable}
+\normalsize
+\end{center}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Canonical engaged contact cases retained by the mechanical-invariants audit.  Dwell is the time spent on the requested initial branch before the first transition or the end of the 30 ms audit window.}
+\label{tab:invariants_contact_cases}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.22\textwidth}r p{0.28\textwidth}@{}}
+\toprule
+Contact regime & Reproduction class & Initial dwell & First exit \\ \midrule
+Stick--stick, forward & standard & 30.000 ms & none within 30 ms \\
+Stick--stick, reverse & standard & 13.114 ms & primary static-capacity exit \\
+Primary slip \((+)\) & standard & 26.225 ms & primary restick \\
+Primary slip $(-)$ & standard & 5.624 ms & primary restick \\
+Secondary slip \((+)\) & targeted anchor & \SI{414.44}{\micro\second} & secondary restick \\
+Secondary slip $(-)$ & standard & 30.000 ms & none within 30 ms \\
+Both slip \((+,+)\) & standard, transient & \SI{31.71}{\micro\second} & secondary restick \\
+Both slip \((+,-)\) & standard & 30.000 ms & none within 30 ms \\
+Both slip \((-,+)\) & targeted anchor & \SI{9.82}{\micro\second} & secondary restick \\
+Both slip \((-,-)\) & standard & 1.757 ms & primary restick \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two targeted reproduction anchors are frozen explicitly in the shared case
+library.  Their initial CVT states are listed in
+\Cref{tab:invariants_rare_anchor_states}; their constant shaft-boundary values
+are listed separately in \Cref{tab:invariants_rare_anchor_boundaries}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Initial CVT states of the two targeted mechanical-invariant reproduction anchors.}
+\label{tab:invariants_rare_anchor_states}
+\begin{tabular}{@{}p{0.40\textwidth}rr@{}}
+\toprule
+Quantity & Secondary slip \((+)\) & Both slip \((-,+)\) \\ \midrule
+Primary speed [rad/s] & 272.786402 & 536.870017 \\
+Secondary speed [rad/s] & 223.014459 & 173.988007 \\
+Belt speed [m/s] & 17.211387 & 17.245403 \\
+Shift position [m] & 0.01446320 & 0.00292236 \\
+Shift speed [m/s] & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Constant torque--inertia boundary values of the two targeted mechanical-invariant reproduction anchors.}
+\label{tab:invariants_rare_anchor_boundaries}
+\begin{tabular}{@{}p{0.40\textwidth}rr@{}}
+\toprule
+Boundary quantity & Secondary slip \((+)\) & Both slip \((-,+)\) \\ \midrule
+Primary external torque [N m] & -38.596922 & -105.580961 \\
+Primary referred inertia [kg m$^2$] & 0.01279093 & 0.06468014 \\
+Secondary external torque [N m] & -17.984371 & -282.073589 \\
+Secondary referred inertia [kg m$^2$] & 0.04127251 & 0.00250569 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Numerical settings used by the mechanical-invariants case families.}
+\label{tab:invariants_numerics}
+\begin{tabular}{@{}p{0.26\textwidth}p{0.14\textwidth}p{0.14\textwidth}p{0.16\textwidth}p{0.12\textwidth}@{}}
+\toprule
+Case family & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Duration \\ \midrule
+Reference Baja trajectory & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & 10 s \\
+Canonical contact bench & $3\times10^{-5}$ & $3\times10^{-8}$ & 1 ms & 30 ms \\
+Targeted contact anchors & $3\times10^{-5}$ & $3\times10^{-8}$ & 0.5 ms & 30 ms \\
+Structural arrivals & $3\times10^{-5}$ & $3\times10^{-8}$ & 0.5 ms & 30 ms \\
+Free-shift cases & $3\times10^{-5}$ & $3\times10^{-8}$ & 1 ms & 20 ms \\
+Static rest & $3\times10^{-5}$ & $3\times10^{-8}$ & 2 ms & 50 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The geometry-domain audit uses 401 points over the physical shift range and a
+\SI{1e-6}{\meter} finite-difference displacement for derivative checks.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.68\textwidth}>{\raggedleft\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+Audit threshold & Value \\ \midrule
+\endfirsthead
+\toprule
+Audit threshold & Value \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Numerical review thresholds used by the mechanical-invariants audit.}
+\label{tab:invariants_review_guards}\\
+\endlastfoot
+Belt-length residual & $10^{-9}$ m \\
+Scaled closure-equation residual & $10^{-10}$ \\
+Sticking velocity drift & $10^{-3}$ m/s \\
+Sticking acceleration residual & $10^{-7}$ m/s$^2$ \\
+Allowed negative static-margin roundoff & $10^{-9}$ \\
+Allowed positive kinetic pair power & $10^{-3}$ W \\
+Allowed negative integrated normal load & $10^{-6}$ N \\
+Allowed negative belt tension & $10^{-6}$ N \\
+Allowed negative distributed normal load & $10^{-6}$ N/rad \\
+Wrap-field normal-integral residual & $10^{-6}$ N \\
+Allowed negative stop reaction & $10^{-6}$ N \\
+Fixed-shift speed residual & $10^{-8}$ m/s \\
+Fixed-shift acceleration residual & $10^{-7}$ m/s$^2$ \\
+Deadzone secondary-lock speed residual & $10^{-7}$ m/s \\
+Deadzone secondary-lock acceleration residual & $10^{-7}$ m/s$^2$ \\
+Static-rest state drift & $10^{-10}$ \\
+Deadzone radius-derivative residual & $10^{-12}$ \\
+Geometry first-derivative finite-difference residual & $10^{-7}$ \\
+Geometry second-derivative finite-difference residual & $5\times10^{-3}$ m$^{-1}$ \\
+\end{longtable}
+\normalsize
+\end{center}
+
+\section{Mechanical-Energy Consistency}
+\label{app:study_energy_consistency}
+
+Configuration details for \Cref{sec:results_energy_consistency} are defined in
+\ResultsCode{studies/energy-consistency/study.json}{energy-consistency/study.json}.
+The physical case is the reference configuration of
+\Cref{app:common_physical_configuration} with the reference engine and
+flat-road vehicle boundaries of
+\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Case and numerical settings used by the mechanical-energy audit.}
+\label{tab:energy_study_numerics}
+\begin{tabular}{@{}p{0.27\textwidth}p{0.14\textwidth}p{0.14\textwidth}p{0.15\textwidth}p{0.14\textwidth}@{}}
+\toprule
+Configuration & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Duration \\ \midrule
+Nominal audit & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & 10 s \\
+Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & 10 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Quadrature and review settings used by the mechanical-energy audit.}
+\label{tab:energy_acceptance_criteria}
+\begin{tabular}{@{}p{0.66\textwidth}r@{}}
+\toprule
+Quantity & Value \\ \midrule
+Continuous-work quadrature steps & 5, 2.5, 1.25, 0.625 ms \\
+Maximum final $\lvert R_E\rvert/\lvert W_{\mathrm{ext}}\rvert$ & $10^{-4}$ \\
+Maximum absolute event-energy defect & $10^{-8}$ J \\
+Maximum impact momentum residual & $10^{-7}$ \\
+Maximum impact constraint residual & $10^{-8}$ \\
+Maximum normalized final-state difference & $10^{-2}$ \\
+Allowed negative computed capture loss & $10^{-9}$ J \\
+Maximum finest-to-previous continuous-defect ratio & $1.25$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Solver Convergence}
+\label{app:study_solver_convergence}
+
+Configuration details for \Cref{sec:results_solver_convergence} are defined in
+\ResultsCode{studies/solver-convergence/study.json}{solver-convergence/study.json}.
+The benchmark trajectory uses the reference configuration and reference shaft
+boundaries of \Cref{app:reference_configuration}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Numerical reference, formal sweep, and retained comparison point of the solver-convergence study.}
+\label{tab:solver_convergence_design}
+\begin{tabular}{@{}p{0.23\textwidth}p{0.20\textwidth}p{0.20\textwidth}p{0.21\textwidth}@{}}
+\toprule
+Component & Relative tolerance & Absolute tolerance & Maximum step \\ \midrule
+Tight numerical reference & $10^{-7}$ & $10^{-10}$ & 2.5 ms \\
+Canonical comparison point & $10^{-4}$ & $10^{-7}$ & 10 ms \\
+Formal main sweep & $10^{-2}$ to $3\times10^{-6}$, 8 values & $10^{-3}\,\mathrm{rtol}$ & 5, 10, 20, 50, 100 ms \\
+Independent $\mathrm{atol}$ sweep & $10^{-4}$ & $10^{-5}$ to $10^{-8}$, 7 values & 10 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Formal review guards used in the solver-convergence study.}
+\label{tab:solver_convergence_guards}
+\begin{tabular}{@{}p{0.66\textwidth}r@{}}
+\toprule
+Metric & Required value \\ \midrule
+Event-aligned normalized trajectory RMS & $\le10^{-4}$ \\
+Event-aligned normalized maximum error & $\le10^{-3}$ \\
+Maximum corresponding event-time error & $\le1$ ms \\
+Exact regime-history mismatch fraction & $\le10^{-3}$ \\
+Hybrid transition signature & exact match \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Closure Conditioning and Root Structure}
+\label{app:study_closure_conditioning}
+
+Configuration details for \Cref{sec:results_closure_structure} are defined in
+\ResultsCode{studies/closure-conditioning/study.json}{closure-conditioning/study.json}.
+The accepted operating states are drawn from the reference launch and the shared
+verification case library used by \Cref{app:study_mechanical_invariants}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Reference-trajectory and multistart settings used by the closure-conditioning study.}
+\label{tab:closure_study_settings}
+\begin{tabular}{@{}p{0.48\textwidth}p{0.42\textwidth}@{}}
+\toprule
+Quantity & Value \\ \midrule
+Reference launch duration & 10 s \\
+Reference launch sampling interval & 2 ms \\
+Reference launch $\mathrm{rtol}$ / $\mathrm{atol}$ & $10^{-4}$ / $10^{-7}$ \\
+Reference launch maximum step & 10 ms \\
+Physical-box multistart grid & $7\times7$ \\
+Expanded-box multistart grid & $9\times9$ \\
+Root-clustering tolerance & $10^{-6}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Named frozen states selected for closure maps.}
+\label{tab:closure_named_states}
+\begin{tabular}{@{}p{0.34\textwidth}p{0.54\textwidth}@{}}
+\toprule
+Case ID & Role \\ \midrule
+\texttt{low\_ratio\_seat} & Engaged low-ratio support state \\
+\texttt{mid\_shift} & Interior shifting state and broad-map showcase \\
+\texttt{upper\_stop} & Engaged upper-travel support state \\
+\texttt{free\_shift\_opening\_70} & Late-ratio opening/backshift state \\
+Worst actual $A$ state & Largest encountered mechanical-closure condition number \\
+Worst actual $J_R$ state & Largest encountered stick-root Jacobian condition number \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Traction domains used by the closure-conditioning maps.}
+\label{tab:closure_lambda_domains}
+\begin{tabular}{@{}p{0.20\textwidth}p{0.20\textwidth}p{0.52\textwidth}@{}}
+\toprule
+Domain & Grid & Definition \\ \midrule
+Static Coulomb box & $241\times241$ & Exact static-capacity intervals at the frozen state; mechanical admissibility is evaluated separately. \\
+Expanded continuation & $321\times321$ & Signed half-width $\max(2.5,4\lambda_{\max,\mathrm{phys}})$; normally about $[-2.6,2.6]^2$. \\
+Broad diagnostic & $501\times501$ & $[-10,10]^2$, generated for the configured showcase state. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
