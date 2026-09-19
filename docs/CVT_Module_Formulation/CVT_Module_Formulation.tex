@@ -10320,92 +10320,290 @@ provides the initial condition for the next interval of continuous motion.
 \chapter{Results and Discussion}
 \label{chap:results}
 
-TODO: Roadmap
+The formulation in \Cref{chap:derivation} determines the CVT response from
+its internal mechanics and the loading at its shafts. The numerical
+investigation begins with verification of this coupled model and comparison
+with an independent transient formulation. It then examines when the retained
+actuator and belt dynamics change the predicted behaviour. Full transient
+simulations finally bring these mechanisms together, following how the CVT
+engages, shifts, and responds to changing loads.
 
 \section{Computational Implementation and Reproducibility}
 \label{sec:results_implementation_reproducibility}
 
-The formulation developed in \Cref{chap:derivation} is implemented in the
-open-source CINDER simulator.  The numerical details required to carry that
-formulation into an executable model are documented in
-\Cref{app:numerical_implementation}, including the solution of the implicit belt
-geometry, the coupled mechanical and traction closure, actuator assembly, and
-hybrid time integration.  The Results reported in this chapter are generated
-with the frozen CINDER release identified at the end of this section.
+CINDER is the simulator developed in this work to implement the formulation
+and carry out these numerical studies. Its numerical methods are documented in
+\Cref{app:numerical_implementation}.
 
-CINDER was developed around a Baja SAE-scale mechanically actuated CVT, and the
-reference configuration in \Cref{app:reference_configuration} is based closely
-on that physical system.  Much of the chapter therefore occupies the speed,
-torque, power, ratio, inertia, and loading scales of a small off-road vehicle
-rather than attempting a broad sweep over CVT applications.  The quantitative
-magnitudes reported for those cases are most directly supported within and near
-that operating regime; their extrapolation to substantially different machines
-is not established by the present Results.
+The model was developed around a Baja SAE CVT, whose hardware forms the basis
+of the reference configuration in
+\Cref{app:reference_configuration}. Much of the investigation therefore
+concerns the operating range of a small off-road vehicle. The quantitative
+importance of the effects examined here requires separate assessment for
+substantially different machines.
 
-The supporting material is separated according to what it defines.
-\Cref{app:numerical_implementation} records the numerical implementation of the
-CVT equations, while \Cref{app:reference_configuration} collects the recurring
-physical configuration and parameter provenance.  The exact study and case
-definitions, including numerical settings and study-specific configurations,
-are indexed in \Cref{app:study_reproducibility}.  The same appendix traces the
-manuscript figures and tables to their archived source artifacts through
-\Cref{app:artifact_index}.
+Complete study definitions, including the physical configurations and numerical
+settings, are collected in \Cref{app:study_reproducibility}. The external
+systems that drive and load the CVT, including simplified engine and vehicle
+models, are defined separately in \Cref{app:results_boundary_models}.
 
-The shaft-boundary models used by the Results are documented separately in
-\Cref{app:results_boundary_models}.  As established in
-\Cref{sec:system_definition}, the CVT model ends at the primary and secondary
-shafts; a complete simulation must additionally specify the mechanical systems
-acting through those interfaces.  The cases in this chapter use several such
-descriptions, ranging from simplified engine and vehicle models grounded in
-physical systems to prescribed torque or load histories and attached inertias
-used for controlled numerical experiments.  The boundary-model appendix records
-the equations, assumptions, parameters, and provenance of these external
-systems, keeping them explicit without folding them into the CVT formulation.
-
-The simulator implementation and the Results record are frozen separately.
-The former identifies the exact CINDER source used to evaluate the model; the
-latter identifies the study definitions, analysis code, and archived outputs
-used in the manuscript.  Their publication records are
+The results reported here use a frozen CINDER release and a separate frozen
+study record containing the case definitions, analysis scripts, and outputs.
+Both records are identified in \Cref{tab:results_reproducibility_record}.
+The correspondence between the archived outputs and the manuscript figures
+and tables is given in \Cref{app:artifact_index}.
 
 \begin{table}[H]
 \centering
+\caption{Frozen software and study records used for the results in this chapter.}
+\label{tab:results_reproducibility_record}
 \small
-\begin{tabular}{@{}p{0.23\textwidth}p{0.68\textwidth}@{}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{0.20\linewidth}
+    >{\raggedright\arraybackslash}p{0.49\linewidth}
+    >{\raggedright\arraybackslash}p{\dimexpr0.31\linewidth-4\tabcolsep\relax}
+    @{}}
 \toprule
-Record & Identifier \\ \midrule
-CINDER release & \CINDERtag\; (\texttt{\CINDERcommit}) \\
-Tagged CINDER source &
-\url{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2} \\
-Results release & \ResultsTag\; (\texttt{\ResultsCommit}) \\
-Results archive & \ResultsDOI \\ \bottomrule
+Record & Release / source revision & Source / archive \\
+\midrule
+CINDER implementation
+    & \CINDERtag\newline\CINDERcommit
+    & \href{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}{Tagged source} \\
+\addlinespace[4pt]
+Study record
+    & \ResultsTag\newline\ResultsCommit
+    & \ResultsDOI \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\noindent
-The release tags identify the named frozen versions, the commits identify the
-exact repository revisions, and \ResultsDOI provides the persistent archival
-record of the published Results package.
 
-\section{Mathematical Closure and Verification}
+\section{Internal Verification}
 \label{sec:results_verification}
 
-% TODO after Results freeze: write claim-driving prose and insert final artifacts.
+Deriving the individual mechanical balances does not by itself show that they
+remain mutually compatible when the complete CVT is solved. Belt--pulley
+contact, for example, enters the belt balances, the axial sheave reactions,
+and the pulley torques at the same time, while the active contact and support
+relations change with mechanical regime. Internal verification therefore asks
+whether the assembled model preserves that consistency across the states and
+regime changes it admits.
 
-\subsection{Nonlinear Traction-Closure Structure}
-\label{sec:results_closure_structure}
-% TODO: conditioning / root structure / local branch discussion.
+That requirement separates naturally into four parts. The operating-domain
+audit tests whether the governing equations and admissibility conditions
+remain satisfied across the represented regimes. The energy audit provides an
+independent global check that the coupled mechanics exchange, store, and
+dissipate energy consistently. Solver refinement tests whether both the
+continuous response and the discrete regime history persist as the numerical
+controls are tightened. Finally, the closure study isolates the instantaneous
+engaged solve, examining its conditioning and the uniqueness and global
+structure of the traction roots required to close sticking contact.
 
 \subsection{Mechanical Invariants and Operating-Domain Audit}
 \label{sec:results_mechanical_invariants}
-% TODO: broad invariant/capability suite and coverage summary.
+
+The first test was deliberately broader than the nominal vehicle trajectory.
+CINDER contains distinct equations for the deadzone, free shifting, structural
+stops, sticking contact, either single-contact slip state, and both-contact
+slip. If those branches are to represent one mechanical model rather than a
+collection of locally valid equations, each must admit states that satisfy the
+same geometry, tension, contact, and closure requirements.
+
+The operating-domain audit therefore searched for and propagated states in
+each required class. Across 6,257 audited states and 81 hybrid transitions, all
+25 requested coverage classes were realized. These included static rest,
+deadzone motion, engagement, free shift in both directions, the low-ratio seat
+and upper stop, forward and reverse shaft rotation, both individual slip
+directions at each pulley, and all four signed both-slip combinations. No
+accepted state violated the retained mechanical admissibility conditions, no
+exact hybrid-successor check failed, and the largest row-scaled residual of the
+engaged mechanical closure was \(1.11\times10^{-14}\).
+
+The different contact regimes were not equally easy to realize in the reference
+configuration. Several appeared naturally and could remain on their requested
+branch for the full audit interval, whereas others required targeted initial
+conditions and rapidly evolved toward restick. Secondary positive slip, for
+example, persisted for approximately \(414~\mu\mathrm{s}\), while the
+\((-,+)\) both-slip state persisted for only approximately
+\(9.8~\mu\mathrm{s}\) in its canonical test. These observations are specific
+to the investigated CVT and loading set; they are not taken to imply that the
+same regimes are intrinsically rare for every CVT. They do show, however, that
+some portions of the hybrid state space occupy much narrower dynamical regions
+than the ordinary stick and single-slip states.
+
+The limiting condition in these difficult cases was also informative. Loss of
+admissibility often first appeared in the distributed wrap contact, through a
+local normal load approaching zero, rather than through loss of the integrated
+pulley-normal resultant. Thus the audit exercised not only the gross regime
+logic but also the distributed contact mechanics retained within each pulley
+wrap.
+
+The resulting coverage is useful beyond verification. It demonstrates that the
+same formulation can move continuously among a comparatively large set of
+mechanical behaviors without replacing the underlying model or prescribing the
+contact state externally. Later studies use only a subset of this capability,
+but the broader audit establishes that those trajectories sit inside a much
+larger mechanically admissible hybrid domain.
 
 \subsection{Energy Consistency}
 \label{sec:results_energy_consistency}
-% TODO: work, stored energy, dissipation, and event bookkeeping closure.
+
+Mechanical admissibility does not by itself ensure that the coupled equations
+exchange energy consistently. CINDER therefore records the work crossing the
+two shaft boundaries, the change in modeled stored energy, and each retained
+irreversible loss channel along the complete hybrid trajectory.
+
+For the reference trajectory, the net external work was
+\(52.168893~\mathrm{kJ}\). Of this, \(50.580274~\mathrm{kJ}\) remained as a
+change in modeled stored energy and \(1.588340~\mathrm{kJ}\) was dissipated by
+kinetic belt--pulley slip. Discrete impact and capture events dissipated a much
+smaller \(0.253859~\mathrm{J}\). The final unexplained balance was only
+\(0.025444~\mathrm{J}\), or \(4.88\times10^{-7}\) of the magnitude of the
+external work.
+
+This decomposition is also useful for interpreting what CINDER regards as an
+energy loss. Conservative actuator springs and the retained inertial elements
+store and return energy; they do not contribute directly to dissipation.
+Irreversible loss in the present formulation enters through kinetic slip and
+through the perfectly inelastic velocity updates applied at finite-speed
+capture events. These are the loss mechanisms represented by the model, not an
+exhaustive inventory of losses in a physical CVT. Belt hysteresis, bearing and
+seal drag, windage, and other parasitic mechanisms omitted from the formulation
+are therefore absent from this accounting.
+
+The residual magnitude was consistent with numerical integration and
+quadrature error. Refinement of the audit quadrature gave a Richardson estimate
+of \(0.024510~\mathrm{J}\), essentially the same scale as the observed final
+defect. Individual discrete events satisfied their energy relation to within
+\(2.27\times10^{-13}~\mathrm{J}\), and tightening the trajectory integration
+changed the final state by only \(1.30\times10^{-7}\) in the normalized metric
+while reversing the sign, but not the scale, of the remaining energy residual.
+
+The energy audit therefore serves two purposes. It verifies that the retained
+mechanics close energetically to numerical accuracy, and it establishes a
+common bookkeeping framework for later comparisons in which different CVT
+configurations may redistribute energy between useful boundary work, stored
+mechanical energy, and the modeled dissipative channels.
 
 \subsection{Solver Convergence}
 \label{sec:results_solver_convergence}
-% TODO: tolerance, maximum-step, event-sequence, and timing refinement.
+
+The preceding tests examine the mechanics represented by CINDER. A separate
+question is whether the simulated trajectory depends materially on the
+numerical controls used to integrate those mechanics. This distinction is
+particularly important for a hybrid system: two trajectories can remain nearly
+identical in shaft speed and shift position while differing in the timing or
+even the sequence of brief contact-state transitions.
+
+The convergence study therefore compared both the continuous state trajectory
+and the discrete hybrid history. A tight numerical reference used
+\(\mathrm{rtol}=10^{-7}\), \(\mathrm{atol}=10^{-10}\), and a
+\(2.5~\mathrm{ms}\) maximum step. The formal sweep then varied relative
+tolerance over eight levels and maximum step over five levels. Every tested
+maximum step from \(5\) to \(100~\mathrm{ms}\) satisfied all review criteria
+once \(\mathrm{rtol}\le10^{-4}\), forming a contiguous converged region rather
+than an isolated passing point.
+
+The retained research setting,
+\[
+\mathrm{rtol}=10^{-4},\qquad
+\mathrm{atol}=10^{-7},\qquad
+\Delta t_{\max}=10~\mathrm{ms},
+\]
+lay comfortably within this region. Relative to the tight reference, its
+event-aligned normalized trajectory RMS error was
+\(4.27\times10^{-7}\), its maximum normalized state error was
+\(6.96\times10^{-5}\), and the largest corresponding event-time error was only
+\(7.99~\mu\mathrm{s}\). The complete 16-transition signature was reproduced,
+with an exact regime-history mismatch fraction of
+\(8.46\times10^{-6}\).
+
+Comparison across hybrid trajectories requires some care. A direct
+absolute-time norm can compare the state immediately before an event in one
+solution with the state immediately after the corresponding event in another
+solution when the two event times differ by only microseconds. Such a
+comparison produces an artificial \(O(1)\) pointwise error at the reset even
+when the two hybrid trajectories have otherwise converged. The reported state
+errors were therefore evaluated between corresponding smooth segments using a
+common normalized phase coordinate, while event timing and regime-history
+differences were measured separately.
+
+The broader sweep also exposed a useful distinction between mechanics-level and
+outcome-level convergence. At sufficiently loose settings, brief stick--slip
+transitions could be missed or altered while the macroscopic RPM, belt-speed,
+and shift trajectories remained visually close to the converged solution.
+Gross vehicle response can therefore appear robust beyond the point at which
+the internal contact mechanics have ceased to converge. Because CINDER is
+intended to resolve those internal mechanics, the stricter hybrid criterion is
+used throughout the remaining studies.
+
+\subsection{Closure Conditioning and Root Structure}
+\label{sec:results_closure_structure}
+
+The engaged contact problem contains two distinct numerical layers. For any
+proposed pair of contact tractions, the instantaneous mechanical response is
+obtained from the linear \(8\times8\) closure described in
+\Cref{app:num_fixed_lambda}. When one or both contacts are assumed to stick,
+the corresponding traction values must then be selected so that the sticking
+residuals vanish.
+
+The linear mechanical closure was well behaved throughout the practical domain
+examined. No rank-deficient point was found anywhere in the sampled physical
+or expanded traction maps, and the system remained solvable even through the
+strong conditioning structures visible near the edges of the admissible
+region. Among the representative physical maps, the largest scaled
+\(8\times8\) condition number was approximately \(3.4\times10^{5}\).
+Consequently, for a specified traction pair, the implemented closure produced a
+single instantaneous mechanical solution throughout the investigated operating
+domain. The retained torque variables and the reason for the eight-variable
+implementation, rather than the reduced form used in the formulation, are
+described in \Cref{app:num_fixed_lambda}.
+
+The nonlinear sticking problem was similarly unambiguous at the representative
+operating states. Fifteen frozen states were each solved repeatedly from a
+broad set of initial traction guesses, giving 375 multistart attempts in total.
+Within each state, every accepted solution collapsed to the same physical root.
+Thus the ordinary operating cases showed no evidence that the contact solver
+was selecting arbitrarily among several admissible sticking solutions.
+
+A deliberately broader search nevertheless revealed that global uniqueness is
+not guaranteed by the reduced contact equations. The stick--stick solution
+surface can fold, allowing a fixed loading slice to intersect the same
+continuous solution manifold twice. A corresponding fold was also found in a
+mixed contact state, where one interface was already sliding and the remaining
+scalar sticking residual possessed two roots. These structures are therefore
+properties of the nonlinear closure itself rather than numerical noise.
+
+Their practical context is important. The multiple-root examples were found
+only after explicitly searching for them over extended operating and traction
+domains. In the mixed-contact search, 62 frozen states reduced to only one
+unique geometry exhibiting the scalar fold, and one of the two roots lay close
+to local contact loss. No spontaneous root ambiguity of this type has appeared
+in the maintained transient studies. The result should therefore not be read
+as evidence that ordinary CINDER trajectories are routinely non-unique; it
+identifies a genuine global limit of the reduced sticking closure that becomes
+visible near selected, often boundary-adjacent regions.
+
+The numerical solution strategy is consistent with that structure. During
+time integration, the contact solve uses the previously accepted traction root
+as a continuation estimate and first attempts to remain on the locally
+connected branch before reverting to the full bounded nonlinear solve. The
+continuation and fallback procedure is described in
+\Cref{app:num_contact_continuation}. This does not remove the possibility of a
+fold, but it prevents each right-hand-side evaluation from behaving as an
+independent global root-selection problem while the existing branch remains
+available.
+
+The conditioning study therefore gives both a positive and a limiting result.
+The fixed-traction \(8\times8\) mechanics are nonsingular and uniquely solvable
+throughout the investigated practical domain, and representative sticking
+states converge robustly to a single accepted physical root. At the same time,
+the nonlinear closure possesses rare folded regions in a wider state space.
+Their existence motivates branch-aware continuation and provides a concrete
+boundary on the global uniqueness that can be claimed for the reduced contact
+model.
 
 % ==============================================================
 \section{Independent Transient-Model Benchmark}
