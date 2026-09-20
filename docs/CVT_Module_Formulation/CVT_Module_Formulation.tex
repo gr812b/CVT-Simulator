@@ -329,7 +329,8 @@
 % =========================
 \title{A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Simulation\\[0.4em]\large With Mechanical Actuation and Traction-Limited Torque Transfer}
 
-\author{Kai Arseneau}
+\author{Kai Arseneau \and W.~Spencer Smith}
+\hypersetup{pdfauthor={Kai Arseneau; W. Spencer Smith}}
 \date{\today}
 
 \begin{document}
@@ -379,6 +380,58 @@ for understanding mechanically actuated CVT behavior during launch events. Its
 main value is not only that it closes the governing mechanisms into one
 consistent dynamical system, but also that the resulting behavior remains
 traceable back to clear mechanical causes.
+
+% =========================
+% Acknowledgements (sample page)
+% =========================
+% Replace the bracketed placeholders with names and accurate descriptions of
+% the help received. The sentences are examples: combine, expand, or remove
+% them as needed. Retain only assistance that was actually provided, and
+% distinguish earlier project work from contributions to the present research.
+% These are Kai Arseneau's acknowledgements. Smith's contribution is recorded
+% in the Author Contributions (CRediT) statement before the bibliography.
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+
+This manuscript grew out of several years of work on CVTs, from tuning with 
+McMaster Baja Racing to a capstone project and, later, independent research. 
+I am grateful to the people who shared in that experience, helped me work 
+through what I did not understand, and gave their time and care to preparing 
+this manuscript.
+
+I am especially grateful to Salma Baig for the considerable time and care she 
+devoted to preparing many of the figures in this manuscript. Her work has been 
+a substantial help in presenting the mechanics clearly, and I particularly 
+appreciate her patience with many detailed requests and repeated revisions.
+
+I am deeply grateful to McMaster Baja Racing for the collaborative environment 
+and practical experience that shaped my development as an engineer and made 
+my work on CVTs possible. I thank Benjamin Waldie and Emily Ing for their part 
+in early CVT testing and tuning, and David Fields, Anshul Keswani, 
+and Ariel Wolle for the many hours we spent tuning the transmission and working 
+together to understand its behaviour. The effort and curiosity they brought to 
+those sessions, and the questions we worked through together, were an important 
+motivation for this project.
+
+I owe particular thanks to Ariel Wolle, who first brought me into the CVT project 
+through data acquisition and has supported it throughout its development. I am 
+grateful for his help with experimental data and the capstone derivation, as well 
+as his involvement in our tuning work. His willingness to discuss ideas and work 
+through difficulties with me has been a continuing source of help. I greatly 
+value the time he has given to this project and his friendship throughout these 
+years.
+
+I thank my capstone teammates, Cameron Dunn, Travis Wing, and Grace McKenna, for 
+their contributions to our earlier CVT simulator and the work we shared during 
+that project. I also thank Cameron for taking the time to proofread an early 
+version of this manuscript.
+
+I am grateful to Alex Harper, Duncan Shearer, and Benjamin Waldie for our many 
+discussions of mechanics during the capstone project, particularly the roles of 
+torque, power, and gearing in vehicle acceleration, and the behaviour of bodies 
+and mechanisms. I greatly appreciate the time they spent working through these 
+questions with me, helping me recognise and correct misunderstandings and develop 
+stronger mechanical intuition.
 
 \newpage
 \tableofcontents
@@ -11913,6 +11966,17 @@ should be tested first, with the remaining coupled balances preserved.
 \label{sec:results_tune_comparison}
 % TODO: small set of deliberately distinct tunes, if retained in final manuscript.
 
+% Role names follow the NISO Contributor Role Taxonomy (CRediT):
+% https://credit.niso.org/contributor-roles-defined/
+% The roles describe the present research, not the earlier capstone project.
+\section*{Author Contributions (CRediT)}
+
+\noindent\textbf{Kai Arseneau:} Conceptualization; Methodology; Software;
+Formal analysis; Visualization; Writing~--~original draft;
+Writing~--~review \& editing.
+
+\noindent\textbf{W.~Spencer Smith:} Supervision;
+Writing~--~review \& editing.
 
 \bibliographystyle{plainnat}
 \bibliography{../../refs/References,CINDER_Appendix_References}
