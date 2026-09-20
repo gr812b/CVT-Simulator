@@ -1,0 +1,9 @@
+artifacts/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+exploration/history/
+provenance/layout_history/
+provenance/migrations/
+migration_report.html
+MIGRATING.lock

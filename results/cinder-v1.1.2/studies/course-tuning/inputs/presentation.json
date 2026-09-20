@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "opening_flat",
+      "title": "Clutching and upshift",
+      "cars": [
+        "R00",
+        "W85",
+        "W115",
+        "U55"
+      ],
+      "sectors": [
+        "launch_flat"
+      ]
+    },
+    {
+      "id": "severe_hill",
+      "title": "Different reasons for a poor climb",
+      "cars": [
+        "R00",
+        "D01",
+        "D02",
+        "U55"
+      ],
+      "sectors": [
+        "hill_entry",
+        "hill_hold",
+        "hill_exit"
+      ]
+    },
+    {
+      "id": "cyclic",
+      "title": "Free shift and upper-stop histories",
+      "cars": [
+        "R00",
+        "H28",
+        "B01",
+        "D02_P"
+      ],
+      "sectors": [
+        "cyclic"
+      ]
+    },
+    {
+      "id": "moderate_hill",
+      "title": "Approach to interior travelling operation",
+      "cars": [
+        "R00",
+        "W85",
+        "W115",
+        "H28",
+        "B01",
+        "D01",
+        "D02_M",
+        "D02_P"
+      ],
+      "sectors": [
+        "secondary_hill_entry",
+        "secondary_hill_hold",
+        "secondary_hill_exit"
+      ]
+    },
+    {
+      "id": "repair_comparison",
+      "title": "Two single-change D02 interventions",
+      "cars": [
+        "R00",
+        "D02",
+        "D02_M",
+        "D02_P"
+      ],
+      "sectors": []
+    },
+    {
+      "id": "descent",
+      "title": "Unchanged full-throttle boundary through the descent",
+      "cars": [
+        "R00",
+        "W85",
+        "H28",
+        "B01",
+        "D02_P"
+      ],
+      "sectors": [
+        "descent_entry",
+        "descent_hold",
+        "descent_exit",
+        "finish_flat"
+      ]
+    }
+  ]
+}

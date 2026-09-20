@@ -1,0 +1,75 @@
+{
+  "layout_revision": "single-study-v1",
+  "selected_case_revision": "section4p5-final-v1",
+  "previous_final_package_sha256": "932cdae10c202443e3fd20cc7f0813aec38818bcbf107129211c0ddb13f66485",
+  "unchanged_previous_files": [
+    "FORMULATION_LINKAGE.md",
+    "analysis/__init__.py",
+    "analysis/feature_metrics.py",
+    "analysis/final_course_checks.py",
+    "analysis/inspect_event.py",
+    "analysis/metrics.py",
+    "analysis/report.py",
+    "analysis/report_final.py",
+    "analysis/shift_curves.py",
+    "experiments/__init__.py",
+    "experiments/fleet.py",
+    "infrastructure/__init__.py",
+    "infrastructure/course.py",
+    "infrastructure/diagnostics.py",
+    "infrastructure/model.py",
+    "infrastructure/tunes.py",
+    "inputs/competitors.json",
+    "inputs/course.json",
+    "inputs/flat_800m.json",
+    "inputs/presentation.json",
+    "inputs/settling_criteria.json",
+    "provenance/APPENDIX_HANDOFF.md",
+    "provenance/LOCAL_TEST_RECORD.json",
+    "provenance/SOURCES.md",
+    "provenance/TEST_REPORT.md",
+    "provenance/inherited_implementation.json",
+    "run.py",
+    "tests/test_plot_metrics.py",
+    "tests/test_settling.py",
+    "tests/test_study.py",
+    "verify_study.py"
+  ],
+  "changed_previous_files": [
+    ".gitignore",
+    "README.md",
+    "infrastructure/common.py",
+    "infrastructure/selection.py",
+    "inputs/selection.lock.json",
+    "study.json",
+    "tests/test_final_suite.py"
+  ],
+  "all_five_selected_input_json_files_byte_identical": true,
+  "exploration_source_archives": [
+    {
+      "name": "CINDER_v1.1.2_Course_Tuning_Exploration.zip",
+      "sha256": "44fd40c165f328ab8c2754a5264e719de802c06d0247eb47fac226899e89407e"
+    },
+    {
+      "name": "CINDER_v1.1.2_Course_Tuning_Exploration_v2_Update.zip",
+      "sha256": "1941ad1cf23e9f5e9a0ca300810f2bdd0751c81492825216ed40e38637621ee4"
+    },
+    {
+      "name": "CINDER_v1.1.2_Unified_Course_Final_Check_v3.zip",
+      "sha256": "8d76fd2f1a9c3a27bd06503a61c4582cc185a90ba8f41ee6fe6b17cec65d5134"
+    }
+  ],
+  "migration_test": {
+    "migrations": [
+      {
+        "status": "complete",
+        "completed_utc": "2026-09-20T19:50:29+00:00",
+        "verified_file_count": 7409
+      }
+    ],
+    "html_files": 33,
+    "local_links": 1980,
+    "broken_links": [],
+    "old_top_level_folders_removed": true
+  }
+}

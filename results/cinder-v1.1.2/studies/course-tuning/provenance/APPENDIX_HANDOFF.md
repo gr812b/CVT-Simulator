@@ -1,0 +1,32 @@
+# Data available for drafting Section 4.5 and its appendix
+
+Use the newly returned final run, not the exploratory result as a substitute.
+
+- `suite.json`: exact selection, execution controls and environment.
+- `unified_course/campaign.json`: analytic road parameters, ordered sector
+  intervals, all selected tune dictionaries and final numerical controls.
+- `*/competitors_resolved.csv`: physical mass, preload and helix values plus
+  every serialized departure from the common baseline.
+- `*/cases/*/resolved_case.json`: independent complete initial configuration,
+  course, controls and tune identity for that individual trajectory.
+- `*/cases/*/model_identity.json`: actuator/boundary classes and referred
+  inertias; confirms the full-dynamic bilateral common mechanics.
+- `*/cases/*/events.json`: exact before/after states, timestamps, positions,
+  regime transitions, velocity jumps and available capture metadata.
+- `*/cases/*/diagnostics.csv`: solved accelerations, forces, torques, contact
+  margins, power transfer and loss diagnostics alongside vehicle response.
+- `unified_course/final_checks/`: settling criteria, every tested window,
+  tail means and failure chronology. Quote means as settled only for passing
+  rows, retaining the finite-window qualification.
+- `tables/`: all experiments' outcomes, time/sector records, cyclic metrics,
+  settling records, event index and physical tune values in one place.
+- `flat_800m/feature_metrics.csv`: full-shift attainment and final-window flat
+  behavior for R00 versus U55. This finite experiment does not prove global
+  mathematical unreachability.
+- Case `summary.json` and `execution.log`: stopping reason and runtime. A
+  progress/rollback censor is different from a model-domain/numerical error.
+
+Presentation groups organize existing data, not independent extra runs.
+Energy diagnostics remain distinct from physical efficiency. The descent's
+full-throttle overspeed-tail behavior must remain attached to the engine-boundary
+assumptions. No outcome-based changes to the frozen course are made here.
