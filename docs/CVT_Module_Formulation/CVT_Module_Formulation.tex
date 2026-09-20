@@ -10304,15 +10304,92 @@ upper stop; only the total must not increase.
 
 \end{remarkbox}
 
-Together, these rules determine how the state passes from one mechanical
-regime to the next.  While the current regime remains admissible, its
-continuous balances advance the state.  Loss of a support or contact
-admissibility condition ends that interval and determines which neighboring
-mechanics can become active.  If the new regime already admits the incoming
-velocity, the state passes into it continuously; if a newly active constraint
-does not, \Cref{eq:finite_event_kkt_system} supplies the compatible outgoing
-velocity and the impulse required to establish it.  That outgoing state then
-provides the initial condition for the next interval of continuous motion.
+
+\section{Evaluation of the Complete System}
+\label{sec:complete_system_evaluation}
+
+The derivation is now complete. Beginning with a single pulley's geometry,
+we have brought the shafts, sheaves, and belt into one coupled description,
+including the changes in contact and support encountered as they move.
+We can now step back from the individual balances and see how they work
+together to follow the CVT through time.
+
+\paragraph{Establishing the initial condition.}
+We first choose \(\vect{x}_0\) to describe the starting configuration and
+motion for the case being studied. That choice must respect the travel
+limits in \Cref{eq:shift_operating_domain} and the velocity constraints of
+the contacts and supports present. In the deadzone, for example, the belt
+must move with the secondary: \(v_b=r_{s,\mathrm{eff,dz}}\omega_s\), as
+required by \Cref{eq:deadzone_secondary_lock}. The shift position restricts
+the arrangements in \Cref{tab:shift_structural_arrangements}, while nonzero
+relative speed identifies an existing contact as sliding. Zero relative
+speed alone does not establish sticking; the required traction must still
+be available. Likewise, a sheave at rest against a stop can remain there
+only if the stop can supply the necessary reaction. The contact and support
+checks in
+\Cref{sec:contact_admissibility_transitions,sec:shift_regime_transitions}
+settle these remaining choices under the initial shaft loading, establishing
+the initial regime \(q_0\) that accompanies the prescribed state.
+
+\paragraph{Evaluating the current regime.}
+With \(q\) established, we hold it fixed while calculating how the CVT
+accelerates. The geometry and actuator maps are evaluated at the current
+state, while the shaft interfaces supply the applied torques and attached
+inertias. For engaged motion, the \(6\times6\) system in
+\Cref{eq:engaged_six_by_six_mechanical_core} gathers the mechanics of
+\Crefrange{sec:geometry}{sec:belt_transport_contact} into one coupled
+response. In the deadzone, \Cref{eq:deadzone_linear_mechanical_core} is used
+instead. At a supported stop, \(\ddot s=0\) is prescribed, so the supported
+member's axial balance determines the force needed to hold it there rather
+than its acceleration, as summarized in \Cref{tab:structural_stop_reactions}.
+
+Within the engaged system, two sliding contacts supply both traction
+utilizations through \Cref{eq:sliding_traction_utilization}, leaving one
+linear solve. One sticking contact requires the scalar root in
+\Cref{eq:sticking_traction_root_condition}, and two require the coupled root
+in \Cref{eq:stick_stick_root_condition}. Each trial is evaluated through the
+same active linear system, and the root is reached when the returned
+accelerations preserve the speed match at every sticking contact. The solved
+accelerations and the stored shift velocity \(\dot s\) then complete the
+state derivative \(\dot{\vect{x}}\) in \Cref{eq:state-derivative}.
+
+\paragraph{Checking whether the regime can continue.}
+As the integrator advances the state using this derivative, the contact and
+support conditions determine whether the same regime can be retained. The
+tangential checks in \Cref{sec:contact_admissibility_transitions} watch for
+a sliding relative speed reaching zero or a sticking traction reaching its
+static limit. The shift checks in \Cref{sec:shift_regime_transitions} locate
+arrivals at travel boundaries and monitor the stop reactions. A stop releases
+when its required reaction crosses zero, since holding the mechanism there
+would then require the stop to pull. Primary separation requires both zero
+primary normal load and an opening tendency in the contact-free primary
+balance, as in \Cref{eq:primary_separation_conditions}. The engaged belt
+must also satisfy \Cref{eq:wrap_contact_admissibility}: negative tension or
+local normal loading would indicate slack or lift-off, neither of which
+this belt representation describes.
+
+If a regime event occurs, the integrator advances only to that instant.
+Before it can continue, the transition must establish both the motion
+immediately afterward and the regime that can sustain it. If the proposed
+regime admits the incoming physical motion, the state remains continuous;
+otherwise, \Cref{eq:finite_event_kkt_system} supplies the outgoing velocities
+and impulses using the connections on both sides. Any stop impulse must act
+in the direction in which the stop can push. The continuous mechanics are
+then evaluated at that outgoing state to test whether the proposed contacts
+and supports can be maintained. At zero relative speed, sticking is tested
+first; if it is unavailable, the sliding branch must produce the direction
+of relative motion it assumes
+(\Cref{eq:sliding_onset_sign_consistency}). Simultaneous changes are checked
+as one combined regime, since they affect the same mechanical response.
+
+\paragraph{Advancing and repeating.}
+With no intervening event, the integrator advances the state using
+evaluations of \(\dot{\vect{x}}\) and retains \(q\). After a transition,
+it resumes at the event time from the accepted outgoing state and regime.
+In either case, the next evaluation begins with an updated state and an
+established regime, and the cycle repeats. Together, the continuous balances
+and transition laws thus determine the CVT's motion from the prescribed
+initial condition and shaft loading.
 
 \chapter{Results and Discussion}
 \label{chap:results}
