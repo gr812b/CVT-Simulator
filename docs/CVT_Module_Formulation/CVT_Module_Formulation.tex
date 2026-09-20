@@ -10376,264 +10376,1438 @@ Study record
 \end{tabular}
 \end{table}
 
+% Replacement for Section 4.2 only.
+% Baseline: CVT_Module_Formulation_20260919_appendix_actuators_v9.tex.
+% Existing subsection labels are retained. No appendix changes are required.
+% Figure paths are relative to the manuscript's compilation directory.
+% Each missing file produces a labelled box; captions and references remain active.
+% Source-page and assembly notes are given immediately above each figure.
+% This draft uses the study recap results, not newly generated simulations.
+
+% Keep the figure helper and paragraph-break preferences local to this section.
+\begingroup
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+\providecommand{\CINDERVerificationFigure}[3][52mm]{%
+  \IfFileExists{#2}{%
+    \includegraphics[width=\linewidth,height=0.56\textheight,keepaspectratio]{#2}%
+  }{%
+    \fbox{%
+      \begin{minipage}[c][#1][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+        \centering\small
+        \textbf{Figure placeholder}\par\medskip
+        #3\par\medskip
+        \footnotesize\nolinkurl{#2}
+      \end{minipage}%
+    }%
+  }%
+}
+
 \section{Internal Verification}
 \label{sec:results_verification}
 
-The derivation has brought the belt, pulleys, and actuators into a single
-coupled model. The first numerical studies examine whether that model produces
-motion consistent with all of its governing relations. The forces exchanged
-between components must satisfy their respective balances, energy must be
-accounted for as it is transferred, stored, and dissipated, and changes of
-contact or support must produce admissible outgoing states.
-
-This verification provides the basis for interpreting the transient mechanisms
-investigated later in the chapter. A plausible shift trajectory alone does not
-establish that the internal mechanics are consistent or that their evolution
-is adequately resolved. The studies therefore examine both the consistency of
-the assembled model and the numerical reliability of its response across the
-conditions tested here.
+The same belt--pulley contact forces enter the belt transport, shaft rotation,
+and axial sheave balances. Their numerical evaluation must preserve these
+coupled effects as contacts stick or slide and travel constraints engage or
+release. Verification therefore covers both the individual mechanical
+conditions and their combined response: the operating-domain audit and
+work--energy balance check local and global consistency, while refinement of
+the time solution and examination of the instantaneous contact closure assess
+the numerical reliability of that response.
 
 \subsection{Mechanical Invariants and Operating-Domain Audit}
 \label{sec:results_mechanical_invariants}
 
-The first test was deliberately broader than the nominal vehicle trajectory.
-CINDER contains distinct equations for the deadzone, free shifting, structural
-stops, sticking contact, either single-contact slip state, and both-contact
-slip. If those branches are to represent one mechanical model rather than a
-collection of locally valid equations, each must admit states that satisfy the
-same geometry, tension, contact, and closure requirements.
+The audit combines the ten-second, flat-road Baja launch with constructed
+constant torque--inertia cases that exercise additional contact and structural
+regimes. The launch retains the engine and vehicle boundaries of
+\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}; the
+constructed cases instead prescribe the torque and attached inertia at each
+shaft using \Cref{app:fixed_shaft_boundary}, while allowing both shaft speeds
+to evolve. All use the reference CVT and its zero-clearance bilateral secondary
+helix, defined in
+\Cref{app:common_physical_configuration,app:reference_helix_topology}.
+Case definitions and audit thresholds are collected in
+\Cref{app:study_mechanical_invariants}.
 
-The operating-domain audit therefore searched for and propagated states in
-each required class. Across 6,257 audited states and 81 hybrid transitions, all
-25 requested coverage classes were realized. These included static rest,
-deadzone motion, engagement, free shift in both directions, the low-ratio seat
-and upper stop, forward and reverse shaft rotation, both individual slip
-directions at each pulley, and all four signed both-slip combinations. No
-accepted state violated the retained mechanical admissibility conditions, no
-exact hybrid-successor check failed, and the largest row-scaled residual of the
-engaged mechanical closure was \(1.11\times10^{-14}\).
+All 25 required coverage classes were exercised. These include rest and
+deadzone motion, engagement, free shifting in both directions, the travel
+stops, forward and reverse rotation, either slipping contact with either slip
+sign, and all four both-slip sign combinations. Across 6,257 audited states
+and 81 hybrid transitions, the recorded mechanical checks passed, including
+those applied to the exact post-transition states. The largest row-scaled
+mechanical-closure residual was \(1.11\times10^{-14}\), using the
+normalization in \Cref{eq:invariants_scaled_closure_residual}. The coverage
+record is given in \Cref{tab:invariants_coverage_classes};
+\Cref{fig:verification_contact_regimes} shows how differently the canonical
+contact cases behave within that successful audit.
 
-The different contact regimes were not equally easy to realize in the reference
-configuration. Several appeared naturally and could remain on their requested
-branch for the full audit interval, whereas others required targeted initial
-conditions and rapidly evolved toward restick. Secondary positive slip, for
-example, persisted for approximately \(414~\mu\mathrm{s}\), while the
-\((-,+)\) both-slip state persisted for only approximately
-\(9.8~\mu\mathrm{s}\) in its canonical test. These observations are specific
-to the investigated CVT and loading set; they are not taken to imply that the
-same regimes are intrinsically rare for every CVT. They do show, however, that
-some portions of the hybrid state space occupy much narrower dynamical regions
-than the ordinary stick and single-slip states.
+% FIGURE 1 -- Assemble/replot existing evidence, not a new simulation.
+% Source: CINDER_v1.1.2_mechanical_invariants_recap.pdf, pp. 5, 8, 9.
+% (a) Requested-branch dwell for the ten canonical contact cases (p. 8).
+%     Mark secondary-slip (+) and both-slip (-,+) as targeted initial states.
+%     Mark the 30 ms no-exit cases as lower bounds, NOT measured exit times.
+% (b) Minimum distributed wrap normal for each initialized case (p. 9).
+%     These are minima over the audited case, not necessarily only its first branch.
+% Do not replace (b) with an invented normal-load profile or imply that minima
+% of different quantities occur at the same time. Keep the 25-class list in the appendix.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure[60mm]{figures/results/verification/contact_regimes.pdf}{%
+    (a) Canonical contact-case dwell, with targeted states and the 30 ms limit marked.\par
+    (b) Minimum local wrap-normal loading for the same initialized cases.\par
+    Source: mechanical-invariants recap, pages 8--9; values on page 5.}
+  \caption{Contact-regime coverage and persistence in the reference CVT.
+  (a) Time to the first transition from each requested initial contact state;
+  a case with no transition in the 30 ms interval has a dwell of at least
+  30 ms. Slip signs refer to \(v_{\mathrm{rel},j}\) in
+  \Cref{eq:tangential_relative_speed}. (b) Minimum distributed normal loading
+  on each pulley over the corresponding audited case. The contact cases
+  satisfy the retained constraints, but differ substantially in persistence
+  and local contact margin.}
+  \label{fig:verification_contact_regimes}
+\end{figure}
 
-The limiting condition in these difficult cases was also informative. Loss of
-admissibility often first appeared in the distributed wrap contact, through a
-local normal load approaching zero, rather than through loss of the integrated
-pulley-normal resultant. Thus the audit exercised not only the gross regime
-logic but also the distributed contact mechanics retained within each pulley
-wrap.
+Several requested branches persist throughout the 30 ms interval, whereas
+secondary-slip \((+)\) and both-slip \((-,+)\) leave their initial branches
+through secondary resticking after approximately \(414~\mu\mathrm{s}\) and
+\(9.82~\mu\mathrm{s}\), respectively. Both required targeted initial states
+in this reference configuration. The readily reproduced both-slip \((+,+)\)
+case also resticks quickly, after \(31.7~\mu\mathrm{s}\). Thus short dwell
+and difficulty finding an initial state are distinct observations. In these
+cases the coupled dynamics rapidly bring the secondary relative speed back
+to zero; a brief initial branch is a resolved part of the trajectory rather
+than a failure to continue the simulation. These observations describe the
+selected hardware, loads, and initial states, not the frequency of these
+regimes in vehicle operation generally.
 
-The resulting coverage is useful beyond verification. It demonstrates that the
-same formulation can move continuously among a comparatively large set of
-mechanical behaviors without replacing the underlying model or prescribing the
-contact state externally. Later studies use only a subset of this capability,
-but the broader audit establishes that those trajectories sit inside a much
-larger mechanically admissible hybrid domain.
+The local contact margins in \Cref{fig:verification_contact_regimes}(b) also
+show why integrated clamping alone is an incomplete admissibility check. In
+the case initialized in both-slip \((-,-)\), the minimum primary distributed
+normal loading is \(0.0482~\mathrm{N/rad}\), while the integrated primary
+normal resultant remains at least \(374~\mathrm{N}\) over that case. The
+small local margin is therefore not accompanied by disappearance of the
+overall normal load. The retained full-wrap description requires nonnegative
+contact loading everywhere along the wrap as well as a nonnegative resultant.
+Together with the exact successor checks, this audit demonstrates consistent
+operation across the tested regime set, without implying that every admissible
+initial state or every possible transition has been exhausted.
+\FloatBarrier
 
 \subsection{Energy Consistency}
 \label{sec:results_energy_consistency}
 
-Mechanical admissibility does not by itself ensure that the coupled equations
-exchange energy consistently. CINDER therefore records the work crossing the
-two shaft boundaries, the change in modeled stored energy, and each retained
-irreversible loss channel along the complete hybrid trajectory.
+The energy audit follows the reference launch for ten seconds on flat road,
+with the numerical settings in \Cref{app:study_energy_consistency}. Its
+inventory includes the retained kinetic stores and conservative
+actuator-spring energy. The boundary
+work is the signed net work supplied at the two shafts,
+\begin{equation}
+  W_{\mathrm B}(t)
+  =\int_0^t
+    \left(\tau_{\mathrm B,p}\omega_p+
+          \tau_{\mathrm B,s}\omega_s\right)\dd t,
+  \label{eq:verification_boundary_work}
+\end{equation}
+so a resisting vehicle load contributes negative work. The audited balance is
+\begin{equation}
+  W_{\mathrm B}(t)
+  =\Delta E_{\mathrm{stored}}(t)
+   +E_{\mathrm{slip}}(t)+E_{\mathrm{capture}}(t)+R_E(t),
+  \label{eq:verification_energy_balance}
+\end{equation}
+where \(R_E\) is the unexplained numerical residual, not an additional loss
+mechanism.
 
-For the reference trajectory, the net external work was
-\(52.168893~\mathrm{kJ}\). Of this, \(50.580274~\mathrm{kJ}\) remained as a
-change in modeled stored energy and \(1.588340~\mathrm{kJ}\) was dissipated by
-kinetic belt--pulley slip. Discrete impact and capture events dissipated a much
-smaller \(0.253859~\mathrm{J}\). The final unexplained balance was only
-\(0.025444~\mathrm{J}\), or \(4.88\times10^{-7}\) of the magnitude of the
-external work.
+\Cref{fig:verification_energy_balance} compares this accounting on the
+throughput scale and then resolves the much smaller balance defect. The final
+residual is \(0.0254~\mathrm{J}\) against \(52.17~\mathrm{kJ}\) of net
+boundary work, giving \(\epsilon_E=4.88\times10^{-7}\) under
+\Cref{eq:energy_final_balance_fraction}. The final energy ledger in
+\Cref{tab:verification_energy_ledger} distinguishes the two retained
+irreversible channels from stored energy: kinetic belt--pulley slip accounts
+for approximately \(1.588~\mathrm{kJ}\), whereas the cumulative inelastic
+capture loss is only \(0.254~\mathrm{J}\) in this trajectory. Spring storage
+and inertial storage are not counted as dissipation. The omitted mechanisms
+remain those stated in \AssRef{assump:no_parasitic_losses}; this ledger
+quantifies the losses represented by the model.
 
-This decomposition is also useful for interpreting what CINDER regards as an
-energy loss. Conservative actuator springs and the retained inertial elements
-store and return energy; they do not contribute directly to dissipation.
-Irreversible loss in the present formulation enters through kinetic slip and
-through the perfectly inelastic velocity updates applied at finite-speed
-capture events. These are the loss mechanisms represented by the model, not an
-exhaustive inventory of losses in a physical CVT. Belt hysteresis, bearing and
-seal drag, windage, and other parasitic mechanisms omitted from the formulation
-are therefore absent from this accounting.
+% FIGURE 2 -- Assemble existing plots from the energy recap.
+% Source: CINDER_v1.1.2_energy_audit_interpretation.pdf, pp. 2--4.
+% (a) W_B and Delta E_stored + E_slip + E_capture, in kJ (p. 2).
+% (b) Signed raw residual history, in J (p. 3), retaining all event-scale features.
+% (c) Summed continuous defect versus audit spacing squared (p. 4).
+% The 0.024510 J line is a zero-spacing extrapolate, not an error bar and not
+% a direct estimate of the quadrature error remaining at the finest spacing.
+% The channel values are tabulated below; p. 8 is an optional channel-history view.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure[62mm]{figures/results/verification/energy_balance.pdf}{%
+    (a) Cumulative net work and accounted energy.\par
+    (b) Signed energy-residual history on a joule-scale axis.\par
+    (c) Continuous-defect refinement against audit spacing squared.\par
+    Source: energy-audit recap, pages 2--4.}
+  \caption{Mechanical-energy accounting for the reference launch.
+  (a) Net boundary work and stored-energy change plus modeled dissipation.
+  (b) Their signed residual, shown separately from the kilojoule-scale
+  throughput. (c) Refinement of the summed continuous-segment defect using
+  audit spacings of 5, 2.5, 1.25, and 0.625 ms; the horizontal line is the
+  Richardson zero-spacing estimate. Capture losses are accounted for at the
+  discrete events rather than integrated across the velocity resets.}
+  \label{fig:verification_energy_balance}
+\end{figure}
 
-The residual magnitude was consistent with numerical integration and
-quadrature error. Refinement of the audit quadrature gave a Richardson estimate
-of \(0.024510~\mathrm{J}\), essentially the same scale as the observed final
-defect. Individual discrete events satisfied their energy relation to within
-\(2.27\times10^{-13}~\mathrm{J}\), and tightening the trajectory integration
-changed the final state by only \(1.30\times10^{-7}\) in the normalized metric
-while reversing the sign, but not the scale, of the remaining energy residual.
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Final energy ledger for the reference audit. The residual is
+  evaluated from unrounded quantities; displayed entries are rounded.}
+  \label{tab:verification_energy_ledger}
+  \begin{tabular}{@{}lr@{}}
+    \toprule
+    Quantity & Energy [J] \\
+    \midrule
+    Net boundary work & \(52\,168.893\) \\
+    Stored-energy change & \(50\,580.274\) \\
+    Kinetic-slip dissipation & \(1\,588.340\) \\
+    Inelastic capture dissipation & \(0.253859\) \\
+    Balance residual & \(0.025444\) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-The energy audit therefore serves two purposes. It verifies that the retained
-mechanics close energetically to numerical accuracy, and it establishes a
-common bookkeeping framework for later comparisons in which different CVT
-configurations may redistribute energy between useful boundary work, stored
-mechanical energy, and the modeled dissipative channels.
+The refinement panel is important because coincident cumulative curves alone
+would conceal a small systematic defect. Reducing the quadrature spacing
+approaches a finite continuous-defect estimate of \(0.024510~\mathrm{J}\):
+post-processing refinement alone does not drive the fixed-trajectory residual
+to zero. A tighter trajectory integration gives a final residual of
+\(-0.022843~\mathrm{J}\), changing its sign while retaining the same small
+scale. The maximum normalized final-state change is
+\(1.30\times10^{-7}\), using
+\Cref{eq:energy_final_state_normalization}. Discrete captures separately
+satisfy the recorded energy-drop relation to within
+\(2.27\times10^{-13}~\mathrm{J}\). These checks support energy consistency
+at the observed numerical-error scale across both the continuous motion and
+the discrete updates. The residual fraction measures accounting accuracy; it
+is not a transmission-efficiency estimate.
+\FloatBarrier
 
 \subsection{Solver Convergence}
 \label{sec:results_solver_convergence}
 
-The preceding tests examine the mechanics represented by CINDER. A separate
-question is whether the simulated trajectory depends materially on the
-numerical controls used to integrate those mechanics. This distinction is
-particularly important for a hybrid system: two trajectories can remain nearly
-identical in shaft speed and shift position while differing in the timing or
-even the sequence of brief contact-state transitions.
+A hybrid trajectory includes the contact history as well as the shaft speeds
+and shift motion. Its numerical convergence therefore requires both parts to
+agree. The convergence benchmark uses the ten-second reference launch, with a
+tight LSODA solution at \(\mathrm{rtol}=10^{-7}\),
+\(\mathrm{atol}=10^{-10}\), and a 2.5 ms maximum step as the numerical
+reference. The physical case and tested settings are specified in
+\Cref{app:study_solver_convergence}.
 
-The convergence study therefore compared both the continuous state trajectory
-and the discrete hybrid history. A tight numerical reference used
-\(\mathrm{rtol}=10^{-7}\), \(\mathrm{atol}=10^{-10}\), and a
-\(2.5~\mathrm{ms}\) maximum step. The formal sweep then varied relative
-tolerance over eight levels and maximum step over five levels. Every tested
-maximum step from \(5\) to \(100~\mathrm{ms}\) satisfied all review criteria
-once \(\mathrm{rtol}\le10^{-4}\), forming a contiguous converged region rather
-than an isolated passing point.
+The transition signature records the ordered events, successor modes, and
+occurrence of velocity resets. State differences are evaluated between
+corresponding smooth segments after matching that signature; a different
+signature is itself a convergence failure. Each segment is sampled at the
+same fractional progress between its endpoint events rather than at the same
+absolute time, so a small event-time offset does not compare a pre-reset state
+with a post-reset state. Event-time
+error is reported separately, together with the fraction of time spent in
+different regimes. The normalization and duration-weighted root-mean-square (RMS) error
+are defined by
+\Cref{eq:solver_state_scale,eq:solver_normalized_state_error,eq:solver_event_aligned_rms}.
+The acceptance criteria in \Cref{tab:solver_convergence_guards} require an
+exact transition signature as well as bounds on the state and timing errors.
 
-The retained research setting,
-\[
-\mathrm{rtol}=10^{-4},\qquad
-\mathrm{atol}=10^{-7},\qquad
-\Delta t_{\max}=10~\mathrm{ms},
-\]
-lay comfortably within this region. Relative to the tight reference, its
-event-aligned normalized trajectory RMS error was
-\(4.27\times10^{-7}\), its maximum normalized state error was
-\(6.96\times10^{-5}\), and the largest corresponding event-time error was only
-\(7.99~\mu\mathrm{s}\). The complete 16-transition signature was reproduced,
-with an exact regime-history mismatch fraction of
+% FIGURE 3 -- Assemble existing formal-grid and absolute-tolerance evidence.
+% Source: CINDER_v1.1.2_Solver_Convergence_Final_Recap(1).pdf, pp. 3--4.
+% (a) Formal 8 x 5 error grid; mark the research point and all-guards-passing cells.
+% (b) Independent atol error plot; annotate reference-signature recovery if
+%     adding labels from the reported seven-point sweep. Do not interpret
+%     event count alone as the full transition-signature test.
+% Keep the grid as sampled cells; do not interpolate a sharper pass/fail boundary.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure[60mm]{figures/results/verification/solver_refinement.pdf}{%
+    (a) Formal relative-tolerance / maximum-step convergence grid.\par
+    (b) Independent absolute-tolerance sweep.\par
+    Mark the research setting and distinguish state error from all-guard acceptance.\par
+    Source: solver-convergence recap, pages 3--4.}
+  \caption{Convergence of the reference hybrid trajectory.
+  (a) Event-aligned normalized state error over the formal relative-tolerance
+  and maximum-step grid. (b) Independent absolute-tolerance sensitivity at
+  \(\mathrm{rtol}=10^{-4}\) and a 10 ms maximum step. The research setting
+  is \(\mathrm{rtol}=10^{-4}\), \(\mathrm{atol}=10^{-7}\), and a
+  10 ms maximum step. The maximum step is an upper bound on the adaptive
+  integration, not a fixed time increment.}
+  \label{fig:verification_solver_refinement}
+\end{figure}
+
+\Cref{fig:verification_solver_refinement}(a) shows a contiguous passing
+region: every tested maximum step from 5 to 100 ms satisfies all criteria
+when \(\mathrm{rtol}\leq10^{-4}\), with
+\(\mathrm{atol}=10^{-3}\mathrm{rtol}\) in that sweep. At the research
+setting, the event-aligned trajectory RMS is \(4.27\times10^{-7}\), the
+maximum normalized state error is \(6.96\times10^{-5}\), and the largest
+corresponding event-time difference is \(7.99~\mu\mathrm{s}\). The complete
+16-transition signature is reproduced, and the regime-mismatch fraction is
 \(8.46\times10^{-6}\).
 
-Comparison across hybrid trajectories requires some care. A direct
-absolute-time norm can compare the state immediately before an event in one
-solution with the state immediately after the corresponding event in another
-solution when the two event times differ by only microseconds. Such a
-comparison produces an artificial \(O(1)\) pointwise error at the reset even
-when the two hybrid trajectories have otherwise converged. The reported state
-errors were therefore evaluated between corresponding smooth segments using a
-common normalized phase coordinate, while event timing and regime-history
-differences were measured separately.
+The independent absolute-tolerance sweep in
+\Cref{fig:verification_solver_refinement}(b) matters because the angular
+speeds, shift position, and shift speed have different numerical scales.
+Loose absolute tolerances alter the transition history; the tighter tested
+range from \(3\times10^{-7}\) to \(10^{-8}\) recovers the reference
+history, with \(10^{-7}\) satisfying all criteria. The one failed formal
+integration uses the coarsest combination,
+\(\mathrm{rtol}=10^{-2}\) and a 100 ms maximum step, and reaches an
+inadmissible primary flyweight-contact state. This is a numerical/domain
+failure of that calculation, not evidence of physical lift-off on the
+converged trajectory.
 
-The broader sweep also exposed a useful distinction between mechanics-level and
-outcome-level convergence. At sufficiently loose settings, brief stick--slip
-transitions could be missed or altered while the macroscopic RPM, belt-speed,
-and shift trajectories remained visually close to the converged solution.
-Gross vehicle response can therefore appear robust beyond the point at which
-the internal contact mechanics have ceased to converge. Because CINDER is
-intended to resolve those internal mechanics, the stricter hybrid criterion is
-used throughout the remaining studies.
+% FIGURE 4 -- Ready existing evidence, not an invented two-run example.
+% Source: solver-convergence recap, p. 9, Figure 8:
+% gross trajectory error vs native solver points, grouped by transition count.
+% Gross metric includes omega_p, omega_s, v_b, s; excludes sdot and is NOT the
+% event-aligned five-state RMS used for formal convergence.
+% A more intuitive trajectory + regime-timeline replacement remains optional,
+% pending selection of a specific DIFFERENT-signature run from archived outputs.
+% The p. 8 Figure 7 overlay is SAME-signature and must not be used to claim a
+% missed transition. Keep data/normalization consistent if replacing this slot.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure{figures/results/verification/gross_motion_hybrid_history.pdf}{%
+    Gross trajectory error versus native solver points, grouped by transition count.\par
+    Source: solver-convergence recap, page 9, Figure 8.\par
+    This existing population plot supports the current text without selecting a new case.}
+  \caption{Macroscopic agreement and hybrid-history agreement are distinct.
+  The dense exploratory sweep is shown using the absolute-time gross-state
+  error for \((\omega_p,\omega_s,v_b,s)\), excluding \(\dot s\), and
+  grouped by transition count. A low gross error need not reproduce the
+  reference contact history. Native solver points are a work proxy; they are
+  not right-hand-side evaluation counts.}
+  \label{fig:verification_gross_hybrid_agreement}
+\end{figure}
+
+The dense sweep makes the distinction visible in
+\Cref{fig:verification_gross_hybrid_agreement}. Among 609 completed runs
+with a different transition signature, the median absolute-time gross-state
+RMS error is only \(1.23\times10^{-4}\). This diagnostic includes shaft
+speeds, belt speed, and shift position, but excludes shift speed; it is not
+the event-aligned five-state metric used for acceptance. Gross motion can
+remain close while brief contact transitions differ. Resolving internal
+traction and shift mechanisms therefore requires the hybrid checks, not only
+a visually converged speed or ratio curve. The demonstrated tolerance range
+applies to this benchmark; settings for other cases remain part of their
+individual study definitions.
+% APPENDIX FOLLOW-UP (not inserted in this pass): retain the measured runtime /
+% native-point comparison from recap p. 10, with hardware and timing-scope context.
+\FloatBarrier
 
 \subsection{Closure Conditioning and Root Structure}
 \label{sec:results_closure_structure}
 
-The engaged contact problem contains two distinct numerical layers. For any
-proposed pair of contact tractions, the instantaneous mechanical response is
-obtained from the linear \(8\times8\) closure described in
-\Cref{app:num_fixed_lambda}. When one or both contacts are assumed to stick,
-the corresponding traction values must then be selected so that the sticking
-residuals vanish.
+The engaged solve separates into a linear mechanical response at fixed
+\((\lambda_p,\lambda_s)\) and a nonlinear selection of the traction required
+by sticking contact. The eight-variable form, including the retained pulley
+torques, is given in \Cref{eq:appendix_eight_unknown_closure}. These two
+levels are assessed separately: uniqueness of the fixed-traction response
+does not imply uniqueness of the traction pair that enforces stick.
 
-The linear mechanical closure was well behaved throughout the practical domain
-examined. No rank-deficient point was found anywhere in the sampled physical
-or expanded traction maps, and the system remained solvable even through the
-strong conditioning structures visible near the edges of the admissible
-region. Among the representative physical maps, the largest scaled
-\(8\times8\) condition number was approximately \(3.4\times10^{5}\).
-Consequently, for a specified traction pair, the implemented closure produced a
-single instantaneous mechanical solution throughout the investigated operating
-domain. The retained torque variables and the reason for the eight-variable
-implementation, rather than the reduced form used in the formulation, are
-described in \Cref{app:num_fixed_lambda}.
+At the frozen states drawn from the reference launch and constructed
+operating cases, no rank-deficient mechanical system is found in the sampled
+static-capacity or expanded traction maps. Each sampled fixed-traction system
+therefore has a unique linear response. The condition numbers in
+\Cref{fig:verification_closure_robustness}(a) use the equilibrated matrix of
+\Cref{eq:appendix_equilibrated_system}; the largest reported value among the
+four representative static-capacity maps is \(3.38\times10^5\).
+Full rank does not imply uniform sensitivity, and some trial points violate
+contact or support admissibility even within the static-capacity box. The
+map domains and mechanical-admissibility checks are distinguished in
+\Cref{app:study_closure_conditioning}.
 
-The nonlinear sticking problem was similarly unambiguous at the representative
-operating states. Fifteen frozen states were each solved repeatedly from a
-broad set of initial traction guesses, giving 375 multistart attempts in total.
-Within each state, every accepted solution collapsed to the same physical root.
-Thus the ordinary operating cases showed no evidence that the contact solver
-was selecting arbitrarily among several admissible sticking solutions.
+% FIGURE 5 -- Ordinary-case evidence before the targeted fold.
+% Source: CINDER_closure_conditioning_multiroot_summary_2026-09-15.pdf,
+% p. 3 table and p. 5 left-hand multistart basin.
+% (a) Replot ONLY max equilibrated kappa(A) for the four static-capacity maps:
+% low_ratio_seat 1.33e4; mid_shift 3.70e4; upper_stop 3.38e5;
+% free_shift_opening_70 8.26e3. These are map maxima, NOT root-only values.
+% (b) Existing mid_shift multistart basin: distinguish not accepted from accepted.
+% Do not draw iteration paths: the recap records starting points/outcomes, not paths.
+% Keep the reported 375 TOTAL attempts distinct from the current appendix's
+% 7x7/9x9 manifest settings; the archived run specification needs reconciliation.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure[60mm]{figures/results/verification/closure_robustness.pdf}{%
+    (a) Four representative static-capacity-map maxima of equilibrated
+    \(\kappa(\vect A_s)\), replotted from the closure recap, page 3.\par
+    (b) Mid-shift multistart outcomes, closure recap, page 5.\par
+    Distinguish accepted roots from unsuccessful starts.}
+  \caption{Representative fixed-traction and sticking-root behaviour.
+  (a) Maximum equilibrated mechanical-matrix condition number in each of four
+  sampled static-capacity maps; these are map maxima rather than values at
+  the accepted sticking root. (b) Starting guesses and acceptance outcomes
+  for the mid-shift sticking solve. Accepted solutions belong to one root
+  cluster; unsuccessful starts are shown separately. Mechanical admissibility
+  is assessed independently of membership in the static-capacity box.}
+  \label{fig:verification_closure_robustness}
+\end{figure}
 
-A deliberately broader search nevertheless revealed that global uniqueness is
-not guaranteed by the reduced contact equations. The stick--stick solution
-surface can fold, allowing a fixed loading slice to intersect the same
-continuous solution manifold twice. A corresponding fold was also found in a
-mixed contact state, where one interface was already sliding and the remaining
-scalar sticking residual possessed two roots. These structures are therefore
-properties of the nonlinear closure itself rather than numerical noise.
+The representative nonlinear solves are also reproducible across starting
+estimates. Across 15 states and 375 multistart attempts in total, all accepted
+solutions for each state belong to one physical root cluster.
+\Cref{fig:verification_closure_robustness}(b) illustrates this result at
+mid-shift. The statement concerns the accepted roots: it neither assumes
+that every initial guess succeeds nor proves nonlinear uniqueness outside
+the tested states.
 
-Their practical context is important. The multiple-root examples were found
-only after explicitly searching for them over extended operating and traction
-domains. In the mixed-contact search, 62 frozen states reduced to only one
-unique geometry exhibiting the scalar fold, and one of the two roots lay close
-to local contact loss. No spontaneous root ambiguity of this type has appeared
-in the maintained transient studies. The result should therefore not be read
-as evidence that ordinary CINDER trajectories are routinely non-unique; it
-identifies a genuine global limit of the reduced sticking closure that becomes
-visible near selected, often boundary-adjacent regions.
+Targeted continuation reveals a different structure elsewhere in the
+reduced contact equations. In the selected stick--stick example of
+\Cref{fig:verification_closure_fold}, a continuous solution branch turns back
+in loading space. A fixed loading then intersects that branch twice,
+producing two traction pairs that satisfy both sticking residuals and the
+physical admissibility checks. The smaller static-capacity reserve of the
+selected pair is \(0.098\), so the multiplicity is not explained simply by
+including an above-capacity mathematical root. It occurs in the nonlinear
+traction selection while the fixed-traction mechanics still give a definite
+response at either root.
 
-The numerical solution strategy is consistent with that structure. During
-time integration, the contact solve uses the previously accepted traction root
-as a continuation estimate and first attempts to remain on the locally
-connected branch before reverting to the full bounded nonlinear solve. The
-continuation and fallback procedure is described in
-\Cref{app:num_contact_continuation}. This does not remove the possibility of a
-fold, but it prevents each right-hand-side evaluation from behaving as an
-independent global root-selection problem while the existing branch remains
-available.
+% FIGURE 6 -- Existing selected stick-stick example, recap p. 6.
+% Case: sf0p950_sdotm40_rpm3000.
+% Use (a) focused lambda-plane view and (b) one-dimensional fold/crossing view.
+% Retain the same root colours/identifiers and load slice in both panels.
+% The 3-D LOCAL CURVE on p. 6 is optional, not a required extra panel.
+% Do not relabel its continuation coordinate as a physical state variable.
+% The mixed scalar example on pp. 8--9 remains supporting evidence for a later
+% appendix slot; it is not substituted for this two-contact example.
+\begin{figure}[H]
+  \centering
+  \CINDERVerificationFigure[60mm]{figures/results/verification/sticking_closure_fold.pdf}{%
+    (a) Focused traction-plane view with two admissible stick--stick roots.\par
+    (b) Continuation curve and fixed-load line intersecting both sides of the fold.\par
+    Source: closure recap, page 6; selected late-shift opening case.}
+  \caption{Two admissible sticking solutions in a deliberately selected
+  frozen-state example. The traction-plane view identifies the two roots;
+  the continuation view shows that they lie on opposite sides of one folded
+  branch at the same applied loading. Multiple nonlinear sticking roots can
+  therefore coexist with a unique mechanical response for each prescribed
+  traction pair.}
+  \label{fig:verification_closure_fold}
+\end{figure}
 
-The conditioning study therefore gives both a positive and a limiting result.
-The fixed-traction \(8\times8\) mechanics are nonsingular and uniquely solvable
-throughout the investigated practical domain, and representative sticking
-states converge robustly to a single accepted physical root. At the same time,
-the nonlinear closure possesses rare folded regions in a wider state space.
-Their existence motivates branch-aware continuation and provides a concrete
-boundary on the global uniqueness that can be claimed for the reduced contact
-model.
+Multiplicity also occurs in a mixed branch with primary slip at
+\(-\mu_k\) and secondary stick. The targeted 62-state investigation found
+one distinct scalar-fold geometry, with secondary sticking roots near
+\(0.434\) and \(0.546\) on the selected loading slice. One approaches
+local wrap-contact loss. The examples establish that neither the two-contact
+nor the one-contact sticking problem is globally single-rooted; their
+frequency in this targeted search is not an operating probability.
+
+These folded branches were exposed by deliberate frozen-state searches.
+No spontaneous ambiguity of this type was observed in the maintained
+transient studies. During smooth evolution, the continuation strategy in
+\Cref{app:num_contact_continuation} reuses the previous accepted traction
+solution, encouraging the solver to remain on the nearby branch. Fresh
+mechanical-residual and admissibility checks still apply, as described in
+\Cref{app:num_contact_search}. Continuation reduces arbitrary root changes
+but cannot remove a fold or guarantee a unique continuation when a branch
+ends. The positive sampled solvability results and the global multiplicity
+finding therefore describe different, compatible properties of the reduced
+closure.
+\FloatBarrier
+
+\endgroup
+
+% Replace the block from \section{Independent Transient-Model Benchmark}
+% to immediately before \section{Coupled Operation Across Regimes}.
+% Baseline: CVT_Module_Formulation_20260919_verification_figure_draft.tex.
+% Section 4.2 and all appendices are unchanged.
+%
+% DRAFT STATUS:
+% - Numerical results are drawn from the supplied study closeout PDFs.
+% - Algebraic decompositions below follow the existing formulation.
+% - Boxed evidence notes identify missing/ambiguous results; they are not findings.
+% - Figure files may be prepared from existing data or built later, as specified.
+% - Do not remove an evidence note until its requested check has been completed.
+% - Full source/case mapping is in Retained_Dynamics_Evidence_and_Figure_Plan.md.
+
+\begingroup
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+\providecommand{\CINDERResultsFigure}[4][44mm]{%
+  \IfFileExists{#2}{%
+    \includegraphics[width=\linewidth,height=0.56\textheight,keepaspectratio]{#2}%
+  }{%
+    \fbox{%
+      \begin{minipage}[c][#1][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+        \centering\small
+        \textbf{#3}\par\medskip
+        #4\par\medskip
+        \footnotesize\nolinkurl{#2}
+      \end{minipage}%
+    }%
+  }%
+}
+\providecommand{\CINDERResultsDraftNote}[2]{%
+  \begin{tcolorbox}[title={Evidence to complete: #1},fonttitle=\bfseries]
+    \small #2
+  \end{tcolorbox}%
+}
 
 % ==============================================================
 \section{Independent Transient-Model Benchmark}
 \label{sec:results_ballew_benchmark}
 
-% TODO after Results freeze: independent model-to-model benchmark against Ballew.
+Ballew's discretized rubber-belt model provides a five-second ATV acceleration
+case with published shaft-speed histories, primary clamping force, and
+controller gains \citep{Ballew2015}. It permits a comparison at two different
+levels: whether CINDER reproduces the response under reconstructed speed
+feedback, and whether it reproduces the response when the published clamping
+force itself is imposed. The distinction is consequential. In the first
+comparison the controller can adjust the force in response to CINDER's motion;
+in the second, the force history is fixed and the transmission must respond to
+it directly.
+
+The two comparisons give markedly different impressions of agreement.
+Reconstructed feedback keeps the shaft-speed errors relatively small despite a
+large difference in clamp demand. Force replay then exposes a much larger
+difference in primary speed. Together, they identify a limit on what agreement
+in controlled shaft speeds can establish about the underlying belt and shift
+mechanics.
 
 \subsection{Benchmark Reconstruction}
 \label{sec:results_ballew_reconstruction}
-% TODO: reconstructed geometry, inputs, and implementation assumptions.
 
-\subsection{Force-Replay Protocol}
-\label{sec:results_ballew_force_replay}
-% TODO: prescribed forcing comparison.
+The benchmark is assembled from Ballew's published case rather than from the
+Baja reference. Both protocols use the same reconstructed belt geometry,
+rotating inertias, constant primary torque of \(18~\mathrm{N\,m}\), and ATV
+road-load boundary. The secondary closing force is fixed at
+\(2000~\mathrm{N}\). The initial primary and secondary speeds are the
+explicitly tabulated \(2500\) and \(1136~\mathrm{rpm}\); their compatible belt
+speed and shift position are obtained from the reconstructed geometry.
+The boundary and protocol parameters are collected in
+\Cref{app:study_ballew}, and the interchangeable force laws are defined in
+\Cref{app:ballew_actuator_implementations}.
 
-\subsection{Reconstructed Closed-Loop Protocol}
+Several translations are necessary to make those inputs comparable. The
+published belt mass and combined shaft inertias are preserved, and the friction
+coefficients are converted between the two normal-force conventions so that
+the gross tangential capacity corresponds to the same applied clamp. Both
+literal moving-sheave masses are set to zero because Ballew determines radial
+position from an algebraic axial-force balance rather than integrating a
+movable-sheave axial equation. CINDER's belt inertia and reduced shift dynamics
+remain active. Thus the comparison does not introduce the Baja sheave masses
+as an additional difference between the two models.
+
+The published model still contains internal belt deformation states that
+cannot be initialized identically in CINDER. Those differences are retained as
+part of the model-to-model comparison. No physical parameter or controller
+gain is fitted to the reference traces. The published information, the
+necessary reconstruction choices, and the digitization procedure are recorded
+separately in the study's
+\ResultsCode{studies/ballew-2015/provenance/RECONSTRUCTION.md}{reconstruction record}.
+
+\subsection{Reconstructed Closed-Loop Response}
 \label{sec:results_ballew_closed_loop}
-% TODO: closed-loop comparison using reconstructed external plant/actuator logic.
 
+In the closed-loop protocol, primary speed is regulated toward
+\(2500~\mathrm{rpm}\) by the reconstructed PI and feed-forward law of
+\Cref{eq:ballew_pi_force_law}. The published gains are used with an integrated
+controller-error state. Ballew's primary force history is an output reference
+in this protocol, not an input to the controller.
+
+The left-hand comparison in \Cref{fig:results_ballew_protocols} shows why the
+shaft-speed agreement is useful but incomplete. Primary and secondary speed
+RMSE are approximately \(110\) and \(33~\mathrm{rpm}\), respectively. Yet the
+primary force differs substantially, and CINDER's controlled response is
+visibly more oscillatory. The percentage errors in
+\Cref{tab:results_ballew_comparison} quantify the contrast: errors of only a
+few percent in the shaft histories coexist with a primary-clamp error of
+approximately \(47\%\).
+
+% SOURCE: CINDER_v1.1.2_ballew_interpretation.pdf, pp. 2, 3, 6.
+% PREPARATION: two protocol columns with shared units/scales for corresponding
+% outputs; show primary/secondary speeds, shaft ratio, and primary clamp.
+% Retain a resolved time-window inset for closed-loop oscillations. Do not
+% smooth the CINDER curve to the native digitization rate and call it agreement.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[57mm]
+    {figures/results/ballew/protocol_comparison.pdf}
+    {Existing results: paired protocol comparison}
+    {Left: reconstructed feedback. Right: published force replay.
+     Compare the same shaft outputs and show how primary clamp is supplied in
+     each protocol. Include a resolved closed-loop time-window inset.}
+  \caption{Ballew model-to-model comparison under reconstructed speed feedback
+  and prescribed primary-force replay. The secondary closing force and the
+  reconstructed shaft boundaries are common to both protocols. In the
+  closed-loop case, primary clamp is generated by feedback; in force replay,
+  the digitized force from Ballew's Figure~45 is imposed. The original
+  shaft-speed references are from Ballew's Figure~41 \citep{Ballew2015}.}
+  \label{fig:results_ballew_protocols}
+\end{figure}
+
+% SOURCE: Ballew interpretation memo p. 1; normalization checked in
+% studies/ballew-2015/infrastructure/benchmark/metrics.py.
+\begin{table}[tbp]
+  \centering\small
+  \caption{RMSE relative to the mean absolute reference value at the comparison
+  samples, expressed as a percentage. The shaft-speed ratio is
+  \(\omega_p/\omega_s\). Primary clamp is prescribed in force replay and is
+  therefore not an independently predicted output in that column.}
+  \label{tab:results_ballew_comparison}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    Quantity & Closed loop & Force replay \\
+    \midrule
+    Primary speed & \(4.42\%\) & \(77.89\%\) \\
+    Secondary speed & \(2.71\%\) & \(1.09\%\) \\
+    Shaft-speed ratio & \(4.81\%\) & \(78.31\%\) \\
+    Primary clamp & \(46.66\%\) & Prescribed input \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The controller is therefore generating a different force history while
+keeping the primary speed near the same objective. Agreement in the regulated
+quantity does not imply agreement in the force required to produce it.
+This is particularly important here because clamping controls both the shift
+balance and the available traction.
+
+\subsection{Force Replay and the Internal Response}
+\label{sec:results_ballew_force_replay}
+
+Force replay removes that adjustment. The prepared Figure~45 history is
+applied through the tabulated primary actuator of
+\Cref{eq:ballew_primary_force_replay}, while the other reconstructed inputs are
+unchanged. The right-hand comparison in \Cref{fig:results_ballew_protocols}
+then shows a substantial reduction in CINDER's primary speed relative to
+Ballew's history. Its primary-speed and shaft-ratio errors approach
+\(78\%\), even though secondary speed remains close to the reference.
+Agreement at the output shaft alone would consequently conceal a very
+different transmission response.
+
+The internal kinematic comparison in
+\Cref{fig:results_ballew_internal_response} makes the limitation more direct.
+For this benchmark, which has no relative sheave-rotation mechanism, the
+shaft-speed ratio \(\omega_p/\omega_s\) and geometric ratio
+\(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\) would coincide if both contacts
+rolled without slip. In CINDER's reconstructed closed loop they instead
+follow substantially different histories. A relatively close shaft-speed
+ratio is therefore not evidence that the model has reproduced the same belt
+position or contact state. The accompanying slip-energy history supplies an
+energetic view of that distinction within CINDER's retained loss model.
+
+% SOURCE: Ballew memo pp. 4--5.
+% PREPARATION: use unsmoothed dense CINDER output; compare explicit ratio
+% definitions; include a resolved zoom and cumulative slip loss.
+% The memo's 0.15 s rolling mean may be retained only as a labelled overlay.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[49mm]
+    {figures/results/ballew/internal_response.pdf}
+    {Existing results: kinematics and slip loss}
+    {Show shaft-speed and effective-radius ratios separately, with a resolved
+     oscillation window. Add cumulative modeled slip dissipation. Do not use
+     a smoothed geometric ratio as a substitute for the actual trajectory.}
+  \caption{Internal response of the reconstructed closed-loop CINDER case.
+  Shaft-speed ratio, effective-radius ratio, and modeled slip dissipation
+  describe different aspects of the response. Their comparison shows why
+  macroscopic speed agreement alone does not establish agreement of the
+  internal belt and shift mechanics.}
+  \label{fig:results_ballew_internal_response}
+\end{figure}
+
+\subsection{Interpretation of the Model-Form Difference}
+\label{sec:results_ballew_interpretation}
+
+The leading physical difference is the treatment of the belt itself. Ballew
+resolves internal deformation and local nodal motion,
+whereas CINDER represents the belt with a fixed length, one transport speed,
+and a prescribed path controlled by the shift coordinate. Local deformation,
+force redistribution, and contact evolution can therefore change the response
+to the same clamp history. The unmatched distributed initial-tension state and
+the reconstructed controller equation also bound how directly individual
+differences can be attributed to one belt mechanism.
+
+Rubber compliance and dissipation are plausible contributors to a less abrupt
+response, but they are not interchangeable explanations. Compliance allows
+energy to be stored and motion to be redistributed; damping dissipates energy.
+Moreover, Figures~41 and~45 are Ballew's case \emph{without the added linear
+inter-node damping}, rather than his separate linearly damped case
+\citep[Figures~40--45]{Ballew2015}. The present mismatch cannot therefore be
+assigned specifically to that added damper. Separating the remaining causes
+would require controlled
+changes to the belt descriptions, beyond the comparison available here.
+
+\CINDERResultsDraftNote{B1 --- benchmark-specific numerical evidence}{
+  Recover the existing four-case closed-loop refinement outputs before using
+  the oscillatory waveform to make a stronger physical claim. Compare the
+  nominal 1 ms limit with 0.5 and 0.25 ms limits and the tighter-tolerance
+  0.5 ms case specified in the reconstruction's numerical-stability record.
+  The supplied recap supports the aggregate comparison above, but does not
+  provide the quantitative refinement table. No new convergence result is
+  asserted here.}
+
+The useful result is the contrast between the two protocols. CINDER can
+approach the controlled shaft histories while requiring a different clamp
+history, and the discrepancy becomes much more pronounced when that freedom
+is removed. The benchmark consequently tests more than whether two speed
+curves look similar: it reveals a difference in the reconstructed
+clamp-to-shift/contact response. It is an independent model comparison, not
+experimental validation of either internal belt description.
+
+\FloatBarrier
 % ==============================================================
 \section{Dynamic Mechanics Retained by CINDER}
 \label{sec:results_dynamic_mechanics}
 
-% TODO after Results freeze: quantify when retained transient terms matter.
+At a given mechanism position, the same centrifugal or torque loading need
+not produce the same clamp during a transient. Part of that loading may be
+required to accelerate the actuator itself. A quasi-static actuator law omits
+that inertial demand. The resulting approximation may reproduce a
+smooth response while changing the reaction to a rapid load disturbance.
+The relevant question is therefore which retained inertial contributions are
+actually excited, and when their omission changes the solved CVT motion.
+
+The comparisons begin with the primary and secondary mechanisms under this
+common question, then examine the transient terms retained in the reduced
+belt. The actuator variants use the interchangeable interface in
+\Cref{app:num_affine_assembly}; their exact reductions and redistribution of
+rotating inertia are given in \Cref{app:results_quasistatic_actuators}.
+Evaluating an omitted term on the full-model trajectory isolates its local
+contribution. Integrating the corresponding reduced model answers the
+different question of whether that omission changes the trajectory itself.
 
 \subsection{Primary Actuation Dynamics}
 \label{sec:results_primary_actuator_dynamics}
-% TODO: quasi-static versus dynamic primary-actuation study.
 
-\subsection{Secondary Helix Dynamics and Contact Topology}
+\subsubsection{Centrifugal drive and the motion it must accelerate}
+\label{sec:results_primary_dynamic_terms}
+
+The flyweights both generate the centrifugal closing action and move about
+their pivots as the primary sheave shifts. These roles involve different
+inertias. The shaft-axis map \(J_{f,p}(x_p)\) sets the centrifugal drive,
+whereas the pivot inertia \(I_f\) sets the torque required to accelerate the
+flyweight motion. Writing \Cref{eq:primary_flyweight_axial_force} as its
+quasi-static part plus its omitted contribution gives
+\begin{equation}
+\begin{aligned}
+ F_{\mathrm{fw},x_p}
+ &=F_{\mathrm{fw},x_p}^{\mathrm{QS}}+\Delta F_{\mathrm{fw},x_p},\\
+ F_{\mathrm{fw},x_p}^{\mathrm{QS}}
+ &=\frac12\omega_p^2\frac{dJ_{f,p}}{dx_p},\\
+ \Delta F_{\mathrm{fw},x_p}
+ &=-I_f\left(\frac{dq_f}{dx_p}\right)^2\ddot x_p
+   -I_f\frac{dq_f}{dx_p}\frac{d^2q_f}{dx_p^2}\dot x_p^2.
+\end{aligned}
+\label{eq:results_primary_dynamic_decomposition}
+\end{equation}
+
+The acceleration term has a positive inertial coefficient
+\begin{equation}
+ m_{f,\mathrm{ref}}
+ =I_f\left(\frac{dq_f}{ds}\right)^2,
+ \label{eq:results_flyweight_reflected_inertia}
+\end{equation}
+because \(x_p=s\). Thus even a modest pivot inertia can resist shifting
+strongly if the mechanism requires a large flyweight rotation per unit sheave
+travel. The final term in
+\Cref{eq:results_primary_dynamic_decomposition} instead depends on how that
+motion ratio changes along the ramp. A large centrifugal force alone does not
+determine either correction.
+
+This distinction gives a useful first sensitivity test before selecting a
+transient. For a sheave excursion of fixed shape and amplitude executed over
+a time scale \(T\), both \(\ddot x_p\) and \(\dot x_p^2\) scale as
+\(T^{-2}\). Shortening the same prescribed excursion can therefore magnify
+the dynamic correction without changing the centrifugal force at the same
+position and shaft speed. This is a kinematic scaling argument; in an actual
+CVT the excursion and its duration are themselves outcomes of the coupled
+solve.
+
+% NEW DISPLAY FROM EXISTING FORMULATION / ARCHIVED PRIMARY STUDY.
+% Show q'_f and I_f(q'_f)^2 over admissible travel, then signed axial
+% corrections and the separate shaft-angular-momentum terms on selected
+% reference/rapid-load traces. The primary numerical archive must be recovered.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[54mm]
+    {figures/results/dynamics/primary_geometry_and_response.pdf}
+    {New figure: primary geometry, excitation, and response}
+    {Map the motion-ratio-weighted pivot inertia over travel. Below it, show
+     signed centrifugal/inertial force terms and a matched full-versus-QS
+     primary comparison. Keep the shaft-torque correction separate from the
+     axial-force correction. Quantitative primary evidence is pending.}
+  \caption{Primary-actuator comparison to be assembled from the fixed-pivot
+  mechanism map and its matched dynamic and quasi-static runs. The upper
+  display locates geometric sensitivity; the lower displays test whether the
+  realized motion excites that sensitivity and changes shaft or shift
+  response. All variants use the same tested primary mechanism and the
+  inertia treatment in \Cref{app:results_quasistatic_actuators}.}
+  \label{fig:results_primary_dynamics}
+\end{figure}
+
+\subsubsection{Small force corrections do not make flyweight inertia irrelevant}
+\label{sec:results_primary_scope}
+
+The reference actuator study identifies ordinary continuous Baja operation as
+close to quasi-static. A small primary correction means that little of the
+centrifugal action is consumed by accelerating the flyweights about their
+pivots. The comparison in \Cref{fig:results_primary_dynamics} separates this
+force-level statement from its consequence for shaft and shift motion.
+A local measure is
+\begin{equation}
+ \Pi_p(t)=
+ \frac{|\Delta F_{\mathrm{fw},x_p}(t)|}
+      {|F_{\mathrm{fw},x_p}^{\mathrm{QS}}(t)|},
+ \qquad F_{\mathrm{fw},x_p}^{\mathrm{QS}}\ne0.
+ \label{eq:results_primary_dynamic_number}
+\end{equation}
+The signed force terms must accompany this ratio so that a small denominator
+or cancellation between corrections is not mistaken for a large change in
+physical loading.
+
+\CINDERResultsDraftNote{P1 --- recover the primary comparison}{
+  The supplied commercial-actuator recap gives the qualitative ordinary-Baja
+  conclusion, but not the primary's force peaks, shaft-torque corrections, or
+  paired trajectory errors. Insert those from the archived fixed-pivot study.
+  Use at least the smooth reference interval and the strongest admissible
+  primary transient already tested; report the interval, denominator, and
+  full/QS comparison. If those outputs do not support the qualitative
+  statement for the primary separately, revise that statement. No numerical
+  primary bound or universal negligible-inertia claim is assumed.}
+
+There is a second distinction to preserve. The same flyweight mass also
+changes the primary's shaft-axis angular momentum. Its contribution to the
+rotational balance is
+\begin{equation}
+ \frac{d}{dt}\!\left[J_{f,p}(s)\omega_p\right]
+ =J_{f,p}(s)\dot\omega_p
+  +\frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
+ \label{eq:results_primary_angular_momentum_terms}
+\end{equation}
+Even when the pivot-acceleration force is small, outward flyweight motion
+changes the rotating inertia. During upshift, angular momentum is required
+to move that mass outward; during backshift, the redistribution reverses.
+The axial-force comparison and the shaft-torque comparison therefore answer
+different questions. In particular, the trajectory ablation changes the
+mechanism's inertial coupling as specified in the appendix; it is not a test
+of deleting a single axial term while everything else remains identical.
+
+The primary result is consequently specific to the fixed-pivot roller
+mechanism examined here. It can justify the quasi-static force approximation
+for that mechanism over the supported operating intervals, while the maps in
+\Cref{eq:results_primary_dynamic_decomposition} identify what must be checked
+for another design. Neither greater flyweight mass nor a similar static
+clamp curve, by itself, establishes the size of the dynamic error.
+
+\subsection{Secondary Helix Dynamics and Transient Sensitivity}
 \label{sec:results_secondary_helix}
-% TODO: dynamic helix terms and selected-flank / bilateral topology study.
+
+\subsubsection{The helix converts rotational inertia into axial response}
+\label{sec:results_secondary_dynamic_terms}
+
+The secondary adds a direct route by which shaft acceleration changes clamp.
+Its movable assembly rotates with the shaft and relative to it through the
+helix. The torque available for axial reaction must therefore supply both
+motions. Define the quasi-static reacted torque, with the formulation's
+symmetric face share, as
+\begin{equation}
+ \tau_{s,\mathrm{helix}}^{\mathrm{QS}}
+ =\frac{\tau_s}{2}
+  +k_{s,\theta}\bigl(\theta_{s,\mathrm{pre}}-\theta_s\bigr).
+ \label{eq:results_secondary_qs_torque_recalled}
+\end{equation}
+Then \Cref{eq:secondary_helix_closing_force} separates into
+\begin{equation}
+\begin{aligned}
+ F_{\mathrm{helix},x_s}
+ &=\frac{d\theta_s}{dx_s}\,
+   \tau_{s,\mathrm{helix}}^{\mathrm{QS}}
+   +\Delta F_{\mathrm{helix},x_s},\\
+ \Delta F_{\mathrm{helix},x_s}
+ &=-I_{s,M}\frac{d\theta_s}{dx_s}\dot\omega_s
+   -I_{s,M}\left(\frac{d\theta_s}{dx_s}\right)^2\ddot x_s\\
+ &\quad-I_{s,M}\frac{d\theta_s}{dx_s}
+                 \frac{d^2\theta_s}{dx_s^2}\dot x_s^2.
+\end{aligned}
+\label{eq:results_secondary_dynamic_decomposition}
+\end{equation}
+
+The three omitted contributions are driven by shaft acceleration, axial
+acceleration, and changing helix motion ratio. The first can remain active
+even while the sheave is instantaneously stationary. The second changes the
+inertia multiplying axial acceleration in
+\Cref{eq:completed_secondary_axial_balance}. Its contribution to the shared
+shift coordinate is
+\begin{equation}
+ m_{h,\mathrm{ref}}
+ =I_{s,M}\left(\frac{d\theta_s}{ds}\right)^2.
+ \label{eq:results_helix_reflected_inertia}
+\end{equation}
+The force correction and the reflected inertia are thus two appearances of
+the same mechanism, not separate effects that can be assessed independently
+once the trajectory changes.
+
+The equation also distinguishes excitation time scales. A change in shaft
+speed over a shorter interval increases the first term through
+\(\dot\omega_s\); a fixed-shape axial excursion executed more rapidly
+increases the acceleration and squared-velocity contributions. A constant-angle
+helix removes the local profile-curvature term, but retains both acceleration
+terms. Nonlinear mapping from \(x_s\) to \(s\) may still introduce
+\(\dot s^2\) contributions in the shared-coordinate equations.
+
+Geometry can amplify these contributions strongly because the motion ratio
+appears squared in the reflected axial inertia. The commercial-secondary
+estimate in \Cref{fig:results_secondary_scaling} illustrates why physical
+rotational inertia and motion ratio must be considered together. Its motion
+ratio is weaker than the Baja reference, yet the larger movable-member inertia
+raises the nominal reflected local axial inertia to approximately
+\(1.49\) times the reference at \(31^\circ\). The low and high estimates
+span approximately \(0.45\) to \(2.92\) times the reference. The
+\(28^\circ\) high-estimate sensitivity reaches approximately \(3.72\).
+These are component estimates, not measurements of a complete commercial CVT
+response.
+
+% SOURCE: commercial-actuator recap pp. 2, 5--6.
+% NEW COMPOSITION: show I*H^2 contours or curves, the Baja point, and low/
+% nominal/high hardware estimates. A demand panel may use prescribed
+% accelerations, but must label these as sensitivity inputs, not trajectories.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[48mm]
+    {figures/results/dynamics/secondary_inertia_scaling.pdf}
+    {Existing estimates + new equation-based display}
+    {Compare movable rotational inertia, helix motion ratio, and their squared
+     product. Mark Baja and the low/nominal/high commercial estimates; separate
+     component-level prescribed acceleration sensitivity from simulated motion.}
+  \caption{Secondary-actuator sensitivity to movable-member inertia and helix
+  geometry. The coefficient \(I_{s,M}(d\theta_s/dx_s)^2\) is local axial
+  reflected inertia; conversion to the shared shift coordinate also includes
+  \((dx_s/ds)^2\). The provisional commercial estimates show that a less
+  aggressive motion ratio need not imply a smaller dynamic contribution.}
+  \label{fig:results_secondary_scaling}
+\end{figure}
+
+\subsubsection{A continuous transient with a measurable response change}
+\label{sec:results_secondary_continuous}
+
+To connect that scaling to motion, the nominal commercial helix geometry and
+movable-member rotational inertia are inserted into the otherwise reference
+Baja system. A secondary torque increment of \(-120~\mathrm{N\,m}\) is
+applied over \(25~\mathrm{ms}\) from a conditioned state near the middle of
+active shift. The selected case remains in clean continuous operation and
+compares the full helix with its quasi-static counterpart. The unchanged host
+makes this a mechanism-transplant experiment, not a reconstructed prediction
+for a Sidewinder vehicle.
+
+The total relative helix-reaction correction is evaluated on the full-model
+trajectory as
+\begin{equation}
+ \Pi_{s,\mathrm{total}}(t)
+ =\frac{I_{s,M}|\dot\omega_s+\ddot\theta_s|}
+        {|\tau_{s,\mathrm{helix}}^{\mathrm{QS}}|},
+ \qquad \tau_{s,\mathrm{helix}}^{\mathrm{QS}}\ne0.
+ \label{eq:results_secondary_dynamic_number}
+\end{equation}
+It reaches \(7.87\%\) in the nominal case, with an approximately
+\(89.3~\mathrm{N}\) peak dynamic helix-force correction. The quasi-static
+torque magnitude remains above \(92.2\%\) of its onset value, so the peak
+relative correction is not generated by a denominator approaching zero.
+The shaft-acceleration term dominates this example. The component maxima are
+not added to obtain the total: the signed contributions are combined at each
+instant before their magnitude is taken.
+
+A local correction is not yet a trajectory error. Each model is therefore
+also run with a zero-disturbance control. For any output \(y\), the compared
+perturbation responses are
+\begin{equation}
+ \delta y^{M}(t)=y^{M}_{\mathrm{loaded}}(t)-y^{M}_{\mathrm{control}}(t),
+ \qquad M\in\{\mathrm{full},\mathrm{QS}\}.
+ \label{eq:results_actuator_perturbation_response}
+\end{equation}
+\Cref{fig:results_secondary_continuous_response} compares these responses
+alongside the actual stressed trajectories. In the nominal case,
+\(\max|\delta y^{\mathrm{full}}-\delta y^{\mathrm{QS}}|\) is
+\(0.274~\mathrm{mm}\) for shift, \(40.4~\mathrm{rpm}\) for primary speed,
+and \(109.1~\mathrm{N}\) for secondary clamp. Under the same disturbance,
+the high estimate reaches a \(13.6\%\) reaction correction and a
+\(68.5~\mathrm{rpm}\) primary-speed response difference.
+
+% SOURCE: commercial-actuator recap pp. 3--4, 7--12.
+% CASE: S_s50_m120_r25ms, nominal 31-degree estimate; low/high repeat same
+% forcing. Include each model's unforced control in response extraction.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[57mm]
+    {figures/results/dynamics/secondary_continuous_response.pdf}
+    {Existing results: continuous secondary response}
+    {Show signed dynamic contributions and quasi-static torque, then actual
+     stressed motion and full/QS perturbation-response differences. Include
+     the low/nominal/high sensitivity without mixing unlike response units.}
+  \caption{Continuous-transient consequence of the commercial-secondary
+  mechanism transplant. The nominal case uses a \(-120~\mathrm{N\,m}\)
+  added secondary torque over \(25~\mathrm{ms}\). Force diagnostics are
+  evaluated on the full-model motion. Perturbation-response differences
+  subtract each model's own zero-disturbance control as defined in
+  \Cref{eq:results_actuator_perturbation_response}; they are not raw differences
+  between independently conditioned trajectories.}
+  \label{fig:results_secondary_continuous_response}
+\end{figure}
+
+This example establishes a secondary dynamic effect without relying on a
+contact loss or an almost-vanishing static reaction. The gross trajectories
+remain close, but the disturbance-induced response changes measurably. The
+low, nominal, and high hardware estimates provide a sensitivity range; they
+are not statistical confidence bounds on a measured machine.
+
+\subsubsection{Rapid backshift couples reaction, inertia, and traction}
+\label{sec:results_secondary_hybrid_response}
+
+A more sensitive response occurs when the transient approaches a traction
+transition. The severe reversal case uses the reference secondary with
+\(270^\circ\) torsional preload and a conditioned state near \(30\%\)
+active shift. Primary applied torque is blended toward
+\(-28~\mathrm{N\,m}\) over \(50~\mathrm{ms}\). The full and quasi-static
+helix systems receive the same initial state and external disturbance.
+Both use the zero-clearance bilateral slot, so the comparison changes the
+movable-member dynamics rather than permitting detachment in only one model.
+
+\Cref{fig:results_secondary_sensitive_transient} shows that the trajectories
+remain close until the late contact event, after which the quasi-static
+model backshifts more rapidly. It leaves stick approximately
+\(4.66~\mathrm{ms}\) earlier and accumulates approximately
+\(4.66~\mathrm{ms}\) more non-stick duration within the reported window.
+The maximum shift separation is \(2.026~\mathrm{mm}\). Near the event,
+\(I_{s,M}(d\theta_s/ds)^2\) contributes approximately \(7.48~\mathrm{kg}\)
+to the full model's shift-inertia accounting. This is a reflected coefficient,
+not additional physical mass attached to the sheave.
+
+The reduced model returns the movable rotational inertia to rigid shaft
+rotation. It consequently retains that rotating hardware but loses its
+resistance to relative helix motion. The resulting shift acceleration feeds
+back into the reaction terms in
+\Cref{eq:results_secondary_dynamic_decomposition}, changing the clamp and
+traction solution. This explains why the difference is not captured by
+subtracting an inertial force from a fixed quasi-static trajectory. The
+trajectory changes as well. The extra resistance to rapid backshift is
+inertial; it is not an added dissipative damper.
+
+% SOURCE: helix checkpoint pp. 6--10.
+% CASES: E58_reversal_270_s30_engine_m28_r050 and
+% E58_stock_300_s30_output_m120_r002, with E5.7 parent chronology.
+% REQUIRED NEW COMPOSITION: common absolute event time; shift, signed helix
+% terms, normal load, and contact strips. Show stock contrast separately.
+% Avoid labelling the archived ratio field as omega_s/omega_p: see S1.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[60mm]
+    {figures/results/dynamics/secondary_sensitive_transient.pdf}
+    {Existing results: severe transient and high-margin contrast}
+    {Severe pair: shift response, reflected inertia, helix reaction, and exact
+     contact histories through the event. Adjacent contrast: the stock
+     high-margin case on explicitly stated axes. Preserve absolute event-time
+     differences rather than aligning away the change being measured.}
+  \caption{Secondary-helix dynamics near a sensitive traction event, contrasted
+  with a high-margin stock case. In the severe case, full and quasi-static
+  models start from the same conditioned state under the same forcing.
+  The stock contrast uses \(300^\circ\) preload and a different disturbance,
+  an added secondary torque of \(-120~\mathrm{N\,m}\) over
+  \(2~\mathrm{ms}\); it is not a preload-only comparison. Contact histories
+  and shift motion are displayed with their original timing.}
+  \label{fig:results_secondary_sensitive_transient}
+\end{figure}
+
+The reaction chronology adds an important distinction. In the selected
+full-dynamic reversal, the quasi-static reacted torque is still approximately
+\(+1.811~\mathrm{N\,m}\) when the dynamic correction cancels it. The
+required slot reaction then changes sign. Yet secondary normal load remains
+positive: across the thirty crossing cases in the chronology analysis, the
+smallest reported secondary resultant at a helix crossing is approximately
+\(827~\mathrm{N}\). Those crossings did not coincide with loss of the integrated secondary
+normal load. Slot-flank reversal and belt-contact admissibility must therefore
+be assessed separately. The microsecond separation between
+the recorded helix and traction crossings is not used to establish a resolved
+causal ordering.
+
+Conversely, the stock high-margin case develops a visible shift-acceleration
+reaction contribution while sticking, but the paired shift trajectories differ
+by only about \(0.051~\mathrm{mm}\). Nonzero dynamic terms are thus neither
+confined to slipping operation nor sufficient, by themselves, to produce a
+large trajectory difference. Their importance depends on the available
+reaction margin and on the coupled response being excited.
+
+\CINDERResultsDraftNote{S1 --- archive-level ratio and event checks}{
+  The recap reports a maximum ratio separation of 0.231, but the inspected
+  plot routine labels a field sourced from an effective-radius ratio as a
+  shaft-speed ratio. Confirm the archived field and convention before adding
+  that number here. The 4.66 ms timing difference is retained at the recap's
+  precision; retain the underlying event records and observation window when
+  preparing the contact strips. Do not convert the reported non-stick
+  duration into a claim about eventual reattachment outside that window.}
+
+\subsubsection{What the comparison changes for prediction and design}
+\label{sec:results_actuator_design_implication}
+
+The continuous and sensitive-transient cases answer complementary questions.
+The commercial estimate shows that ordinary helix kinematics and plausible
+movable-member inertia can produce a measurable dynamic correction during
+continuous motion. The reversal comparison shows how the same type of
+coupling can change the timing and magnitude of a rapid shift/contact
+response. A quasi-static model may therefore describe a smooth acceleration
+well while missing a consequential response to a harsher disturbance.
+
+This has a direct design implication. A static torque-to-clamp relationship
+contains the spring, transmitted torque, and helix motion ratio, but not the
+acceleration demand of the movable assembly. Matching that static relationship
+alone does not fix \(I_{s,M}(d\theta_s/ds)^2\) or the
+\(I_{s,M}\dot\omega_s\) reaction contribution. Inertia and mechanism geometry
+must therefore be assessed alongside preload when transient behavior matters.
+The evidence does not select an optimal inertia or helix angle; it establishes
+why a static clamp comparison alone is insufficient for that design decision.
 
 \subsection{Reduced-Belt Transient Mechanics}
 \label{sec:results_reduced_belt_mechanics}
-% TODO: belt acceleration, shift acceleration, curvature, moving-radius, density continuation.
 
-% ==============================================================
+\subsubsection{Judge each term in the equation it must close}
+\label{sec:results_belt_term_inventory}
+
+The belt retains two different balances. The global transport equation
+\Cref{eq:complete_belt_transport_newton} relates the net pulley traction to
+\(m_b\dot v_b\). The closed tension compatibility
+\Cref{eq:closed_loop_tension_compatibility} instead requires the two wraps and
+straight spans to form one consistent tension field. A small global inertia
+force need not imply that acceleration is unimportant to that second balance.
+
+For the term comparison, the final tension compatibility is collected as
+\begin{equation}
+ F_{\ddot s}+F_{\dot s^2}+F_{\dot v_b}+F_{\dot s v_b}+F_N=0.
+ \label{eq:results_belt_term_balance}
+\end{equation}
+Here the terms are the surviving contributions in
+\Cref{tab:results_belt_terms}; the common \(2\rho_bA_bv_b^2\) contribution
+has already cancelled between the two wrap-boundary sums. That cancellation
+is specific to this compatibility equation and does not remove centrifugal
+loading from the local contact conditions.
+
+To state the coefficients compactly, let \(r'_j=dr_{j,\mathrm{cm}}/ds\)
+and \(r''_j=d^2r_{j,\mathrm{cm}}/ds^2\). For nonzero \(\lambda_j\), define
+\begin{equation}
+\begin{aligned}
+ G_j&=\lambda_j
+       \frac{1+e^{-\lambda_j\phi_j/\sin\beta}}
+            {1-e^{-\lambda_j\phi_j/\sin\beta}},\\
+ H_j&=\frac{2\sin\beta}{\lambda_j}
+       -\phi_j\frac{1+e^{-\lambda_j\phi_j/\sin\beta}}
+                    {1-e^{-\lambda_j\phi_j/\sin\beta}}.
+\end{aligned}
+\label{eq:results_belt_contact_factors}
+\end{equation}
+The continuous limits are \(G_j=2\sin\beta/\phi_j\) and \(H_j=0\) at
+\(\lambda_j=0\). These factors collect the existing wrap solution; they do
+not add a contact law.
+
+\begin{table}[H]
+  \centering\small
+  \caption{Surviving contributions to the reduced tension compatibility.
+  Radius derivatives are with respect to the shared shift coordinate.
+  The contact term is the difference of the two mapped normal-load
+  contributions, not either gross pulley load.}
+  \label{tab:results_belt_terms}
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}p{0.24\linewidth}p{\dimexpr0.76\linewidth-2\tabcolsep\relax}@{}}
+    \toprule
+    Contribution & Final-equation term \\
+    \midrule
+    Shift acceleration &
+      \(F_{\ddot s}=-2\rho_bA_b(r_{p,\mathrm{cm}}r'_p-r_{s,\mathrm{cm}}r'_s)\ddot s\) \\
+    Path curvature &
+      \(F_{\dot s^2}=-2\rho_bA_b(r_{p,\mathrm{cm}}r''_p-r_{s,\mathrm{cm}}r''_s)\dot s^2\) \\
+    Belt acceleration &
+      \(F_{\dot v_b}=\rho_bA_b(H_pr_{p,\mathrm{cm}}-H_sr_{s,\mathrm{cm}})\dot v_b\) \\
+    Moving radius &
+      \(F_{\dot s v_b}=\rho_bA_b(H_pr'_p-H_sr'_s)\dot s v_b\) \\
+    Net contact & \(F_N=G_pN_p-G_sN_s\) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The distinction between gross and net loading is central to the result.
+\(G_pN_p\) and \(G_sN_s\) can each be hundreds or thousands of newtons
+while nearly cancelling. A sub-newton transient term can then be important to
+the remaining compatibility. Its scale should not be dismissed by comparing
+it only with gross clamp.
+
+The reported activity share uses the absolute contributions to this final
+balance. For a time window \(\mathcal W\),
+\begin{equation}
+ a_i(t)=\frac{|F_i(t)|}{\sum_k|F_k(t)|},
+ \qquad
+ A_i(\mathcal W)=
+ \frac{\int_{\mathcal W}|F_i(t)|\,dt}
+      {\int_{\mathcal W}\sum_k|F_k(t)|\,dt},
+ \label{eq:results_belt_activity}
+\end{equation}
+where the sum contains the five terms in
+\Cref{eq:results_belt_term_balance}. Windows with vanishing total activity
+carry no such percentage interpretation. Signed terms and dimensional
+magnitudes remain necessary: activity describes participation in the equation,
+not an energy fraction or the trajectory error caused by deleting a term.
+
+% SOURCE: reduced-belt recap pp. 2--3, 8--9, 11.
+% NEW DISPLAY: show global transport and tension compatibility separately;
+% plot signed dimensional terms and their proper activity shares over matched
+% reference free-shift intervals. Do not place every global/local term into
+% one common denominator. Keep cancellation of precursor terms exact.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[51mm]
+    {figures/results/dynamics/belt_balance_hierarchy.pdf}
+    {Existing term data: two distinct belt balances}
+    {Compare the global transport row with the closed tension balance on the
+     same reference interval. Show gross contact cancellation, signed surviving
+     terms, and equation-activity shares using separate denominators.}
+  \caption{Term hierarchy in the global transport and closed tension
+  compatibility equations. The global inertia term is compared with the two
+  opposing pulley reactions; the local acceleration terms are compared within
+  the surviving tension compatibility. These are distinct force balances, so
+  their relative contributions need not have the same hierarchy.}
+  \label{fig:results_belt_hierarchy}
+\end{figure}
+
+\subsubsection{Rapid changes in shift motion activate radial belt inertia}
+\label{sec:results_belt_rapid_shift}
+
+During smooth free shifting, belt acceleration and net contact provide the
+main opposing contributions to the tension compatibility. The
+shift-acceleration contribution grows when sheave motion is strongly
+accelerated, arrested, or reversed. This is the distinction tested by applying
+the same \(+18^\circ\) road-load change over different rise times.
+The finite-rise cases produce peak \(|F_{\ddot s}|\) values of approximately
+\(0.0360\), \(0.00941\), and \(0.00269~\mathrm{N}\) for
+\(50\), \(200\), and \(800~\mathrm{ms}\), respectively.
+
+\Cref{fig:results_belt_rate_dependence} separates this rate effect from load
+magnitude. Across the three smooth rises, the fitted peak varies approximately
+as \(T_{\mathrm{rise}}^{-0.94}\), close to inverse rise time over that
+range. This is a response of the coupled system to those forcing programmes,
+not a universal power law or a prescribed scaling of sheave motion. The
+instantaneous-load case is shown separately; only the boundary load is stepped,
+not a CVT state.
+
+The wider twenty-eight-case envelope connects the controlled experiment to
+other operating states. A rapid uphill case near \(64\%\) active shift,
+with about \(+20.7^\circ\) loading applied over \(56~\mathrm{ms}\), reaches
+approximately \(24\%\) shift-acceleration activity over the load-rise
+window. Increased road load does not always produce backshift: the tested
+responses include continued upshift, arrest, and reversal. The better
+predictor of this term's importance is the realized shift acceleration, not
+the name assigned to the maneuver.
+
+% SOURCE: reduced-belt recap pp. 3--5, 13.
+% CASES: +18 deg / 50,200,800 ms; instantaneous case outside the fit;
+% 28-case envelope; fast +20.7 deg / about56ms exemplar (exact ID pending).
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[53mm]
+    {figures/results/dynamics/belt_rate_dependence.pdf}
+    {Existing results: loading rate and realized shift acceleration}
+    {Pair the controlled rise-time curve with the envelope's activity versus
+     actual shift acceleration. Add a short trace of the rapid-shift exemplar
+     to connect the percentage to arrest/reversal of sheave motion.}
+  \caption{Activation of the shift-acceleration term by rapid loading.
+  The controlled \(+18^\circ\) family isolates boundary rise time, while the
+  wider envelope links the contribution to the solved sheave acceleration.
+  Activity is evaluated over the stated load-rise window using
+  \Cref{eq:results_belt_activity}; it is not a percentage change in vehicle
+  acceleration or shift position.}
+  \label{fig:results_belt_rate_dependence}
+\end{figure}
+
+The same mechanism remains active when power flow is reversed. A separate
+overrun case combines downhill loading with a resisting primary torque and
+verifies secondary-to-primary power flow. Its shift-acceleration contribution
+accounts for approximately \(17\%\) of integrated tension-equation activity
+in the reported transition window. The result is therefore not limited to
+uphill backshift: rapid changes in the shift motion also matter during
+controlled overrun. The ordinary downhill cases, by contrast, retain
+full-throttle drive and represent unloading rather than this reverse-power
+condition.
+
+\subsubsection{A sensitive coefficient need not produce an important term}
+\label{sec:results_belt_coefficient_driver}
+
+The ordinary load envelope reaches only about \(19\%\) of the static
+traction limit, so it does not alone test whether contact asymmetry could
+amplify the moving-radius contribution. Independent evaluation of the
+coefficients toward \(95\%\) utilization shows that it can. This motivates
+the high-contact comparisons rather than treating small terms in the nominal
+launch as sufficient evidence for omission.
+
+The subsequent clamp-stress cases reach sticking states near \(40\), \(60\),
+\(80\), and \(95\%\) utilization without altering the friction
+coefficients. More severe cases enter primary-slip/secondary-stick, and one
+also enters both-slip. The largest realized moving-radius coefficient is
+approximately \(0.928~\mathrm{N}/(\mathrm{m^2\,s^{-2}})\), yet the
+largest realized moving-radius force is only \(0.0182~\mathrm{N}\).
+Its greatest instantaneous activity in these stress cases is approximately
+\(0.13\%\).
+
+\Cref{fig:results_belt_coefficient_driver} should be read as a product, not
+as three independent rankings. The large coefficient tends to appear near
+engagement, when belt speed is still low, or in heavily utilized seated
+states, when shift speed is near zero. Either condition suppresses
+\(\dot s v_b\). Multiplying the largest coefficient from one instant by the
+largest driver from another would describe a state the trajectory did not
+visit. The mixed-slip example retains the same distinction: high contact
+asymmetry does not by itself supply the missing kinematic driver.
+
+% SOURCE: reduced-belt recap pp. 6--9.
+% CASES: contact_primary_45, contact_combined_p40_s20, selected active
+% primary-slip interval; overrun_strong as reverse-power comparison.
+% NEW DISPLAY: synchronized coefficient/driver/product, not just a scatter
+% of separate peak values. Use same-instant data; retain native contact timing.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[54mm]
+    {figures/results/dynamics/belt_coefficient_driver.pdf}
+    {New composition from existing high-contact and overrun data}
+    {Show the moving-radius coefficient, its simultaneous driver, and their
+     product through high utilization and mixed slip. Contrast with the
+     significant shift-acceleration contribution in true overrun.}
+  \caption{Why coefficient sensitivity alone overstates the realized
+  moving-radius effect. The complete term uses coefficient and driver at the
+  same state. High utilization can enlarge the coefficient while small belt
+  speed or nearly stationary shift suppresses its contribution. Overrun
+  supplies an additional test with verified reverse power flow.}
+  \label{fig:results_belt_coefficient_driver}
+\end{figure}
+
+The path-curvature term remains very small for a related but distinct reason:
+the realized \(\dot s^2\) is too small to activate its finite coefficient
+strongly. Belt acceleration does not share that suppression and remains a
+substantial partner to net contact, including at high traction demand and in
+overrun. These observations support a hierarchy of complete terms, not a
+claim that the small coefficients vanish or that every contact branch has
+been sampled. In particular, the opposite mixed branch,
+primary-stick/secondary-slip, did not arise naturally in this belt-study set.
+
+\subsubsection{What can be reduced without breaking the coupled description}
+\label{sec:results_belt_reduction}
+
+The global transport inertia presents a different reduction question.
+Across the investigated envelope, \(m_b\dot v_b\) is small relative to the
+two opposing pulley reactions. Scaling only that coefficient to \(10\%\)
+or \(3\%\), however, prevents admissible engagement in the flat,
+fast-backshift, and fast-unloading tests. This isolated modification leaves
+the local wrap inertia unchanged and therefore does not represent a
+consistent change in belt mass.
+
+Scaling belt density instead changes the global mass and local wrap inertia
+together. Both the \(10\%\) and \(3\%\) density continuations complete
+all three cases and preserve their respective hybrid transition counts.
+\Cref{fig:results_belt_reduction} compares the trajectory differences from
+this coherent modification with the isolated-row outcomes. This is evidence
+for investigating a coupled low-inertia reduction, rather than deleting a
+small coefficient from one equation on its own. It does not solve the exact
+zero-density limit.
+
+\CINDERResultsDraftNote{R1 --- reconcile the continuation error scale}{
+  The source recap's graph and narrative report approximately 0.81--0.86\%
+  worst five-state normalized RMSE at 3\% density; its page-10 table prints
+  approximately 81--86\%. Match the archived
+  \texttt{inertia\_continuation\_comparison.csv} to the normalization and plot
+  before inserting the quantitative error bound. The completion and unchanged
+  transition-count statements above do not resolve this discrepancy.}
+
+% SOURCE: reduced-belt recap p.10 and pp.11--13, with scale discrepancy R1.
+% NEW REDUCED-MODEL TEST R2: omit the curvature and moving-radius terms
+% together, preserve the other equations, and re-integrate selected cases.
+% Plot this only once actually run; no invented outcome or trace is permitted.
+\begin{figure}[tbp]
+  \centering
+  \CINDERResultsFigure[56mm]
+    {figures/results/dynamics/belt_reduction_comparisons.pdf}
+    {Reduction evidence: existing continuation + proposed omission test}
+    {Existing: flat/backshift/unloading density continuation, with transition
+     counts and correctly normalized state errors. Planned: a consistently
+     re-integrated curvature/moving-radius omission comparison on the same
+     challenge cases. Keep the two tests distinctly labelled.}
+  \caption{Tests of further belt-model reduction. The completed continuation
+  changes density in all retained belt-inertia contributions; isolated
+  transport-row changes are shown separately. A second, explicitly planned
+  comparison tests omission of the two small kinematic terms. Its results
+  remain to be generated, and the density-continuation error scale requires
+  the source check identified in the draft.}
+  \label{fig:results_belt_reduction}
+\end{figure}
+
+\CINDERResultsDraftNote{R2 --- test the proposed small-term omission}{
+  Re-integrate a consistently assembled model omitting \(F_{\dot s^2}\) and
+  \(F_{\dot s v_b}\), first jointly and separately only if attribution is
+  needed. Use the flat reference, rapid backshift, rapid unloading, high-contact
+  mixed-slip, and true-overrun cases. Compare state errors, event histories,
+  and admissibility at resolved numerical settings. This is the evidence
+  needed to turn small observed equation activity into a quantitative bound
+  on the reduced model's response; no passing outcome is presumed.}
+
+The resulting approximation guidance is summarized in
+\Cref{tab:results_belt_reduction_guidance}. Belt acceleration belongs in the
+present finite-inertia tension compatibility. Shift-acceleration inertia must
+also be retained when rapid changes in sheave motion are part of the intended
+use. Curvature and moving-radius terms are the strongest candidates for
+omission over the investigated Baja envelope, because their complete realized
+contributions remain small even in the targeted high-contact and overrun
+cases. Their actual omission error must still be established by the reduced
+comparison. Global low-belt-inertia modeling is a separate, coupled limit.
+
+\begin{table}[H]
+  \centering\small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.17}
+  \caption{Reduction guidance for the investigated belt model and operating
+  envelope. Equation-level smallness, a completed continuation, and a
+  quantitatively verified reduced trajectory are different levels of evidence.}
+  \label{tab:results_belt_reduction_guidance}
+  \begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{0.22\linewidth}
+    >{\raggedright\arraybackslash}p{0.26\linewidth}
+    >{\raggedright\arraybackslash}p{\dimexpr0.52\linewidth-4\tabcolsep\relax}@{}}
+    \toprule
+    Contribution & Disposition & Condition / evidence \\
+    \midrule
+    Belt acceleration in tension closure & Retain & Substantial contribution
+    throughout the tested finite-inertia balance. \\[3pt]
+    Shift acceleration & Retain for rapid transients & Appreciable during
+    arrest/reversal and overrun; smaller in smooth shifting. \\[3pt]
+    Path curvature & Candidate omission & Small realized squared-speed
+    contribution; re-integrated omission error pending. \\[3pt]
+    Moving radius & Candidate omission & Small simultaneous
+    coefficient--driver product, including tested high utilization and slip;
+    re-integrated omission error pending. \\[3pt]
+    Global transport inertia & Reduce coherently & Density continuation
+    completes; local and global belt inertia must change together. Exact
+    massless limit not evaluated. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The distinction across these results is not simply between a dynamic model
+and a static one. Some retained mechanisms participate throughout ordinary
+motion, some become important only when the corresponding acceleration is
+excited, and others remain small because their coefficient and driver do not
+become large together. That separation explains both why a relatively simple
+approximation can succeed in smooth operation and why it can miss the
+response to a rapid disturbance. It also identifies which simplifications
+should be tested first, with the remaining coupled balances preserved.
+
+\FloatBarrier
+\endgroup
+
 \section{Coupled Operation Across Regimes}
 \label{sec:results_coupled_regimes}
 
@@ -13095,7 +14269,7 @@ Continuous regime equations
 \normalsize
 \end{center}
 
-\chapter{Reference Inputs and Shaft-Boundary Models}
+\chapter{Reference Inputs, Shaft Boundaries, and Study Actuators}
 \label{app:reference_configuration}
 
 This appendix records the shared Baja reference inputs used by the Results
@@ -13194,6 +14368,28 @@ Secondary & Movable-face share of belt torque & $\tau_{s,M}/\tau_s$ & $0.5$ \\
 \normalsize
 \end{center}
 
+\subsection{Reference secondary-helix contact topology}
+\label{app:reference_helix_topology}
+
+The Results reference CVT uses a zero-clearance bilateral slot at the secondary
+helix. The signed torque and axial reaction are those derived in
+\Cref{sec:secondary_rotational_loading,sec:secondary_helix_closing_force}; a
+positive or negative required reaction is carried by the corresponding slot
+flank. The slot is idealized as having no backlash or free-play, so changing
+reaction sign does not introduce a separate kinematic state.
+
+This is a physical reference-model assumption, not a change to the helix
+equations derived in the main text. The stock \CINDERtag\ helix element additionally applies a one-sided
+contact-admissibility check that requires the reaction on its implemented helix
+flank to remain compressive. For the reference Results model, the loader
+replaces that element by a bilateral subclass that preserves the same spring,
+torque-sharing, inertia, and helix kinematics while removing only that
+one-sided flank check. The implementation is
+in
+\ResultsCode{defaults/reference_model/slotted_helix.py}{defaults/reference_model/slotted_helix.py}
+and is applied by
+\ResultsCode{defaults/reference_model/reference_case.py}{defaults/reference_model/reference_case.py}.
+
 The shared reference launch begins from
 \begin{equation}
 \omega_p(0)=1800~\mathrm{rpm},\qquad
@@ -13223,6 +14419,7 @@ or published data, and engineering estimates.  The principal basis of each param
 Parameter family & Basis used for the reference set \\ \midrule
 CVT and pulley dimensions & Based on the team's custom Baja CVT hardware, using direct measurements and derived geometry where available. \\
 Primary and secondary actuation & Based on the team's hardware and reference tune; preload and profile quantities are the values used by the frozen simulation input. \\
+Secondary helix contact topology & Zero-clearance bilateral slot used as the Results reference mechanism; this is a modelling assumption for the ideal signed helix relation, not a measured backlash/contact-compliance model. \\
 Masses and inertias & Combination of known component masses, CAD/geometry-derived quantities, and engineering estimates where direct inertia measurements were unavailable. \\
 Belt density and traction coefficients & Engineering estimates based on generic rubber/V-belt material and contact data; these quantities were not measured for the exact belt used by the team. \\
 Engine torque curve & Based on the Kohler CH440 torque/power data used in \Cref{fig:kohler_engine_motivation} \citep{BajaSAEKohlerEngine2022}; interpolation and the out-of-range braking tails are numerical extensions described in \Cref{app:primary_engine_boundary}. \\
@@ -13236,12 +14433,12 @@ Rolling resistance and aerodynamic parameters & Engineering estimates used to pr
 \label{app:results_boundary_models}
 
 At each shaft, the host boundary supplies the signed external torque and the
-rotational inertia referred to that shaft.  In the notation of the formulation,
+rotational inertia referred to that shaft.  Using the shaft-interface notation introduced in \Cref{sec:system_definition},
 a boundary evaluation returns
 \begin{equation}
 \mathcal{B}_j(t,\vect{x},\vect{x}_h)
 \;\longmapsto\;
-\left(\tau_{j,\mathrm{ext}},I_{j,\mathrm{ext}}\right),
+\left(\tau_{\mathrm{B},j},I_{\mathrm{B},j}\right),
 \qquad j\in\{p,s\},
 \label{eq:shaft_boundary_interface}
 \end{equation}
@@ -13288,15 +14485,15 @@ Controlled overrun boundary pair & Results code & \ResultsCode{studies/reduced-b
 The CINDER class named \texttt{FixedShaftBoundary} fixes the \emph{boundary
 inputs}, not the shaft speed.  It returns
 \begin{equation}
-\tau_{j,\mathrm{ext}}=\tau_{j,0},
+\tau_{\mathrm{B},j}=\tau_{\mathrm{B},j}^{(0)},
 \qquad
-I_{j,\mathrm{ext}}=I_{j,0},
+I_{\mathrm{B},j}=I_{\mathrm{B},j}^{(0)},
 \label{eq:fixed_shaft_boundary}
 \end{equation}
 while \(\omega_j\) remains part of the dynamically integrated CVT state.  This
 boundary is used for constructed bench states in the verification studies and
 for source-constrained external cases such as the independent Ballew benchmark;
-the selected \(\tau_{j,0}\) and \(I_{j,0}\) values are listed with those cases in
+the selected \(\tau_{\mathrm{B},j}^{(0)}\) and \(I_{\mathrm{B},j}^{(0)}\) values are listed with those cases in
 \Cref{app:study_reproducibility}.
 
 \subsection{Primary full-throttle engine boundary}
@@ -13305,9 +14502,9 @@ the selected \(\tau_{j,0}\) and \(I_{j,0}\) values are listed with those cases i
 The reference primary boundary uses the CINDER v1.1.2 full-throttle engine
 component,
 \begin{equation}
-\tau_{p,\mathrm{ext}}=\tau_{\mathrm{eng}}(\omega_p),
+\tau_{\mathrm{B},p}=\tau_{\mathrm{eng}}(\omega_p),
 \qquad
-I_{p,\mathrm{ext}}=I_{\mathrm{eng}},
+I_{\mathrm{B},p}=I_{\mathrm{eng}},
 \label{eq:reference_primary_boundary}
 \end{equation}
 with \(I_{\mathrm{eng}}=\SI{0.05}{\kilogram\meter\squared}\).  The positive-drive
@@ -13368,7 +14565,7 @@ F_{\mathrm{aero}} &=-\frac{1}{2}\rho C_d A_f\lvert v\rvert v,
 \end{align}
 and the external secondary torque is
 \begin{equation}
-\tau_{s,\mathrm{ext}}
+\tau_{\mathrm{B},s}
 =
 \frac{r_w}{G}
 \left(F_{\mathrm{grade}}+F_{\mathrm{roll}}+F_{\mathrm{aero}}\right).
@@ -13376,7 +14573,7 @@ and the external secondary torque is
 \end{equation}
 The vehicle translation and wheel rotation are reflected to the secondary as
 \begin{equation}
-I_{s,\mathrm{ext}}
+I_{\mathrm{B},s}
 =
 I_{s,\mathrm{dir}}
 +\frac{I_w}{G^2}
@@ -13425,16 +14622,16 @@ u(t)=
 \xi=\frac{t-t_0}{T_r}.
 \label{eq:results_boundary_smoothstep}
 \end{equation}
-The boundary forms used in the Results campaign include
+For a shaft $j$, the boundary forms used in the Results campaign include
 \begin{align}
-\tau_{\mathrm{add}}(t)
-&=\tau_{\mathrm{base}}(t)+u(t)\,\Delta\tau,\\
-\tau_{\mathrm{target}}(t)
-&=[1-u(t)]\tau_{\mathrm{base}}(t)+u(t)\tau_{\mathrm{target}},\\
-\tau_{\mathrm{scale}}(t)
-&=[1+u(t)(k_\tau-1)]\tau_{\mathrm{base}}(t),\\
-\tau_{\mathrm{prescribed}}(t)
-&=[1-u(t)]\tau_i+u(t)\tau_f.
+\tau_{\mathrm{B},j}^{\mathrm{add}}(t)
+&=\tau_{\mathrm{B},j}^{\mathrm{base}}(t)+u(t)\,\Delta\tau_j,\\
+\tau_{\mathrm{B},j}^{\mathrm{target}}(t)
+&=[1-u(t)]\tau_{\mathrm{B},j}^{\mathrm{base}}(t)+u(t)\tau_{j,\mathrm{target}},\\
+\tau_{\mathrm{B},j}^{\mathrm{scale}}(t)
+&=[1+u(t)(k_\tau-1)]\tau_{\mathrm{B},j}^{\mathrm{base}}(t),\\
+\tau_{\mathrm{B},j}^{\mathrm{prescribed}}(t)
+&=[1-u(t)]\tau_{j,i}+u(t)\tau_{j,f}.
 \label{eq:results_torque_boundary_family}
 \end{align}
 The additive, target, and scale forms retain the equivalent inertia returned by
@@ -13444,28 +14641,165 @@ case-specified constant inertia.  The time-programmed vehicle boundary retains
 road profile by a prescribed \(\gamma(t)\).  Exact amplitudes, inertias, grades,
 and transition times are listed with the study cases that use them.
 
+\section{Study-Specific Actuator Implementations}
+\label{app:results_actuator_implementations}
+
+The implementation described in \Cref{app:num_affine_assembly} allows the
+pulley actuator attached to either side to be exchanged without changing the
+belt, pulley, or contact closure. Each actuator contribution is returned
+through the same affine closure interface. The Results studies use that
+interface both for the full mechanisms derived in the main text and for the
+study-specific alternatives summarized below.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.39\textwidth}>{\raggedright\arraybackslash}p{0.12\textwidth}@{}}
+\toprule
+Actuator law & Used in & Mechanical change relative to the main-text actuator & Origin \\ \midrule
+\endfirsthead
+\toprule
+Actuator law & Used in & Mechanical change relative to the main-text actuator & Origin \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\bottomrule
+\caption{Study-specific actuator laws used through the common CINDER pulley-actuator interface.}
+\label{tab:results_actuator_implementations}\\
+\endlastfoot
+Bilateral dynamic helix
+& Shared Baja-reference studies
+& Same signed dynamic helix relation as \Cref{eq:secondary_reacted_helix_torque}; the physical contact is the zero-clearance bilateral slot of \Cref{app:reference_helix_topology}, rather than the stock v1.1.2 one-sided flank check.
+& \ResultsCode{defaults/reference_model/slotted_helix.py}{Results} \\[5pt]
+Quasi-static fixed-pivot flyweight
+& \Cref{sec:results_primary_actuator_dynamics}
+& Retains the centrifugal term of \Cref{eq:primary_flyweight_axial_force} and removes the two pivot-acceleration terms. The associated rotating inertia is reassigned to the fixed primary inertia rather than deleted.
+& \ResultsCode{studies/actuator-dynamics/infrastructure/ablation_core.py}{Results} \\[5pt]
+Quasi-static helix
+& \Cref{sec:results_primary_actuator_dynamics,sec:results_secondary_helix}
+& Retains spring torque and reacted movable-face belt torque, but removes the movable-member inertial term from \Cref{eq:secondary_reacted_helix_torque}. The removed movable rotational inertia is reassigned to the fixed secondary inertia.
+& \ResultsCode{studies/helix-topology/infrastructure/helix_mechanics.py}{Results} \\[5pt]
+Constant axial force
+& \Cref{sec:results_ballew_benchmark}
+& Replaces the native mechanical actuator by a prescribed axial closing force independent of state and closure unknowns.
+& \ResultsCode{studies/ballew-2015/infrastructure/benchmark/actuation.py}{Benchmark} \\[5pt]
+Tabulated axial force
+& \Cref{sec:results_ballew_force_replay}
+& Replaces the primary mechanical actuator by a prescribed time history, evaluated by piecewise-linear interpolation of the prepared force data.
+& \ResultsCode{studies/ballew-2015/infrastructure/benchmark/actuation.py}{Benchmark} \\[5pt]
+PI-controlled axial force
+& \Cref{sec:results_ballew_closed_loop}
+& Replaces the primary mechanical actuator by a feedback force law driven by primary speed and an integrated controller-error state carried by the benchmark host.
+& \ResultsCode{studies/ballew-2015/infrastructure/benchmark/controller.py}{Benchmark} \\
+\end{longtable}
+\normalsize
+\end{center}
+
+\subsection{Quasi-static actuator reductions}
+\label{app:results_quasistatic_actuators}
+
+The quasi-static primary-flyweight law used for the actuator-dynamics
+comparison keeps only the first term of
+\Cref{eq:primary_flyweight_axial_force},
+\begin{equation}
+F_{\mathrm{fw},x_p}^{\mathrm{QS}}
+=
+\frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{dx_p}.
+\label{eq:results_qs_flyweight_force}
+\end{equation}
+The terms proportional to \(\ddot x_p\) and \(\dot x_p^2\) are omitted from
+the actuator force. To avoid deleting physical rotating mass, the ablation
+moves the corresponding flyweight rotational inertia into the constant
+primary rotating inertia used by that comparison. The implementation is in
+\ResultsCode{studies/actuator-dynamics/infrastructure/ablation_core.py}{ablation_core.py}.
+
+For the secondary, define the quasi-static reacted torque
+\begin{equation}
+\tau_{s,\mathrm{helix}}^{\mathrm{QS}}
+=
+\tau_{s,M}
++k_{s,\theta}\left(\theta_{s,\mathrm{pre}}-\theta_s\right).
+\label{eq:results_qs_helix_torque}
+\end{equation}
+The quasi-static helix closing force is then
+\begin{equation}
+F_{\mathrm{helix},x_s}^{\mathrm{QS}}
+=
+\frac{d\theta_s}{dx_s}\,
+\tau_{s,\mathrm{helix}}^{\mathrm{QS}}.
+\label{eq:results_qs_helix_force}
+\end{equation}
+Relative to \Cref{eq:secondary_reacted_helix_torque}, the movable-member
+inertial contribution
+\(I_{s,M}\dot\omega_{s,M}\) is omitted. Its rotational inertia is moved to
+the fixed secondary inertia for the quasi-static comparison. The same
+reduction is used by the actuator-dynamics and helix-topology studies through
+\ResultsCode{studies/actuator-dynamics/infrastructure/ablation_core.py}{ablation_core.py}
+and
+\ResultsCode{studies/helix-topology/infrastructure/helix_mechanics.py}{helix_mechanics.py}.
+
+\subsection{Ballew benchmark axial-force actuators}
+\label{app:ballew_actuator_implementations}
+
+The Ballew benchmark uses prescribed clamping-force actuators rather than the
+mechanical flyweight, spring, and helix combination of the Baja reference CVT.
+The secondary actuator is constant in both benchmark protocols,
+\begin{equation}
+F_{s,\mathrm{act}}=\SI{2000}{\newton}.
+\label{eq:ballew_secondary_constant_force}
+\end{equation}
+The force-replay protocol sets the primary actuator equal to the prepared
+Figure~45 force history, with piecewise-linear interpolation between adjacent
+samples,
+\begin{equation}
+F_{p,\mathrm{act}}(t)
+=
+\operatorname{interp}_{\mathrm{lin}}\!\left[F_{45}(t)\right].
+\label{eq:ballew_primary_force_replay}
+\end{equation}
+The benchmark-local constant and tabulated force laws are implemented in
+\ResultsCode{studies/ballew-2015/infrastructure/benchmark/actuation.py}{actuation.py}.
+
+For the reconstructed closed-loop protocol, let
+\(n_p=60\omega_p/(2\pi)\) be primary speed in rpm and
+\(e=n_p-n^*\), with \(n^*=2500~\mathrm{rpm}\). The host carries the controller
+integral \(\eta\),
+\begin{equation}
+\dot\eta=e,
+\label{eq:ballew_controller_integral}
+\end{equation}
+and the commanded primary closing force is
+\begin{equation}
+F_{p,\mathrm{act}}
+=
+F_{\mathrm{ff}}+K_p e+K_i\eta,
+\qquad
+F_{\mathrm{ff}}=K_{\mathrm{ff}}F_{s,\mathrm{act}}.
+\label{eq:ballew_pi_force_law}
+\end{equation}
+The source-constrained reconstruction uses
+\(K_{\mathrm{ff}}=1.2\), \(K_p=5\), \(K_i=75\), so
+\(F_{\mathrm{ff}}=\SI{2400}{\newton}\), with \(\eta(0)=0\). No saturation or
+anti-windup term is added. The controller force law and host state are
+implemented in
+\ResultsCode{studies/ballew-2015/infrastructure/benchmark/controller.py}{controller.py}.
 
 \chapter{Results Configuration and Reproducibility}
 \label{app:study_reproducibility}
 
-This appendix collects the study-specific case definitions and numerical settings that support the Results chapter.  The working paper references the
-Results tree on \ResultsTag; the single ref used by \verb|\ResultsCode| and
-\verb|\ResultsTree| will be replaced by the frozen Results revision before
-publication.
-
-A shared Results decoder is used by the Baja-reference studies.  It keeps the
-secondary helix force, spring, inertia, and kinematics of CINDER v1.1.2 but
-allows the signed helix reaction to pass through zero to the opposite slot
-flank; see
-\ResultsCode{defaults/reference_model/reference_case.py}{defaults/reference_model/reference_case.py}
-and
-\ResultsCode{defaults/reference_model/slotted_helix.py}{defaults/reference_model/slotted_helix.py}.
+This appendix records exact case inputs, numerical settings, normalization
+definitions, and other reproduction details that are referenced by the Results
+chapter but are not needed in its main discussion. The working paper
+references the Results tree on \ResultsTag; the single ref used by
+\verb|\ResultsCode| and \verb|\ResultsTree| will be replaced by the frozen
+Results revision before publication.
 
 \section{Mechanical Invariants and Operating-Domain Audit}
 \label{app:study_mechanical_invariants}
 
-The results reported in \Cref{sec:results_mechanical_invariants} use the case
-set defined by
+Exact configuration data supporting \Cref{sec:results_mechanical_invariants}
+are defined by
 \ResultsCode{studies/mechanical-invariants/study.json}{study.json}
 and the shared accepted-case library
 \ResultsCode{defaults/verification/operating_cases.json}{operating_cases.json}.
@@ -13498,10 +14832,12 @@ Negative controls & Initial-state/classifier checks & Deliberately invalid state
 \normalsize
 \end{center}
 
-The standard constructed bench cases use constant referred inertias of
-$ I_{p,0}=\SI{0.03}{\kilogram\meter\squared}$ and
-$ I_{s,0}=\SI{0.05}{\kilogram\meter\squared}$.  The two targeted anchors
-use the explicit boundary values in \Cref{tab:invariants_rare_anchor_boundaries}.
+The standard constructed bench cases use
+\Cref{app:fixed_shaft_boundary} on both shafts with
+$ I_{\mathrm{B},p}=\SI{0.03}{\kilogram\meter\squared}$ and
+$ I_{\mathrm{B},s}=\SI{0.05}{\kilogram\meter\squared}$. Their shaft
+speeds remain dynamic. The two targeted anchors use the explicit boundary
+values in \Cref{tab:invariants_rare_anchor_boundaries}.
 
 \begin{center}
 \small
@@ -13618,8 +14954,8 @@ Secondary referred inertia [kg m$^2$] & 0.04127251 & 0.00250569 \\
 \toprule
 Case family & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Duration \\ \midrule
 Reference Baja trajectory & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & 10 s \\
-Canonical contact bench & $3\times10^{-5}$ & $3\times10^{-8}$ & 1 ms & 30 ms \\
-Targeted contact anchors & $3\times10^{-5}$ & $3\times10^{-8}$ & 0.5 ms & 30 ms \\
+Selected contact-case audit & $3\times10^{-5}$ & $3\times10^{-8}$ & 1 ms & 30 ms \\
+Targeted-anchor screening before selection & $3\times10^{-5}$ & $3\times10^{-8}$ & 0.5 ms & 30 ms \\
 Structural arrivals & $3\times10^{-5}$ & $3\times10^{-8}$ & 0.5 ms & 30 ms \\
 Free-shift cases & $3\times10^{-5}$ & $3\times10^{-8}$ & 1 ms & 20 ms \\
 Static rest & $3\times10^{-5}$ & $3\times10^{-8}$ & 2 ms & 50 ms \\
@@ -13627,8 +14963,36 @@ Static rest & $3\times10^{-5}$ & $3\times10^{-8}$ & 2 ms & 50 ms \\
 \end{tabular}
 \end{table}
 
-The geometry-domain audit uses 401 points over the physical shift range and a
-\SI{1e-6}{\meter} finite-difference displacement for derivative checks.
+The geometry-domain audit evaluates 401 points over the engaged shift range and
+100 points through the primary deadzone, for 501 geometry samples in total. A
+\SI{1e-6}{\meter} finite-difference displacement is used for the independent
+derivative checks away from one-sided boundaries. The two targeted contact
+anchors are first screened with the 0.5 ms maximum step shown in
+\Cref{tab:invariants_numerics}; once accepted, they are rerun by the main contact
+audit with the same 1 ms maximum step used for every selected contact case.
+
+For the engaged closure, let
+\(
+\vect r=\vect A\vect z-\vect b
+\).
+Each row is normalized by
+\begin{equation}
+s_i
+=
+\max\!\left(
+1,
+|b_i|,
+\sum_k |A_{ik}|\,|z_k|
+\right),
+\qquad
+\epsilon_{\mathrm{cl}}
+=
+\max_i\frac{|r_i|}{s_i}.
+\label{eq:invariants_scaled_closure_residual}
+\end{equation}
+The ``scaled closure-equation residual'' in
+\Cref{tab:invariants_review_guards} is \(\epsilon_{\mathrm{cl}}\). The other
+residual thresholds retain their physical units as shown.
 
 \begin{center}
 \small
@@ -13673,12 +15037,12 @@ Geometry second-derivative finite-difference residual & $5\times10^{-3}$ m$^{-1}
 \section{Mechanical-Energy Consistency}
 \label{app:study_energy_consistency}
 
-Configuration details for \Cref{sec:results_energy_consistency} are defined in
+Exact settings supporting \Cref{sec:results_energy_consistency} are defined in
 \ResultsCode{studies/energy-consistency/study.json}{energy-consistency/study.json}.
-The physical case is the reference configuration of
-\Cref{app:common_physical_configuration} with the reference engine and
-flat-road vehicle boundaries of
-\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}.
+The audited trajectory uses the physical reference configuration of
+\Cref{app:common_physical_configuration} and the reference shaft boundaries of
+\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}, with
+\(\gamma=0\) throughout the 10 s interval.
 
 \begin{table}[H]
 \centering
@@ -13694,6 +15058,39 @@ Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & 10 s \\
 \end{tabular}
 \end{table}
 
+The final balance fraction is
+\begin{equation}
+\epsilon_E
+=
+\frac{|R_E(t_f)|}{|W_{\mathrm{B}}(t_f)|},
+\label{eq:energy_final_balance_fraction}
+\end{equation}
+where \(R_E\) is the raw mechanical-energy residual and \(W_{\mathrm{B}}\) is
+the net work supplied through the shaft boundaries. The ODE-refinement
+final-state metric compares the nominal and tight solutions componentwise. For
+\(x_k\in\{\omega_p,\omega_s,v_b,s,\dot s\}\),
+\begin{equation}
+S_k
+=
+\max\!\left(
+|x_{k,\mathrm{nom}}(t_f)|,
+|x_{k,\mathrm{tight}}(t_f)|,
+S_{k,\min}
+\right),
+\qquad
+\epsilon_{x,f}
+=
+\max_k
+\frac{|x_{k,\mathrm{tight}}(t_f)-x_{k,\mathrm{nom}}(t_f)|}{S_k},
+\label{eq:energy_final_state_normalization}
+\end{equation}
+with floors
+\((1~\mathrm{rad/s},1~\mathrm{rad/s},1~\mathrm{m/s},10^{-3}~\mathrm{m},10^{-3}~\mathrm{m/s})\).
+The impact momentum and active-constraint residuals are the residuals returned
+by the finite-speed boundary projection described in
+\Cref{sec:finite_speed_shift_boundary_arrival}; they are audited independently
+of the energy defect.
+
 \begin{table}[H]
 \centering
 \small
@@ -13703,7 +15100,7 @@ Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & 10 s \\
 \toprule
 Quantity & Value \\ \midrule
 Continuous-work quadrature steps & 5, 2.5, 1.25, 0.625 ms \\
-Maximum final $\lvert R_E\rvert/\lvert W_{\mathrm{ext}}\rvert$ & $10^{-4}$ \\
+Maximum final $\lvert R_E\rvert/\lvert W_{\mathrm{B}}\rvert$ & $10^{-4}$ \\
 Maximum absolute event-energy defect & $10^{-8}$ J \\
 Maximum impact momentum residual & $10^{-7}$ \\
 Maximum impact constraint residual & $10^{-8}$ \\
@@ -13717,10 +15114,10 @@ Maximum finest-to-previous continuous-defect ratio & $1.25$ \\
 \section{Solver Convergence}
 \label{app:study_solver_convergence}
 
-Configuration details for \Cref{sec:results_solver_convergence} are defined in
+Exact settings supporting \Cref{sec:results_solver_convergence} are defined in
 \ResultsCode{studies/solver-convergence/study.json}{solver-convergence/study.json}.
-The benchmark trajectory uses the reference configuration and reference shaft
-boundaries of \Cref{app:reference_configuration}.
+The benchmark trajectory uses the reference configuration and shaft boundaries
+of \Cref{app:reference_configuration,app:results_boundary_models}.
 
 \begin{table}[H]
 \centering
@@ -13737,6 +15134,56 @@ Independent $\mathrm{atol}$ sweep & $10^{-4}$ & $10^{-5}$ to $10^{-8}$, 7 values
 \bottomrule
 \end{tabular}
 \end{table}
+
+Continuous-state error is evaluated only after matching the complete hybrid
+transition signature. Corresponding candidate and reference segments are each
+parameterized by normalized within-segment phase
+\begin{equation}
+u=\frac{t-t_m}{t_{m+1}-t_m}\in[0,1],
+\label{eq:solver_event_aligned_phase}
+\end{equation}
+and each retained dense interpolant is evaluated directly on the same
+2049-point phase grid. No interpolation is performed across a reset. For each
+state component \(x_k\), the normalization scale is
+\begin{equation}
+S_k
+=
+\max\!\left(
+\max_t|x_{k,\mathrm{ref}}|,
+\operatorname{range}(x_{k,\mathrm{ref}}),
+S_{k,\min}
+\right),
+\label{eq:solver_state_scale}
+\end{equation}
+with floors
+\((100~\mathrm{rad/s},100~\mathrm{rad/s},5~\mathrm{m/s},0.02~\mathrm{m},0.05~\mathrm{m/s})\)
+for \((\omega_p,\omega_s,v_b,s,\dot s)\), respectively. The normalized error
+on segment \(m\) is
+\begin{equation}
+e_{k,m}(u)
+=
+\frac{x_{k,m}^{\mathrm{cand}}(u)-x_{k,m}^{\mathrm{ref}}(u)}{S_k}.
+\label{eq:solver_normalized_state_error}
+\end{equation}
+Using the reference segment duration \(\Delta t_m\) and total reference duration
+\(T\), the reported aggregate RMS is
+\begin{equation}
+\epsilon_{\mathrm{RMS}}
+=
+\left[
+\frac{1}{5T}
+\sum_k\sum_m
+\Delta t_m
+\int_0^1 e_{k,m}^2(u)\,du
+\right]^{1/2},
+\label{eq:solver_event_aligned_rms}
+\end{equation}
+while the maximum metric is
+\(\epsilon_{\max}=\max_{k,m,u}|e_{k,m}(u)|\). Event-time error is compared
+separately between corresponding transitions. The regime-mismatch fraction is
+the exact fraction of total time for which the two mode labels differ after the
+union of all candidate and reference event times partitions the interval; it is
+therefore not evaluated on an arbitrary reporting grid.
 
 \begin{table}[H]
 \centering
@@ -13814,5 +15261,106 @@ Broad diagnostic & $501\times501$ & $[-10,10]^2$, generated for the configured s
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+\section{Independent Ballew Benchmark}
+\label{app:study_ballew}
+
+Exact benchmark inputs supporting \Cref{sec:results_ballew_benchmark} are defined
+in \ResultsCode{studies/ballew-2015/study.json}{study.json}. The
+benchmark assembly and shaft boundaries are constructed in
+\ResultsCode{studies/ballew-2015/infrastructure/benchmark/case.py}{case.py},
+with published and reconstructed constants collected in
+\ResultsCode{studies/ballew-2015/infrastructure/benchmark/constants.py}{constants.py}.
+
+\subsection{Shaft boundaries}
+\label{app:ballew_boundaries}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Shaft-boundary quantities used by the independent Ballew benchmark.}
+\label{tab:ballew_boundary_values}
+\begin{tabular}{@{}p{0.47\textwidth}p{0.17\textwidth}r@{}}
+\toprule
+Quantity & CINDER boundary & Value \\ \midrule
+Primary applied torque $\tau_{\mathrm{B},p}$ & Constant torque--inertia & \SI{18}{\newton\meter} \\
+Primary referred inertia $I_{\mathrm{B},p}$ & Constant torque--inertia & \SI{0.008}{\kilogram\meter\squared} \\
+Final-drive reduction $G$ & Locked final drive & $8.93$ \\
+Tire radius $r_w$ & Locked final drive & \SI{0.317}{\meter} \\
+ATV mass $m_v$ & Locked final drive & \SI{226}{\kilogram} \\
+Wheel rotational inertia $I_w$ & Locked final drive & \SI{0}{\kilogram\meter\squared} \\
+Rolling-resistance coefficient $C_{rr}$ & Road load & $0.048$ \\
+Aerodynamic drag coefficient $C_d$ & Road load & $1.0$ \\
+Frontal area $A_f$ & Road load & \SI{1.39}{\meter\squared} \\
+Road grade $\gamma$ & Constant grade & $0$ \\
+Air density $\rho$ & Reconstructed road load & \SI{1.225}{\kilogram\per\meter\cubed} \\
+Gravity $g$ & Reconstructed road load & \SI{9.80665}{\meter\per\second\squared} \\
+Rolling-speed regularization $v_\epsilon$ & Reconstructed road load & \SI{0.01}{\meter\per\second} \\
+Reflected ATV translation $m_v(r_w/G)^2$ & Locked final drive & \SI{0.28478955}{\kilogram\meter\squared} \\
+Direct secondary-boundary inertia $I_{s,\mathrm{dir}}$ & Locked final drive & \SI{0.98821045}{\kilogram\meter\squared} \\
+Total secondary boundary inertia $I_{\mathrm{B},s}$ & Locked final drive & \SI{1.273}{\kilogram\meter\squared} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Ballew assembly assigns a further
+\(\SI{0.002}{\kilogram\meter\squared}\) to the output pulley inside the CVT.
+Thus the internal output-pulley inertia plus the secondary boundary inertia is
+\(0.002+1.273=\SI{1.275}{\kilogram\meter\squared}\), matching the published
+combined output-pulley--ATV inertia used by the reconstruction.
+
+\subsection{Actuation and host state}
+\label{app:ballew_protocol_implementation}
+
+The benchmark-specific axial-force laws are defined in
+\Cref{app:ballew_actuator_implementations}. Their use in the two comparison
+protocols is fixed as follows.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Actuator and host configuration of the two Ballew benchmark protocols.}
+\label{tab:ballew_actuator_protocols}
+\begin{tabular}{@{}p{0.18\textwidth}p{0.29\textwidth}p{0.22\textwidth}p{0.23\textwidth}@{}}
+\toprule
+Protocol & Primary actuator & Secondary actuator & Host state \\ \midrule
+Force replay & Prepared Figure~45 force history; piecewise-linear interpolation & Constant \SI{2000}{\newton} closing force & Secondary-shaft angle \\
+Closed loop & PI force law of \Cref{eq:ballew_pi_force_law} & Constant \SI{2000}{\newton} closing force & Secondary-shaft angle and controller integral $\eta$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The common initial shaft speeds are
+\begin{equation}
+ n_p(0)=2500~\mathrm{rpm},
+ \qquad
+ n_s(0)=1136~\mathrm{rpm},
+ \qquad
+ \dot s(0)=0.
+\label{eq:ballew_initial_shaft_state}
+\end{equation}
+The initial shift coordinate is the engaged geometry that makes those two shaft
+speeds compatible with one belt speed. In the closed-loop protocol,
+\(\eta(0)=0\). The exact construction is implemented in
+\ResultsCode{studies/ballew-2015/infrastructure/benchmark/simulation.py}{simulation.py}.
+
+\subsection{Numerical settings}
+\label{app:ballew_numerics}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Numerical settings used by the two Ballew benchmark protocols.}
+\label{tab:ballew_numerics}
+\begin{tabular}{@{}p{0.19\textwidth}p{0.12\textwidth}p{0.12\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.10\textwidth}@{}}
+\toprule
+Protocol & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Report step & Duration \\ \midrule
+Force replay & $10^{-7}$ & $10^{-9}$ & 1 ms & 5 ms & 5 s \\
+Closed loop & $10^{-7}$ & $10^{-9}$ & 1 ms & 0.2 ms & 5 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+Both protocols permit up to 2000 hybrid transitions and retain dense output for the benchmark comparison.
 
 \end{document}

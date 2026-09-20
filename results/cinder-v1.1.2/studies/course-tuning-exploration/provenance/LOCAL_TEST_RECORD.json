@@ -1,0 +1,65 @@
+{
+  "environment": {
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "machine": "x86_64",
+    "processor": "",
+    "cpu_count": 5,
+    "cinder-cvt": "1.1.2",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "matplotlib": "3.10.8"
+  },
+  "cinder_wheel_sha256": "f9c454963006d701b33197bdef3be60abebc591199aef7f4b52f37a7159310c3",
+  "unit_tests_passed": 20,
+  "full_fleet": {
+    "campaign": "course38_w6_h80_v2__screen__203875813878",
+    "counts": {
+      "finished": 31,
+      "progress_limited": 1
+    },
+    "review_flags": 0,
+    "inspection_errors": 0,
+    "parallel_workers": 4
+  },
+  "regression": {
+    "campaign": "course38_w6_h80_v2__screen__2fb137cb1e26",
+    "cars": [
+      "R00",
+      "H18",
+      "D02"
+    ],
+    "parallel_workers": 3
+  },
+  "final_smoke": {
+    "campaign": "course38_w6_h80_v2__smoke__3fb108bb068a",
+    "cars": [
+      "R00",
+      "W90",
+      "H18",
+      "D02"
+    ],
+    "parallel_workers": 4
+  },
+  "resume_test_passed": true,
+  "timeout_test_passed": true,
+  "alternate_course_screen": "planning only",
+  "final_python_source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/inspect_event.py": "88328a3a2186719f623347eeaf562db634d8d8bb7d9ae3f84d1cb397f30911b2",
+    "analysis/metrics.py": "fb9d7a1b51d18d4f5f3ddf5cf58bae17efdb2d33f771bb432c7fd912c0735fe5",
+    "analysis/report.py": "0fc1c239dcee2f8b24cca406f54f1958f66fd6dd1e1497354d930f5b17e88083",
+    "experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/fleet.py": "b632fc39ca0f8532de2fbde5c0c38f39508b4e1a3e2a17ab0c7b98adb13d3f49",
+    "exploration/scan_courses.py": "1203b4d21a7384bd1d24793e8fb3f444ee8606515248322a646cb1074ca9414c",
+    "infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "infrastructure/common.py": "0076decf92bde250234be8e221ad27b770dfef266c61da4a0b9e8ba03fbdede1",
+    "infrastructure/course.py": "b8903d96b92b108575d8450340f9fd36a4b4c7a167edffb0a16df8498042e061",
+    "infrastructure/diagnostics.py": "ef0bc0cef9acb3e7d51d89476301bd242d94a7f797920d0b4a9405563624f260",
+    "infrastructure/model.py": "286c77dd2b87e4b6f82b42b6bf92faa771a922d9ed2f0c28742246e444c765d0",
+    "infrastructure/tunes.py": "c3e67e7e093bb20f75f414f61f8c2cfb8c84e446d2b9abc604897dd8f9607762",
+    "run.py": "34f19875b72fa53c903fa7f921761b660c28bf266f717ce345aafec8208353e6",
+    "tests/test_study.py": "e496d4205a6fc592bcaa1dd19901427ff39037b2725b520c219cb3428e2f9612",
+    "verify_study.py": "75716635914e47fceb63549483380e67266fd82e6fa80d0417216451f48d20d9"
+  }
+}
