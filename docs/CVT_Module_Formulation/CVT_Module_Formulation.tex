@@ -11955,17 +11955,280 @@ should be tested first, with the remaining coupled balances preserved.
 \label{sec:results_engine_braking}
 % TODO: reverse-power sign handling, contact switching, and hybrid architecture.
 
-% ==============================================================
-\section{Design and Tuning Consequences}
-\label{sec:results_design_consequences}
+\section{Coupled Operation and Tuning on a Common Off-Road Course}
+\label{sec:results_coupled_regimes}
 
-% Optional final section.  Populate only if the final Results scope supports a
-% compact comparison whose purpose is interpretation rather than optimization.
+The preceding studies examined the formulation in controlled pieces: whether
+its coupled balances remain mechanically and numerically consistent, how its
+transient response compares with an independent model, and when the retained
+actuator and belt dynamics alter the predicted motion. Those questions are
+necessary, but they stop short of the problem that motivated the complete CVT
+formulation. If the surrounding vehicle supplies the loading at the shafts,
+can the same internal mechanics carry the transmission through the changing
+conditions of a drive, and can the resulting behaviour be followed back to the
+hardware that produced it?
 
-\subsection{Representative Tune Comparison}
-\label{sec:results_tune_comparison}
-% TODO: small set of deliberately distinct tunes, if retained in final manuscript.
+To examine that question, twelve selected configurations are run from the same
+initial state over one common \SI{732}{m} road. The vehicle, final drive,
+engine boundary, belt, pulley geometry, and contact parameters remain fixed;
+only the declared CVT tuning hardware changes between cases. The primary
+boundary remains at full throttle throughout. No CVT state is reset when the
+road changes. The state produced by the opening acceleration is therefore the
+state that enters the severe climb, and the state leaving that climb is carried
+through the repeated loading, the sustained moderate climb, and the final
+descent. The road sequence is prescribed, but the sequence of CVT contact and
+support states is not.
 
+The road was chosen to ask several different questions of the same continuous
+trajectory. A level opening gives the transmission room to engage and shift.
+A \(38^\circ\) climb then demands a large backshift and, for sufficiently
+unfavourable hardware, exposes the limits of the available ratio and belt
+traction. After a level recovery, six cycles of \(\pm32^\circ\) road grade
+apply repeated longitudinal loading before a sustained \(18^\circ\) climb
+allows the transient backshift to approach an interior operating condition.
+The final \(-22^\circ\) descent unloads the vehicle and eventually reverses
+the direction of shaft power for the finishing cases. The cyclic portion is a
+one-dimensional road-grade input only; it does not represent suspension
+motion, wheel unloading, or airborne vehicle dynamics.
+
+\Cref{fig:results_course_overview} follows the reference configuration through
+this road. The important feature of the figure is not any one speed or shift
+value, but the continuity between them. The reference reaches the upper shift
+stop on the opening flat, backshifts to the low-ratio seat on the severe
+climb, returns toward high ratio during recovery and repeated loading, and
+then settles to an interior shift position on the moderate climb. Each of
+those responses begins from the state left by the preceding part of the road.
+
+\begin{figure}[tbp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/course_continuity_overview.png}
+  \caption{Common \SI{732}{m} road and the continuous response of the reference
+  configuration. Road grade is prescribed as a function of distance; vehicle
+  speed and CVT shift position are solved as the same trajectory passes from
+  launch, through the severe climb and repeated longitudinal loading, to the
+  sustained moderate climb and descent. The dashed lines in the lower panel
+  mark the low-ratio seat and upper shift stop. No state is reset at the road
+  boundaries.}
+  \label{fig:results_course_overview}
+\end{figure}
+
+The configurations used below are collected in
+\Cref{tab:results_course_cases}. They are not intended to form an optimization
+or a ranking of complete tunes. Instead, particular cases are reused where
+they isolate a mechanical difference that is visible in the complete vehicle
+response. All unlisted parameters remain equal to the reference configuration.
+The mass percentages in the table refer to the replaceable flyweight tip mass,
+not to the complete flyweight mass, and the corresponding mass moments are
+changed consistently.
+
+\begin{table}[tbp]
+  \centering\small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.14}
+  \caption{Selected CVT configurations used on the common course. Only changes
+  from the reference configuration are listed. Ramp distances are physical
+  coordinates along the ramp, not movable-sheave travel.}
+  \label{tab:results_course_cases}
+  \begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{0.11\linewidth}
+    >{\raggedright\arraybackslash}p{\dimexpr0.89\linewidth-2\tabcolsep\relax}@{}}
+    \toprule
+    Case & Change from R00 \\
+    \midrule
+    R00 & Reference configuration. \\
+    W85 & Replaceable primary flyweight tip mass reduced to \(85\%\). \\
+    P300 & Primary spring stiffness increased to \(3k_p\); installed
+      compression reduced so that the spring force matches R00 at the
+      low-ratio engagement geometry. \\
+    RC10 & Reference ramp retained for the first \SI{10}{mm}, followed by a
+      \SI{5}{mm} smooth blend into an arc ending at \(10^\circ\). \\
+    R26B7 & Reference ramp retained for the first \SI{10}{mm}, followed by a
+      \SI{7}{mm} smooth blend into an arc ending at \(26^\circ\). \\
+    RC40L & Reference ramp retained for the first \SI{18}{mm}, followed by a
+      \SI{5}{mm} smooth blend into an arc ending at \(40^\circ\). \\
+    H28 & Secondary helix angle increased from \(20^\circ\) to \(28^\circ\)
+      from the circumferential direction. \\
+    U55 & Replaceable primary flyweight tip mass reduced to \(55\%\). \\
+    D01 & Tip mass increased to \(130\%\); primary and secondary installed
+      spring compressions reduced to \(80\%\); secondary torsional preload
+      reduced from \(300^\circ\) to \(240^\circ\); helix angle increased to
+      \(28^\circ\). \\
+    D02 & Tip mass reduced to \(65\%\) and primary installed spring
+      compression increased to \(115\%\). \\
+    D02\_M & D02 with the flyweight tip mass restored to the reference value. \\
+    D02\_P & D02 with the primary installed spring compression restored to the
+      reference value. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Arrival time remains a useful consequence of these differences, but it is not
+the organizing quantity for the comparison. The more useful question is what
+changed inside the transmission when two vehicles respond differently to the
+same road. The opening flat provides the simplest place to begin.
+
+\subsection{Launch and the Shape of the Shift Curve}
+\label{sec:results_launch_upshift}
+
+Once the belt is engaged and the primary leaves the low-ratio seat, the
+opening flat places relatively little disturbance on the shift. It therefore
+provides a clear view of a familiar tuning observable: primary speed as a
+function of secondary speed. In tuning practice, this shift curve is a familiar observable
+\citep{Aaen2007,Skinner2020}, but the curve alone does not identify the
+hardware balance that produced it. Here it is instead a consequence of the
+actuator geometry, spring loading, belt and secondary reactions, and vehicle
+acceleration solved together. This makes it possible to separate three
+different things that hardware can change: the level of the working-speed
+band, the way that speed changes as the shift progresses, and the part of the
+shift over which the change occurs.
+
+\Cref{fig:results_shift_curve_shape} compares six configurations while they are
+freely shifting on the opening flat with both belt contacts sticking. The
+reference curve is nearly level over most of the active travel. Reducing the
+replaceable flyweight tip mass to \(85\%\) in W85 moves the trajectory upward:
+between \(20\%\) and \(80\%\) of the available engaged shift travel, primary
+speed changes from approximately \(3393\) to \(3447~\mathrm{rpm}\), compared
+with approximately \(3169\) to \(3205~\mathrm{rpm}\) for R00. The shape is not
+identical, but the dominant change is the higher working-speed band.
+
+\begin{figure}[tbp]
+  \centering
+  \includegraphics[width=0.94\linewidth]{figures/results/course/opening_free_shift_characteristics.png}
+  \caption{Opening-flat free-shift characteristics for selected primary tuning
+  changes. Each curve is the solved primary--secondary speed trajectory while
+  the CVT is engaged, freely shifting, and in stick--stick contact; no speed
+  relation is prescribed. W85 primarily raises the working-speed band, P300
+  progressively raises primary speed as the shift proceeds, RC10 and R26B7
+  produce strongly rising and falling characteristics, and RC40L preserves the
+  early response before changing the late-shift shape.}
+  \label{fig:results_shift_curve_shape}
+\end{figure}
+
+The direction of the W85 change follows the primary force balance developed in
+\Cref{sec:primary_flyweight_closing_force}. The leading speed-dependent
+flyweight contribution in \Cref{eq:primary_flyweight_axial_force} contains
+\(\tfrac{1}{2}\omega_p^2\,dJ_{f,p}/dx_p\). Removing tip mass reduces the
+centrifugal closing action available at a given primary speed. The coupled
+balance therefore reaches comparable closing action at a higher primary speed,
+while the remaining forces and inertial terms determine the exact trajectory.
+The result is the familiar effect of flyweight mass, but here the speed change
+is obtained from the complete transient balance rather than imposed as a
+shift-speed rule.
+
+P300 changes a different part of that balance. Its spring stiffness is three
+times the reference value, while its installed compression is reduced so that
+\Cref{eq:primary_spring_force} gives the same spring opening force as R00 at
+the low-ratio engagement geometry. The two springs therefore begin from the
+same force at that selected position, but they cannot remain equal as the
+primary closes: the opening force grows with slope \(k_p\). This separation is
+visible in \Cref{fig:results_shift_curve_mechanics}(a). Correspondingly, P300
+is still close to R00 near the beginning of active shift, but primary speed
+rises to approximately \(3336~\mathrm{rpm}\) by \(80\%\) travel. Matching one
+spring force has not matched the force characteristic. Flyweight mass and
+spring rate are therefore not interchangeable ways of asking the primary to
+operate at a different speed.
+
+The ramp cases change the conversion between flyweight motion and axial
+closing force itself. RC10 and R26B7 preserve the first \SI{10}{mm} of the
+reference ramp, whereas RC40L preserves the first \SI{18}{mm}; the modified
+profiles are shown in \Cref{fig:results_shift_curve_mechanics}(b). Because the
+roller initially encounters the same geometry, the early trajectories of
+these cases remain close to R00. Once the roller reaches the modified region,
+the geometry changes the flyweight pose and the derivative of its shaft-axis
+inertia with sheave position. It also changes the motion-ratio and inertial
+terms retained in the full flyweight model. Panel (c) isolates the leading
+speed-dependent contribution, showing how the same
+\(\omega_p^2 dJ_{f,p}/dx_p\) term acquires a different dependence on shift;
+the complete trajectory still uses every term in the dynamic actuator balance.
+
+\begin{figure}[tbp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/shift_curve_mechanical_causes.png}
+  \caption{Mechanical origin of the selected shift-curve changes. (a) R00 and
+  P300 have the same primary spring force at the selected low-ratio engagement
+  geometry, but the greater P300 stiffness causes the opening force to grow
+  more rapidly with shift. (b) The ramp cases preserve a common early profile
+  and alter the later physical ramp geometry. The dashed positions mark the
+  \SI{10}{mm} and \SI{18}{mm} ramp coordinates at which the selected modified
+  families begin to depart from the reference construction. (c) The changed
+  ramp geometry produces different centrifugal closing contributions at the
+  same \(3000~\mathrm{rpm}\) primary speed. The ramp changes also alter the
+  retained motion-ratio and flyweight-inertia terms; panel (c) isolates the
+  leading speed-dependent contribution. These maps are mechanism
+  characteristics, while the speed trajectories in
+  \Cref{fig:results_shift_curve_shape} are obtained only after the complete CVT
+  and vehicle balances are solved.}
+  \label{fig:results_shift_curve_mechanics}
+\end{figure}
+
+The resulting speed curves separate in opposite directions. In RC10, the
+reduced late-shift centrifugal contribution is accompanied by a primary-speed
+rise from approximately \(3169\) to
+\(3655~\mathrm{rpm}\) between \(20\%\) and \(80\%\) travel. R26B7 develops a
+larger speed-dependent closing contribution over the same region while its
+primary speed falls to approximately \(3013~\mathrm{rpm}\). RC40L delays the geometric change
+farther into the ramp. Its trajectory is essentially coincident with R00 at
+\(20\%\) and \(50\%\) travel, then develops a distinct late-shift shoulder and
+downturn. Thus a ramp need not simply move the complete shift curve up or down;
+it can change the portion of the operating range over which the primary speed
+changes.
+
+\begin{table}[tbp]
+  \centering\small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.12}
+  \caption{Selected opening-flat shift-curve measures. Active shift fraction is
+  the normalized engaged travel between the low-ratio seat and upper stop. The
+  reported slope is the secant in primary speed with respect to secondary speed
+  between \(20\%\) and \(80\%\) travel; it describes these trajectories rather
+  than a prescribed or universal shift law.}
+  \label{tab:results_shift_curve_metrics}
+  \begin{tabular}{@{}lrrrrr@{}}
+    \toprule
+    Case & \shortstack{Primary rpm\\at 20\%} & \shortstack{Primary rpm\\at 50\%} &
+      \shortstack{Primary rpm\\at 80\%} & \shortstack{Secant slope\\[rpm/1000 rpm]} &
+      \shortstack{Opening-flat\\upper stop [m]} \\
+    \midrule
+    R00   & 3168.5 & 3127.4 & 3204.7 &  23.7 & 64.92 \\
+    W85   & 3392.9 & 3355.5 & 3447.1 &  32.9 & 84.46 \\
+    P300  & 3189.5 & 3203.5 & 3336.2 &  89.6 & 77.52 \\
+    RC10  & 3168.5 & 3177.3 & 3655.4 & 250.8 & -- \\
+    R26B7 & 3168.5 & 3146.6 & 3013.5 &-114.8 & 39.83 \\
+    RC40L & 3168.5 & 3127.4 & 3160.0 &  -5.8 & 29.39 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The shape of the curve also changes which mechanical restriction is reached
+later in the drive. R26B7 and RC40L arrive at the upper stop after only about
+\SI{39.8}{m} and \SI{29.4}{m}, respectively, whereas R00 reaches it near
+\SI{64.9}{m} and W85 near \SI{84.5}{m}. RC10 does not reach the upper stop at
+all on the opening flat; its first arrival occurs much later on the descent,
+near \SI{652.2}{m}.
+These are not independent settings of ``shift-out distance.'' They are the
+vehicle-level consequences of the different actuator characteristics in
+\Cref{fig:results_shift_curve_mechanics} acting through the same coupled CVT.
+
+A more extreme mass change provides a useful limit on that interpretation.
+U55 reduces the replaceable tip mass to \(55\%\) of the reference value and
+reaches only about \SI{14.08}{mm} before the severe hill interrupts the
+opening acceleration. That observation alone cannot distinguish a delayed
+upshift from a persistent interior operating condition. The separate
+\SI{800}{m} flat run provides the needed time and distance: R00 reaches the
+\SI{19.05}{mm} upper stop near \SI{64.9}{m}, while U55 remains near
+\SI{14.90}{mm} through the end of the run, varying by less than
+\SI{0.001}{mm} over the final \SI{10}{s}. The finite run does not establish
+that U55 could never reach the stop, but it does show that incomplete upshift
+on the common course is not simply an artefact of the first hill arriving a
+few metres too early.
+
+Taken together, the opening-flat cases separate three ideas that are easily
+collapsed into a single notion of ``shift RPM.'' Flyweight mass can move the
+working-speed band, spring rate can make the required speed diverge as the
+primary closes, and ramp geometry can shape where and in which direction the
+speed changes. The same hardware then remains in the transmission as the road
+load increases; the following climb asks whether those different trajectories
+remain merely different operating choices or become mechanical limitations.
 
 
 \chapter{Conclusion and Future Work}
