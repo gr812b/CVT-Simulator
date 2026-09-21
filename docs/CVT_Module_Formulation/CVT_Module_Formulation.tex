@@ -11939,6 +11939,7 @@ should be tested first, with the remaining coupled balances preserved.
 \FloatBarrier
 \endgroup
 
+
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
 \label{sec:results_coupled_regimes}
 
@@ -11952,37 +11953,29 @@ the same internal mechanics carry the transmission through the changing
 conditions of a drive, and can the resulting behaviour be followed back to the
 hardware that produced it?
 
-To examine that question, the main comparison carries several mechanically
-different CVT configurations from the same initial condition through one
-continuous road course. The same external problem is applied to every
-configuration, so differences between their trajectories develop under a common
-engine, vehicle, and road history rather than from different tests. The drive is
-treated as one continuous experiment: conditions encountered later in the
-course act on the shaft speeds, ratio, contact state, and hardware motion left by
-the conditions before them. This provides a common setting in which each new
-load can probe a different part of the coupled transmission while any resulting
-difference can still be followed back into the mechanics that produced it.
+To answer that question, each configuration is placed in the same vehicle,
+started from the same state, and driven at full throttle over the same
+continuous road. The drive is not divided into independent launch, hill, and
+backshift tests. The shaft speeds, ratio, contact state, and hardware motion
+left by one part of the road are carried into the next. Several different CVTs
+can therefore meet the same sequence of external loads while the model is left
+to determine how each one engages, shifts, transmits torque, and uses its
+available supports and traction.
 
-The quantities defining that common external problem are fixed before the CVT
-configurations are compared. The vehicle and shaft interfaces use the Baja
-reference setup documented in the appendices. The primary shaft is driven by
-the full-throttle Kohler CH440 boundary of
-\Cref{app:primary_engine_boundary}, while the secondary is coupled to the
-locked-final-drive vehicle boundary of
-\Cref{app:secondary_vehicle_boundary}; road grade therefore enters the
-secondary shaft through the vehicle load in
-\Cref{eq:reference_vehicle_torque}. Every trajectory begins from the common
-state in \Cref{eq:results_reference_initial_state}. The common baseline for the
-CVT itself is the physical reference configuration of
-\Cref{app:common_physical_configuration}, with the bilateral secondary helix
-topology of \Cref{app:reference_helix_topology}. These definitions provide the
-same vehicle, final drive, engine boundary, belt and contact model, reference
-pulley geometry, and boundary inertias for the comparison.
+At the primary shaft, every run uses the same full-throttle Kohler CH440
+boundary described in \Cref{app:primary_engine_boundary}. At the secondary,
+the same locked-final-drive vehicle boundary of
+\Cref{app:secondary_vehicle_boundary} supplies the vehicle inertia and road
+load; road grade enters that load through
+\Cref{eq:reference_vehicle_torque}. Every run also begins from the state in
+\Cref{eq:results_reference_initial_state}. The engine map, vehicle, final
+drive, shaft-boundary inertias, and starting condition are therefore unchanged
+from one hardware case to another.
 
-The road is prescribed as a function of travelled distance rather than clock
-time. Every configuration therefore encounters the same grade at the same
-position even when differences in vehicle speed cause it to arrive there at a
-different time. \Cref{fig:results_course_overview} defines that common road.
+The road itself is also common to every run. It is prescribed as a function of
+travelled distance rather than clock time, so a faster vehicle reaches a road
+feature sooner but does not encounter a different feature. The complete course
+is shown in \Cref{fig:results_course_overview}.
 
 \begin{figure}[H]
   \centering
@@ -11997,43 +11990,45 @@ different time. \Cref{fig:results_course_overview} defines that common road.
   an \SI{8}{m} exit, followed by \SI{20}{m} of level recovery. The final load
   change is a \(-22^\circ\) descent with \SI{12}{m} entry and exit transitions
   around a \SI{60}{m} constant-grade section, followed by a \SI{24}{m} level
-  finish. The cyclic region is a longitudinal road-load input only; suspension
-  motion, wheel unloading, tire normal-load variation, and airborne vehicle
-  dynamics are not represented.}
+  finish. The cyclic region changes only the longitudinal road grade;
+  suspension motion, wheel unloading, tire normal-load variation, and airborne
+  vehicle dynamics are not represented.}
   \label{fig:results_course_overview}
 \end{figure}
 
-The road features are chosen to place different demands on the same
-transmission rather than to prescribe a sequence of CVT responses. The opening
-flat provides room for engagement and upshift before a large road load is
-introduced. The \(38^\circ\) climb then asks the CVT to respond to a severe
-increase in load, where the available ratio range and belt traction may both
-become important. The following level section allows the transmission to
-recover before the six-cycle region applies repeated longitudinal load changes.
-The long \(18^\circ\) climb serves a different purpose: its sustained load gives
-the initial backshift time to develop toward an interior operating condition,
-so the transient response can later be distinguished from the ratio, engine
-speed, and vehicle speed maintained on the climb. The descent finally changes
-the direction in which the road can exchange power with the drivetrain, giving
-the same signed mechanics a chance to continue into reverse-power operation.
+Each part of the road is included to ask a different mechanical question. The
+opening flat gives the CVT room to engage and move through its ratio range
+before a large road load is introduced. The \(38^\circ\) climb then places a
+much larger demand on the drivetrain, allowing limitations in available ratio
+or belt traction to appear if the hardware drives the transmission toward
+them. After a level recovery, the six-cycle region applies repeated changes in
+longitudinal load and tests how much shift motion remains available as those
+changes continue. The long \(18^\circ\) climb serves a different purpose: it
+holds the load long enough to separate the initial backshift from whatever
+interior ratio, engine speed, and climbing speed the coupled system approaches.
+The descent reverses the road-grade contribution and allows any corresponding
+reverse transfer of power through the drivetrain to emerge from the same
+signed mechanics.
 
-With the vehicle, shaft boundaries, initial state, and road fixed in this way,
-the selected CVT hardware is the only prescribed difference between runs. The
-configurations used for that comparison are defined in
+Every vehicle has now been given the same engine boundary, vehicle boundary,
+starting state, and road. What changes from run to run is selected hardware
+inside the CVT. Those configurations are defined in
 \Cref{tab:results_course_cases}. The nominal case, R00, is the unmodified Baja
-reference CVT. Every other row lists only the hardware changed from that
-baseline; unlisted quantities retain the reference values of
-\Cref{app:common_physical_configuration,app:reference_helix_topology}. The mass
-percentages refer to the replaceable flyweight tip mass rather than the total
-flyweight mass, and the corresponding mass moments are changed consistently.
+reference CVT of \Cref{app:common_physical_configuration}, using the bilateral
+secondary helix topology of \Cref{app:reference_helix_topology}. Every other
+row lists only the hardware changed from that baseline; unlisted quantities
+retain the reference values. The mass percentages refer to the replaceable
+flyweight tip mass rather than the total flyweight mass, and the corresponding
+mass moments are changed consistently.
 
 \begin{table}[H]
   \centering\small
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.14}
   \caption{Selected CVT hardware configurations used on the common course.
-  Only changes from R00 are listed for the remaining cases. Ramp distances are
-  physical coordinates along the ramp, not movable-sheave travel.}
+  Only changes from the nominal R00 reference are listed for the remaining
+  cases. Ramp distances are physical coordinates along the ramp, not
+  movable-sheave travel.}
   \label{tab:results_course_cases}
   \begin{tabular}{@{}
     >{\raggedright\arraybackslash}p{0.11\linewidth}
@@ -12068,26 +12063,26 @@ flyweight mass, and the corresponding mass moments are changed consistently.
   \end{tabular}
 \end{table}
 
-The cases are chosen to probe several ways in which physical hardware can alter
-the coupled response, not because a particular course outcome is assumed in
-advance. W85 and P300 change the primary centrifugal--spring balance through
-different routes: one changes the flyweight mass properties, while the other
-changes how the opposing spring force develops with sheave position after being
-matched to the nominal force at one geometry. RC10, R26B7, and RC40L modify the
-primary ramp over different portions of the roller path, providing three ways
-to examine how a change in the contacted geometry is carried into the actuator
-response. H28 moves the comparison to the secondary side by changing the helix
-geometry that couples reacted torque, axial force, and secondary motion.
+The cases span several ways of changing the forces and motion inside a
+mechanically actuated CVT. W85 changes the flyweight mass properties that
+produce the primary centrifugal action. P300 changes the primary spring rate
+while matching its force to R00 at the low-ratio engagement geometry, allowing
+the spring characteristic to be changed without simply beginning from a
+larger or smaller opposing force. RC10, R26B7, and RC40L alter different
+portions of the physical ramp followed by the roller, so the effect of changing
+that contact geometry can be examined without replacing the flyweight
+mechanism itself. H28 makes the corresponding comparison on the secondary by
+changing the helix geometry that couples reacted torque to axial motion.
 
-The remaining cases broaden those comparisons and provide controlled contrasts
-for the more demanding parts of the road. U55 extends the primary flyweight-mass
-change well beyond W85, while D01 and D02 combine larger departures from the
-nominal hardware so that the same course can reveal whether different internal
-balances lead to distinguishable limiting behaviour. D02\_M and D02\_P are
-one-change variants of D02: each restores a different primary-side quantity to
-its nominal value. They are included so that, if the D02 response exposes a
-useful limitation, the consequences of changing those two contributions can be
-compared without changing the rest of that configuration.
+U55, D01, and D02 extend the comparison farther from the nominal hardware. U55
+continues the flyweight-mass change to a more severe value, while D01 and D02
+combine larger changes in the primary and secondary actuation. They are
+included to expose whether the more demanding parts of the road bring out
+limitations that are not apparent near the reference configuration. D02\_M and
+D02\_P then separate two of the primary-side changes contained in D02 by
+restoring, one at a time, the nominal flyweight mass and the nominal primary
+spring preload. Together, the set provides several distinct mechanical routes
+away from the reference before any of their course responses are interpreted.
 
 \subsection{Launch and the Shape of the Shift Curve}
 \label{sec:results_launch_upshift}
@@ -12261,6 +12256,12 @@ remain merely different operating choices or become mechanical limitations.
 
 TODO
 
+% Future-work section for the Conclusion and Future Work chapter.
+% Revision 4: combined belt discussion and revised recovery argument, 2026-09-21.
+% Reference basis: CVT_Module_Formulation(20260920-195252).tex.
+% Uses the manuscript's existing natbib, cleveref, and AssRef commands.
+% Additional bibliography entries: CINDER_Future_Work_References.bib.
+
 \section{Future Work}
 \label{sec:future_work}
 
@@ -12380,7 +12381,7 @@ an added friction force alone cannot supply it. The opening of a helix
 contact remains distinct from belt lift-off, which depends on the normal
 loading at the belt--sheave interface.
 
-\subsection*{Belt Deformation, Transport, and Material History}
+\subsection*{Belt Deformation, Transport, and Contact}
 \label{sec:future_work_belt_material}
 
 The belt couples the two pulleys through its length, motion, and loading.
@@ -12403,81 +12404,48 @@ help explain the different clamp-to-shift responses identified in
 \Cref{sec:results_ballew_interpretation}.
 
 The single transport coordinate in \AssRef{assump:single_belt_speed} is a
-separate kinematic reduction. Relaxing it would allow belt transport to vary
-around the loop. Such variation need not originate in longitudinal
-extension: the inextensible continuum kinematics of
+further kinematic reduction. Relaxing it would allow tangential material
+speed to vary around the loop. Such variation need not originate in
+longitudinal extension: the inextensible continuum kinematics of
 \citet{CarboneMangialardiMantriota2005} already allow local transport to vary
-with changing geometry. With compliance and inertia retained, a spatial
-description could also follow the propagation of changes in tension and
-deformation after a sudden load change. Steady-path and constant-mass-flow
-restrictions, such as those used by \citet{Messick2018}, would need to be
-reconsidered when following this response through time.
+with changing geometry. Following this motion through a transient would
+require reconsidering steady-path and constant-mass-flow restrictions such
+as those used by \citet{Messick2018}.
 
-The belt section determines which deformations can participate. Under
-\AssRef{assump:fixed-belt-cross-section}, the cord location and section
-geometry are prescribed. Resolving compression, bulging, shear, and warping would
-allow belt width and contact shape to change, altering the relation between
-sheave position and running radius. Bending stiffness would affect entry and
-exit from the wraps. A refined cord and rubber mass distribution could also
-improve the inertial description without resolving every local deformation.
+That spatial variation also changes how contact can be determined. A single
+belt--pulley speed difference would no longer generally describe relative
+motion throughout the wrap. The present equations resolve tension and normal
+loading, but \AssRef{assump:wrap_contact_resolution} assigns one contact state
+and one traction utilisation \(\lambda_j\) to each wrap through
+\Cref{eq:lambda_local_definition}. Locally different motions could produce
+adhering and sliding regions, or regions with opposing traction, within the
+same wrap. A local Coulomb law could still represent friction, with contact
+states and traction determined along the wrap rather than assigned to it
+as a whole.
 
-A belt model could retain these sectional effects without representing every
-cord or cog around the loop. \citet{Gerbert1996} uses sectional analysis to construct an
-effective shear relation. Similar reductions could carry sectional forces,
-moments, contact geometry, and material history into a belt model. If a section
+The relevant relative velocity is that between the contacting rubber and
+the sheave surface. Under \AssRef{assump:fixed-belt-cross-section}, the section
+geometry and cord location are prescribed. Compression and bulging would
+change belt width and contact shape, altering the relation between sheave
+position and running radius. Shear and warping allow the rubber between the
+tension-carrying layer and the sheave to deform. As \citet{Gerbert1996} shows,
+the cord and pulley can then have different speeds while the rubber surface
+adheres. Bending stiffness also affects seating and unseating as the belt
+enters and leaves a wrap; Gerbert shows that these processes can produce
+friction opposing the main torque-transmitting direction at the primary.
+
+Sectional analysis offers a way to retain these effects without representing
+every cord or cog around the loop. \citet{Gerbert1996} uses it to construct an
+effective shear relation. Similar reductions could supply sectional forces,
+moments, and deformed contact geometry to the belt model. If a section
 adjusts much faster than the overall belt motion, its deformation may be
-treated without a separate inertial state even when it changes contact.
-Whether deformation,
-dissipation, and sectional inertia matter are therefore related but distinct
-questions.
+treated without a separate inertial
+state even when it changes contact. A refined cord and rubber mass
+distribution could also improve the inertial description without resolving
+every local deformation.
 
-Elasticity stores and returns energy. Viscoelasticity adds dependence on
-deformation history and can dissipate energy during repeated stretching,
-compression, shear, and bending. Messick measures temperature- and
-frequency-dependent rubber properties but uses an elastic approximation in
-the mechanical model; Ballew identifies independent damping measurements as
-unfinished work \citep{Messick2018,Ballew2015}. A transient constitutive
-description would carry the deformation history of each belt section through
-the spans and wraps, while the energy accounting in
-\Cref{eq:verification_energy_balance} would extend to
-recoverable strain energy and material dissipation. This distinction matters
-when a transient reduction in output power reflects energy being stored in
-the belt.
-
-Deformation and inertia would also permit belt vibration to be examined.
-\citet{Messick2018} identifies crank-angle-dependent engine torque as a
-possible source of vibration outside the scope of his steady model. A transient belt model
-could determine whether torque ripple materially changes contact loading
-and traction. Physical vibration would need to remain distinguishable from
-numerical oscillation through spatial and
-temporal refinement, particularly given the stiffness difficulties reported
-by \citet{Ballew2015}.
-
-\subsection*{Local Belt Contact and Traction}
-\label{sec:future_work_local_contact}
-
-A richer belt description would need contact relations that connect those
-motions to the forces on the sheaves. The present wrap equations resolve
-tension and normal loading, but one traction utilisation \(\lambda_j\) and
-one contact state describe each wrap
-(\Cref{eq:lambda_local_definition} and
-\AssRef{assump:wrap_contact_resolution}). They cannot distinguish a region
-where the belt adheres from another where it slides, or a region where the
-local friction direction reverses. Resolving these differences would change
-the torque carried by a pulley and the belt load opposing its actuator.
-
-These contact states depend on the motion of the contacting surface.
-The sectional mechanics described by \citet{Gerbert1996} show that rubber
-between the tension-carrying layer and the sheave can deform in shear while
-its surface adheres. A difference between cord speed and pulley surface
-speed therefore need not imply sliding. Seating and unseating also change
-the surface motion as the belt enters and leaves a wrap; Gerbert shows that
-they can produce friction opposing the main torque-transmitting direction
-at the primary. The deformation established in the belt description must
-therefore enter the contact kinematics if these motions are to be
-distinguished from sliding.
-
-Radial migration makes the direction of friction particularly important.
+The circumferential-only friction of
+\AssRef{assump:gross_coulomb_traction} also omits resistance to radial migration.
 Traction along a sheave face can have both radial and circumferential
 components. Resistance to changing running radius and resistance to
 tangential slip therefore share the available contact traction.
@@ -12491,25 +12459,37 @@ contribution to directional shifting alongside actuator friction.
 
 The distributed groove mechanics of \citet{KongParker2006} and shifting
 analysis of \citet{Sorge2008} provide foundations for determining the friction
-direction from local relative motion. Such a description would replace the
-circumferential-only reduction in
-\AssRef{assump:gross_coulomb_traction} and determine how radial resistance,
-torque transmission, and axial thrust change together during shifting.
-A pressure- or speed-dependent friction law could also be examined within
-the present reduced model; separating adhering and sliding regions would
-require spatial contact resolution. Applied separately to the secondary
-faces, these relations could supply the face torques needed by the helix
-balance.
+direction from local relative motion. Coupling these tractions to the belt
+and sheave balances would determine how radial resistance, torque
+transmission, and axial thrust develop together during shifting. A friction
+coefficient that varies with pressure or sliding speed would provide a
+further extension. Its influence on available traction could also be
+examined within the present reduced kinematics.
 
-The distinction between surface sliding and internal deformation also
-matters for power loss. The contact calculation would determine work
-dissipated by sliding, while the material description would determine the
-energy stored or dissipated within the belt. \citet{Bertini2014} distinguish
-sliding, material hysteresis, and losses at entry to and exit from the
-pulley wraps. Those entry and exit processes recur as the belt circulates,
-even after initial clutching is complete. Following them during a transient
-would connect changes in power loss to the same mechanics that determine
-clamp demand and shift timing.
+These deformations and contact motions also change how mechanical work is
+stored and dissipated. Elasticity stores and returns energy; viscoelasticity
+adds dependence on deformation history and can dissipate energy during
+repeated stretching, compression, shear, and bending. Surface sliding
+dissipates work at the belt--sheave interface. The entry and exit processes
+considered by \citet{Bertini2014} recur as the belt circulates, so their
+contribution to loss continues after initial clutching. Messick measures
+temperature- and frequency-dependent rubber properties but uses an elastic approximation in
+the mechanical model; Ballew identifies independent damping measurements as
+unfinished work \citep{Messick2018,Ballew2015}. A transient constitutive
+description would carry the deformation history of each belt section through
+the spans and wraps. Extending the energy accounting in
+\Cref{eq:verification_energy_balance} to include recoverable strain energy
+and material dissipation alongside sliding loss would distinguish a temporary
+reduction in output power due to storage from an irreversible loss.
+
+With compliance and inertia retained, changes in tension and deformation
+could propagate around the loop after a sudden load change.
+\citet{Messick2018} identifies crank-angle-dependent engine torque as a
+possible source of vibration outside the scope of his steady model. A
+transient belt model could determine whether this excitation materially
+changes contact loading and traction. Spatial and temporal refinement would
+help distinguish the physical response from numerical oscillation,
+particularly given the stiffness difficulties reported by \citet{Ballew2015}.
 
 \subsection*{Belt Path, Support, and Re-engagement}
 \label{sec:future_work_belt_path}
@@ -12671,24 +12651,11 @@ reselecting the physical parameters for each maneuver.
 \subsection*{Recovery and Assessment of the Reduced Model}
 \label{sec:future_work_reductions_design}
 
-These extensions would be most useful if their relation to the present
-model remained explicit. Wherever the reduction is well defined, restoring
-the same assumptions and closure relations should recover CINDER's equations
-and reproduce its response within numerical accuracy under corresponding
-loading and initial conditions. Agreement
-in that case would establish that the added mechanics connect consistently
-to the existing description. A remaining difference would need to be traced
-to the reduction, the solution procedure, or an identified change in the
-physical model.
-
-Recovery may require several restrictions to be imposed together. Making
-a belt very stiff, for example, does not by itself impose the prescribed
-path, single transport coordinate, or wrap-level contact description used
-here. The same forces and inertias must also be reduced consistently in
-every balance where they participate. Establishing this correspondence
-would give a clear basis for a second comparison: allowing the additional
-mechanisms to act under the same physical loading, then examining how much
-they change the predictions of interest.
+The present formulation can serve as a common reference for these extensions.
+Wherever a reduction is well defined, reinstating the assumptions and closure
+relations used here should recover its governing equations. The reduced model
+should then reproduce the same response under
+the same loading and initial conditions.
 
 With the additional mechanisms active, the comparison would address when
 the simpler model is sufficient.
@@ -12700,9 +12667,9 @@ predictions are sensitive to the added mechanics. Experimental comparisons
 would then help establish whether the extra detail improves those
 predictions. Where its effect is small enough for the question being studied,
 the present description may remain sufficient. Each extension could thereby
-help establish both where CINDER remains useful and where more detail is
-needed, providing a basis for choosing an appropriate model for a component
-or design study.
+help establish both where the present formulation remains useful and where
+more detail is needed, providing a basis for choosing an appropriate model
+for a component or design study.
 
 \section*{Author Contributions (CRediT)}
 
