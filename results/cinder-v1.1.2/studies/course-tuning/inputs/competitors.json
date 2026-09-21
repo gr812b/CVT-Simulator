@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "description": "Selected ten configurations: eight principal cases and two one-change D02 interventions.",
+  "schema_version": 2,
+  "description": "Selected twelve common-course configurations: reference, familiar flyweight change, spring-rate and admissible ramp-shape cases, isolated secondary change, adverse cases, and two one-change D02 interventions.",
   "competitors": [
     {
       "id": "R00",
@@ -19,12 +19,48 @@
       }
     },
     {
-      "id": "W115",
-      "label": "Tip hardware 115%",
-      "family": "flyweight",
-      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "id": "P300",
+      "label": "Primary spring rate 3x",
+      "family": "primary_rate",
+      "intent": "Strong rate contrast; test rising work-speed characteristic and possible incomplete shift; installed preload is explicitly adjusted at engagement geometry.",
       "knobs": {
-        "tip_mass_scale": 1.15
+        "primary_rate_scale": 3.0
+      }
+    },
+    {
+      "id": "RC10",
+      "label": "Ramp arc tail 10 deg",
+      "family": "ramp_shape",
+      "intent": "Keep first 10 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 10 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 10,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "R26B7",
+      "label": "Ramp 26 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Keep the first 10 mm of the physical ramp unchanged, C3-blend over 7 mm, then use an arc tail ending at 26 degrees. Selected from the frozen-environment RC28 replacement screen as an admissible falling working-speed characteristic.",
+      "knobs": {
+        "ramp_end_deg": 26,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.007,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "RC40L",
+      "label": "Ramp arc tail 40 deg late",
+      "family": "ramp_shape",
+      "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 40 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 40,
+        "ramp_prefix_m": 0.018,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
       }
     },
     {
@@ -34,17 +70,6 @@
       "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
       "knobs": {
         "helix_angle_deg": 28
-      }
-    },
-    {
-      "id": "B01",
-      "label": "Light weights + load reserve",
-      "family": "combined",
-      "intent": "Candidate: higher engine working speed plus stronger secondary load response.",
-      "knobs": {
-        "tip_mass_scale": 0.9,
-        "helix_angle_deg": 18,
-        "secondary_twist_deg": 330
       }
     },
     {
@@ -97,5 +122,6 @@
         "tip_mass_scale": 0.65
       }
     }
-  ]
+  ],
+  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are promoted from the shift-shape exploration, and R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit."
 }

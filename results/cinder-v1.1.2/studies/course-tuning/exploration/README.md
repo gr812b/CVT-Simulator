@@ -82,3 +82,8 @@ artifacts does not change the selected final study's fingerprint.
 Detailed original protocols remain in `V2_REFERENCE.md`, `V2_QUICKSTART.md`, and
 `V3_FINAL_CHECK_README.md`. Their current command paths have been relocated;
 reported historical measurements have not been changed.
+
+
+## RC28 replacement search
+
+A focused audit-first replacement search for the rejected final-v2 `RC28` ramp is available at `scans/scan_rc28_replacements.py`. See `rc28_replacement/README.md`. It is exploratory only and does not change the root final runner.

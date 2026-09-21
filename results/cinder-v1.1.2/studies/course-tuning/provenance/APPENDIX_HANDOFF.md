@@ -5,16 +5,23 @@ Use the newly returned final run, not the exploratory result as a substitute.
 - `suite.json`: exact selection, execution controls and environment.
 - `unified_course/campaign.json`: analytic road parameters, ordered sector
   intervals, all selected tune dictionaries and final numerical controls.
-- `*/competitors_resolved.csv`: physical mass, preload and helix values plus
+- `*/competitors_resolved.csv`: physical mass, spring-rate/preload, ramp, and helix values plus
   every serialized departure from the common baseline.
 - `*/cases/*/resolved_case.json`: independent complete initial configuration,
   course, controls and tune identity for that individual trajectory.
 - `*/cases/*/model_identity.json`: actuator/boundary classes and referred
   inertias; confirms the full-dynamic bilateral common mechanics.
+- `*/cases/*/definition_checks.json`, `ramp_profile.csv`, and
+  `shape_mechanism_map.csv`: released fixed-pivot geometry validation and the
+  physical spring/ramp/mechanism maps used for the selected shape cases.
 - `*/cases/*/events.json`: exact before/after states, timestamps, positions,
   regime transitions, velocity jumps and available capture metadata.
 - `*/cases/*/diagnostics.csv`: solved accelerations, forces, torques, contact
   margins, power transfer and loss diagnostics alongside vehicle response.
+- `unified_course/shift_shape.html` plus `shift_shape_*.csv`: opening-flat
+  free-shift/stick--stick RPM--RPM shape comparisons, local secants, and exact
+  definitions; these deliberately exclude clutch slip, support-held motion,
+  hill backshift and descent.
 - `unified_course/final_checks/`: settling criteria, every tested window,
   tail means and failure chronology. Quote means as settled only for passing
   rows, retaining the finite-window qualification.

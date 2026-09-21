@@ -56,7 +56,16 @@ class LayoutTests(unittest.TestCase):
         with TemporaryDirectory() as d:
             r=Path(d)/'study';other=Path(d)/'outside';put(other,'oops.py')
             (r/'analysis').mkdir(parents=True)
-            (r/'analysis/link').symlink_to(other,target_is_directory=True)
+            try:
+                (r/'analysis/link').symlink_to(other,target_is_directory=True)
+            except OSError as exc:
+                # Windows commonly requires Developer Mode or elevated privileges
+                # to create symbolic links. That is an environment capability,
+                # not a failure of final_files(). Keep the assertion active
+                # whenever the host permits symlink creation.
+                if getattr(exc, 'winerror', None) == 1314:
+                    self.skipTest('Windows host does not permit unprivileged symlink creation')
+                raise
             self.assertEqual(final_files(r),[])
     def test_exploration_config_resolves_shared_reference(self):
         import json

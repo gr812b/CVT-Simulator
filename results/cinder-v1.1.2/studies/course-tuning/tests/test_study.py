@@ -59,7 +59,11 @@ class TuneTests(unittest.TestCase):
             d,_=resolve_tune(self.base,t)
             for k in ('shaft_boundaries','host','scenario','execution'): self.assertEqual(d[k],self.base[k])
             for k in ('geometry','contact','inertias'): self.assertEqual(d['assembly'][k],self.base['assembly'][k])
-            self.assertEqual(component(d,'primary','fixed_pivot_roller_flyweight')['geometry'],component(self.base,'primary','fixed_pivot_roller_flyweight')['geometry'])
+            a=component(self.base,'primary','fixed_pivot_roller_flyweight')['geometry']
+            b=component(d,'primary','fixed_pivot_roller_flyweight')['geometry']
+            for key in a:
+                if key!='ramp_profile': self.assertEqual(b[key],a[key])
+            if 'ramp_end_deg' not in t['knobs']: self.assertEqual(b['ramp_profile'],a['ramp_profile'])
     def test_tip_delta_moments(self):
         tune={'id':'test','label':'test','family':'test','intent':'test','knobs':{'tip_mass_scale':.9}};d,_=resolve_tune(self.base,tune)
         a=component(self.base,'primary','fixed_pivot_roller_flyweight');b=component(d,'primary','fixed_pivot_roller_flyweight')
@@ -71,6 +75,26 @@ class TuneTests(unittest.TestCase):
         for t in self.tunes:
             d,_=resolve_tune(self.base,t);m=component(d,'primary','fixed_pivot_roller_flyweight')['mass_geometry']
             FlyweightMassGeometry(number_of_flyweights=m['number_of_flyweights'],mass_per_flyweight=m['mass_per_flyweight_kg'],first_moment_u=m['first_moment_u_kg_m'],first_moment_v=m['first_moment_v_kg_m'],second_moment_u=m['second_moment_u_kg_m2'],second_moment_v=m['second_moment_v_kg_m2'],product_moment_uv=m['product_moment_uv_kg_m2'],second_moment_z=m['second_moment_z_kg_m2'])
+    def test_primary_rate_match(self):
+        t=next(x for x in self.tunes if x['id']=='P300')
+        d,s=resolve_tune(self.base,t)
+        a=component(self.base,'primary','axial_spring');b=component(d,'primary','axial_spring')
+        sd=self.base['assembly']['geometry']['deadzone_shift_m']
+        fa=a['stiffness_N_per_m']*(a['initial_compression_m']+a['compression_per_axial_position']*sd)
+        fb=b['stiffness_N_per_m']*(b['initial_compression_m']+b['compression_per_axial_position']*sd)
+        self.assertAlmostEqual(b['stiffness_N_per_m']/a['stiffness_N_per_m'],3.0)
+        self.assertAlmostEqual(fa,fb,places=9)
+        self.assertTrue(s['spring_matches'])
+    def test_selected_ramps_build_and_preserve_mass(self):
+        from cinder.model.cvt.actuation import FixedPivotFlyweightForce
+        from cinder.model.system import MechanicalCVTPlant
+        for cid in ('RC10','R26B7','RC40L'):
+            t=next(x for x in self.tunes if x['id']==cid);d,_=resolve_tune(self.base,t)
+            self.assertEqual(component(d,'primary','fixed_pivot_roller_flyweight')['mass_geometry'],component(self.base,'primary','fixed_pivot_roller_flyweight')['mass_geometry'])
+            from cinder.contracts import decode_simulation_case_document
+            decoded=decode_simulation_case_document(d)
+            law=next(l for l in decoded.plant.primary_actuator.force_laws if type(l) is FixedPivotFlyweightForce)
+            self.assertTrue(law.spec.mechanism_map.validation_report.is_valid)
     def test_helix_angle_convention(self):
         t={'id':'test','label':'test','family':'test','intent':'test','knobs':{'helix_angle_deg':18.}};d,s=resolve_tune(self.base,t)
         angle=d['assembly']['pulleys']['secondary']['helical_coupling']['profile']['circumferential_profile']['segments'][0]['angle_rad']

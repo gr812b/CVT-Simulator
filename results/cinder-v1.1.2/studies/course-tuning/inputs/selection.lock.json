@@ -1,11 +1,11 @@
 {
-  "selection_revision": "section4p5-final-v1",
+  "selection_revision": "section4p5-final-v3-r26b7",
   "inputs": {
-    "study.json": "74dd9ed56623f87ebe916bc4574c60d9c6b11183366bfaaf4c0c0f15ca3eb4ad",
-    "inputs/competitors.json": "d6477bada25abf3c67fe78bc4dcdc14571206ee90f6f65470b02f59ee8d498b8",
+    "study.json": "a54f4e176811f4e0cc0819a21b9f8d268e7c551d47162e39677328e072b78d2a",
+    "inputs/competitors.json": "756001f103b036e28b178ede7679420c68f6ff5720a07c7414f784e5f5eada81",
     "inputs/course.json": "89e3feb75825e7e2c985238222a5146cfb1efeed4be27560fd3ea7e373bad88c",
     "inputs/flat_800m.json": "10737d72b664501483496e18eee9d42e45f26c1ca87b8385847284908132788d",
-    "inputs/presentation.json": "0e7d1ab42ec68a2e0855b104f06a9ea78c0ec3bf59b9fbc1f0350188b4e335b3",
+    "inputs/presentation.json": "5fcc7f5836c70cf3a65d588fe7dc7e0073b73662b8fb219ddf4f308b247ac580",
     "inputs/settling_criteria.json": "4f97e1a33291cb004f4742b90dfc25c062342457fc6de191523d7f936c324111"
   },
   "baseline_canonical_sha256": "8abe09ab80d0b11dfbd89879e894ff063d2bf90f68ab981f84e76243f290c219",
@@ -16,13 +16,14 @@
     "policy.json": "28cf7e53897b471ab561c6fd4f5f12035f0936792c4f44d70710fd67bd98cb14"
   },
   "basis": {
-    "confirmed_uploaded_campaign": "unified38_c6a32w12_h18hold240__tight__632317402693",
-    "unified_entrants": [
+    "selected_unified_entrants": [
       "R00",
       "W85",
-      "W115",
+      "P300",
+      "RC10",
+      "R26B7",
+      "RC40L",
       "H28",
-      "B01",
       "U55",
       "D01",
       "D02",
@@ -33,6 +34,22 @@
       "R00",
       "U55"
     ],
-    "change_from_prior_flat": "Same physical input; now regenerated under the common final tight numerical settings."
+    "promoted_from_shift_shape_exploration": [
+      "P300",
+      "RC10",
+      "RC40L"
+    ],
+    "demoted_to_exploration_only": [
+      "W115",
+      "B01"
+    ],
+    "course": "unchanged 732 m unified course confirmed before fleet revision",
+    "numerical_settings": "unchanged final tight settings",
+    "promoted_from_rc28_replacement_exploration": [
+      "R26B7"
+    ],
+    "rejected_final_v2_definition": [
+      "RC28"
+    ]
   }
 }

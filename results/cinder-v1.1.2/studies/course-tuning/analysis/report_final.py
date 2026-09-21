@@ -80,6 +80,8 @@ def build_final_report(output:Path,plots:bool=True) -> dict:
         build_report(folder,focus=g['cars'],plots=plots)
         if g['id']=='unified_course':
             build_checks(folder,criteria=manifest['settling_criteria'],plots=plots)
+            from analysis.shape_report import build_shape_report
+            build_shape_report(folder,plots=plots)
             if plots:comparisons=discussion_figures(folder,manifest['comparison_groups'])
         page=folder/'index.html';body=page.read_text(encoding='utf-8')
         if '<!-- final-suite-nav -->' not in body:
@@ -91,7 +93,8 @@ def build_final_report(output:Path,plots:bool=True) -> dict:
     # Keep the schema / values emitted by each existing analysis, simply add an experiment identifier.
     sources={'outcomes.csv':'leaderboard.csv','sector_comparison.csv':'sector_comparison.csv',
              'feature_metrics.csv':'feature_metrics.csv','cyclic_cycle_metrics.csv':'cyclic_cycle_metrics.csv',
-             'settling_summary.csv':'final_checks/settling_summary.csv','competitors_resolved.csv':'competitors_resolved.csv'}
+             'settling_summary.csv':'final_checks/settling_summary.csv','competitors_resolved.csv':'competitors_resolved.csv',
+             'shift_shape_metrics.csv':'shift_shape_metrics.csv'}
     for name,relative in sources.items():
         combined=[]
         for g in manifest['experiments']:
@@ -111,7 +114,7 @@ def build_final_report(output:Path,plots:bool=True) -> dict:
     nav=''
     for g in manifest['experiments']:
         nav+=f'<h2>{html.escape(g["title"])}</h2><p><a href="{g["id"]}/index.html">Course, vehicle and mechanical plots</a> · <a href="{g["id"]}/shift_curves.html">All shift curves</a>'
-        if g['id']=='unified_course':nav+=' · <a href="unified_course/final_checks/index.html">Interior settling, cycle-by-cycle and failure chronology</a>'
+        if g['id']=='unified_course':nav+=' · <a href="unified_course/final_checks/index.html">Interior settling, cycle-by-cycle and failure chronology</a> · <a href="unified_course/shift_shape.html">Selected shift-curve shape comparisons</a>'
         nav+='</p>'
     comparison_html=''
     for group in comparisons:

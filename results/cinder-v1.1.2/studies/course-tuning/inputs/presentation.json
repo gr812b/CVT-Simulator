@@ -1,14 +1,16 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "groups": [
     {
-      "id": "opening_flat",
-      "title": "Clutching and upshift",
+      "id": "opening_shape",
+      "title": "Working-speed level and shift-curve shape",
       "cars": [
         "R00",
         "W85",
-        "W115",
-        "U55"
+        "P300",
+        "RC10",
+        "R26B7",
+        "RC40L"
       ],
       "sectors": [
         "launch_flat"
@@ -31,12 +33,12 @@
     },
     {
       "id": "cyclic",
-      "title": "Free shift and upper-stop histories",
+      "title": "Ramp and spring changes carried into repeated loading",
       "cars": [
         "R00",
-        "H28",
-        "B01",
-        "D02_P"
+        "P300",
+        "RC10",
+        "R26B7"
       ],
       "sectors": [
         "cyclic"
@@ -48,9 +50,11 @@
       "cars": [
         "R00",
         "W85",
-        "W115",
+        "P300",
+        "RC10",
+        "R26B7",
+        "RC40L",
         "H28",
-        "B01",
         "D01",
         "D02_M",
         "D02_P"
@@ -77,9 +81,9 @@
       "title": "Unchanged full-throttle boundary through the descent",
       "cars": [
         "R00",
-        "W85",
+        "RC10",
+        "R26B7",
         "H28",
-        "B01",
         "D02_P"
       ],
       "sectors": [

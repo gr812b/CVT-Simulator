@@ -74,7 +74,7 @@ cases; `--resume` then reuses completed cases within this layout as usual.
 ```text
 studies/course-tuning/
 ├── study.json
-├── run.py                        # Selected final 12 trajectories only
+├── run.py                        # Selected final 14 trajectories only
 ├── verify_study.py
 ├── inputs/                       # Locked final road, fleet, and criteria
 ├── infrastructure/
@@ -100,10 +100,7 @@ studies/course-tuning/
     └── layout_history/           # Original separate-final installation
 ```
 
-The course, tune definitions, numerical settings, stopping rules, diagnostic
-formulas and figure routines are unchanged from the selected final package.
-Only organization, path resolution, source isolation and migration support have
-changed.
+The course, numerical settings, stopping rules and shared model remain unchanged. The selected fleet is revision 3: P300, RC10 and RC40L are retained from the shift-shape exploration, while R26B7 replaces the RC28 geometry rejected by the frozen CINDER 1.1.2 construction audit. W115 and B01 remain exploratory/supporting cases. The final report now includes focused spring/ramp shift-shape and mechanism figures.
 
 Activate the existing Results environment. The expected environment is Python
 3.12, `cinder-cvt==1.1.2`, NumPy 2.5.2, SciPy 1.18.1 and Matplotlib 3.11.1. Do not
@@ -122,15 +119,15 @@ These commands are the same in macOS/Linux terminals and PowerShell. `--jobs 4`
 uses four independent processes, not four threads. Use a smaller value to reduce
 CPU/memory use. BLAS thread counts default to one per process.
 
-The verifier checks the selected inputs, shared reference, unit tests, and all ten
+The verifier checks the selected inputs, shared reference, unit tests, and all twelve
 model assemblies. It does not integrate trajectories. The second command runs:
 
 | Experiment | Cars | Road |
 |---|---|---|
-| `unified_course` | R00, W85, W115, H28, B01, U55, D01, D02, D02_M, D02_P | The selected 732 m course |
+| `unified_course` | R00, W85, P300, RC10, R26B7, RC40L, H28, U55, D01, D02, D02_M, D02_P | The selected 732 m course |
 | `flat_800m` | R00, U55 | A separate 800 m flat |
 
-**Twelve trajectories in total.** Both experiments now use the final tight
+**Fourteen trajectories in total.** Both experiments now use the final tight
 settings: LSODA, relative tolerance `3e-5`, absolute tolerance `3e-8`, maximum step
 `0.005 s`, diagnostic interval `0.005 s`, and observation limit `180 s`.
 The earlier exploratory flat used the research preset; this final package
@@ -145,7 +142,7 @@ or inserted quasi-static actuator comparisons.
 The runner prints a directory such as:
 
 ```text
-studies/course-tuning/artifacts/final_v1__<fingerprint>/
+studies/course-tuning/artifacts/final_v3__<fingerprint>/
 ├── index.html                     # Start here
 ├── suite.json                     # Exact suite identity, settings and environment
 ├── completion.json                # Completeness and review flags
@@ -154,6 +151,7 @@ studies/course-tuning/artifacts/final_v1__<fingerprint>/
 │   ├── index.html                 # Familiar course/family/mechanical report
 │   ├── shift_curves.html          # All and phase-coloured individual shift curves
 │   ├── final_checks/index.html    # Interior settling, cycles and failure chronology
+│   ├── shift_shape.html           # Selected shift-curve shape + mechanism comparisons
 │   ├── figures/
 │   └── cases/<ID>/                # Full CSV/JSON/NPZ records for every case
 ├── flat_800m/
@@ -173,7 +171,7 @@ connection is required. The latest directory is also written to
 With `--pack`, the complete current dataset is archived beside that folder as:
 
 ```text
-final_v1__<fingerprint>_return.zip
+final_v3__<fingerprint>_return.zip
 ```
 
 **Return that ZIP.** It includes the reports, every generated figure, all case
@@ -210,35 +208,26 @@ separate supporting experiment, not an extension spliced into this road.
 
 ## Fixed competitors
 
-Each modification is applied to the same baseline. Mass percentages below refer
-to **replaceable tip mass**, not total flyweight mass. Preload percentages refer
-to **initial compression**, not spring rate.
+Each modification is applied to the same baseline. Mass percentages refer to **replaceable tip mass**, not total flyweight mass. The P300 rate case changes spring stiffness and explicitly adjusts installed compression so the spring force matches the reference at the low-ratio engagement geometry. Ramp cases preserve the fixed-pivot hardware and mass properties while changing only the physical ramp profile; the dynamic mechanism map is rebuilt from that geometry.
 
 | ID | Changes relative to R00 |
 |---|---|
 | R00 | None |
 | W85 | 85% tip mass |
-| W115 | 115% tip mass |
-| H28 | 28-degree helix instead of 20 degrees |
-| B01 | 90% tip mass, 18-degree helix, 330-degree torsional preload |
+| P300 | 3× primary spring stiffness, with matched low-ratio spring force |
+| RC10 | First 10 mm of ramp retained, 5 mm C3 blend, arc tail ending at 10° |
+| R26B7 | First 10 mm retained, 7 mm C3 blend, arc tail ending at 26°; accepted by the frozen release construction audit |
+| RC40L | First 18 mm retained, 5 mm C3 blend, late arc tail ending at 40° |
+| H28 | 28° helix instead of 20° |
 | U55 | 55% tip mass |
-| D01 | 130% tip mass, 80% primary and secondary axial preload, 28-degree helix, 240-degree twist |
+| D01 | 130% tip mass, 80% primary/secondary axial preload, 28° helix, 240° torsional twist |
 | D02 | 65% tip mass and 115% primary axial preload |
 | D02_M | Reference tip mass; retain D02's 115% primary preload |
 | D02_P | Retain D02's 65% tip mass; restore reference primary preload |
 
-Tip changes update mass and both relevant mass moments consistently. All
-competitors keep full dynamic fixed-pivot flyweights and the same full dynamic
-bilateral/slotted helix implementation. The belt, friction law, primary ramp,
-shaft-boundary inertias, engine map, vehicle, final drive, spring rates, helix
-radius and mechanism types are unchanged.
+W115 and B01 remain under `exploration/` and are not part of this selected final fleet. Every selected case retains the same full dynamic fixed-pivot flyweight mechanism, dynamic bilateral/slotted secondary helix, engine/vehicle boundaries, belt/contact model and initial state.
 
-Inputs are checked against `inputs/selection.lock.json`. JSON whitespace or
-platform line endings do not count as a physical change. An altered input,
-shared reference or shared mechanics helper is rejected rather than silently
-included in the selected final experiment. Deliberate redesign belongs in an
-explicit new study revision; this entry point has no `--course` or tune-sweep
-options.
+The report writes `unified_course/shift_shape.html` using only the opening-flat, free-shifting, stick-stick interval for shape descriptors. These descriptors do not fit stop-held, slipping, backshift or downhill portions into one shift-curve slope.
 
 ## Resume, incomplete runs and errors
 
@@ -250,7 +239,7 @@ trajectory. Completed cases remain untouched.
 A case with an observed rollback or slow-progress stop is a valid recorded
 outcome. It is not given an invented finishing time, discarded, or repeatedly
 rerun in search of a finish. A numerical error or model-domain stop is reported
-separately. The ten physical outcomes are never hardcoded as expected results.
+separately. The twelve common-course physical outcomes are never hardcoded as expected results.
 
 To retry completed numerical/setup/timeout errors:
 
@@ -297,13 +286,13 @@ python studies/course-tuning/run.py --prepare-only
 Rebuild all figures/reports or repack an existing final folder without integrating:
 
 ```bash
-python studies/course-tuning/analysis/report_final.py "/path/to/final_v1__fingerprint" --pack
+python studies/course-tuning/analysis/report_final.py "/path/to/final_v3__fingerprint" --pack
 ```
 
 Generate a close-up from an exact event ID in a saved main-course case:
 
 ```bash
-python studies/course-tuning/analysis/inspect_event.py "/path/to/final_v1__fingerprint/unified_course" --car D02 --event E0017 --window 0.5
+python studies/course-tuning/analysis/inspect_event.py "/path/to/final_v3__fingerprint/unified_course" --car D02 --event E0017 --window 0.5
 ```
 
 Use an event ID that exists in that case's `events.csv`. This reads saved data

@@ -89,7 +89,7 @@ def build_shift_curves(run_dir: Path, focus=None, data=None):
     if data is None:
         data={p.name:read_csv(p/'diagnostics.csv') for p in sorted((run_dir/'cases').iterdir()) if (p/'diagnostics.csv').is_file()}
     ids=[t['id'] for t in manifest['competitors'] if data.get(t['id'])]
-    if focus is None:focus=[i for i in ('R00','W85','W115','H16','H28','B01','D02','U55') if i in ids]
+    if focus is None:focus=[i for i in ('R00','W85','P300','RC10','R26B7','RC40L','H28','U55','D01','D02','D02_M','D02_P') if i in ids]
     focus=[i for i in focus if i in ids]
     import matplotlib.pyplot as plt
     # Fleet colours are independent of sector colours and stable across focus/family views.

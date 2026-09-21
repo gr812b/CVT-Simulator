@@ -26,7 +26,7 @@ def arguments(argv=None):
     p.add_argument('--jobs',type=int,default=4,help='Independent processes; never parallel LSODA threads')
     p.add_argument('--resume',action='store_true',help='Reuse hash-verified completed cases; restart interrupted cases from their original initial state')
     p.add_argument('--retry-errors',action='store_true',help='With --resume, retry completed setup/integration/timeout errors')
-    p.add_argument('--only',nargs='+',metavar='EXPERIMENT/CAR',help='Run a subset such as unified_course/D02; the final report remains incomplete until all 12 cases exist')
+    p.add_argument('--only',nargs='+',metavar='EXPERIMENT/CAR',help='Run a subset such as unified_course/D02; the final report remains incomplete until all selected cases exist')
     p.add_argument('--prepare-only',action='store_true',help='Verify and write exact inputs without integrating')
     p.add_argument('--smoke',action='store_true',help='Separate three-second R00/D02 plumbing check, never the final-results folder')
     p.add_argument('--no-plots',action='store_true',help='Defer image rendering; CSV/JSON reports are still produced')
@@ -39,9 +39,11 @@ def run_one(job:dict) -> dict:
     """Every case's stdout and traceback stay beside its saved trajectory."""
     from contextlib import redirect_stdout,redirect_stderr
     from experiments.fleet import execute_case
+    from infrastructure.shape_preflight import inspect_definition
     out=Path(job['case_dir']);out.mkdir(parents=True,exist_ok=True)
     with (out/'execution.log').open('a',encoding='utf-8') as log:
         with redirect_stdout(log),redirect_stderr(log):
+            inspect_definition(job['document'],job['course'],job['execution'],out)
             summary=execute_case(job)
     seal_case(out,job['fingerprint'])
     return summary
@@ -83,7 +85,7 @@ def main(argv=None) -> int:
         'execution':spec['execution'],'diagnostics':spec['diagnostics'],
         'experiments':groups,'smoke':a.smoke}
     fp=digest(identity)
-    output=ROOT/'artifacts'/f"{'smoke' if a.smoke else 'final_v1'}__{fp[:12]}"
+    output=ROOT/'artifacts'/f"{'smoke' if a.smoke else 'final_v3'}__{fp[:12]}"
     output.mkdir(parents=True,exist_ok=True)
     manifest={**identity,'fingerprint':fp,'selection_revision':spec['selection_revision'],
         'created_utc':utc_now(),'expected_cases':expected,'expected_case_count':len(expected),
