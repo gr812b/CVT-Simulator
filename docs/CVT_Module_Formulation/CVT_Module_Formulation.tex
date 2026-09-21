@@ -11976,155 +11976,125 @@ should be tested first, with the remaining coupled balances preserved.
 
 TODO
 
+
 \section{Future Work}
 \label{sec:future_work}
 
-The present formulation makes it possible to follow how the shafts, actuators,
-and belt respond together as the CVT changes operating condition. The
-assumptions that make this description compact also identify where it can be
-extended. Some omitted forces can be added to the existing free bodies.
-Other changes would give the belt motions and deformations that its present
-coordinates cannot describe. The useful question is therefore not simply
-which assumptions can be removed, but what those changes would allow us to
-explain about the transient response.
+The present formulation follows how the shafts, actuators, and belt respond
+together as the CVT changes operating condition. Its assumptions also identify
+where that description can be extended. Some omitted forces can enter the
+existing free bodies; other changes would give the belt motions and
+deformations that its present coordinates cannot describe. The questions
+below concern what those changes would allow us to explain about the
+transient response.
 
-Much of the required local physics already has a foundation in the literature
-reviewed in \Cref{sec:literature-review}. The opportunity is to bring those
-mechanisms into the same problem in which shaft speeds, sheave motion, belt
-loading, and changes of contact are determined together. This need not
-preserve the present state vector or every equation. It should preserve the
-mechanical interaction that motivated them: a change in belt loading changes
-the actuator response, and the resulting motion changes the loading again.
-Experiments are needed alongside these extensions, both to test the present
-model and to establish which additional mechanisms materially change its
-predictions.
+Much of the local physics already has a foundation in the literature reviewed
+in \Cref{sec:literature-review}. Bringing it into the present problem requires
+keeping the interaction between belt loading and hardware motion: a change
+in contact force changes how the sheaves accelerate, and their motion changes
+the contact again. The proposed extensions examine that interaction alongside
+the measurements needed to distinguish its physical causes.
 
-\subsection{Friction in the Clamping Mechanisms}
+\subsection{Actuator Friction and Directional Shifting}
 \label{sec:future_work_mechanism_friction}
 
 The same mechanism position need not produce the same clamping force while
-the CVT shifts in opposite directions. In the present model, acceleration can
-already create this distinction because some of the applied loading is
-required to accelerate the actuator. Friction in the ramps, helix, and guides
-would add a different source of resistance. It opposes relative motion and
-may hold the mechanism at rest until the available driving force is
-sufficient to start it moving. These effects are excluded by
-\AssRef{assump:ideal_actuator_mechanics}, but their points of entry are already
-visible in the primary free body and secondary helix balance
-(\Cref{eq:primary_movable_sheave_balance,eq:secondary_reacted_helix_torque_structure}).
+the CVT shifts in opposite directions. Acceleration can already contribute to
+this distinction in the present model because part of the applied loading
+accelerates the actuator itself. Friction in the ramps, helix, and guides
+would add resistance that changes direction with the relative motion. Static
+friction could also delay the start of motion or hold a sheave away from a
+travel stop. These effects are excluded by
+\AssRef{assump:ideal_actuator_mechanics}; their forces would enter the primary
+free body and secondary helix balance in
+\Cref{eq:primary_movable_sheave_balance,eq:secondary_reacted_helix_torque_structure}.
 
-There are established actuator descriptions on which to build.
-\citet{KimEtAl2002} include contact friction in their mechanical-actuator
-relations, and \citet{Cammalleri2005} distinguish the friction directions for
-incipient upshift and downshift. Incorporating such forces into the present
-dynamic balances would make it possible to investigate their effect on
-breakaway, shift reversal, and the recovery of engine speed after a load
-increase. The existing contact reactions provide a starting point, but they
-must be determined with the added friction present. Applying a friction
-correction to the already solved frictionless reaction would not, in general,
-produce the same force balance. For a roller mechanism, bearing drag and
-rolling resistance would also have to be distinguished from sliding at the
-ramp contact.
+Practical tuning literature gives this question a direct motivation.
+\citet{Aaen2007} describes how reversal of friction at the secondary cam and
+sliding buttons delays backshift and allows engine speed to fall.
+\citet{KimEtAl2002} include friction in their mechanical-actuator relations,
+while \citet{Cammalleri2005} distinguishes its direction for incipient upshift
+and downshift. Incorporating these forces into the dynamic balances would
+allow their contribution to the separation between upshift and backshift
+curves to be examined during complete maneuvers, including the recovery of
+engine speed after a load increase.
 
-Friction in the actuator is not the only possible cause of a different
-upshift and backshift response. \citet[p.~645]{KimEtAl2002} explain the
-different coefficients in their experimentally identified shift law through
-the direction of radial belt friction at the primary. During downshift, that
-friction can support a condition resembling the self-locking behaviour of
-steady running; during upshift, its reversal changes the belt's radial and
-circumferential motion. Their explanation concerns the belt--groove contact,
-not an isolated measurement of actuator friction. A useful investigation would
-therefore distinguish the force that the actuator can deliver from the force
-that the moving belt requires. Comparing matched upshift and backshift
-manoeuvres at different rates, with independently characterised actuator
-friction, would help establish how much of the directional response comes
-from actuator friction, belt contact, and inertia. It would also show when these effects
-delay the return to a useful engine operating region.
-
-Static actuator friction would require more than an additional dissipated
-power. A sheave could remain held away from a travel stop, and motion reversal
-could introduce a new sticking or sliding condition inside the actuator. The
-regime framework of \Cref{sec:shift_regime_dynamics} provides a way to organise
-such changes, but the present set of regimes would need to be extended to
-include them. Ordinary bearing, seal, and windage losses are a simpler related
-extension of \AssRef{assump:no_parasitic_losses}. These can be attached to the
-bodies and relative motions that produce them without introducing a global
-efficiency multiplier. Their allocation must agree with the shaft boundaries
-so that a loss included in an external machine model is not counted again
-inside the CVT.
+That separation also depends on belt contact and inertia. Comparisons at
+different shift rates, with actuator friction characterised independently,
+could establish how much each contributes to delayed reversal. For the
+roller mechanisms considered here, the relevant resistance may come from
+roller bearings and rolling contact rather than the sliding buttons discussed
+by Aaen. In either case, friction changes the contact reaction that generates
+the clamping force, so it must participate in the actuator balance.
 
 \subsection{Local Belt Motion and Contact}
 \label{sec:future_work_local_contact}
 
 The belt contact supplies both the torque carried by a pulley and the load
 that opposes its actuator. The present wrap equations resolve tension and
-normal loading, but one traction utilisation \(\lambda_j\) and one overall
-contact state describe each wrap
+normal loading, but one traction utilisation \(\lambda_j\) and one contact
+state describe each wrap
 (\Cref{eq:lambda_local_definition} and
-\AssRef{assump:wrap_contact_resolution}). They therefore cannot distinguish a
-part of the belt that adheres from another part that slides, or a region where
-the local friction direction reverses. Resolving those distinctions would
-change the forces returned to the sheaves as well as the description of slip.
+\AssRef{assump:wrap_contact_resolution}). They cannot distinguish a region
+where the belt adheres from another where it slides, or a region where the
+local friction direction reverses. Resolving these motions would change the
+forces returned to the sheaves as well as the description of slip.
 
-The mechanisms identified by \citet{Gerbert1996} give a physical reason to make
-this change. Longitudinal extension changes the motion of the tension-carrying
-layer. Radial compression changes its running radius. Shear and warping allow
-the rubber between that layer and the sheave to deform, while the rapid change
-of curvature at entry and exit changes the motion of the contacting surface.
-These are distinct contributions to belt speed loss, particularly when the
-belt thickness is appreciable relative to the pulley radius. Importantly, a
-difference between cord speed and pulley surface speed need not imply sliding
-of the contacting rubber: some relative motion can be accommodated by shear
-while the surface adheres. Gerbert also shows how seating and unseating can
-produce friction opposing the main torque-transmitting direction at the
-primary. A single wrap-level slip speed cannot recover these local motions.
+The mechanisms identified by \citet{Gerbert1996} explain why these distinctions
+matter. Longitudinal extension changes the motion of the tension-carrying
+layer, and radial compression changes its running radius. Shear and warping
+allow the rubber between that layer and the sheave to deform, while the
+change of curvature at entry and exit changes the motion of the contacting
+surface. A difference between cord speed and pulley surface speed therefore
+need not imply sliding: the rubber can deform in shear while its surface
+adheres. Gerbert also shows how seating and unseating can produce friction
+opposing the main torque-transmitting direction at the primary. A single
+wrap-level slip speed cannot recover these local motions.
 
-Radial migration introduces a further connection. Friction acting along a
-sheave face can have both radial and circumferential components, so resistance
-to changing running radius and resistance to tangential slip draw on the same
-contact traction. They should not be introduced as two independent forces,
-each with the full available friction capacity. The distributed groove
-mechanics of \citet{KongParker2006} and the shifting analysis of
-\citet{Sorge2008} provide foundations for treating the local sliding direction
-and its consequences for normal loading and axial thrust. Such a description
-would replace the circumferential-only reduction in
-\AssRef{assump:gross_coulomb_traction} with a local relation between surface
-motion and traction.
+Radial migration makes the direction of friction particularly important.
+Traction along a sheave face can have both radial and circumferential
+components. Resistance to changing running radius and resistance to
+tangential slip therefore share the available contact traction.
+\citet[p.~645]{KimEtAl2002} use this connection to explain the different
+coefficients in their experimentally identified upshift and downshift laws.
+Their proposed pseudo-self-locking mechanism occurs at the primary
+belt--groove interface: outward radial friction during downshift can support
+a condition resembling steady running, whereas its reversal during upshift
+changes the radial and circumferential sliding. This is a belt-contact
+contribution to directional shifting, separate from the actuator friction
+discussed above.
 
-The corresponding loss calculation would need to follow the same mechanics.
-\citet{Bertini2014} distinguish sliding, material hysteresis, and losses
-associated with belt entry and exit, using a reduced contact description and
-experimentally identified parameters. Their entry and exit losses concern
-material passing through pulley contact during circulation, rather than the
-initial clutching event. A transient extension could determine how these
-losses change during a manoeuvre and whether the same local mechanisms also
-change clamp demand or shift timing. Local contact work would then account
-for resolved sliding; adding a separate empirical loss for the same motion
-would count it twice.
+The distributed groove mechanics of \citet{KongParker2006} and shifting
+analysis of \citet{Sorge2008} provide foundations for determining the friction
+direction from local relative motion. Such a description would replace the
+circumferential-only reduction in
+\AssRef{assump:gross_coulomb_traction} and determine how radial resistance,
+torque transmission, and axial thrust change together during shifting. Local
+motion also depends on the belt description. The inextensible continuum
+kinematics of \citet{CarboneMangialardiMantriota2005} already allow local
+transport to vary with changing geometry; longitudinal creep and
+shear-mediated surface motion require the corresponding deformation.
+A pressure- or speed-dependent friction law could be examined within the
+present reduced model, but separating adhering and sliding regions would
+require spatial contact resolution.
 
-These improvements need not all be introduced at once. A pressure- or
-speed-dependent traction law could be tested within the present reduced
-contact description, although it would not create local adhesion regions or
-separate cord and surface motion. Conversely, spatially varying contact does
-not by itself require a spatially varying friction coefficient, and local
-material-speed variation is not exclusively an elasticity effect. The
-inextensible continuum kinematics developed by
-\citet{CarboneMangialardiMantriota2005} already couple local transport to
-changing geometry. Longitudinal creep requires extension, and shear-mediated
-surface motion requires a corresponding section model. Each intermediate
-extension should therefore be judged by the particular motion it recovers.
+The same local mechanics would give a more detailed account of belt losses.
+\citet{Bertini2014} distinguish sliding, material hysteresis, and losses at
+entry to and exit from the pulley wraps. Those entry and exit processes occur
+as the belt circulates, even after initial clutching is complete. Following
+them during a transient would allow their effect on power loss to be examined
+alongside their effect on clamp demand and shift timing.
 
 \subsection{Face Torque and Dynamic Helix Response}
 \label{sec:future_work_face_torque}
 
-The two secondary faces provide a particularly direct connection between
-local contact and the complete transient response. The movable face rotates
-relative to the shaft as it shifts, so the belt generally encounters a
-different surface velocity on each face. The current formulation retains
-that relative rotation in the actuator and shaft dynamics. It also uses the
-power-equivalent representative contact speed in
-\Cref{eq:representative_contact_angular_speed}. What it does not determine is
-the division of torque between the two contacts:
+The two secondary faces provide a direct connection between local contact and
+the complete transient response. The movable face rotates relative to the
+shaft as it shifts, so the belt generally encounters a different surface
+velocity on each face. The current formulation retains this relative rotation
+in the actuator and shaft dynamics and uses the power-equivalent contact
+speed in \Cref{eq:representative_contact_angular_speed}. What it does not
+determine is the division of torque between the two contacts:
 \AssRef{assump:symmetric_face_sharing} supplies
 \(\tau_{s,M}=\tau_s/2\) in
 \Cref{eq:secondary_movable_face_belt_torque}.
@@ -12132,423 +12102,302 @@ the division of torque between the two contacts:
 \citet{SorgeCammalleri2011} show why this division deserves closer attention.
 Their separate face-contact calculations produce substantially unequal
 torques, with circumferential tractions that can oppose one another over
-parts of the wrap. In some of their calculated conditions, even the
-integrated torque on the faster half-pulley is negative. Their analysis
-retains the contact consequences of relative face motion while neglecting
-inertia other than centrifugal loading. The present formulation retains the
-movable assembly's inertial demand but reduces the face contacts. The two
-descriptions therefore address different consequences of the same motion.
+parts of the wrap. In some calculated conditions, even the integrated torque
+on the faster half-pulley is negative. Their analysis retains the contact
+consequences of relative face motion while neglecting inertia other than
+centrifugal loading. The present formulation retains the movable assembly's
+inertial demand but reduces the face contacts. The two descriptions address
+different consequences of the same motion.
 
-The point at which they meet is already explicit in
+The point at which they meet is explicit in
 \Cref{eq:secondary_reacted_helix_torque_structure}. The helix reacts the belt
 and spring torques remaining after the movable assembly has been accelerated.
 Replacing the prescribed half-share by the actual movable-face torque changes
 that reaction and hence the axial force in
-\Cref{eq:secondary_helix_closing_force}. The changed axial acceleration alters
-the relative face motion, which changes the contact conditions that supplied
-the torque. The shaft balance must respond at the same time. Face torque and
-helix inertia cannot therefore be assessed fully as independent corrections
-to an unchanged trajectory.
+\Cref{eq:secondary_helix_closing_force}. The changed acceleration alters the
+relative face motion, which changes the contact conditions that supplied the
+torque. The shaft balance responds at the same time. Contact power must also
+follow each face torque at its own speed, replacing the equal-share reduction
+in \Cref{eq:secondary_face_tangential_power}.
 
-The comparisons in \Cref{sec:results_secondary_helix} make this interaction
-worth investigating during both smooth shifting and rapid disturbances. They
-show that an inertial contribution to helix reaction and a change in the
-resulting trajectory are different measures of importance, especially when a
-manoeuvre approaches a contact or support transition. A controlled comparison
-could vary the face-contact description and the retained helix dynamics
-separately and together, while preserving the physical hardware inventory
-and shaft loading. Comparing ordinary upshift with rapid backshift and torque
-reversal would determine when the combined response differs from what either
-change suggests on its own. The separate face torques, helix reaction,
-sheave motion, and traction-state changes would be more informative here
-than total transmitted torque alone.
+The transient sensitivity examined in \Cref{sec:results_secondary_helix}
+makes this coupling worth investigating during smooth shifting, rapid
+backshift, and torque reversal. Comparing separate face contacts with and
+without the retained helix dynamics would show whether their interaction
+changes the shift trajectory or the approach to a contact or support
+transition. The separate torques and helix reaction would reveal changes
+that total transmitted torque alone could conceal. This would establish
+when the known unequal-sharing mechanics alter the dynamic response, and
+when the present aggregate description remains sufficient.
 
-The contact power must change consistently with the torque description.
-The reduction in \Cref{eq:secondary_face_tangential_power} relies on equal
-torque shares; a face-resolved model should instead evaluate the power of
-each actual torque at its own face speed. Signed face torques and
-powers remain meaningful even when a percentage torque split becomes
-misleading near zero total torque. The objective is not to establish unequal
-sharing anew, but to determine how its known contact mechanics interact with
-the secondary's inertia, and where the present aggregate reduction remains
-adequate.
+\subsection{Secondary Contact and Clearance}
+\label{sec:future_work_secondary_contact}
+
+The helix reaction also raises a question about the contact that carries it.
+The reference mechanism uses the zero-clearance bilateral slot described in
+\Cref{app:reference_helix_topology}. A change in signed reaction is carried
+immediately by the opposite flank. A one-sided helix could instead separate,
+while finite clearance in a slot would allow relative motion before the
+opposite flank is reached. The reaction changes examined in
+\Cref{sec:results_secondary_hybrid_response} motivate studying how these
+arrangements change the response to reversal.
+
+While flank contact is absent, the movable assembly's rotation and axial
+motion can no longer be tied by the same helix map. Allowing those motions
+to evolve independently would determine when contact returns and how clamp
+develops during the interval. This extends the mechanism's permitted motion;
+an added friction force alone cannot supply it. The opening of a helix
+contact remains distinct from belt lift-off, which depends on the normal
+loading at the belt--sheave interface.
 
 \subsection{Belt Deformation and Material History}
 \label{sec:future_work_belt_material}
 
-Following the local motions described above requires reconsidering how the
-belt carries force between the pulleys. With the fixed length of
-\AssRef{assump:constant_belt_length}, the geometric compatibility relation in
-\Cref{eq:belt_length_compatibility} determines the secondary position from the
-shared shift coordinate. An extensible belt could accommodate part of a
-sheave displacement through elongation instead. Tension would then depend on
-deformation, and the present position map in
+Local deformation also changes how the belt couples the two pulleys. With
+the fixed length of \AssRef{assump:constant_belt_length}, the compatibility
+relation in \Cref{eq:belt_length_compatibility} determines the secondary
+position from the shared shift coordinate. An extensible belt could
+accommodate part of a sheave displacement through elongation instead.
+Tension would depend on deformation, and the position map in
 \Cref{eq:secondary_coordinate_map} would no longer supply the complete
-coupling. Independent sheave coordinates and distributed belt deformation
-may be needed, with both pulleys still responding to their own force balances.
+coupling. Independent sheave coordinates may then be needed, with each
+movable assembly responding to its own force balance.
 
 The single transport coordinate in \AssRef{assump:single_belt_speed} is a
-related but separate reduction. A local velocity field would allow tension
-changes and deformation to propagate around the loop rather than being
-represented only through one global transport acceleration. Its continuity
-and momentum equations would have to agree with the evolving belt geometry.
-The resulting extension could investigate whether deformation changes the
-onset of shifting, the development of transient slip, or the way a sudden
-load is transmitted between the pulleys. It would also provide a controlled
-way to examine the different clamp-to-shift responses identified in
-\Cref{sec:results_ballew_interpretation}.
+related reduction. A local velocity field would allow tension changes and
+deformation to propagate around the loop. This would make it possible to
+examine how compliance changes the onset of shifting, transient slip, and
+the transmission of a sudden load between the pulleys. It would also help
+investigate the different clamp-to-shift responses identified in
+\Cref{sec:results_ballew_interpretation}, without assigning that discrepancy
+to one untested material mechanism.
 
-The belt section offers several levels of refinement. The present cord line
-has a prescribed location, but the cord and rubber do not have separately
-resolved mass distributions under
-\AssRef{assump:fixed-belt-cross-section}. A more representative section could
-first improve the centre of mass and inertial description without introducing
-all local deformations. Allowing compression, bulging, and shear would then
-change the belt's width, contact surface, and relationship between sheave
-position and running radius. Bending stiffness would affect the path at entry
-and exit, while the section's reinforcement and geometry would determine how
-these deformations transmit forces and moments along the belt. The material
-and component tests described by \citet{Ballew2015} and \citet{Messick2018}
-provide useful foundations for identifying these properties separately.
+Ballew already evolves belt-node motion and both pulley speeds together. His
+running-radius search determines geometry by matching belt axial reaction
+to applied clamp, rather than advancing movable-sheave axial inertia
+\citep{Ballew2015}. Coupling those belt mechanics to an axial equation of
+motion would allow the sheave and actuator inertia to participate in the
+response. Steady descriptions require a different extension: Messick's
+constant-mass-flow and steady-path assumptions would need to be reconsidered
+when deformation and transport evolve through time \citep{Messick2018}.
 
-Retaining a section effect need not mean resolving every cord or cog throughout
-the complete belt. \citet{Gerbert1996} uses detailed sectional analysis to
-construct an effective shear relation. A similar approach could retain the
-section's influence through resultant forces, moments, deformed contact
-geometry, and material history. The required questions are whether a
-deformation matters, whether its dissipation matters, and whether its own
-inertia must be resolved on the timescale of interest. These need not have
-the same answer. A section may deform enough to change contact while its
-fast internal motion can still be reduced, provided that reduction preserves
-the response seen by the rest of the CVT.
+The belt section determines which deformations can participate. Under
+\AssRef{assump:fixed-belt-cross-section}, the cord location and section
+geometry are prescribed. Resolving compression, bulging, and shear would
+allow belt width and contact shape to change, altering the relation between
+sheave position and running radius. Bending stiffness would affect entry and
+exit from the wraps. A refined cord and rubber mass distribution could also
+improve the inertial description without resolving every local deformation.
+The material and component tests described by \citet{Ballew2015} and
+\citet{Messick2018} provide foundations for characterising these responses
+independently of a complete CVT test.
 
-Elasticity alone does not supply material loss. It stores and returns energy;
-viscoelasticity introduces a dependence on deformation history and can
-dissipate energy during repeated stretching, compression, shear, and bending.
-Messick measures temperature- and frequency-dependent rubber properties but
-uses an elastic approximation in the mechanical model, while Ballew
-identifies independent damping measurements as unfinished work
-\citep{Messick2018,Ballew2015}. A transient constitutive description should
-therefore be supported by cyclic material or component tests rather than by
-an unexplained damping coefficient chosen to smooth a CVT trace. Because the
-belt circulates, the material history must follow each section through the
-spans and wraps. The associated energy balance must distinguish recoverable
-strain energy from dissipation, extending the accounting in
-\Cref{eq:verification_energy_balance}. During a transient, a reduction in
-output power can reflect energy being stored rather than energy lost as heat.
+Retaining their influence need not require every cord or cog to be resolved
+around the loop. \citet{Gerbert1996} uses sectional analysis to construct an
+effective shear relation. Similar reductions could carry sectional forces,
+moments, contact geometry, and material history into a belt model. A section
+may deform enough to change contact even when its internal motion is fast
+enough to be treated without a separate inertial state. Whether deformation,
+dissipation, and sectional inertia matter are therefore related but distinct
+questions.
 
-Deformation and inertia would also allow belt vibration to be studied.
-\citet{Messick2018} identifies crank-angle-dependent engine torque as a
-possible excitation that a steady model cannot predict. A belt model driven
-by an appropriately resolved shaft torque could determine whether such
-excitation changes contact loading and traction or remains a small
-oscillation around the slower shift response. This is another reason to
-retain a general transient description when using detailed belt relations
-from the literature. Messick's constant-mass-flow and steady-path assumptions,
-for example, cannot simply be carried into this problem. Likewise, Ballew's
-axial-force search determines sheave geometry by matching belt reaction to
-applied clamp rather than advancing movable-sheave axial inertia
-\citep{Messick2018,Ballew2015}. Their local mechanics are valuable foundations,
-but the extended system must still determine how the belt and hardware
-accelerate together.
+Elasticity stores and returns energy. Viscoelasticity adds dependence on
+deformation history and can dissipate energy during repeated stretching,
+compression, shear, and bending. Messick measures temperature- and
+frequency-dependent rubber properties but uses an elastic approximation in
+the mechanical model; Ballew identifies independent damping measurements as
+unfinished work \citep{Messick2018,Ballew2015}. Cyclic material or component
+tests would support a transient constitutive description. Its history would
+follow each belt section through the spans and wraps, while the energy
+accounting in \Cref{eq:verification_energy_balance} would extend to
+recoverable strain energy and material dissipation. This distinction matters
+when a transient reduction in output power reflects energy being stored in
+the belt.
+
+Deformation and inertia would also permit belt vibration to be examined.
+\citet{Messick2018} identifies crank-angle-dependent engine torque as an
+excitation that his steady model cannot predict. A transient belt model
+could determine whether torque ripple materially changes contact loading
+and traction. Physical vibration would need to
+remain distinguishable from numerical oscillation through spatial and
+temporal refinement, particularly given the stiffness difficulties reported
+by \citet{Ballew2015}.
 
 \subsection{Belt Path, Support, and Re-engagement}
 \label{sec:future_work_belt_path}
 
 A deformable belt also raises a more basic geometric question: which path
-the belt actually follows through the machine. The circular wraps and straight
-spans of \AssRef{assump:prescribed_belt_path} make the current geometry
-well-defined, but they remove possible motions before the force balances are
-solved. The checks in \Cref{eq:wrap_contact_admissibility} can identify a
-negative tension or local normal load. They cannot determine the slack or
-partially detached configuration that would replace the assumed path. A
-model that determines belt position and contact extent from its mechanics
-could continue through such conditions instead of only identifying the limit
-of the present representation.
+the belt follows through the machine. The circular wraps and straight spans
+of \AssRef{assump:prescribed_belt_path} remove possible motions before the
+force balances are solved. The checks in
+\Cref{eq:wrap_contact_admissibility} can identify a negative tension or local
+normal load. They cannot determine the slack or partially detached
+configuration that would replace the assumed path. Determining belt position
+and contact extent from the mechanics would allow the model to continue
+through such conditions.
 
 This would be especially useful while the primary is disengaged. Under
 \AssRef{assump:deadzone_belt_closure}, the belt is carried without slip by the
-fully closed secondary through
-\Cref{eq:deadzone_secondary_lock}. A belt with its own deformation and contact
-motion could instead determine installed pretension, slack take-up, support
-at the primary hub, intermittent sheave contact, and possible secondary slip.
-Initial engagement would then depend on the belt configuration and motion
-actually reached, rather than only on the reduced disengaged constraint.
-These are changes to the physical description of engagement, not simply
-refinements of its numerical event time.
+fully closed secondary through \Cref{eq:deadzone_secondary_lock}. A belt with
+its own deformation and contact motion could instead determine installed
+pretension, slack take-up, support at the primary hub, intermittent sheave
+contact, and possible secondary slip. Initial engagement would then depend
+on the belt configuration and motion actually reached. These are changes to
+the physical description of engagement, beyond refining its event time.
 
 There is substantial precedent for solving belt paths and contact boundaries
-\citep{KongParker2005,KongParker2006,JulioPlante2011}. The remaining task is to
-combine that freedom with the mechanically determined actuator response and
-the operating conditions considered here. The difficulty reported by
+\citep{KongParker2005,KongParker2006,JulioPlante2011}. The question here is how
+that freedom interacts with mechanically determined actuation through
+disengagement and re-engagement. The difficulty reported by
 \citet{JulioPlante2011} in obtaining stabilised predictions near the
-clutching-to-shifting transition also makes low-load engagement an important
-test, rather than a condition to bypass by starting every simulation from a
-convenient running state. A useful development route would establish the
-belt's response under simple end loads and isolated contact before assembling
-the complete CVT. Its force and deformation description should remain
-meaningful when pulley contact is removed.
+clutching-to-shifting transition makes low-load engagement a particularly
+useful test of the resulting description.
 
-The required geometric freedom depends on the question. Planar motion may be
-enough for some studies of tension redistribution and slackness. Axial belt
-migration, skew, and section twist require out-of-plane motion and a contact
-description that follows section orientation. Where the hardware permits the
-whole secondary to float axially, that motion must also be distinguished
-from opening or closing its groove. Pulley compliance and departures from
-fixed, aligned shafts are separate possible extensions of \AssRef{assump:rigid_hardware} and
-\AssRef{assump:axis_alignment}. The chain-CVT studies of
-\citet{CarboneMangialardiMantriota2005} and \citet{DuanEtAl2016} demonstrate
-that hardware deformation can alter contact, but do not establish its
-importance relative to rubber-belt deformation in the present system.
-Structural estimates and measured alignment should determine whether rigid,
-aligned pulleys remain a sufficient approximation for the intended loads.
+Planar motion may be sufficient for some studies of tension redistribution
+and slackness. Axial migration, skew, and section twist require out-of-plane
+motion, and an axially floating secondary introduces translation distinct
+from opening its groove. Pulley compliance and shaft misalignment are
+separate extensions of \AssRef{assump:rigid_hardware} and
+\AssRef{assump:axis_alignment}. The metal-belt and chain-CVT studies of
+\citet{CarboneMangialardiMantriota2005} and \citet{DuanEtAl2016} show that
+hardware deformation can alter contact; its importance relative to rubber
+deformation would need to be established for the loads considered here.
 
-\subsection{Contact Loss and Finite-Speed Events}
+\subsection{Friction and Compliance During Finite-Speed Events}
 \label{sec:future_work_events}
 
-The actuator contacts can change as well as the belt contacts. The flyweight
-construction already requires a compressive ramp reaction in
-\Cref{eq:appB_contact_force_admissible}. If continued contact would require
-the ramp to pull, the flyweight must be allowed to separate. Its subsequent
-motion cannot remain fixed by the same sheave-position map. Predicting
-lift-off and return would require independent motion while contact is absent,
-followed by a mechanically consistent recontact calculation. Simply clipping
-a negative reaction to zero would not supply that missing motion.
+When engagement or a travel stop imposes a new constraint at finite relative
+speed, the impulse--momentum balance in
+\Cref{eq:finite_event_generalized_impulse_momentum} determines the resulting
+velocity change. This compact treatment allows the simulation to continue
+through the event. Two extensions would examine which contact details can
+change its outcome.
 
-The secondary has a related distinction. The reference mechanism uses the
-zero-clearance bilateral helix described in
-\Cref{app:reference_helix_topology}; a change in signed reaction can be carried
-by the opposite slot flank. A one-sided helix could instead lose contact,
-while a slot with finite clearance could permit free relative motion before
-the opposite flank is reached. The reaction changes examined in
-\Cref{sec:results_secondary_hybrid_response} motivate investigating these
-alternatives during reversal. They should remain distinct from belt lift-off:
-the sign of a helix reaction does not by itself establish loss of normal
-loading at the belt.
-
-When a new contact is reached at finite relative speed, the present
-impulse--momentum balance provides a reduced description of the resulting
-velocity change
-(\Cref{eq:finite_event_generalized_impulse_momentum}). Two separate
-extensions would make it possible to examine the limits of that description.
 The first concerns friction during the instantaneous event. Under
 \AssRef{assump:impact_tangential_contact}, an existing sticking belt contact
 transmits the impulse required to remain stuck without a separate friction
-capacity check. An impulse-level traction law, coupled to the normal impulse,
-could determine whether that stick can actually be maintained or whether the
-event produces tangential slip. The outgoing constraints in
-\Cref{eq:finite_event_outgoing_constraints} would then depend on the admissible
-contact impulses as well as the proposed mechanical arrangement. Simultaneous
-contacts would have to be checked together, followed by the existing test of
-whether the outgoing continuous regime can persist. This builds on the
-frictional-impact framework discussed by \citet{Stewart2000RigidImpact}.
+capacity check. An impulse-level traction law coupled to the normal impulse
+could determine whether sticking can be maintained or the event produces
+tangential slip. The outgoing constraints in
+\Cref{eq:finite_event_outgoing_constraints} would then depend on the
+admissible contact impulses, following the frictional-impact framework
+discussed by \citet{Stewart2000RigidImpact}.
 
-The second extension concerns the duration of contact. The instantaneous,
-perfectly inelastic treatment in
-\AssRef{assump:inelastic_constraint_activation} determines an outgoing motion
-and an energy change, but cannot resolve indentation, peak force, rebound,
-or the vibration generated during capture. Selected compliant contacts could
-be advanced through time to investigate those quantities. Such a model would
-need appropriate contact stiffness and dissipation, together with the belt
-or hardware deformation that participates in the event. The event-energy
-loss in \Cref{eq:finite_event_energy_loss} does not by itself determine how
-that energy is distributed among those mechanisms.
-
-These are different investigations. Friction-limited impulses can be studied
-without first replacing every event by compliant contact, and adding normal
-compliance alone does not settle the tangential friction question. Comparing
-both descriptions against measured incoming and outgoing motion would help
-identify where the reduced event law is sufficient for the overall shift
-trajectory and where contact duration or load peaks require more detail.
-The aim is to extend the range of physical behaviour that can be followed
-without losing the compact cross-regime description where it remains useful.
+The second concerns contact duration. The instantaneous, perfectly inelastic
+treatment in \AssRef{assump:inelastic_constraint_activation} determines an
+outgoing motion and energy change, but cannot resolve peak force, rebound,
+or vibration during capture. Advancing selected compliant contacts through
+time would make those quantities accessible. Friction-limited impulses and
+finite-duration contact therefore answer different questions: whether the
+assumed outgoing stick is supportable, and whether the contact's deformation
+and duration materially affect the response. The instantaneous description
+may remain sufficient for the overall shift trajectory even where resolving
+peak loads requires compliance.
 
 \subsection{Temperature During Transient Operation}
 \label{sec:future_work_temperature}
 
-The contact and material losses discussed above also raise a question about
-their effect on temperature. Under
-\AssRef{assump:material_surface_state}, the assigned properties remain fixed
-throughout a run. Yet the rubber-property measurements of
-\citet{Messick2018} show that stiffness and dissipation depend on temperature
-and loading frequency. A first investigation could therefore compare matched
-manoeuvres at different initial belt and sheave temperatures, using
-independently characterised properties. This would establish thermal
-sensitivity before deciding whether temperature must also evolve during each
-simulation.
+The losses in the belt and its contacts can also change the properties that
+determine the subsequent motion. Under
+\AssRef{assump:material_surface_state}, those properties remain fixed
+throughout a run. The measurements of \citet{Messick2018} show that rubber
+stiffness and dissipation depend on temperature and loading frequency. The
+same maneuver may therefore produce a different response from a cold or
+warm belt. The question is whether fixed properties at the measured initial
+temperature are sufficient, or whether heating during the maneuver changes
+the mechanics enough to require an evolving temperature.
 
-The temperature of the belt as a whole is only part of that question. Local
-contact can heat over much shorter distances and times than the bulk material.
-\citet{Persson2006FlashTemperature} describes how this flash heating feeds
-back into rubber friction through the temperature-dependent material
-response. The physical mechanism is relevant to a transient contact question,
-but its importance for a belt--sheave interface must be established from the
-actual compound, surface, pressure, and sliding history. A nearly unchanged
-bulk temperature during a short manoeuvre would not, by itself, demonstrate
-that local flash heating is negligible. Nor does the existence of flash
-heating in other rubber contacts establish that it controls CVT traction.
+The temperature of the belt as a whole is only part of the question. Local
+contact can heat over much shorter distances and times than the bulk
+material. \citet{Persson2006FlashTemperature} describes how flash heating
+feeds back into rubber friction through the temperature-dependent material
+response. For a CVT, clutching, brief slip, and traction recovery give this
+mechanism a specific transient setting: recent sliding may change the force
+available as contact recovers. Its importance at the belt--sheave interface
+remains to be established. A nearly unchanged bulk temperature during a
+short maneuver would not, by itself, show that flash heating is negligible.
 
-The useful distinction is between changes in the background temperature
-carried by a belt section and rapid heating local to its contact. For the
-former, measured heating and cooling times and surface-to-interior gradients
-would help determine whether a fixed temperature, a lumped thermal state, or
-a spatial description is needed. For the latter, clutching, brief slip, and
-traction recovery provide cases in which to investigate whether recent
-sliding changes the force available during the event. The relevant sliding
-velocity is the local relative motion at each face, not simply the belt's
-transport speed. A local thermal approximation could be coupled to the
-resolved contact without requiring the complete belt mesh to resolve every
-roughness scale.
+\subsection{Parasitic Component Losses}
+\label{sec:future_work_component_losses}
 
-Heat generation and redistribution would have to remain consistent with the
-mechanical work. Sliding and viscoelastic dissipation provide heat sources,
-but the fraction entering the belt or sheaves, its subsequent conduction,
-and cooling are additional physical questions. The energy balance in
-\Cref{eq:verification_energy_balance} supplies an accounting foundation,
-not a contact-temperature law. In particular, an unresolved instantaneous
-event loss cannot be converted into a predicted flash-temperature peak
-without a duration and spatial distribution for its dissipation. Temperature
-measurements would also need to distinguish the exposed surface from the
-hidden contact and belt interior; a surface image does not directly measure
-either internal temperature or an unresolved contact-temperature spike.
-These studies could establish where thermal feedback changes the transient
-mechanics and where the time-invariant property assumption remains adequate.
+Bearing, seal, and windage resistance provide a smaller extension of
+\AssRef{assump:no_parasitic_losses}. Attaching independently characterised
+losses to the bodies and relative motions that produce them would allow
+their effect on acceleration and efficiency to be examined alongside the
+belt losses. The shaft interface in \Cref{eq:shaft_boundary_interface}
+identifies which belong inside the CVT and which are supplied by the
+attached machine. This gives a physical allocation of the losses without
+introducing a single efficiency correction for the complete transmission.
 
 \subsection{Experimental Validation and Identification of Physical Causes}
 \label{sec:future_work_validation}
 
-The present model can be tested before all of these extensions are added.
-Because its shaft speeds and shift motion respond to applied loading, an
-acceleration experiment supplies a useful transient without requiring a
-prescribed ratio history. A characterised inertia connected to the secondary
-would provide a simple first load: its acceleration constrains the torque
-received from the CVT once the rig losses are accounted for. With a measured
-or independently characterised primary torque boundary, the model could
-predict the resulting shaft and sheave histories from the initial condition.
-The inertia and losses assigned to the rig must follow the same interface
-definition as the model
-(\Cref{sec:system_definition,eq:shaft_boundary_interface}); secondary hardware
-already retained inside the CVT must not be counted again in the external
-inertia.
+The operating regions represented by the model offer different opportunities
+to examine its mechanics. At a travel stop, shift motion is suppressed, so
+loading can be varied while the pulley geometry remains fixed. Free shifting
+then brings the axial dynamics into the comparison. Supported operation also
+introduces a reaction: the belt load need not equal the actuator force because
+the stop carries the remainder of the axial balance.
+\citet{GrzegozekDobajKot2016} identify this limitation when inferring belt
+loads from regulator characteristics. The reactions in
+\Cref{tab:structural_stop_reactions} therefore require measurements beyond
+the actuator law if supported operation is to test the predicted belt loading.
 
-Such a test could examine initial engagement, low-ratio acceleration, and
-active upshift. It would not establish accuracy in every regime. Controlled
-load changes and unloading would be needed to examine backshift, release,
-and repeated transitions, while reverse-power behaviour requires a boundary
-that can actually produce it. The value of the general formulation is that
-these experiments can be expressed through the same mechanical interfaces,
-not that one experiment validates them all. Existing rubber-belt loss tests
-and loaded chain-CVT shift tests provide useful precedents for varying speed,
-load, and initial operating condition
-\citep{ChenLeeSung1998,Bertini2014,YildizEtAl2018}, with the different
-actuation and boundary conditions kept explicit.
-
-The observations should include more than shaft speeds. In
-\Cref{sec:results_ballew_closed_loop}, feedback can approach the reference
-shaft histories while producing a substantially different primary clamp.
-Replaying the reference force in
+Measurements during shifting should also include more than shaft speeds.
+In the model comparison of \Cref{sec:results_ballew_closed_loop}, feedback
+approaches the reference shaft histories while producing a substantially
+different primary clamp. Replaying the reference force in
 \Cref{sec:results_ballew_force_replay} removes that adjustment and exposes a
-different response. Although this is a model comparison rather than an
-experiment, it gives a concrete reason to measure sheave displacement and,
-where practical, belt speed, torque, or selected actuator loads. Otherwise,
-a correct-looking speed ratio can conceal different geometric shifting and
-slip. A force supplied as an input must also remain distinct from a force
-predicted and independently measured as an output.
+different response. Sheave displacement distinguishes geometric shifting
+from the speed changes produced by slip; belt speed, torque, and selected
+actuator loads can further distinguish the causes. The thrust and torque
+measurements of \citet{Bertini2014} provide a useful precedent. For the
+secondary coupling discussed above, movable-face torque or helix reaction
+would be more informative than total shaft torque alone. A force supplied
+as an input must remain distinct from one predicted and measured as an output.
 
-Supported operation deserves its own measurements. Once a sheave reaches a
-stop, its belt loading need not equal the actuator force because the support
-carries the remainder of the axial balance.
-\citet{GrzegozekDobajKot2016} identify this limitation in their comparison of
-rubber-belt models: regulator characteristics alone do not determine the belt
-load at a travel limit without the additional reaction. The reactions in
-\Cref{tab:structural_stop_reactions} therefore offer a specific validation
-question, not merely another part of the operating sequence. Likewise,
-measurements constraining movable-secondary torque or helix reaction would
-help test face sharing more directly than total shaft torque alone.
+An inertia dynamometer offers a practical first transient test. A
+characterised inertia connected to the secondary constrains the torque
+received through its acceleration once rig losses are accounted for. With
+a measured or independently characterised primary torque boundary, the
+model could predict shaft and sheave histories through engagement,
+low-ratio acceleration, and upshift. Controlled load changes would extend
+the comparison to backshift and traction recovery through the same shaft
+interfaces. Together, these cases would test the progression between
+operating regions as well as the response within each one.
 
-Independent characterisation is equally important. Geometry, spring loading,
-masses, inertias, and parasitic losses can be measured or bounded before a
-whole-CVT comparison. Belt extensions would require the longitudinal,
-compressive, shear, and bending responses relevant to the selected model,
-including cyclic behaviour where material history is retained. The
-measurement approaches in \citet{Ballew2015} and \citet{Messick2018} provide
-starting points. Contact tests should similarly cover the pressures,
-relative velocities, temperatures, and surface conditions actually being
-studied. Identifying constitutive parameters from such tests is different
-from adjusting unmeasured friction or damping until a complete CVT trace
-agrees. Parameters identified independently can then be tested against
-other manoeuvres or hardware settings without being reselected for each
-comparison.
+The independent material and component characterisation described above
+would let these experiments test the coupled response without reselecting
+parameters for each maneuver. Comparisons of belt descriptions under common
+shaft loading and matched initial conditions, as far as their states permit,
+could then distinguish the effects of deformation, dissipation, contact, and
+path freedom. This would turn differences such as the clamp-to-shift
+discrepancy in \Cref{sec:results_ballew_interpretation} into questions that
+measurements can help resolve.
 
-This separation would also make the benchmark discrepancy more informative.
-Matched boundary histories and, as far as the descriptions permit, matched
-initial tension and deformation states would allow elasticity, dissipation,
-local contact, and path freedom to be changed deliberately. The case compared
-in \Cref{sec:results_ballew_interpretation} is Ballew's case without the added
-linear inter-node damper, so a smoother response cannot be assigned to that
-damper. Controlled model variants and measurements are needed to distinguish
-the remaining explanations. Sensor calibration, timing alignment, and input
-uncertainty should accompany the comparison, particularly when acceleration
-is inferred from measured speed or when the conclusion depends on the order
-of closely spaced contact events. Agreement should be assessed in the
-motion, loads, event times, and accumulated energy that distinguish the
-proposed physical causes.
-
-\subsection{Verified Reductions and Design Studies}
+\subsection{Reduced Models and Design Studies}
 \label{sec:future_work_reductions_design}
 
-More detailed mechanics would introduce new numerical questions as well as
-new physical ones. A discretised belt can oscillate because of
-its elasticity and inertia, but also because of inadequate spatial or time
-resolution. The stiffness and stability difficulties described by
-\citet{Ballew2015} make that distinction important. Verification should
-therefore extend the state, constraint, and energy checks of
-\Cref{sec:results_mechanical_invariants,sec:results_energy_consistency,sec:results_solver_convergence}
-to the new deformation and contact variables. Spatial refinement, time-step
-and tolerance refinement, and tests of any contact regularisation should
-establish whether the features used for physical interpretation persist.
-Numerical damping introduced for robustness must be distinguished from
-measured material dissipation.
+The same investigations could establish where a simpler description is
+sufficient. The comparisons in \Cref{sec:results_reduced_belt_mechanics}
+distinguish the size of a term on the full trajectory from the change caused
+by removing it and integrating again. Extending that approach to contact
+and deformation would identify which motions can be reduced while preserving
+the shift response and contact transitions of interest. A reduction must
+remain consistent across the balances in which the same mass or force
+participates. Its usefulness can then be assessed under common loading,
+with numerical refinement sufficient to resolve the difference between
+the models.
 
-The same work can identify where a simpler model is sufficient. The belt
-comparisons in \Cref{sec:results_reduced_belt_mechanics} distinguish the size
-of a term evaluated on a full trajectory from the error produced by removing
-it and integrating again. This distinction should be retained when evaluating
-new reductions. A local belt-inertia term cannot be removed independently of
-the transport and tension balances in which the same mass participates;
-likewise, eliminating a fast sectional motion need not eliminate its
-compliance or hysteresis. Limiting cases and comparisons under common loading
-would establish which reduced descriptions preserve the motions, contact
-transitions, and energy transfers of interest. Such evidence would give a
-physical basis for choosing model complexity rather than treating every
-added state as an improvement.
+Once the relevant predictions are tested, design studies can follow changes
+to a ramp, flyweight, spring, or helix through the forces and inertias they
+alter, building on the component-based approaches of
+\citet{Cammalleri2005} and \citet{Skinner2020}. Examining engagement,
+acceleration, and recovery after a load change would reveal tradeoffs that
+a single target engine speed cannot describe. The question becomes whether
+a component change improves the intended operating response, and whether
+that improvement persists across the measured variation in the hardware.
 
-Once the relevant predictions have been tested, the formulation also provides
-a basis for design studies across complete operating histories. Changes to a
-ramp, flyweight mass, spring, or helix can be evaluated through the forces and
-inertias they actually alter, following the component-based design motivation
-of \citet{Cammalleri2005} and \citet{Skinner2020}. A useful design comparison
-would examine engagement, acceleration, and recovery after changing load,
-rather than only the engine-speed target reached during one smooth shift.
-Including measured parameter uncertainty would determine whether a proposed
-improvement persists across plausible hardware variation. The same studies
-could reveal when lower contact resistance, altered inertia, or a different
-force characteristic improves one manoeuvre at the expense of another.
-
-Together, these directions would extend both the behaviour the model can
-represent and the evidence available to interpret it. The aim remains the
-one established in \Cref{sec:problem-motivation}: to follow an observed
-response back through the belt, contacts, and actuators to its mechanical
-cause. A more detailed description is valuable when it changes that
-explanation or makes a previously inaccessible behaviour predictable. A
-verified reduction is valuable when it preserves the explanation with less
-complexity. Independent measurements would then determine which description
-is needed for the response being studied.
-
-
-% Role names follow the NISO Contributor Role Taxonomy (CRediT):
-% https://credit.niso.org/contributor-roles-defined/
-% The roles describe the present research, not the earlier capstone project.
 
 \section*{Author Contributions (CRediT)}
 
