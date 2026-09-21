@@ -11191,6 +11191,7 @@ experimental validation of either internal belt description.
 
 \FloatBarrier
 % ==============================================================
+
 \section{Dynamic Mechanics Retained by CINDER}
 \label{sec:results_dynamic_mechanics}
 
@@ -11938,23 +11939,6 @@ should be tested first, with the remaining coupled balances preserved.
 \FloatBarrier
 \endgroup
 
-\section{Coupled Operation Across Regimes}
-\label{sec:results_coupled_regimes}
-
-% TODO after Results freeze: use complete trajectories as the scientific result.
-
-\subsection{Launch and Upshift}
-\label{sec:results_launch_upshift}
-% TODO: engagement, low-ratio seat, launch, and active upshift trajectory.
-
-\subsection{Load-Induced Backshift}
-\label{sec:results_backshift}
-% TODO: external load -> contact/axial response -> ratio -> shaft/vehicle response.
-
-\subsection{Reverse-Power Operation and Engine Braking}
-\label{sec:results_engine_braking}
-% TODO: reverse-power sign handling, contact switching, and hybrid architecture.
-
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
 \label{sec:results_coupled_regimes}
 
@@ -11968,66 +11952,79 @@ can the same internal mechanics carry the transmission through the changing
 conditions of a drive, and can the resulting behaviour be followed back to the
 hardware that produced it?
 
-To examine that question, twelve selected configurations are run from the same
-initial state over one common \SI{732}{m} road. The vehicle, final drive,
-engine boundary, belt, pulley geometry, and contact parameters remain fixed;
-only the declared CVT tuning hardware changes between cases. The primary
-boundary remains at full throttle throughout. No CVT state is reset when the
-road changes. The state produced by the opening acceleration is therefore the
-state that enters the severe climb, and the state leaving that climb is carried
-through the repeated loading, the sustained moderate climb, and the final
-descent. The road sequence is prescribed, but the sequence of CVT contact and
-support states is not.
+The nominal case used throughout this section, R00, is the unmodified Baja
+reference CVT defined in \Cref{app:common_physical_configuration}, with the
+bilateral secondary helix topology of \Cref{app:reference_helix_topology}. Its
+primary shaft is driven by the full-throttle Kohler CH440 boundary of
+\Cref{app:primary_engine_boundary}, while its secondary is coupled to the
+locked-final-drive reference vehicle of \Cref{app:secondary_vehicle_boundary};
+the road grade therefore enters the secondary shaft through the vehicle load in
+\Cref{eq:reference_vehicle_torque}. Every case begins from the same state in
+\Cref{eq:results_reference_initial_state}. The vehicle, final drive, engine
+boundary, belt, fixed pulley geometry, contact coefficients, and boundary
+inertias remain common to all cases. The only differences are the declared CVT
+hardware changes collected later in \Cref{tab:results_course_cases}.
 
-The road was chosen to ask several different questions of the same continuous
-trajectory. A level opening gives the transmission room to engage and shift.
-A \(38^\circ\) climb then demands a large backshift and, for sufficiently
-unfavourable hardware, exposes the limits of the available ratio and belt
-traction. After a level recovery, six cycles of \(\pm32^\circ\) road grade
-apply repeated longitudinal loading before a sustained \(18^\circ\) climb
-allows the transient backshift to approach an interior operating condition.
-The final \(-22^\circ\) descent unloads the vehicle and eventually reverses
-the direction of shaft power for the finishing cases. The cyclic portion is a
-one-dimensional road-grade input only; it does not represent suspension
-motion, wheel unloading, or airborne vehicle dynamics.
+The road is also common to every case. It is prescribed as a function of
+travelled distance rather than clock time, so two vehicles encounter the same
+grade at the same position even if they arrive there at different times or
+with different CVT states. No state is reset when one part of the road ends:
+the motion produced on the opening flat is the motion carried into the first
+climb, and each later feature begins from the state left by the previous one.
+\Cref{fig:results_course_overview} defines the complete distance-indexed
+profile used for that comparison.
 
-\Cref{fig:results_course_overview} follows the reference configuration through
-this road. The important feature of the figure is not any one speed or shift
-value, but the continuity between them. The reference reaches the upper shift
-stop on the opening flat, backshifts to the low-ratio seat on the severe
-climb, returns toward high ratio during recovery and repeated loading, and
-then settles to an interior shift position on the moderate climb. Each of
-those responses begins from the state left by the preceding part of the road.
-
-\begin{figure}[tbp]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/results/course/course_continuity_overview.png}
-  \caption{Common \SI{732}{m} road and the continuous response of the reference
-  configuration. Road grade is prescribed as a function of distance; vehicle
-  speed and CVT shift position are solved as the same trajectory passes from
-  launch, through the severe climb and repeated longitudinal loading, to the
-  sustained moderate climb and descent. The dashed lines in the lower panel
-  mark the low-ratio seat and upper shift stop. No state is reset at the road
-  boundaries.}
+  \includegraphics[width=\linewidth]{figures/results/course/common_course_profile.png}
+  \caption{Distance-indexed road grade used by every configuration on the
+  common \SI{732}{m} course. The first \SI{120}{m} are level. A smooth
+  \SI{12}{m} entry leads to an \SI{80}{m} hold at \(38^\circ\), followed by a
+  \SI{12}{m} exit and \SI{40}{m} of level recovery. From \SI{264}{m} to
+  \SI{336}{m}, the road completes six \SI{12}{m} grade cycles with a peak
+  amplitude of \(\pm32^\circ\), followed by \SI{12}{m} of level road. The
+  second climb uses an \SI{8}{m} entry, a \SI{240}{m} hold at \(18^\circ\), and
+  an \SI{8}{m} exit, followed by \SI{20}{m} of level recovery. The final load
+  change is a \(-22^\circ\) descent with \SI{12}{m} entry and exit transitions
+  around a \SI{60}{m} constant-grade section, followed by a \SI{24}{m} level
+  finish. The cyclic region is a longitudinal road-load input only; suspension
+  motion, wheel unloading, tire normal-load variation, and airborne vehicle
+  dynamics are not represented.}
   \label{fig:results_course_overview}
 \end{figure}
 
-The configurations used below are collected in
-\Cref{tab:results_course_cases}. They are not intended to form an optimization
-or a ranking of complete tunes. Instead, particular cases are reused where
-they isolate a mechanical difference that is visible in the complete vehicle
-response. All unlisted parameters remain equal to the reference configuration.
-The mass percentages in the table refer to the replaceable flyweight tip mass,
-not to the complete flyweight mass, and the corresponding mass moments are
-changed consistently.
+Each part of the road is included for a different mechanical reason. The
+opening flat gives the CVT enough distance to engage and establish its shift
+characteristic before a large external disturbance is introduced. The
+\(38^\circ\) climb then asks whether that trajectory can backshift far enough
+and transmit the torque required by a severe load; deliberately unfavourable
+hardware can therefore expose either a poor operating point or a genuine
+traction limit. The level recovery retains the state produced by that climb
+while allowing the transmission to move back toward high ratio. The six-cycle
+section then applies repeated longitudinal load changes to a CVT whose position
+and contact state have already been shaped by the preceding road. The long
+\(18^\circ\) hold serves a different purpose: it gives the backshift transient
+time to decay so that the interior ratio, engine speed, and climbing speed can
+be compared under a sustained load. The descent finally reverses the direction
+of shaft power for the finishing cases, allowing the same signed mechanics to
+be followed into engine-absorbing operation without introducing a separate CVT
+model.
 
-\begin{table}[tbp]
+With that external problem fixed, the hardware cases are defined in
+\Cref{tab:results_course_cases}. The table establishes the case labels used
+throughout the remainder of the section and lists only what changes from the
+nominal R00 configuration; every unlisted quantity retains the R00 value from
+\Cref{app:common_physical_configuration,app:reference_helix_topology}. The mass
+percentages refer to the replaceable flyweight tip mass rather than the total
+flyweight mass, and the corresponding mass moments are changed consistently.
+
+\begin{table}[H]
   \centering\small
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.14}
   \caption{Selected CVT configurations used on the common course. Only changes
-  from the reference configuration are listed. Ramp distances are physical
-  coordinates along the ramp, not movable-sheave travel.}
+  from the nominal R00 reference configuration are listed. Ramp distances are
+  physical coordinates along the ramp, not movable-sheave travel.}
   \label{tab:results_course_cases}
   \begin{tabular}{@{}
     >{\raggedright\arraybackslash}p{0.11\linewidth}
@@ -12035,7 +12032,8 @@ changed consistently.
     \toprule
     Case & Change from R00 \\
     \midrule
-    R00 & Reference configuration. \\
+    R00 & Nominal Baja reference configuration of
+      \Cref{app:common_physical_configuration,app:reference_helix_topology}. \\
     W85 & Replaceable primary flyweight tip mass reduced to \(85\%\). \\
     P300 & Primary spring stiffness increased to \(3k_p\); installed
       compression reduced so that the spring force matches R00 at the
@@ -12062,10 +12060,27 @@ changed consistently.
   \end{tabular}
 \end{table}
 
-Arrival time remains a useful consequence of these differences, but it is not
-the organizing quantity for the comparison. The more useful question is what
-changed inside the transmission when two vehicles respond differently to the
-same road. The opening flat provides the simplest place to begin.
+The cases are not intended to form a ranking of complete tunes. They are chosen
+so that different physical ways of changing the transmission can be separated
+before their consequences are compared on the same road. W85 changes the
+centrifugal action through flyweight mass. P300 changes how the opposing
+primary spring force grows through the shift while matching its force at the
+selected engagement geometry. RC10, R26B7, and RC40L instead change the ramp
+surface that the roller follows, allowing the shape of the primary actuation
+characteristic to be altered in different parts of the travel. H28 moves the
+comparison to the secondary side by changing the helix geometry that converts
+torque reaction into axial force.
+
+The remaining cases are included for diagnosis rather than as candidate
+performance tunes. U55, D01, and D02 deliberately push different parts of the
+mechanism far enough to expose limitations that a well-behaved reference case
+would not reveal. D02\_M and D02\_P then return to one of those failures by
+restoring one primary contribution at a time. They therefore test a stronger
+question than whether a bad response can be removed: once the cause has been
+identified, do two plausible mechanical corrections lead to the same
+transmission behaviour? With those roles established before any trajectory is
+interpreted, the level opening provides the simplest place to see how the
+hardware first changes the response.
 
 \subsection{Launch and the Shape of the Shift Curve}
 \label{sec:results_launch_upshift}
@@ -12186,7 +12201,7 @@ changes.
   \begin{tabular}{@{}lrrrrr@{}}
     \toprule
     Case & \shortstack{Primary rpm\\at 20\%} & \shortstack{Primary rpm\\at 50\%} &
-      \shortstack{Primary rpm\\at 80\%} & \shortstack{Secant slope\\[rpm/1000 rpm]} &
+            \shortstack{Primary rpm\\at 80\%} & \shortstack{Secant slope\\[2pt]\mbox{[rpm/1000 rpm]}} &
       \shortstack{Opening-flat\\upper stop [m]} \\
     \midrule
     R00   & 3168.5 & 3127.4 & 3204.7 &  23.7 & 64.92 \\
@@ -12251,12 +12266,16 @@ deformations that its present coordinates cannot describe. The questions
 below concern what those changes would allow us to explain about the
 transient response.
 
-Much of the local physics already has a foundation in the literature reviewed
-in \Cref{sec:literature-review}. Bringing it into the present problem requires
-keeping the interaction between belt loading and hardware motion: a change
-in contact force changes how the sheaves accelerate, and their motion changes
-the contact again. The proposed extensions examine that interaction alongside
-the measurements needed to distinguish its physical causes.
+Much of the local physics required for these extensions already has a foundation 
+in the literature reviewed in \Cref{sec:literature-review}. The challenge is to 
+incorporate those mechanisms while retaining the coupled transient response of 
+the belt, pulleys, and actuators. Some existing descriptions assume steady running, 
+prescribe part of the motion, or determine a component’s position through 
+instantaneous force balance. These assumptions can make a particular mechanism 
+easier to study, but they may also remove interactions that the present formulation 
+is intended to resolve. Where that occurs, the additional physics must be coupled 
+to the equations of motion so that belt loading and hardware motion continue to 
+determine one another under the applied shaft loading.
 
 \subsection{Actuator Friction and Directional Shifting}
 \label{sec:future_work_mechanism_friction}
