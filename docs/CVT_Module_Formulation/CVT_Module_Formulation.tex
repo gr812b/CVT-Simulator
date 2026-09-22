@@ -12224,6 +12224,177 @@ carried directly into the first severe climb, where the question changes from
 how the hardware shapes the upshift to what limits the transmission when the
 road demands a large backshift.
 
+\subsection{A Severe Climb Separates Poor Shifting from Loss of Traction}
+\label{sec:results_backshift}
+
+The first climb adds a large gravitational load opposing the wheels.
+Backshifting moves the belt inward on the primary and outward on the
+secondary, increasing torque multiplication and allowing the engine to turn
+faster relative to the slowing vehicle. The secondary helix provides a
+physical connection between torque loading and this motion: the torque it
+reacts produces axial closing thrust alongside the spring force
+(\Cref{eq:secondary_helix_force_conversion}). At the same time, falling
+primary speed weakens the centrifugal action holding the primary closed.
+Through the belt, these changes can open the primary and close the secondary,
+producing the required backshift.
+
+How much this helps the vehicle depends on both the ratio reached and the
+traction available to transmit torque through the belt.
+\Cref{fig:results_severe_hill_response} therefore brings together shift
+position, primary speed, and vehicle speed for R00 and the two adverse cases,
+D01 and D02. The road-position axis places them under the same local grade,
+while retaining the different states inherited from the opening flat. R00
+provides the reference response: it leaves the high-ratio stop, backshifts to
+the low-ratio seat, and continues climbing. After the brief seating
+transition, both contacts stick and the vehicle approaches approximately
+\SI{3.77}{m/s}. Reaching the end of backshift travel has limited the ratio,
+but has not prevented torque transmission.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/severe_hill_response.png}
+  \caption{Response to the first severe climb. The shaded bands mark the
+  entry and exit tapers; the intervening road holds \(38^\circ\). The dashed
+  line in (a) marks the low-ratio seat. All three D02 traces end at its first
+  zero vehicle speed, near \SI{192.50}{m}. Equal road
+  position means equal imposed grade, not equal elapsed time or inherited
+  state.}
+  \label{fig:results_severe_hill_response}
+\end{figure}
+
+D01 remains at the high-ratio stop farther into the climb. While the geometry
+is held and the belt sticks, engine speed must fall with vehicle speed. Its
+heavier primary tips and reduced primary spring opposition favour primary
+closure, while the reduced secondary spring loading and changed helix weaken
+the secondary closing action that favours backshift. Near \SI{200}{m}, D01
+still has approximately \SI{0.79}{mm} of backshift travel available and runs
+near \(2477~\mathrm{rpm}\), where the supplied engine boundary delivers less
+power than in R00. Both belt contacts continue sticking throughout the hill,
+and the vehicle still climbs, but at a lower speed. Its difficulty is the
+ratio and engine operating condition reached under load; primary traction has
+not been exhausted.
+
+D02 reaches the low-ratio seat near \SI{146.68}{m}, so its later loss of
+progress begins after the available backshift has already been used. Its
+light tips provide less centrifugal closing action, while its elevated
+primary spring compression increases the opposing opening force. The fixed
+ratio does not, however, fix the clamping force. As established in
+\Cref{sec:low_ratio_supported_regime}, the secondary is held against its
+closing stop while the primary axial balance remains active. At this fixed
+geometry, primary spring opposition stays constant, but the centrifugal
+closing contribution decreases as primary speed falls. The remaining closing
+force must balance the belt's opening reaction, so the primary normal load
+falls with it
+(\Cref{eq:primary_flyweight_axial_force,eq:primary_belt_axial_reaction}).
+For D02, the normal load decreases from about \SI{3.49}{kN} just after seating
+to \SI{1.05}{kN} before sustained slip begins. Loading carried by the
+secondary stop does not add to the belt normal force or supply extra traction.
+
+Sticking can continue only while the required tangential force remains
+within the static capacity supported by that normal load. While a contact
+sticks, \(\lvert\lambda_j\rvert/\mu_s\)
+measures the fraction of its available static traction required by the
+coupled motion; unity is the sticking limit. In
+\Cref{fig:results_d02_traction_power}(a), the primary reaches this limit near
+\SI{17.83}{s} after launch, while the secondary remains below its own limit
+and continues sticking. The primary then slides relative to the belt. Its
+speed recovers slightly toward \(3032~\mathrm{rpm}\), but the vehicle keeps
+slowing, as already seen in \Cref{fig:results_severe_hill_response}. Following
+the power in panel~(b) explains how engine rotation can continue while forward
+progress is lost.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/d02_traction_power.png}
+  \caption{D02 from arrival at the low-ratio seat through the retained
+  rollback. (a) Fraction of static traction used while each contact sticks;
+  the primary trace ends when sustained sliding begins. (b) Primary boundary
+  input, primary slip dissipation, and signed output power. Positive output
+  power leaves the CVT; negative output power enters from the vehicle side.
+  Vertical markers identify primary traction loss and the first zero vehicle
+  speed, with rollback shaded. During transients, differences between input,
+  output, and dissipation also include changes in stored mechanical energy.}
+  \label{fig:results_d02_traction_power}
+\end{figure}
+
+Near \SI{34.22}{s}, the vehicle reaches zero speed while the primary still
+turns near \(3032~\mathrm{rpm}\). Approximately \SI{7.07}{kW} enters through
+the primary boundary, and essentially the same power is dissipated in primary
+slip; useful output power has fallen to zero. The vehicle subsequently rolls
+back. Output power then becomes negative, because the descending vehicle
+supplies power into the CVT, and primary slip dissipation can exceed the
+engine input. For the remainder of the simulated interval, the vehicle
+continues rolling backward while the primary rotates forward and slides
+against the belt.
+
+The primary force balance also identifies two changes that can preserve
+clamping as speed falls. D02\_M restores the reference tip mass and its
+associated mass moments, strengthening centrifugal closing while retaining
+D02's elevated primary spring compression. D02\_P retains the light tips but
+restores the reference spring compression, reducing the opening force opposing
+the flyweights without changing the spring rate. Both act on
+the difference between centrifugal closing and spring opposition. A larger
+remaining closing force supports a larger primary belt normal load, and the
+unchanged friction coefficient then permits a larger tangential force before
+sticking is lost. These are two physical ways to correct the same clamping
+weakness.
+
+The changes also alter the approach to the seat.
+\Cref{fig:results_d02_hill_repairs}(a) follows that motion on the severe hill:
+all three cases reach the same backshift limit, with both repairs arriving
+farther along the road than D02. Their entry speeds and ratios already differ,
+so these arrival distances combine the changed hardware response with the
+inherited states. Once seated, the cases can be compared at a common geometry
+and primary speed. Panels~(b,c) therefore show primary normal load and static
+use against decreasing primary speed on the constant \(38^\circ\) slope.
+Matching speeds are reached at different times and road positions in each run.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/d02_hill_repairs.png}
+  \caption{Severe-hill repair comparison. (a) Shift paths, with the entry
+  taper shaded and the low-ratio seat dashed. (b,c) Total primary normal load
+  and static utilization during seated sticking on the \(38^\circ\) hold,
+  after the seating transitions. Markers identify the comparison near
+  \(2975~\mathrm{rpm}\). D02 ends at sustained primary slip onset; repair
+  annotations refer to states near \SI{200}{m}.}
+  \label{fig:results_d02_hill_repairs}
+\end{figure}
+
+At the marked speed, the required primary tangential force is approximately
+\SI{683}{N} in all three cases. D02 has just exhausted its static capacity,
+but both repairs support greater normal load at the same seated geometry and
+speed. The increase is much larger when the tip mass is restored. Because
+the available static force is \(\mu_sN_p\), the greater normal loads in
+panel~(b) directly explain the lower fractions used in panel~(c). The repaired
+contacts can therefore remain stuck as speed falls below the point where the
+original D02 began sliding. The successful climb follows from restored
+clamping and traction capacity at the existing ratio limit.
+
+Both repairs continue through the hill without the sustained primary traction
+loss seen in D02. Their normal loads still fall as primary speed decreases,
+and the fraction of available traction required rises. Near \SI{200}{m},
+D02\_M uses about \(0.40\) of its static capacity, whereas D02\_P uses about
+\(0.94\). Yet both climb near \SI{3.77}{m/s} at the same low-ratio seat.
+Once sticking is maintained, additional unused traction capacity does not
+itself deliver more power to the wheels. The almost equal climbing speeds
+therefore coexist with substantially different reserves: the preload repair
+succeeds much closer to its primary traction limit under this hill load.
+The different actuator balances also carry into later operation: on the
+subsequent \(18^\circ\) climb, D02\_P runs farther backshifted and climbs
+more slowly than D02\_M.
+
+The hill has separated an unfavourable ratio and engine speed with unused
+backshift travel from a loss of belt traction after full backshift. In the
+latter case, the primary force balance identifies changes that increase
+normal load and static traction capacity. Continued climbing demonstrates
+that both changes supply enough capacity, while the internal contact forces
+show their different remaining reserves. The next repeated
+changes in road load turn attention back to the motion itself, and to how
+much shift travel remains available when each new disturbance arrives.
+
+\FloatBarrier
+
 \chapter{Conclusion and Future Work}
 \label{sec:conclusion_and_future_work}
 

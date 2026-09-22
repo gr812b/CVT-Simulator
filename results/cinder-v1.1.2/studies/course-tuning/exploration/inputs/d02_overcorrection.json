@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "purpose": "Focused D02 repair/over-correction screen. Hold D02's 115% primary preload fixed while increasing replaceable flyweight tip mass from the repaired 100% level through 150%. D02 and D02_P are retained as causal anchors. These are exploratory cases only; no outcome is prescribed or selected in advance.",
+  "unchanged": [
+    "full-throttle engine boundary",
+    "732 m selected common-course road",
+    "vehicle and final-drive parameters",
+    "belt and friction law",
+    "dynamic fixed-pivot flyweight mechanism and ramp geometry",
+    "dynamic bilateral zero-clearance secondary helix",
+    "secondary spring and helix parameters",
+    "shaft boundary model families",
+    "initial CVT and vehicle states",
+    "CINDER 1.1.2 model equations"
+  ],
+  "screen_axis": {
+    "held_primary_preload_scale": 1.15,
+    "baseline_replaceable_tip_mass_kg_per_flyweight": 0.25,
+    "tip_mass_scales": [1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
+    "tip_mass_kg_per_flyweight": [0.25, 0.275, 0.3, 0.325, 0.35, 0.375],
+    "selection_intent": "If an over-corrected case is later promoted, prefer the least-extreme mass increase that clearly preserves primary traction while materially reducing severe-hill backshift relative to D02_M."
+  },
+  "competitors": [
+    {
+      "id": "D02",
+      "label": "D02: weak tip + high primary preload",
+      "family": "diagnostic_anchor",
+      "intent": "Original adverse case: 65% replaceable tip mass with 115% primary preload. Retained as the failure-side anchor; no failure outcome is imposed.",
+      "knobs": {
+        "tip_mass_scale": 0.65,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_P",
+      "label": "D02: restore reference primary preload",
+      "family": "diagnostic_anchor",
+      "intent": "Existing one-change D02 intervention: retain 65% tips but restore reference primary preload. Retained to distinguish preload relief from increased centrifugal actuation.",
+      "knobs": {
+        "tip_mass_scale": 0.65
+      }
+    },
+    {
+      "id": "D02_M",
+      "label": "D02: restore reference tip mass",
+      "family": "diagnostic_repair",
+      "intent": "Existing one-change D02 intervention: restore reference tip mass while retaining the 115% primary preload. This is the 100% tip anchor for the over-correction screen.",
+      "knobs": {
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M110",
+      "label": "D02 repair: 110% tip mass",
+      "family": "diagnostic_overrepair",
+      "intent": "Increase replaceable flyweight tip mass to 110% while retaining D02's 115% primary preload. Test whether added centrifugal closing begins to reduce severe-hill backshift after traction has been repaired.",
+      "knobs": {
+        "tip_mass_scale": 1.1,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M120",
+      "label": "D02 repair: 120% tip mass",
+      "family": "diagnostic_overrepair",
+      "intent": "Increase replaceable flyweight tip mass to 120% while retaining D02's 115% primary preload. Test the same repair axis without changing any secondary hardware.",
+      "knobs": {
+        "tip_mass_scale": 1.2,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M130",
+      "label": "D02 repair: 130% tip mass",
+      "family": "diagnostic_overrepair",
+      "intent": "Increase replaceable flyweight tip mass to 130% while retaining D02's 115% primary preload. Probe a strong primary-closing over-correction on the same mechanism axis.",
+      "knobs": {
+        "tip_mass_scale": 1.3,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M140",
+      "label": "D02 repair: 140% tip mass",
+      "family": "diagnostic_overrepair",
+      "intent": "Increase replaceable flyweight tip mass to 140% while retaining D02's 115% primary preload. Probe whether severe-hill backshift becomes clearly constrained by excessive primary centrifugal closing.",
+      "knobs": {
+        "tip_mass_scale": 1.4,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M150",
+      "label": "D02 repair: 150% tip mass",
+      "family": "diagnostic_overrepair",
+      "intent": "Increase replaceable flyweight tip mass to 150% while retaining D02's 115% primary preload. Upper bound of the focused screen; included to bracket the over-correction transition if lower masses remain too close to D02_M.",
+      "knobs": {
+        "tip_mass_scale": 1.5,
+        "primary_preload_scale": 1.15
+      }
+    }
+  ]
+}
