@@ -4,7 +4,7 @@
   "study_slug": "course-tuning",
   "name": "Common-course CVT operation and tuning",
   "title": "Common-course CVT operation and tuning",
-  "description": "Selected Section 4.5 common-course runs, admissible promoted shift-curve shape cases, and supporting long-flat comparison.",
+  "description": "Selected Section 4.5 common-course runs, admissible promoted shift-curve shape cases, D02 repair/over-correction diagnostics, and supporting long-flat comparison.",
   "maintenance_status": "maintained",
   "paper_role": "section_4_5",
   "classification": "system",
@@ -45,7 +45,7 @@
     "study_specific": "infrastructure/, experiments/, analysis/, inputs/",
     "exploration": "exploration/ (independent tools and artifacts; excluded from run.py)"
   },
-  "run_contract": "Run the selected twelve-car common course and the R00/U55 supporting 800 m flat; build one self-contained report including shift-curve shape and mechanism comparisons. No exploratory sweeps or automatic selection.",
+  "run_contract": "Run the selected thirteen-car common course and the R00/U55 supporting 800 m flat; build one self-contained report including shift-curve shape, severe-hill repair/over-correction, and mechanism comparisons. No exploratory sweeps or automatic selection.",
   "inputs": {
     "competitors": "inputs/competitors.json",
     "settling": "inputs/settling_criteria.json",
@@ -78,7 +78,7 @@
   "study_specific": {
     "stage": "selected_final_case_set_v3_r26b7",
     "course_length_m": 732.0,
-    "primary_cases": 12,
+    "primary_cases": 13,
     "supporting_cases": 2,
     "no_equilibrium_or_failure_is_enforced": true,
     "promoted_shift_shape_cases": [
@@ -86,6 +86,12 @@
       "RC10",
       "R26B7",
       "RC40L"
+    ],
+    "d02_diagnostic_cases": [
+      "D02",
+      "D02_M",
+      "D02_M150",
+      "D02_P"
     ]
   },
   "numerical_settings": {
@@ -112,6 +118,7 @@
         "D01",
         "D02",
         "D02_M",
+        "D02_M150",
         "D02_P"
       ],
       "role": "main"

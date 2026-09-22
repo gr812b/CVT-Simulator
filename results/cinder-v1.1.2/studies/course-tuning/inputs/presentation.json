@@ -23,6 +23,7 @@
         "R00",
         "D01",
         "D02",
+        "D02_M150",
         "U55"
       ],
       "sectors": [
@@ -57,6 +58,7 @@
         "H28",
         "D01",
         "D02_M",
+        "D02_M150",
         "D02_P"
       ],
       "sectors": [
@@ -67,11 +69,12 @@
     },
     {
       "id": "repair_comparison",
-      "title": "Two single-change D02 interventions",
+      "title": "D02 repairs and primary-force over-correction",
       "cars": [
         "R00",
         "D02",
         "D02_M",
+        "D02_M150",
         "D02_P"
       ],
       "sectors": []

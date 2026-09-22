@@ -1,6 +1,6 @@
 # D02 flyweight over-correction screen
 
-This overlay adds one exploratory competitor file only. It does not modify the selected/final course fleet, its selection lock, or any CINDER model source.
+This exploratory screen is the selection evidence for the final `D02_M150` diagnostic. It remains separate from the root final runner: the final case is now defined independently in `inputs/competitors.json` and is regenerated from the common initial state when the final study is run.
 
 ## Question
 
@@ -19,32 +19,18 @@ Cases:
 - `D02_M140`: 140% tip, 115% preload
 - `D02_M150`: 150% tip, 115% preload
 
-## Run
+## Frozen-environment result
 
-From `results/cinder-v1.1.2` in the frozen Results environment:
+Campaign `unified38_c6a32w12_h18hold240__tight__a625698e273b` used the frozen manuscript environment (Python 3.12.4, CINDER 1.1.2, NumPy 2.5.2, SciPy 1.18.1, Matplotlib 3.11.1). D02 reproduced its progress-limited failure. Every repair/over-repair case completed the 732 m course with zero inspection errors and no sampled review flag.
 
-```bash
-python studies/course-tuning/exploration/run.py \
-  --course studies/course-tuning/inputs/course.json \
-  --competitors studies/course-tuning/exploration/inputs/d02_overcorrection.json \
-  --preset tight \
-  --cars D02 D02_P D02_M D02_M110 D02_M120 D02_M130 D02_M140 D02_M150 \
-  --jobs 4 \
-  --resume \
-  --focus D02 D02_P D02_M D02_M110 D02_M120 D02_M130 D02_M140 D02_M150
+The 100-140% mass-repair cases reached and retained the low-ratio seat during the main 38-degree hold. `D02_M150` was the first tested point in the 100-150% sequence to cross the qualitative boundary: it reached the low-ratio seat near 171.132 m, then released it near 173.041 m with `low_ratio_seat_released_by_tensile_reaction` and returned to free shift. It is therefore the selected high-primary-force over-correction diagnostic in the final fleet.
+
+This selection does not turn that outcome into a required result. The root final runner starts `D02_M150` from the same common initial state as every other selected case and records whatever trajectory the fixed model produces.
+
+## Reproduce the screen
+
+From `results/cinder-v1.1.2` in the frozen Results environment, PowerShell users can run:
+
+```powershell
+python studies/course-tuning/exploration/run.py --course studies/course-tuning/inputs/course.json --competitors studies/course-tuning/exploration/inputs/d02_overcorrection.json --preset tight --cars D02 D02_P D02_M D02_M110 D02_M120 D02_M130 D02_M140 D02_M150 --jobs 4 --resume --focus D02 D02_P D02_M D02_M110 D02_M120 D02_M130 D02_M140 D02_M150
 ```
-
-The campaign remains under `studies/course-tuning/exploration/artifacts/` and does not change the final-study fingerprint.
-
-## What to return/check
-
-Return the generated campaign folder or ZIP it. The most useful first-pass quantities over the main hill (120-224 m, especially the 132-212 m 38-degree hold) are:
-
-1. minimum shift coordinate / maximum backshift drawdown,
-2. whether and when the low-ratio seat is reached,
-3. primary RPM through the hill,
-4. vehicle speed and whether progress is maintained,
-5. primary static traction utilization and slip intervals,
-6. primary flyweight/spring/belt axial-force balance.
-
-For manuscript use, do not automatically select the heaviest or fastest case. Prefer the least-extreme mass increase that gives a clear qualitative over-correction: primary traction remains adequate, but the CVT backshifts materially less than `D02_M`, leaving the engine/vehicle response worse for a ratio-related reason rather than renewed traction failure.

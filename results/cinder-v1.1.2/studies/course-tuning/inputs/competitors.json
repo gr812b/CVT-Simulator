@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "description": "Selected twelve common-course configurations: reference, familiar flyweight change, spring-rate and admissible ramp-shape cases, isolated secondary change, adverse cases, and two one-change D02 interventions.",
+  "description": "Selected thirteen common-course configurations: reference, familiar flyweight change, spring-rate and admissible ramp-shape cases, isolated secondary change, adverse cases, and a mechanism-resolved D02 intervention family including a high-primary-force over-correction diagnostic.",
   "competitors": [
     {
       "id": "R00",
@@ -114,6 +114,16 @@
       }
     },
     {
+      "id": "D02_M150",
+      "label": "D02: 150% tip mass",
+      "family": "diagnostic_repair",
+      "intent": "High-primary-force intervention on D02: increase replaceable tip mass to 150% while retaining the 115% primary preload. Test whether stronger centrifugal closing restores traction but resists severe-hill backshift; no outcome is imposed.",
+      "knobs": {
+        "tip_mass_scale": 1.5,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
       "id": "D02_P",
       "label": "D02: restore reference primary preload",
       "family": "diagnostic_repair",
@@ -123,5 +133,5 @@
       }
     }
   ],
-  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are promoted from the shift-shape exploration, and R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit."
+  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit, and D02_M150 is the selected high-primary-force diagnostic on the D02 repair axis."
 }

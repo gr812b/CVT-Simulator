@@ -74,7 +74,7 @@ cases; `--resume` then reuses completed cases within this layout as usual.
 ```text
 studies/course-tuning/
 ├── study.json
-├── run.py                        # Selected final 14 trajectories only
+├── run.py                        # Selected final 15 trajectories only
 ├── verify_study.py
 ├── inputs/                       # Locked final road, fleet, and criteria
 ├── infrastructure/
@@ -100,7 +100,7 @@ studies/course-tuning/
     └── layout_history/           # Original separate-final installation
 ```
 
-The course, numerical settings, stopping rules and shared model remain unchanged. The selected fleet is revision 3: P300, RC10 and RC40L are retained from the shift-shape exploration, while R26B7 replaces the RC28 geometry rejected by the frozen CINDER 1.1.2 construction audit. W115 and B01 remain exploratory/supporting cases. The final report now includes focused spring/ramp shift-shape and mechanism figures.
+The course, numerical settings, stopping rules and shared model remain unchanged. The selected fleet is revision 3: P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 geometry rejected by the frozen CINDER 1.1.2 construction audit, and D02_M150 provides the selected high-primary-force comparison on the D02 repair axis. W115 and B01 remain exploratory/supporting cases. The final report includes focused spring/ramp shift-shape, severe-hill, repair/over-correction, and mechanism figures.
 
 Activate the existing Results environment. The expected environment is Python
 3.12, `cinder-cvt==1.1.2`, NumPy 2.5.2, SciPy 1.18.1 and Matplotlib 3.11.1. Do not
@@ -119,15 +119,15 @@ These commands are the same in macOS/Linux terminals and PowerShell. `--jobs 4`
 uses four independent processes, not four threads. Use a smaller value to reduce
 CPU/memory use. BLAS thread counts default to one per process.
 
-The verifier checks the selected inputs, shared reference, unit tests, and all twelve
+The verifier checks the selected inputs, shared reference, unit tests, and all thirteen
 model assemblies. It does not integrate trajectories. The second command runs:
 
 | Experiment | Cars | Road |
 |---|---|---|
-| `unified_course` | R00, W85, P300, RC10, R26B7, RC40L, H28, U55, D01, D02, D02_M, D02_P | The selected 732 m course |
+| `unified_course` | R00, W85, P300, RC10, R26B7, RC40L, H28, U55, D01, D02, D02_M, D02_M150, D02_P | The selected 732 m course |
 | `flat_800m` | R00, U55 | A separate 800 m flat |
 
-**Fourteen trajectories in total.** Both experiments now use the final tight
+**Fifteen trajectories in total.** Both experiments use the final tight
 settings: LSODA, relative tolerance `3e-5`, absolute tolerance `3e-8`, maximum step
 `0.005 s`, diagnostic interval `0.005 s`, and observation limit `180 s`.
 The earlier exploratory flat used the research preset; this final package
@@ -223,6 +223,7 @@ Each modification is applied to the same baseline. Mass percentages refer to **r
 | D01 | 130% tip mass, 80% primary/secondary axial preload, 28° helix, 240° torsional twist |
 | D02 | 65% tip mass and 115% primary axial preload |
 | D02_M | Reference tip mass; retain D02's 115% primary preload |
+| D02_M150 | 150% tip mass; retain D02's 115% primary preload |
 | D02_P | Retain D02's 65% tip mass; restore reference primary preload |
 
 W115 and B01 remain under `exploration/` and are not part of this selected final fleet. Every selected case retains the same full dynamic fixed-pivot flyweight mechanism, dynamic bilateral/slotted secondary helix, engine/vehicle boundaries, belt/contact model and initial state.
@@ -239,7 +240,7 @@ trajectory. Completed cases remain untouched.
 A case with an observed rollback or slow-progress stop is a valid recorded
 outcome. It is not given an invented finishing time, discarded, or repeatedly
 rerun in search of a finish. A numerical error or model-domain stop is reported
-separately. The twelve common-course physical outcomes are never hardcoded as expected results.
+separately. The thirteen common-course physical outcomes are never hardcoded as expected results.
 
 To retry completed numerical/setup/timeout errors:
 
@@ -309,7 +310,7 @@ The familiar plots are retained for **every** selected car, not just an automati
 winning subset: motion, RPM, shift, forces, traction, powers, local normal load,
 support reactions, and regime histories. The report also contains named
 comparisons for launch, severe hill, cyclic loading, interior hill operation,
-the D02 repairs, and descent. Competitor colours are stable across comparison
+the D02 repairs/over-correction, and descent. Competitor colours are stable across comparison
 plots; individual primary-versus-secondary RPM curves use road-sector colours.
 Chronology and segment/reset boundaries are retained.
 

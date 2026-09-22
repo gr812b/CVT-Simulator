@@ -12,6 +12,7 @@
     "D01",
     "D02",
     "D02_M",
+    "D02_M150",
     "D02_P"
   ],
   "supporting_flat": [
@@ -31,5 +32,32 @@
       "findings": []
     }
   },
-  "assistant_validation": "source/lock/test consistency and compilation checks only; final root campaign must be rerun in the user frozen Results environment"
+  "d02_overcorrection_evidence": {
+    "source": "user frozen-environment unified38_c6a32w12_h18hold240__tight__a625698e273b campaign",
+    "fingerprint": "a625698e273bef933ad8ce400eb1dabacab3d4cf164aefe69692024437a1819e",
+    "frozen_environment_match": true,
+    "screened_tip_mass_scales": [
+      1.0,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.5
+    ],
+    "selected_case": "D02_M150",
+    "tip_mass_scale": 1.5,
+    "primary_preload_scale": 1.15,
+    "tip_mass_per_flyweight_kg": 0.375,
+    "total_mass_per_flyweight_kg": 0.388646,
+    "course_status": "finished",
+    "finish_time_s": 76.82190487921358,
+    "max_distance_m": 732.0000000000001,
+    "inspection_errors": 0,
+    "review_required": false,
+    "main_hill_low_ratio_seat_m": 171.13190990709293,
+    "main_hill_low_ratio_release_m": 173.04077676230062,
+    "main_hill_release_reason": "low_ratio_seat_released_by_tensile_reaction",
+    "selection_basis": "First tested 100-150% D02 mass-repair point to release the low-ratio seat during the main 38-degree hill hold; outcome is evidence for selection, not an enforced final-run target."
+  },
+  "assistant_validation": "source/lock/test consistency and packaging checks only; final root campaign must be rerun in the user frozen Results environment"
 }

@@ -1,11 +1,11 @@
 {
   "selection_revision": "section4p5-final-v3-r26b7",
   "inputs": {
-    "study.json": "a54f4e176811f4e0cc0819a21b9f8d268e7c551d47162e39677328e072b78d2a",
-    "inputs/competitors.json": "756001f103b036e28b178ede7679420c68f6ff5720a07c7414f784e5f5eada81",
+    "study.json": "1cbf1b9ec29743b1922f7283fdec9d086d724ec59cc6d7ce02a93635c8d63412",
+    "inputs/competitors.json": "22d0488671abec3807c52370e66ec062f5f3deca451829c3967118ff4cc90a22",
     "inputs/course.json": "89e3feb75825e7e2c985238222a5146cfb1efeed4be27560fd3ea7e373bad88c",
     "inputs/flat_800m.json": "10737d72b664501483496e18eee9d42e45f26c1ca87b8385847284908132788d",
-    "inputs/presentation.json": "5fcc7f5836c70cf3a65d588fe7dc7e0073b73662b8fb219ddf4f308b247ac580",
+    "inputs/presentation.json": "fc5afe7628c6c2443b3dbd5673f716a64b0c48b337c1c8d4a2c88327bbf28f5c",
     "inputs/settling_criteria.json": "4f97e1a33291cb004f4742b90dfc25c062342457fc6de191523d7f936c324111"
   },
   "baseline_canonical_sha256": "8abe09ab80d0b11dfbd89879e894ff063d2bf90f68ab981f84e76243f290c219",
@@ -28,6 +28,7 @@
       "D01",
       "D02",
       "D02_M",
+      "D02_M150",
       "D02_P"
     ],
     "supporting_800m_flat": [
@@ -50,6 +51,10 @@
     ],
     "rejected_final_v2_definition": [
       "RC28"
-    ]
+    ],
+    "selected_d02_overcorrection_diagnostic": [
+      "D02_M150"
+    ],
+    "d02_overcorrection_evidence_campaign": "unified38_c6a32w12_h18hold240__tight__a625698e273b"
   }
 }

@@ -22,6 +22,10 @@ Use the newly returned final run, not the exploratory result as a substitute.
   free-shift/stick--stick RPM--RPM shape comparisons, local secants, and exact
   definitions; these deliberately exclude clutch slip, support-held motion,
   hill backshift and descent.
+- The selected D02 mechanism family is `D02`, `D02_M`, `D02_M150`, and `D02_P`.
+  Use the saved hill events and diagnostics to distinguish traction failure,
+  successful repair, and high-primary-force resistance to backshift; do not
+  infer those outcomes from the case labels alone.
 - `unified_course/final_checks/`: settling criteria, every tested window,
   tail means and failure chronology. Quote means as settled only for passing
   rows, retaining the finite-window qualification.

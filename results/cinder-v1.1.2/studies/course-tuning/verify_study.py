@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the fixed selection, shared reference, tests, and all twelve selected model assemblies."""
+"""Validate the fixed selection, shared reference, tests, and all thirteen selected model assemblies."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -29,7 +29,7 @@ def main():
         identities.append(identity)
         print(tune['id']+': full dynamic flyweights, bilateral dynamic helix, unchanged shaft boundaries')
     if any(i!=identities[0] for i in identities):raise AssertionError('Competitors changed boundary/model identity')
-    print('Selection, unit tests and all twelve selected model assemblies verified. No trajectory was integrated.')
+    print('Selection, unit tests and all thirteen selected model assemblies verified. No trajectory was integrated.')
     return 0
 if __name__=='__main__':
     try:raise SystemExit(main())

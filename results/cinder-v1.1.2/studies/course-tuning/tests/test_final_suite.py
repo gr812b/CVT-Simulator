@@ -25,10 +25,10 @@ class SelectionTests(unittest.TestCase):
         self.course=Course(load_json(ROOT/'inputs/course.json'))
     def test_selection_lock(self):validate_selection()
     def test_exact_final_fleet(self):
-        self.assertEqual([x['id'] for x in self.fleet],['R00','W85','P300','RC10','R26B7','RC40L','H28','U55','D01','D02','D02_M','D02_P'])
-    def test_two_separate_experiments_fourteen_runs(self):
+        self.assertEqual([x['id'] for x in self.fleet],['R00','W85','P300','RC10','R26B7','RC40L','H28','U55','D01','D02','D02_M','D02_M150','D02_P'])
+    def test_two_separate_experiments_fifteen_runs(self):
         self.assertEqual(len(self.spec['experiments']),2)
-        self.assertEqual(sum(len(g['cars']) for g in self.spec['experiments']),14)
+        self.assertEqual(sum(len(g['cars']) for g in self.spec['experiments']),15)
         self.assertEqual(self.spec['experiments'][1]['cars'],['R00','U55'])
     def test_no_course_or_tune_sweep(self):
         for file in final_files(ROOT):
@@ -57,10 +57,11 @@ class SelectionTests(unittest.TestCase):
         s=self.spec['numerical_settings']
         self.assertEqual(s,{'relative_tolerance':3e-5,'absolute_tolerance':3e-8,'max_step_s':.005,'maximum_time_s':180.,'diagnostic_step_s':.005})
         self.assertEqual(self.spec['execution']['checkpoint_interval_s'],2.)
-    def test_two_independent_repairs(self):
+    def test_d02_repairs_and_overcorrection(self):
         by={t['id']:t['knobs'] for t in self.fleet}
         self.assertEqual(by['D02'],{'tip_mass_scale':.65,'primary_preload_scale':1.15})
         self.assertEqual(by['D02_M'],{'primary_preload_scale':1.15})
+        self.assertEqual(by['D02_M150'],{'tip_mass_scale':1.5,'primary_preload_scale':1.15})
         self.assertEqual(by['D02_P'],{'tip_mass_scale':.65})
     def test_promoted_shape_cases(self):
         by={t['id']:t['knobs'] for t in self.fleet}

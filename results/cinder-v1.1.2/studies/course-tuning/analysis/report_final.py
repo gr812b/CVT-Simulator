@@ -130,7 +130,7 @@ def build_final_report(output:Path,plots:bool=True) -> dict:
     text=f'''<!doctype html><html><head><meta charset="utf-8"><title>CINDER — selected course study</title>
 <style>body{{font:15px system-ui,sans-serif;max-width:1450px;margin:2rem}}p{{line-height:1.55}}table{{border-collapse:collapse;display:block;overflow:auto}}th,td{{padding:.45rem;border:1px solid #bbb;text-align:left}}img{{max-width:100%;margin:1rem 0}}summary{{font-weight:bold;cursor:pointer;padding:1rem}}.warning{{border:2px solid #b45a00;padding:1rem}}code{{overflow-wrap:anywhere}}</style></head><body>
 <h1>CINDER: coupled vehicle operation and tuning</h1>
-<p>Selected final case set, not an optimization or experimental validation. Ten configurations share one 732 m road, full throttle, initial conditions, dynamic flyweights and a bilateral dynamic helix. The separate 800 m flat compares R00 and U55. No exploratory campaigns are included.</p>
+<p>Selected final case set, not an optimization or experimental validation. The selected configurations share one 732 m road, full throttle, initial conditions, dynamic flyweights and a bilateral dynamic helix. The separate 800 m flat compares R00 and U55. No exploratory campaigns are included.</p>
 {warning}<p><b>Dataset: {status['dataset_status']} — {status['completed_output_count']} / {status['expected_count']} outputs.</b> A documented rollback or slow-progress stop counts as an observed output, not as a numerical error.</p>
 <p>Selection: {manifest['selection_revision']} · fingerprint <code>{manifest['fingerprint']}</code>.</p>
 {nav}<h2>Recorded outcomes and completeness</h2>{table(rows,['experiment','case','status','output_complete_and_hash_verified','review_required','finish_time_s','max_distance_m'])}
