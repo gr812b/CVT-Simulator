@@ -12090,28 +12090,33 @@ away from the reference before any of their course responses are interpreted.
 
 The road begins with \SI{120}{m} of level ground. Before the later changes in
 grade disturb the drivetrain, this opening lets each CVT engage and begin its
-upshift from the common initial state. Once the belt is engaged and the primary
-leaves the low-ratio seat, plotting primary speed against secondary speed gives
-a compact view of how the hardware changes the working-speed characteristic.
-\Cref{fig:results_shift_curve_shape} shows that response for six primary-side
-configurations. The dashed lines mark the no-slip shaft-speed relations at the
-low-ratio seat and the high-ratio stop: motion along either line is acceleration
-at fixed geometric ratio, while the free-shift trajectories occupy the region
-between them. This is the familiar shift-curve view used in practical CVT
-tuning \citep{Aaen2007,Skinner2020}, but here no speed curve is prescribed.
-Each trajectory follows from the actuator geometry and spring loading acting
+upshift from the common initial state. Plotting primary speed against secondary
+speed gives the familiar shift-curve view used in practical CVT tuning
+\citep{Aaen2007,Skinner2020}, but here no speed curve is prescribed. Each
+trajectory follows from the actuator geometry and spring loading acting
 through the belt, secondary, and accelerating vehicle.
+\Cref{fig:results_shift_curve_shape} shows this response for six primary-side
+configurations, from launch at zero secondary speed to just before the first hill, including
+their low-ratio motion, free shift, and any high-ratio motion reached along
+the way.
+
+The low-ratio limit is the lower end of engaged shift travel, where the
+secondary is fully closed against its stop. The high-ratio limit is reached
+when the primary closes against its upper stop
+(\Cref{sec:low_ratio_supported_regime,sec:upper_primary_stop_regime}). The
+dashed lines show the no-slip shaft-speed relations at those two fixed
+geometries. While a stop holds the geometry and both contacts stick, the
+shafts accelerate along its line; the disengaged and slipping parts of launch
+need not follow either relation.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{figures/results/course/opening_free_shift_characteristics.png}
-  \caption{Opening-flat free-shift characteristics for selected primary
-  hardware changes. Each solid curve is the solved primary--secondary speed
-  trajectory while the CVT is engaged, freely shifting, and in stick--stick
-  contact. The dashed lines show the fixed no-slip speed relations at the
-  geometric low-ratio seat and high-ratio stop of
-  \Cref{sec:low_ratio_supported_regime,sec:upper_primary_stop_regime}. The
-  curves themselves are not imposed shift laws.}
+  \caption{Complete opening-flat shift curves for the six selected primary
+  hardware configurations, from the initial state through the last recorded
+  point before \SI{120}{m}. The solid curves retain the initial disengaged
+  motion, launch slip, supported motion, and free shift. The dashed lines are the no-slip speed
+  relations at the geometric low- and high-ratio limits.}
   \label{fig:results_shift_curve_shape}
 \end{figure}
 
@@ -12124,51 +12129,51 @@ evolve with the trajectory, but much of the R00 progression is reproduced at
 a higher working speed. Between \(20\%\) and \(80\%\) of the available engaged
 shift travel, W85 changes from approximately \(3393\) to
 \(3447~\mathrm{rpm}\), compared with approximately \(3169\) to
-\(3205~\mathrm{rpm}\) for R00. This is the classical lighter-flyweight effect,
-now obtained from the complete transient balance rather than imposed as a
-shift-speed rule. The leading speed-dependent contribution appears explicitly
+\(3205~\mathrm{rpm}\) for R00. This is the classical lighter-flyweight effect.
+The leading speed-dependent contribution appears explicitly
 in \Cref{eq:primary_flyweight_axial_force} through
 \(\tfrac{1}{2}\omega_p^2\,dJ_{f,p}/dx_p\).
 
 P300 begins much closer to the reference but separates for a different reason.
 Its installed compression is reduced so that
 \Cref{eq:primary_spring_force} gives the same primary spring opening force as
-R00 at the low-ratio engagement geometry. Early in the shift, the two cases
+R00 at the low-ratio engagement geometry, as shown in
+\Cref{fig:results_shift_curve_mechanics}(a). Early in the shift, the two cases
 therefore begin from nearly the same competition between flyweight closing
 action and spring opposition. As the primary continues to close, however, the
 three-times-greater spring rate makes that opposition grow more rapidly. The
 later sheave motion consequently slows relative to R00. Secondary speed can
-continue to rise while less ratio change is produced, giving the
-primary---and therefore the engine---more opportunity to accelerate relative
-to the secondary. The curve therefore peels upward as the shift proceeds,
-reaching approximately \(3336~\mathrm{rpm}\) by \(80\%\) travel even though it
-began near the R00 operating point. Matching the spring force at one position
-has not matched the spring characteristic through the rest of the shift.
-
-The spring and ramp changes are compared directly in
-\Cref{fig:results_shift_curve_mechanics}. The spring case changes a force that
-varies linearly with displacement. The ramp cases instead change the geometry
-through which the roller moves, so the relationship between flyweight motion
-and axial closing force can vary nonlinearly as different parts of the profile
-are reached.
+continue to rise while less ratio change is produced, giving the primary and
+its attached engine more opportunity to accelerate relative to the secondary.
+The curve therefore peels upward as the shift proceeds, reaching approximately
+\(3336~\mathrm{rpm}\) by \(80\%\) travel even though it began near the R00
+operating point. Matching the spring force at one position has not matched the
+spring characteristic through the rest of the shift.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{figures/results/course/shift_curve_mechanical_causes.png}
-  \caption{Mechanical origin of the selected shift-curve changes. (a) R00 and
-  P300 have the same primary spring force at the selected low-ratio engagement
-  geometry, but the greater P300 stiffness causes the opening force to grow
-  more rapidly as the primary closes. (b) RC10 and R26B7 preserve the first
+  \caption{Mechanical origin of the selected shift-curve changes. (a) Primary
+  spring opening force for R00 and P300, matched at the low-ratio engagement
+  geometry. (b) Physical ramp profiles: RC10 and R26B7 preserve the first
   \SI{10}{mm} of the reference ramp, while RC40L preserves the first
-  \SI{18}{mm}; the distances are physical ramp coordinates rather than
-  movable-sheave travel. (c) The changed ramp geometry gives the leading
-  centrifugal closing contribution a different dependence on shift at the
+  \SI{18}{mm}; these distances are ramp coordinates rather than
+  movable-sheave travel. (c) Leading centrifugal closing contribution at the
   same \(3000~\mathrm{rpm}\) primary speed. The complete actuator also retains
   the corresponding motion-ratio and flyweight-inertia terms, so panel (c)
-  isolates one physically important contribution rather than replacing the
-  full dynamic force law.}
+  isolates one contribution rather than replacing the full dynamic force law.
+  In (a) and (c), active shift fraction runs from zero at the low-ratio seat to
+  one at the upper primary stop.}
   \label{fig:results_shift_curve_mechanics}
 \end{figure}
+
+The spring case changes a force that varies linearly with displacement. The
+ramp cases instead change the geometry through which the roller moves, so the
+relationship between flyweight motion and axial closing force can vary
+nonlinearly as different parts of the profile are reached. The changed
+profiles in \Cref{fig:results_shift_curve_mechanics}(b) therefore produce
+different closing-force variations even at the same primary speed, as
+panel~(c) illustrates at \(3000~\mathrm{rpm}\).
 
 That difference in how the hardware varies through travel is visible in the
 three ramp trajectories. RC10 and R26B7 preserve the same early ramp as R00,
@@ -12184,56 +12189,22 @@ late shoulder and downturn. Unlike the linear spring-rate change, a ramp
 change can therefore reshape the working-speed characteristic differently in
 different parts of the same shift.
 
-\Cref{tab:results_shift_curve_metrics} collects a few numerical anchors for
-these trajectories. The secant slope is useful for distinguishing the broad
-trend, but it is only a descriptor of the solved opening-flat path. In
-particular, a single average slope does not capture the localized late feature
-of RC40L.
-
-\begin{table}[H]
-  \centering\small
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.12}
-  \caption{Selected opening-flat shift-curve measures. Active shift fraction is
-  the normalized engaged travel between the low-ratio seat and upper stop. The
-  reported slope is the secant in primary speed with respect to secondary speed
-  between \(20\%\) and \(80\%\) travel; it describes these trajectories rather
-  than a prescribed or universal shift law.}
-  \label{tab:results_shift_curve_metrics}
-  \begin{tabular}{@{}lrrrrr@{}}
-    \toprule
-    Case & \shortstack{Primary rpm\\at 20\%} & \shortstack{Primary rpm\\at 50\%} &
-    \shortstack{Primary rpm\\at 80\%} & \shortstack{Secant slope\\(rpm/(1000 rpm))} &
-      \shortstack{Opening-flat\\upper stop [m]} \\
-    \midrule
-    R00   & 3168.5 & 3127.4 & 3204.7 &  23.7 & 64.92 \\
-    W85   & 3392.9 & 3355.5 & 3447.1 &  32.9 & 84.46 \\
-    P300  & 3189.5 & 3203.5 & 3336.2 &  89.6 & 77.52 \\
-    RC10  & 3168.5 & 3177.3 & 3655.4 & 250.8 & -- \\
-    R26B7 & 3168.5 & 3146.6 & 3013.5 &-114.8 & 39.83 \\
-    RC40L & 3168.5 & 3127.4 & 3160.0 &  -5.8 & 29.39 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The changed working-speed characteristics also alter when the fixed high-ratio
-geometry is reached. R26B7 and RC40L arrive at the upper stop after about
-\SI{39.8}{m} and \SI{29.4}{m}, respectively, while R00 reaches it near
-\SI{64.9}{m} and W85 near \SI{84.5}{m}. RC10 remains in free shift throughout
-the opening flat; its first upper-stop arrival occurs much later, on the
-descent near \SI{652.2}{m}. These distances are not prescribed
-``shift-out'' settings. They follow from the different actuator
-characteristics acting through the same belt, secondary, engine boundary, and
-vehicle.
+The shift curves also show that the upper primary stop is reached at different
+points in the opening acceleration. RC10 is still freely shifting when the
+first hill arrives, whereas the other five curves have already joined the
+high-ratio line. With the stop geometry unchanged, these different arrivals
+follow from the actuator characteristics acting through the same belt,
+secondary, engine boundary, and vehicle.
 
 One ambiguity remains when a case has not reached the upper stop before the
 first hill arrives. The common course deliberately changes grade after
 \SI{120}{m}, so an incomplete opening shift by itself cannot distinguish a
 slow approach to high ratio from an interior balance that would persist on
-level ground. For that question only, R00 and the more extreme low-mass case
-U55 were also run over a separate \SI{800}{m} level road as a supporting
-diagnostic; this auxiliary run is not part of the common course. R00 again
-reaches the \SI{19.05}{mm} upper stop near \SI{64.9}{m}. U55 instead
+level ground. The more extreme flyweight-mass reduction in U55 also leaves its
+opening shift incomplete. To see whether it simply needs a longer level road,
+R00 and U55 were also run over a separate \SI{800}{m} flat.
+
+R00 again reaches the \SI{19.05}{mm} upper stop near \SI{64.9}{m}. U55 instead
 approaches an interior shift position near \SI{14.90}{mm}, changing by less
 than \SI{0.001}{mm} over the final \SI{10}{s}. Under the observed flat-road
 load, the reduced primary closing action therefore approaches a balance with
@@ -12252,7 +12223,6 @@ travel where the new geometry is encountered. Those different states are then
 carried directly into the first severe climb, where the question changes from
 how the hardware shapes the upshift to what limits the transmission when the
 road demands a large backshift.
-
 
 \chapter{Conclusion and Future Work}
 \label{sec:conclusion_and_future_work}
