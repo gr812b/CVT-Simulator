@@ -328,8 +328,20 @@
 % Title
 % =========================
 \title{A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Simulation\\[0.4em]\large With Mechanical Actuation and Traction-Limited Torque Transfer}
+\author{
+Kai Arseneau\thanks{Independent Researcher}
+\and
+W.~Spencer Smith\thanks{Department of Computing and Software, McMaster University}
+}
 
-\author{Kai Arseneau \and W.~Spencer Smith}
+% \author{
+% Kai Arseneau\\
+% \small Independent Researcher
+% \and
+% W.~Spencer Smith\\
+% \small Department of Computing and Software\\
+% \small McMaster University
+% }
 \hypersetup{pdfauthor={Kai Arseneau; W. Spencer Smith}}
 \date{\today}
 
@@ -1415,22 +1427,18 @@ mechanically, and what information describes the CVT at a given instant.
 The definition proceeds from the outside inward. \Cref{sec:system_definition}
 first establishes the modeled CVT and its shaft interfaces, after which
 \Cref{sec:assumptions} states the physical idealizations that set the
-resolution of the formulation. \Cref{sec:coordinate_sign_conventions} then defines the
-coordinates and sign conventions used to describe the retained motions.
-With those choices fixed, \Cref{sec:continuous_state_variables} identifies the internal
-state carried from one instant to the next, while
-\Cref{sec:mechanical_regimes_state_evolution} introduces the active mechanical constraints
-that distinguish the admissible operating regimes. Finally,
-\Cref{sec:model_evaluation_flow} separates the roles of fixed data, current state,
-shaft-interface loading, and instantaneous model results, completing the
-simulation problem used by the derivation in Chapter~3.
+resolution of the formulation. \Cref{sec:coordinate_sign_conventions} then
+defines the coordinates and sign conventions used to describe the retained
+motions. With those choices fixed,
+\Cref{sec:continuous_state_variables} identifies the internal state carried
+from one instant to the next, while
+\Cref{sec:mechanical_regimes_state_evolution} introduces the mechanical
+regimes through which that state can evolve. Finally,
+\Cref{sec:model_evaluation_flow} brings these pieces together by distinguishing
+the fixed model data, current state, shaft loading, and quantities solved at an
+instant. Together, these definitions establish the simulation problem used by
+the derivation in \Cref{chap:derivation}.
 
-These definitions provide the common problem statement used by the derivation
-in \Cref{chap:derivation}. At any instant, the fixed CVT data, current internal
-state, and mechanical loading presented at the two shafts are known. The
-governing mechanics determine the corresponding instantaneous response and
-state derivatives, which may then be advanced through time by numerical
-integration.
 
 % ==============================================================
 \section{Modeled CVT and Shaft Interfaces}
@@ -1438,21 +1446,16 @@ integration.
 
 The CVT is connected to the surrounding machinery through its primary and
 secondary shafts. These two connections form the external mechanical
-interfaces of the modeled transmission. Everything that physically belongs to
-the CVT between them is retained inside the model boundary.
+interfaces of the modeled transmission. The model itself contains the primary
+and secondary pulley assemblies, the complete belt loop and both
+belt--pulley contacts, together with the primary flyweights, ramp, and spring
+and the secondary spring and helix. The masses and inertias retained for these
+components remain inside the same model boundary.
 
-The modeled CVT includes the primary and secondary pulley assemblies, the
-complete belt loop, and both belt--pulley contacts. It also includes the
-primary flyweights, ramp, and spring and the secondary spring and helix. Any
-masses and inertias retained for these components are included with them.
-Their forces and inertias therefore act together as parts of the same coupled
-mechanism.
-
-Placing the model boundary at the two shafts keeps the CVT description
-independent of any particular surrounding system. An attached system supplies
-the mechanical loading that it presents at the corresponding shaft, so
-changing what is connected to the CVT changes the loading seen by the model
-rather than the definition of the transmission itself.
+\Cref{fig:cvt_system_boundary} shows this separation. Systems outside the CVT
+act on it through the two shafts, while the transmission mechanics between
+those interfaces are resolved by the CVT model. The surrounding machinery can
+therefore be changed without redefining the transmission itself.
 
 \begin{figure}[H]
 \centering
@@ -1496,9 +1499,9 @@ of the modeled response.
 \label{fig:cvt_system_boundary}
 \end{figure}
 
-The same interface description applies at either shaft. Let \(j\in\{p,s\}\)
-identify the primary or secondary side. The attached system contributes two
-mechanical quantities:
+At either shaft, let \(j\in\{p,s\}\) identify the primary or secondary
+interface. The attached system contributes the mechanical loading represented
+by
 
 \[
     \tau_{\mathrm{B},j},
@@ -1506,35 +1509,27 @@ mechanical quantities:
     I_{\mathrm{B},j}.
 \]
 
-The applied torque \(\tau_{\mathrm{B},j}\) is the signed torque exerted on the
-CVT through shaft \(j\). The equivalent inertia \(I_{\mathrm{B},j}\) is the
-inertia of the attached system as seen at that same shaft. A rotor connected
-directly to the shaft contributes its own inertia; a wheel, drivetrain, or
-other mechanism connected through gearing contributes the corresponding
-inertia reflected to the shaft.
+Here, \(\tau_{\mathrm{B},j}\) is the torque exerted on the CVT through shaft
+\(j\), while \(I_{\mathrm{B},j}\) is the equivalent inertia of the attached
+system as seen at that shaft. A rotor connected directly to the shaft
+contributes its own inertia; a wheel, drivetrain, or other mechanism connected
+through gearing contributes the corresponding inertia reflected to the shaft.
+The rotational sign convention for the shaft speed and applied torque is
+defined later in \Cref{sec:rotational_sign}.
 
-These quantities describe how the attached system loads the CVT, not how the
-shaft must move. The shaft speed remains part of the modeled motion. An
-attached system may use the current shaft speed, time, and its own internal
-state to determine the torque and equivalent inertia that it presents at the
-interface. Those quantities then act together with the inertia and mechanics
-inside the CVT to determine the shaft acceleration.
+These interface quantities load the CVT without prescribing its shaft motion.
+An attached system may determine its torque and equivalent inertia from the
+current shaft speed, time, and its own internal state. Those quantities then
+act together with the inertia and mechanics retained inside the CVT to
+determine the resulting shaft acceleration.
 
-A positive applied torque acts in the positive rotational direction defined
-for the corresponding shaft, and the equivalent inertia is expressed about
-that same coordinate. The equivalent inertia contains only inertia belonging
-to the machinery attached beyond the shaft interface. Any pulley, sheave,
-flyweight, helix, or belt inertia retained inside the CVT is therefore excluded
-from \(I_{\mathrm{B},j}\), so no component inertia is counted twice.
+Only inertia belonging to machinery outside the CVT boundary is included in
+\(I_{\mathrm{B},j}\). Pulley, sheave, flyweight, helix, and belt inertia
+retained by the CVT model are therefore excluded from the boundary inertia so
+that no component is counted twice. The labels \emph{primary} and
+\emph{secondary} identify the two shaft locations; they do not prescribe a
+direction of power flow.
 
-The terms \emph{primary-side interface} and \emph{secondary-side interface}
-identify the two shaft connections rather than a required direction of power
-flow. Torque may act through either interface in either rotational direction
-without changing which components belong to the CVT. Changing the attached
-driver or load therefore changes the loading at the interface, not the
-definition of the modeled CVT.
-
-% ==============================================================
 \section{Modeling Assumptions}
 \label{sec:assumptions}
 
