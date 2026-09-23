@@ -1547,15 +1547,15 @@ choice so that later results can be interpreted against a clear model boundary.
 The material properties and surface condition assigned to the CVT remain
 unchanged during a simulation. Intrinsic component dimensions are likewise not
 allowed to evolve through wear or thermal growth. The selected properties
-describe the hardware for the duration of the simulated event rather than
-evolving with its operating history.
+therefore describe the hardware throughout the simulation rather than evolving
+with its operating history.
 
 \AssumptionConsequences
 Temperature-dependent stiffness or friction, thermal state evolution, wear,
 glazing, conditioning, degradation, and other feedback from accumulated
-contact history are not represented. The formulation therefore describes
-short-term mechanical response for a specified material and surface state
-rather than the progressive evolution of that state.
+contact history are not represented. The formulation therefore predicts the
+mechanical response for a specified material and surface state rather than the
+progressive evolution of that state.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:rigid_hardware}{Rigid Pulley and Actuation Hardware}
@@ -1576,16 +1576,15 @@ rigid-body balances alone
 \begin{assumptionblock}{assump:ideal_actuator_mechanics}{Idealized Actuator Mechanics}
 The primary ramp and flyweight mechanism, secondary helix, guides, and springs
 follow their prescribed kinematic and force laws without additional contact
-friction, backlash, or local compliance unless such an effect is introduced
-explicitly by the selected component law.
+friction, backlash, or local compliance.
 
 \AssumptionConsequences
 Ramp or roller friction, pin--helix friction, roller or pin spin, guide
 friction, backlash, helix-flank transitions, contact compliance, and unmodelled
 spring hysteresis or internal damping are omitted. Relaxing this assumption
-would add actuator-specific tribology and compliance to the same mechanism
-free bodies; for example, contact friction appears explicitly in more detailed
-centrifugal and helix treatments
+would add actuator friction and compliance to the same mechanism free bodies;
+for example, contact friction appears explicitly in more detailed centrifugal
+and helix treatments
 \citep{KimEtAl2002,SorgeCammalleri2011}.
 \end{assumptionblock}
 
@@ -1600,19 +1599,20 @@ centroid. The cord layer is retained only as a prescribed tension-carrying line
 at the fixed depth \(d_{\mathrm{cord}}\); its distinct density and contribution
 to the through-section mass distribution are not resolved. As the section
 follows the curved modeled belt path, it does not compress, bulge, shear, warp,
-or grow under centrifugal or sheave loading.
+or otherwise change its cross-sectional shape under centrifugal or sheave
+loading.
 
 \AssumptionConsequences
 Accordingly, neither spatial variations caused by cogs, ribs, joints, local
 reinforcement, manufacturing variation, or nonuniform wear nor load-induced
 changes caused by lateral and radial compression, bulging, cross-sectional
-shear and warping, centrifugal growth, or local cog and rib deformation are
-represented. Concentrated cord mass and differences between the densities of
-the belt layers cannot shift the modeled centre of mass away from the geometric
-centroid. Changes in belt width, height, contact geometry, mass distribution,
-and internal strain energy caused by these omitted effects therefore lie
-outside the present formulation. Detailed belt models retain some of these
-spatial and compliance effects explicitly
+shear and warping, centrifugal cross-sectional deformation, or local cog and
+rib deformation are represented. Concentrated cord mass and differences
+between the densities of the belt layers cannot shift the modeled centre of
+mass away from the geometric centroid. Changes in belt width, height, contact
+geometry, mass distribution, and internal strain energy caused by these
+omitted effects therefore lie outside the present formulation. Detailed belt
+models retain some of these spatial and compliance effects explicitly
 \citep{Gerbert1996,KongParker2005,Messick2018}.
 
 \end{assumptionblock}
@@ -1641,43 +1641,43 @@ configuration must be compatible with the same installed length.
 Tension-dependent elongation, longitudinal strain energy, extension waves,
 permanent elongation, and the longitudinal component of elastic creep are not
 represented. Detailed traction-belt models can retain these effects through a
-longitudinal compliance field; the present formulation instead assigns ratio
-change to the pulley and contact motions of a fixed-length belt
+longitudinal compliance field. In the present formulation, geometric ratio
+change instead follows from pulley-radius motion constrained by the fixed belt
+length
 \citep{Gerbert1996,KongParker2005,Messick2018}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Coordinate}
-The circumferential motion of the complete belt is represented by one global
-transport coordinate. Individual material points are not tracked around the
-loop, and the local tangential belt speed is not given an independent spatial
-field.
+\begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Speed}
+The circumferential motion of the complete belt is represented by one signed
+transport speed, \(v_b\), shared by the whole belt loop. Belt material still
+moves around the loop, but the model does not retain an independent transport
+history for individual material points or a spatial field of local tangential
+belt speed.
 
 \AssumptionConsequences
-The geometry-induced redistribution of local tangential material speed during
-shift, material-point migration through the wraps, and the additional momentum
-transport associated with that spatially varying velocity field are not
-resolved. The model still retains acceleration of the global belt transport
-and the motion of the prescribed wrap geometry. Shift-mechanics and
-discretized belt formulations resolve the omitted local transport in greater
-detail
+Local differences in tangential material speed that arise as the belt moves
+through changing pulley geometry, together with the associated momentum
+transport, are not resolved. Because the belt properties are uniform around
+the loop and no local material history is carried, the model also does not
+distinguish which particular material point occupies a given location. It
+still retains acceleration of the common transport speed and motion of the
+prescribed wrap geometry. Shift-mechanics and discretized belt formulations
+resolve the omitted local transport in greater detail
 \citep{Sorge2008,CammalleriSorge2009,JulioPlante2011}.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:prescribed_belt_path}{Prescribed Planar Belt Path}
-% Legacy alias retained until downstream references are revised.
-% \label{assump:uniform_contact_radius}
 At each instant, the belt is taken to wrap each pulley along a circular arc and
 to pass between the pulleys along two straight tangent spans in one common
 plane. The belt path is therefore set by the current pulley geometry rather
 than solved as a flexible dynamic curve.
 
 While both pulleys are engaged, the belt is treated as taut and perfectly
-flexible. It carries load along its length through a single longitudinal
-tension, but it carries no compression, transverse shear force, or bending
-moment. The belt also remains in continuous contact with the sheave faces over
-each prescribed wrap. This engaged description is physically admissible only
-while the belt tension and distributed normal contact loading remain
-nonnegative.
+flexible. It carries load along its length through longitudinal tension, but it
+carries no compression, transverse shear force, or bending moment. The belt
+also remains in continuous contact with the sheave faces over each prescribed
+wrap. This engaged description is physically admissible only while the belt
+tension and distributed normal contact loading remain nonnegative.
 
 \AssumptionConsequences
 Slack or buckled spans within the engaged CVT, local belt lift-off, partial
@@ -1704,32 +1704,30 @@ support provided at the minimum primary radius is not assigned a tangential
 contact law. Belt pretension and the changing shape of the slack spans are not
 retained as additional mechanical states.
 
-The belt is instead taken to remain seated on the fully closed secondary and
-to be carried without slip at the secondary effective radius. The belt
-transport speed and secondary speed are therefore joined by one kinematic
-constraint throughout the disengaged-primary regime.
+To close the disengaged-primary mechanics without introducing a separate
+slack-belt description, the belt is instead taken to remain seated on the fully
+closed secondary and to be carried without slip at the secondary effective
+radius. The belt transport speed and secondary speed are therefore joined by
+one kinematic constraint throughout the disengaged-primary regime.
 
 \AssumptionConsequences
 The disengaged belt and secondary do not have independent transport
 coordinates. Slack-span motion, sag, belt whip, intermittent primary rubbing,
 secondary slip, and tension waves created as slack is taken up cannot be
 predicted. The model also cannot determine deadzone belt pretension or the
-transient contact loads produced by a detailed re-engagement history. Instead,
-the entire belt moves at the speed imposed by the secondary contact.
+transient contact loads produced by a detailed re-engagement history. Within
+this reduced closure, the entire belt instead moves at the speed imposed by the
+secondary contact.
 \end{assumptionblock}
 
 % --------------------------------------------------------------
 \subsection{Belt--Pulley Contact Representation}
 
 \begin{assumptionblock}{assump:gross_coulomb_traction}{Gross Tangential Coulomb Traction}
-% Legacy aliases retained until downstream references are revised.
-% \label{assump:ideal_friction}
-% \label{assump:constant_friction}
-% \label{assump:gross_tangential_traction}
 During continuous motion, each belt--pulley interface is represented by a dry
-gross stick--slip law with fixed static and kinetic traction capacities for the
-selected surface state. The frictional contact action retained by the model
-acts in the circumferential belt-transport direction.
+gross stick--slip law with fixed static and kinetic friction coefficients for
+the selected surface state. The frictional contact action retained by the
+model acts in the circumferential belt-transport direction.
 
 \AssumptionConsequences
 The formulation can distinguish torque-carrying stick from gross kinetic slip,
@@ -1740,19 +1738,13 @@ associated specifically with radial migration, seating, and unseating is also
 outside the retained contact direction. These mechanisms are treated
 separately in higher-fidelity rubber-belt contact models
 \citep{Gerbert1996,KongParker2006}.
-
-The static and kinetic traction limits are force-level laws for continuous
-motion. They do not supply a separate impulse-level friction law during an
-instantaneous change in mechanical constraint.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:wrap_contact_resolution}{Wrap-Level Contact Resolution}
-% Legacy alias retained until downstream references are revised.
-% \label{assump:averaged_contact}
-The model may resolve how belt tension and normal loading vary around a pulley
-wrap, but each wrap is assigned one overall traction state at an instant. The
-contact is not resolved through the belt width or depth, and no separate local
-traction state is carried for different portions of the same wrap.
+Belt tension and normal loading may vary around a pulley wrap, but each wrap is
+assigned one overall traction state at an instant. Different portions of the
+same wrap therefore cannot independently occupy different stick--slip states.
+The contact is not resolved through the belt width or depth.
 
 \AssumptionConsequences
 Local adhesion and sliding subregions, spatial traction reversals, detailed
@@ -1764,32 +1756,27 @@ models
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:symmetric_face_sharing}{Symmetric Sheave-Face Sharing}
-% Legacy aliases retained until downstream references are revised.
-% \label{assump:equal_sheave_normal_load}
-% \label{assump:equal_torque_share}
 The two sheave faces at a pulley are assumed to share the total normal contact
 load equally. On the secondary pulley, the belt torque is also divided equally
 between the fixed and movable faces for the purpose of the movable-sheave
-balance. The primary sheave faces rotate together with their shaft and
-therefore have one common angular speed. On the secondary, helix motion gives
-the movable face a different instantaneous angular speed from the fixed face.
-Under \AssRef{assump:wrap_contact_resolution}, the wrap-level tangential law
-does not retain those two face contacts separately. It therefore uses one
-representative secondary contact speed, defined so that the aggregate contact
-retains the pulley-side tangential power implied by the two equal face-torque
-paths.
+balance. The primary faces rotate together with their shaft, whereas helix
+motion allows the secondary movable face to rotate relative to the fixed face.
+The face contacts are nevertheless represented by the single secondary
+traction state of \AssRef{assump:wrap_contact_resolution} rather than solved
+separately.
 
 \AssumptionConsequences
 Face-to-face differences in normal loading, transmitted torque, and local
-sliding state are not resolved. The power-equivalent representative speed preserves the pulley-side torque
-power implied by the equal-share reduction, but it does not make the two
-physical face speeds equal or recover their separate contact states. The helix-induced rotation of the movable face remains in the
-actuation and rotational balances and also enters the representative contact
-speed. Secondary sticking therefore denotes gross sticking of this aggregate
-contact, rather than simultaneous pointwise adhesion to both physical faces
-during helix motion. Face-resolved shift models show that the two secondary
-face torques and sliding conditions can depart substantially from this
-aggregate description during shifting \citep{SorgeCammalleri2011}.
+sliding state are not resolved. The aggregate secondary contact therefore uses
+one representative surface speed consistent with the equal torque sharing,
+without making the two physical face speeds equal. Helix-induced rotation of
+the movable face remains in the actuation and rotational dynamics; what is
+omitted is the separate contact response of the two faces. Secondary sticking
+therefore denotes gross sticking of the aggregate contact, rather than
+simultaneous pointwise adhesion to both physical faces during helix motion.
+Face-resolved shift models show that the two secondary face torques and sliding
+conditions can depart substantially from this aggregate description during
+shifting \citep{SorgeCammalleri2011}.
 \end{assumptionblock}
 
 
@@ -1803,29 +1790,28 @@ replaced by an instantaneous, perfectly inelastic event. This treatment
 applies to arrival at a mechanical travel stop, first belt engagement, and
 activation of the deadzone belt lock.
 
-The generalized positions remain continuous. The generalized velocities may
-change, and their post-event values are determined by impulse--momentum balance
-over all retained inertial coordinates subject to the newly active kinematic
-constraints. Applied torques, spring forces, damping forces, and other bounded
-forces act over no resolved time during the event and therefore contribute no
-finite impulse. All masses and inertias retained by the continuous mechanics
-remain part of the momentum balance. A constraint release produces no impulse
-unless another constraint activates at the same instant.
+Positions remain continuous through the event, but velocities may change. The
+outgoing velocities are determined by impulse--momentum balance using all
+masses and inertias retained by the continuous mechanics while enforcing the
+newly active kinematic constraints. Applied torques, spring forces, damping
+forces, and other bounded forces act over no resolved time during the event and
+therefore contribute no finite impulse. A constraint release produces no
+impulse unless another constraint activates at the same instant.
 
 \AssumptionConsequences
 The event model does not resolve contact duration, local indentation, peak
 impact force, stress waves, rebound, chatter, or the high-frequency vibration
 created by compliant contact. Individual velocities are neither preserved nor
-set independently; incoming momentum is redistributed among the velocities
-that remain compatible with the new mechanical topology.
+set independently; incoming momentum is redistributed among the retained
+motions that remain compatible with the new constraints.
 
 Because the event is perfectly inelastic, kinetic energy need not be conserved.
-The decrease in kinetic energy is retained as the impact or topology-capture
-loss, but the model cannot divide that loss among local belt deformation,
-material damping, sound, heat, or structural vibration. Predicting those
-details would require a finite-duration compliant-contact model. An impulsive
-load applied through an external shaft boundary would likewise require an
-explicit boundary impulse rather than the continuous torque description.
+The decrease in kinetic energy is retained as the inelastic-capture loss, but
+the model cannot divide that loss among local belt deformation, material
+damping, sound, heat, or structural vibration. Predicting those details would
+require a finite-duration compliant-contact model. An impulsive load applied
+through an external shaft boundary would likewise require an explicit boundary
+impulse rather than the continuous torque description.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:impact_tangential_contact}{Tangential Contact Through Boundary Events}
@@ -1844,49 +1830,42 @@ impact-induced loss of an existing stick, brief impulsive slip followed by
 readhesion, or a transition caused by exhausting an impulse-level friction
 capacity.
 
-Conversely, normal contact or kinematic capture does not automatically glue a
-new belt--pulley interface tangentially. In particular, a newly formed primary
-contact may retain tangential relative motion and begin its continuous motion
-in slip. Resolving the omitted impulsive friction behaviour would require an
-impulse-level traction law coupled to the normal constraint impulse.
+Conversely, normal contact or kinematic capture does not automatically impose
+tangential sticking at a newly formed belt--pulley interface. In particular, a
+newly formed primary contact may retain tangential relative motion and begin
+its continuous motion in slip. Resolving the omitted impulsive friction
+behaviour would require an impulse-level traction law coupled to the normal
+constraint impulse.
 \end{assumptionblock}
 
 % --------------------------------------------------------------
 \subsection{Other Omitted Losses}
 
-\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Unmodeled Parasitic Losses}
+\begin{assumptionblock}{assump:no_parasitic_losses}{Omitted Parasitic Component Losses}
 Bearing, seal, windage, and auxiliary-hardware losses are neglected unless they
 are introduced explicitly by a component or external boundary model. No global
 empirical efficiency factor is inserted to represent these omitted mechanisms.
 
 \AssumptionConsequences
-Energy loss and damping arise only from mechanisms represented explicitly by
-the formulation, including gross kinetic slip and perfectly inelastic boundary
-or topology-capture events. Absolute efficiency may therefore be optimistic,
-and real hardware may exhibit additional damping or resisting torque when the
-omitted parasitic losses are significant. Adding such losses does not require
-changing the kinematic structure of the CVT; it requires supplying the
-corresponding physical torque or force laws.
+Energy loss and damping within the CVT arise only from mechanisms represented
+explicitly by the formulation, including gross kinetic slip and perfectly
+inelastic boundary or topology-capture events. Predicted transmission
+efficiency may therefore be optimistic when the omitted component losses are
+significant, and it should not be interpreted as a complete transmission-loss
+prediction.
 \end{assumptionblock}
 
 \paragraph{Resulting fidelity}
-Taken together, these assumptions retain the dominant rigid-body actuation,
-pulley rotation, sheave-shift motion, global belt transport, wrap tension and
-contact resultants along an admissible taut belt path, clamping, traction
-limitation, gross stick--slip mechanics, and momentum redistribution when a new
-mechanical constraint activates. They also retain the kinetic-energy loss
-associated with gross slip and perfectly inelastic capture.
-
-The formulation does not reproduce the complete deformable belt and local
-contact problem, spatial variation within the belt construction, slack or
-buckled engaged spans, partial-wrap lift-off and reattachment, belt bending
-mechanics, slack-belt dynamics while the primary is disengaged, actuator
-tribology, flexible-structure response, finite-duration impact and rebound,
-impulse-level friction limits, thermal or wear evolution, or miscellaneous
-parasitic losses. The assumptions are separated by physical mechanism so that
-a higher-fidelity model can replace one closure without obscuring which
-additional behaviour that change is intended to recover.
+Taken together, these assumptions define the physical resolution used by the
+remainder of the formulation. The model retains rigid-body actuation, pulley
+rotation, sheave-shift motion, one global belt-transport motion, wrap tension
+and normal loading along the prescribed belt path, gross tangential
+stick--slip behaviour, and momentum redistribution when a new mechanical
+constraint activates. These are the motions and interactions resolved by the
+model; the assumptions above state where additional material, contact,
+structural, or loss mechanisms have been left outside that resolution.
 % ==============================================================
+
 \section{Coordinate and Sign Conventions}
 \label{sec:coordinate_sign_conventions}
 
@@ -1899,11 +1878,11 @@ formulation.
 
 \Cref{fig:rotational_sign} shows the two pulley assemblies face-on, with their
 parallel shafts extending away from the viewer. Let \(\omega_p\) and
-\(\omega_s\) denote the angular
-velocities of the primary and secondary pulley assemblies, respectively. In
-this view, counterclockwise is positive for both pulleys, as shown by the
-arrows in the figure. Thus, \(\omega_p>0\) and \(\omega_s>0\) denote
-counterclockwise rotation, while negative values denote clockwise rotation.
+\(\omega_s\) denote the angular velocities of the primary and secondary pulley
+assemblies, respectively. In this view, counterclockwise is positive for both
+pulleys, as shown by the arrows in the figure. Thus, \(\omega_p>0\) and
+\(\omega_s>0\) denote counterclockwise rotation, while negative values denote
+clockwise rotation.
 
 Let \(v_b\) denote the signed transport speed of belt material around the
 loop. The positive direction is the direction shown in
@@ -1930,13 +1909,9 @@ span.
 Torque follows the corresponding shaft convention. A torque acting on shaft
 \(j\in\{p,s\}\) is positive when it acts in the rotational sense defined by
 \(\omega_j>0\). In particular, the interface torque
-\(\tau_{\mathrm{B},j}>0\) acts on the CVT in this positive direction. A torque
-that opposes positive shaft rotation is negative, but the torque coordinate
-itself does not change if the shaft reverses.
-
-An attached engine, vehicle, dynamometer, or other system may use its own
-coordinates internally. The shaft speed and applied torque exchanged at its
-CVT interface are expressed using the convention defined here.
+\(\tau_{\mathrm{B},j}>0\) acts on the CVT in this positive direction. The
+sign is fixed by the rotational coordinate, not by whether the torque aids or
+opposes the shaft's instantaneous motion.
 
 % --------------------------------------------------------------
 \subsection{Local Axial Sheave Coordinates}
@@ -1966,22 +1941,22 @@ The velocity follows the same convention:
 geometric origin of the coordinate; it does not prescribe the configuration
 from which a simulation must begin.
 
-The two coordinates are local to their respective sheave pairs. Their positive
-directions may therefore point in opposite physical directions along a common
-global axis. What they share is their mechanical meaning: positive axial
-motion closes the corresponding pulley.
+\Cref{fig:cvt_axial_direction} illustrates this convention on the primary
+pulley. The secondary uses the same local definition. Because the two
+coordinates are local to their respective sheave pairs, their positive
+directions may point in opposite physical directions along a common global
+axis; in both cases, positive axial motion closes the corresponding pulley.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]
 {figures/coordinate/axial_direction.png}
 \caption{
-Local axial convention for the primary and secondary movable sheaves. For
-either pulley \(j\), \(x_j=0\) denotes the fully open position and increasing
-\(x_j\) moves the movable sheave toward the fixed sheave. The fully closed
-position is \(x_j=x_{j,\max}\). Because the coordinates are local, the
-positive primary and secondary directions need not point in the same global
-direction.
+Local axial convention illustrated on the primary movable sheave. \(x_p=0\) 
+denotes the fully open position and increasing
+\(x_p\) moves the movable sheave toward the fixed sheave. The fully closed
+position is \(x_p=x_{p,\max}\). The secondary uses the same local
+convention for \(x_s\).
 }
 \label{fig:cvt_axial_direction}
 \end{figure}
@@ -2001,33 +1976,31 @@ component is positive when it points along its corresponding unit vector.
 These vectors form a local polar basis rather than a fixed Cartesian pair.
 Their directions therefore change with the point around the pulley, while
 \(\hat{\mathbf e}_r\) remains outward and \(\hat{\mathbf e}_\theta\) remains
-tangent in the positive rotational direction. The inset in
-\Cref{fig:radial_direction} shows this local basis.
-
-The positive axial direction for pulley \(j\) is the direction of increasing
-\(x_j\) defined in \Cref{sec:cvt_axial_direction}. It lies along the pulley
-shaft and is perpendicular to the radial--tangential plane. In the face-on
-view of \Cref{fig:radial_direction}, the shaft axis therefore passes through
-the page. That figure illustrates only the radial and tangential directions;
-the axial sign remains the local sheave-closing direction shown in
-\Cref{fig:cvt_axial_direction}.
+tangent in the positive rotational direction. \Cref{fig:radial_direction}
+illustrates this basis on a representative primary pulley; the direction
+definitions apply at either pulley. For reference, the axial direction remains
+the local closing direction defined in \Cref{sec:cvt_axial_direction}; in the
+primary view shown here, positive axial motion points perpendicular to the page 
+along the shaft.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]
 {figures/coordinate/radial_tangential_direction.png}
 \caption{
-Radial and tangential directions in the plane of pulley rotation. The inset
-shows the local polar basis: \(\hat{\mathbf e}_r\) points outward from the
-pulley axis, while \(\hat{\mathbf e}_\theta\) is tangent in the positive
-rotational direction defined in \Cref{sec:rotational_sign}. The basis changes
-orientation with the point around the pulley rather than remaining fixed like
-a Cartesian pair.
+Representative primary-pulley view of the local radial and tangential
+directions. The inset shows the local polar basis:
+\(\hat{\mathbf e}_r\) points outward from the pulley axis, while
+\(\hat{\mathbf e}_\theta\) is tangent in the positive rotational direction
+defined in \Cref{sec:rotational_sign}. The basis changes orientation with the
+point around the pulley. All force and velocity arrows
+shown are illustrative.
 }
 \label{fig:radial_direction}
 \end{figure}
 
 % ==============================================================
+
 \section{CVT State Variables}
 \label{sec:continuous_state_variables}
 
@@ -11934,7 +11907,6 @@ should be tested first, with the remaining coupled balances preserved.
 \FloatBarrier
 \endgroup
 
-
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
 \label{sec:results_coupled_regimes}
 
@@ -12055,6 +12027,8 @@ mass moments are changed consistently.
     D02\_M & D02 with the flyweight tip mass restored to the reference value. \\
     D02\_P & D02 with the primary installed spring compression restored to the
       reference value. \\
+    D02\_M150 & D02 with the flyweight tip mass increased to \(150\%\) of
+      the reference value; elevated primary spring compression retained. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -12077,8 +12051,11 @@ included to expose whether the more demanding parts of the road bring out
 limitations that are not apparent near the reference configuration. D02\_M and
 D02\_P then separate two of the primary-side changes contained in D02 by
 restoring, one at a time, the nominal flyweight mass and the nominal primary
-spring preload. Together, the set provides several distinct mechanical routes
+spring preload. D02\_M150 extends the mass correction to test how stronger
+primary closing affects both clamping and backshift. Together, the set
+provides several distinct mechanical routes
 away from the reference before any of their course responses are interpreted.
+
 
 \subsection{Launch and the Shape of the Shift Curve}
 \label{sec:results_launch_upshift}
@@ -12222,10 +12199,14 @@ road demands a large backshift.
 \subsection{A Severe Climb Separates Poor Shifting from Loss of Traction}
 \label{sec:results_backshift}
 
-The first climb adds a large gravitational load opposing the wheels.
-Backshifting moves the belt inward on the primary and outward on the
-secondary, increasing torque multiplication and allowing the engine to turn
-faster relative to the slowing vehicle. The secondary helix provides a
+The first climb increases the gravitational resistance to forward motion,
+so the wheels need more torque to sustain the vehicle's speed. If the ratio
+stays fixed while the belt sticks, slowing the vehicle also slows the engine,
+potentially taking it away from the speeds at which it supplies useful power.
+Gearing down allows the same transmitted power to provide more wheel torque
+at a lower wheel speed, while keeping the engine turning faster relative to
+the vehicle. Backshifting serves that purpose by moving the belt inward on
+the primary and outward on the secondary. The secondary helix provides a
 physical connection between torque loading and this motion: the torque it
 reacts produces axial closing thrust alongside the spring force
 (\Cref{eq:secondary_helix_force_conversion}). At the same time, falling
@@ -12270,12 +12251,13 @@ ratio and engine operating condition reached under load; primary traction has
 not been exhausted.
 
 D02 reaches the low-ratio seat near \SI{146.68}{m}, so its later loss of
-progress begins after the available backshift has already been used. Its
-light tips provide less centrifugal closing action, while its elevated
-primary spring compression increases the opposing opening force. The fixed
-ratio does not, however, fix the clamping force. As established in
+progress begins after the available backshift has already been used. The
+secondary has completed its closing travel, but the primary must still squeeze
+the belt strongly enough to transmit torque. D02's light tips provide less
+centrifugal closing action, while its elevated primary spring compression
+increases the opposing opening force. As established in
 \Cref{sec:low_ratio_supported_regime}, the secondary is held against its
-closing stop while the primary axial balance remains active. At this fixed
+closing stop while the primary axial balance still determines clamping. At this fixed
 geometry, primary spring opposition stays constant, but the centrifugal
 closing contribution decreases as primary speed falls. The remaining closing
 force must balance the belt's opening reaction, so the primary normal load
@@ -12322,37 +12304,44 @@ engine input. For the remainder of the simulated interval, the vehicle
 continues rolling backward while the primary rotates forward and slides
 against the belt.
 
-The primary force balance also identifies two changes that can preserve
-clamping as speed falls. D02\_M restores the reference tip mass and its
+Preventing this loss of grip requires sufficient primary normal load at the
+low ratio D02 has already reached. At the seated geometry, the primary force
+balance relates that load to the difference between centrifugal closing and
+spring opposition. D02\_M restores the reference tip mass and its
 associated mass moments, strengthening centrifugal closing while retaining
 D02's elevated primary spring compression. D02\_P retains the light tips but
 restores the reference spring compression, reducing the opening force opposing
-the flyweights without changing the spring rate. Both act on
-the difference between centrifugal closing and spring opposition. A larger
+the flyweights without changing the spring rate. A larger
 remaining closing force supports a larger primary belt normal load, and the
 unchanged friction coefficient then permits a larger tangential force before
 sticking is lost. These are two physical ways to correct the same clamping
 weakness.
 
-The changes also alter the approach to the seat.
-\Cref{fig:results_d02_hill_repairs}(a) follows that motion on the severe hill:
-all three cases reach the same backshift limit, with both repairs arriving
-farther along the road than D02. Their entry speeds and ratios already differ,
-so these arrival distances combine the changed hardware response with the
-inherited states. Once seated, the cases can be compared at a common geometry
-and primary speed. Panels~(b,c) therefore show primary normal load and static
-use against decreasing primary speed on the constant \(38^\circ\) slope.
+D02\_M150 carries the mass correction farther, to \(150\%\) of the reference
+tip mass, with the associated mass moments changed consistently and D02's
+elevated spring compression retained. It also increases centrifugal closing at a
+given speed and geometry. That action supplies clamping, but it also opposes
+the primary opening needed for backshift. A change that preserves grip can
+therefore change how readily the CVT gears down under the hill load. The
+three corrections must be understood through both effects.
+
+Both D02\_M and D02\_P reach the same low-ratio seat as D02 and remain there
+through the rest of the constant \(38^\circ\) climb. This gives a direct way
+to distinguish increased clamping from a change in ratio or engine speed:
+their seated states can be compared at a common geometry and primary speed.
+\Cref{fig:results_d02_hill_repairs} therefore shows primary normal load and
+static use against decreasing primary speed on the constant slope.
 Matching speeds are reached at different times and road positions in each run.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{figures/results/course/d02_hill_repairs.png}
-  \caption{Severe-hill repair comparison. (a) Shift paths, with the entry
-  taper shaded and the low-ratio seat dashed. (b,c) Total primary normal load
-  and static utilization during seated sticking on the \(38^\circ\) hold,
+  \caption{Restored primary clamping in D02\_M and D02\_P. (a) Total primary
+  normal load and (b) static utilization during seated sticking on the \(38^\circ\) hold,
   after the seating transitions. Markers identify the comparison near
   \(2975~\mathrm{rpm}\). D02 ends at sustained primary slip onset; repair
-  annotations refer to states near \SI{200}{m}.}
+  annotations refer to states near \SI{200}{m}. D02\_M150 is excluded because
+  it does not occupy seated sticking states in this speed range.}
   \label{fig:results_d02_hill_repairs}
 \end{figure}
 
@@ -12361,7 +12350,7 @@ At the marked speed, the required primary tangential force is approximately
 but both repairs support greater normal load at the same seated geometry and
 speed. The increase is much larger when the tip mass is restored. Because
 the available static force is \(\mu_sN_p\), the greater normal loads in
-panel~(b) directly explain the lower fractions used in panel~(c). The repaired
+panel~(a) directly explain the lower fractions used in panel~(b). The repaired
 contacts can therefore remain stuck as speed falls below the point where the
 original D02 began sliding. The successful climb follows from restored
 clamping and traction capacity at the existing ratio limit.
@@ -12375,16 +12364,66 @@ Once sticking is maintained, additional unused traction capacity does not
 itself deliver more power to the wheels. The almost equal climbing speeds
 therefore coexist with substantially different reserves: the preload repair
 succeeds much closer to its primary traction limit under this hill load.
-The different actuator balances also carry into later operation: on the
-subsequent \(18^\circ\) climb, D02\_P runs farther backshifted and climbs
-more slowly than D02\_M.
+
+The closing force that restores this grip also resists the primary opening
+as the load calls for backshift. \Cref{fig:results_d02_hill_backshift} follows
+that motion together with primary speed. D02\_M and D02\_P reach the seat
+farther along the road than D02, and the stronger mass correction leaves
+D02\_M150 more upshifted during hill entry than D02\_M. Near \SI{150}{m}, its
+primary speed has fallen to approximately \(2750~\mathrm{rpm}\), compared
+with \(3240~\mathrm{rpm}\) in D02\_M. The stronger closing preserves
+clamping, but leaves the transmission more upshifted as the engine slows.
+Each case also arrives with a different speed and ratio from
+the opening flat, so the road-position comparison retains that history.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/d02_hill_backshift.png}
+  \caption{Backshift consequences of the three primary-side corrections.
+  (a) Shift position and (b) primary speed, with the entry taper shaded and
+  the common low-ratio seat dashed in (a). D02 ends at sustained primary slip
+  onset. The inset enlarges the gap above the seat for D02\_M and D02\_M150.
+  Following its initial contact with the stop, D02\_M150 remains supported
+  over the shaded inset interval, from
+  about \SI{171.13}{m} to \SI{173.04}{m}, approximately \SI{0.51}{s}, then
+  leaves the seat while both contacts stick. The road remains at \(38^\circ\)
+  throughout the inset. Equal road position retains the different states
+  inherited from the opening flat.}
+  \label{fig:results_d02_hill_backshift}
+\end{figure}
+
+D02\_M150 eventually reaches the low-ratio seat, but the inset reveals that
+it cannot remain there. The reason is visible in the secondary force balance.
+The helix and spring push the secondary closed, while the belt pushes its
+sheaves apart; at the seat, the stop carries the excess of closing over belt
+opening force (\Cref{eq:low_ratio_stop_reaction}). The two pulley normal loads
+are connected through tension in the same belt. Here, stronger primary
+clamping is accompanied by a larger secondary normal load and hence a larger
+belt-opening force. Just after D02\_M150 has seated and regained sticking,
+only about \SI{11}{N} of closing force remains for the stop to carry.
+As primary speed and normal load recover slightly, the belt-opening force
+increases until that surplus reaches zero. Continuing to hold the secondary
+closed would then require the stop to pull, so the secondary leaves the stop
+while the road still holds the same grade.
+
+Both contacts continue sticking after release. D02\_M150 approaches an
+interior position only about \SI{0.029}{mm} above the seat, using approximately
+\(0.20\) of its primary static capacity near \SI{200}{m}. Its climbing speed
+there is about \SI{3.763}{m/s}, compared with \SI{3.775}{m/s} for D02\_M,
+and it completes the course. The small positional difference therefore marks
+a change in how the forces balance, with only a small late climbing-speed
+penalty. Ample traction does not ensure that the lowest geometric ratio can
+remain supported; the actuator and belt forces must also allow the secondary
+to stay against its stop.
 
 The hill has separated an unfavourable ratio and engine speed with unused
-backshift travel from a loss of belt traction after full backshift. In the
-latter case, the primary force balance identifies changes that increase
-normal load and static traction capacity. Continued climbing demonstrates
-that both changes supply enough capacity, while the internal contact forces
-show their different remaining reserves. The next repeated
+backshift travel from a loss of belt traction after full backshift. Following
+the latter failure through the primary force balance identifies two ways to
+restore enough clamping, with different remaining traction reserves. The
+stronger mass correction then shows why that improvement cannot be judged
+from clamping alone: the same closing action changes backshift, engine speed,
+and whether the low-ratio stop can remain loaded. These effects follow from
+the same hardware change within the coupled motion. The next repeated
 changes in road load turn attention back to the motion itself, and to how
 much shift travel remains available when each new disturbance arrives.
 
