@@ -10686,80 +10686,89 @@ the numerical reliability of that response.
 \subsection{Mechanical Invariants and Operating-Domain Audit}
 \label{sec:results_mechanical_invariants}
 
-The audit combines the ten-second, flat-road Baja launch with constructed
-constant torque--inertia cases that exercise additional contact and structural
-regimes. The launch retains the engine and vehicle boundaries of
+A launch can exercise engagement, slip and shifting without bringing either
+pulley into both directions of sliding or approaching every travel boundary
+from free motion. The audit therefore starts the CVT from additional
+admissible states and asks whether the coupled balances and contact conditions
+remain satisfied as each state evolves, including when its initial arrangement
+gives way to another.
+
+It combines a ten-second, flat-road Baja launch with
+constructed cases using constant shaft torques and attached inertias. The
+launch uses the engine and vehicle boundaries of
 \Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}; the
-constructed cases instead prescribe the torque and attached inertia at each
-shaft using \Cref{app:fixed_shaft_boundary}, while allowing both shaft speeds
-to evolve. All use the reference CVT and its zero-clearance bilateral secondary
-helix, defined in
-\Cref{app:common_physical_configuration,app:reference_helix_topology}.
-Case definitions and audit thresholds are collected in
-\Cref{app:study_mechanical_invariants}.
+constructed cases use \Cref{app:fixed_shaft_boundary}, with both shaft speeds
+still determined dynamically. All retain the reference CVT and its
+zero-clearance bilateral secondary helix
+(\Cref{app:common_physical_configuration,app:reference_helix_topology}). The
+additional cases exercise rest, deadzone motion, free shift, travel supports
+and the different tangential contact states. The exact inputs, checks and
+coverage record are given in \Cref{app:study_mechanical_invariants}.
 
-All 25 required coverage classes were exercised. These include rest and
-deadzone motion, engagement, free shifting in both directions, the travel
-stops, forward and reverse rotation, either slipping contact with either slip
-sign, and all four both-slip sign combinations. Across 6,257 audited states
-and 81 hybrid transitions, the recorded mechanical checks passed, including
-those applied to the exact post-transition states. The largest row-scaled
-mechanical-closure residual was \(1.11\times10^{-14}\), using the
-normalization in \Cref{eq:invariants_scaled_closure_residual}. The coverage
-record is given in \Cref{tab:invariants_coverage_classes};
-\Cref{fig:verification_contact_regimes} shows how differently the canonical
-contact cases behave within that successful audit.
+All 25 required coverage classes were reached. The mechanical checks passed
+at 6,257 sampled states and at each of the 81 exact post-transition states.
+Coverage records which arrangements were reached; the checks test whether
+their motion remains mechanically consistent.
 
-% FIGURE 1 -- Assemble/replot existing evidence, not a new simulation.
-% Source: CINDER_v1.1.2_mechanical_invariants_recap.pdf, pp. 5, 8, 9.
-% (a) Requested-branch dwell for the ten canonical contact cases (p. 8).
-%     Mark secondary-slip (+) and both-slip (-,+) as targeted initial states.
-%     Mark the 30 ms no-exit cases as lower bounds, NOT measured exit times.
-% (b) Minimum distributed wrap normal for each initialized case (p. 9).
-%     These are minima over the audited case, not necessarily only its first branch.
-% Do not replace (b) with an invented normal-load profile or imply that minima
-% of different quantities occur at the same time. Keep the 25-class list in the appendix.
+An admissible contact arrangement need not persist for long.
+\Cref{fig:verification_contact_regimes}(a) shows the time to the first change
+from each of ten selected initial contact states. A positive slip sign means
+the belt leads the representative pulley surface; a negative sign reverses
+that relation, following
+\Cref{eq:tangential_relative_speed}. The right-pointing markers indicate
+cases that retain their initial arrangement for the entire \SI{30}{ms}
+observation window. Their durations are lower bounds, rather than measured
+exit times.
+
 \begin{figure}[H]
   \centering
-  \CINDERVerificationFigure[60mm]{figures/results/verification/contact_regimes.pdf}{%
-    (a) Canonical contact-case dwell, with targeted states and the 30 ms limit marked.\par
-    (b) Minimum local wrap-normal loading for the same initialized cases.\par
-    Source: mechanical-invariants recap, pages 8--9; values on page 5.}
-  \caption{Contact-regime coverage and persistence in the reference CVT.
-  (a) Time to the first transition from each requested initial contact state;
-  a case with no transition in the 30 ms interval has a dwell of at least
-  30 ms. Slip signs refer to \(v_{\mathrm{rel},j}\) in
-  \Cref{eq:tangential_relative_speed}. (b) Minimum distributed normal loading
-  on each pulley over the corresponding audited case. The contact cases
-  satisfy the retained constraints, but differ substantially in persistence
-  and local contact margin.}
+  \includegraphics[width=\linewidth]{figures/results/verification/contact_regimes.pdf}
+  \caption{Persistence and local contact loading for ten canonical initial
+  contact states. (a) Time to first transition; orange marks the supplied
+  initial-state anchors. (b) Least normal loading per unit wrap angle on each
+  pulley over engaged states in the \SI{30}{ms} continuation. Minima may follow
+  a contact change and need not coincide between pulleys. Deadzone intervals
+  are excluded because they have no engaged full-wrap field.}
   \label{fig:verification_contact_regimes}
 \end{figure}
 
-Several requested branches persist throughout the 30 ms interval, whereas
-secondary-slip \((+)\) and both-slip \((-,+)\) leave their initial branches
-through secondary resticking after approximately \(414~\mu\mathrm{s}\) and
-\(9.82~\mu\mathrm{s}\), respectively. Both required targeted initial states
-in this reference configuration. The readily reproduced both-slip \((+,+)\)
-case also resticks quickly, after \(31.7~\mu\mathrm{s}\). Thus short dwell
-and difficulty finding an initial state are distinct observations. In these
-cases the coupled dynamics rapidly bring the secondary relative speed back
-to zero; a brief initial branch is a resolved part of the trajectory rather
-than a failure to continue the simulation. These observations describe the
-selected hardware, loads, and initial states, not the frequency of these
-regimes in vehicle operation generally.
+The secondary-slip \((+)\) and both-slip \((-,+)\) cases instead leave
+their initial arrangements after approximately \(414~\mu\mathrm{s}\) and
+\(9.82~\mu\mathrm{s}\). In both, the secondary relative speed reaches
+zero and the required static traction lies within its available capacity, so
+the secondary begins sticking. The primary remains sticking in the first
+case and sliding in the second. These two initial states were supplied as
+targeted reproduction anchors, but short duration is not confined to them:
+the ordinary search also finds both-slip \((+,+)\), which reaches secondary
+sticking after \(31.7~\mu\mathrm{s}\). A brief branch can therefore be a
+resolved part of an admissible continuation. Neither its duration nor the
+way its initial state was found measures how frequently it occurs in a
+vehicle drive.
 
-The local contact margins in \Cref{fig:verification_contact_regimes}(b) also
-show why integrated clamping alone is an incomplete admissibility check. In
-the case initialized in both-slip \((-,-)\), the minimum primary distributed
-normal loading is \(0.0482~\mathrm{N/rad}\), while the integrated primary
-normal resultant remains at least \(374~\mathrm{N}\) over that case. The
-small local margin is therefore not accompanied by disappearance of the
-overall normal load. The retained full-wrap description requires nonnegative
-contact loading everywhere along the wrap as well as a nonnegative resultant.
-Together with the exact successor checks, this audit demonstrates consistent
-operation across the tested regime set, without implying that every admissible
-initial state or every possible transition has been exhausted.
+The local loading in panel~(b) tests a different requirement. The sheaves may
+carry a substantial total normal force while one part of a wrap is only
+lightly loaded. Since \(N_j\) is the integral of that loading, its positive
+value alone cannot establish that contact is maintained everywhere. In the
+case initialized in both-slip \((-,-)\), the primary's least local loading
+falls to \SI{0.0482}{N/rad}. At that same state, the integrated primary
+normal force is still approximately \SI{411}{N}. This state occurs just
+after the primary sliding direction reverses at \SI{1.757}{ms}: the belt
+and primary momentarily match speeds, then their relative motion reverses.
+Reversing sliding reverses the kinetic traction, changing how tension varies
+along the wrap and, through the radial balance, how its normal load is
+distributed. Evaluating both sides of the change therefore matters even
+when the velocities remain continuous.
+
+The small positive local load remains admissible under the prescribed
+full-wrap description. A negative value would require the sheave to pull on
+the belt; similarly, negative tension would require the flexible belt to
+carry compression. As established in \Cref{eq:wrap_contact_admissibility},
+those outcomes would require local lift-off or slack, which the retained
+belt path does not describe. They would not simply select another
+stick--slip branch. The audit thus checks both continuation among the
+represented contact arrangements and continued use of the belt description
+itself. These are verified for the sampled cases, without extending the
+result to every admissible initial state or every possible transition.
 \FloatBarrier
 
 \subsection{Energy Consistency}
@@ -15196,11 +15205,11 @@ Audited case family & Shaft-boundary environment & Case role \\ \midrule
 \caption{Case families used by the mechanical-invariants audit.}
 \label{tab:invariants_case_families}\\
 \endlastfoot
-Reference Baja trajectory & Full-throttle engine + locked final-drive vehicle from \Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary} & Ten-second reference launch/shift and nominal trajectory coverage. \\[4pt]
+Reference Baja trajectory & Full-throttle engine + locked final-drive vehicle from \Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary} & Ten-second reference launch/shift, including the observed upper-stop arrival. \\[4pt]
 Static rest and deadzone states & Constant torque--inertia boundaries from \Cref{app:fixed_shaft_boundary} & Zero-speed rest, deadzone lock, and classifier checks. \\[4pt]
 Canonical engaged contact states & Constant torque--inertia boundaries on both shafts; no vehicle host & Stick--stick, both single-slip branches, and all four both-slip sign combinations. \\[4pt]
 Free-shift states & Constant torque--inertia boundaries on both shafts; no vehicle host & Positive and negative engaged shift speed. \\[4pt]
-Structural arrivals & Constant torque--inertia bench environment & Engagement, low-ratio-seat, upper-stop, and lower-stop arrivals with exact successor audit. \\[4pt]
+Structural arrivals & Constant torque--inertia bench environment & Engagement, low-ratio-seat, and lower-stop arrivals with exact successor audit. \\[4pt]
 Geometry-domain audit & No dynamic shaft boundary required & Belt-length closure and radius derivatives over the physical shift domain. \\[4pt]
 Negative controls & Initial-state/classifier checks & Deliberately invalid states required to be rejected rather than projected into the admissible domain. \\
 \end{longtable}
@@ -15247,11 +15256,11 @@ Forward and reverse rotation & Stick/contact states & Constant torque--inertia b
 Free shift closing & Free-shift state & Constant torque--inertia bench \\
 Free shift opening & Free-shift state & Constant torque--inertia bench \\
 Low-ratio seat & Structural state & Constant torque--inertia bench \\
-Upper stop & Structural state & Constant torque--inertia bench \\
+Upper stop & Reference trajectory & Full-throttle engine + locked final drive \\
 Deadzone lower stop & Structural state & Constant torque--inertia bench \\
 Engagement transition & Structural arrival & Constant torque--inertia bench \\
 Low-ratio arrival & Structural arrival & Constant torque--inertia bench \\
-Upper-stop arrival & Structural arrival & Constant torque--inertia bench \\
+Upper-stop arrival & Reference trajectory & Full-throttle engine + locked final drive \\
 Lower-stop arrival & Structural arrival & Constant torque--inertia bench \\
 Negative controls & Invalid-state checks & No accepted dynamic case \\
 Engagement-side classifier & Classifier control & Constructed boundary state \\
@@ -15260,26 +15269,37 @@ Nominal Baja reference & Reference trajectory & Full-throttle engine + locked fi
 \normalsize
 \end{center}
 
+The dedicated upper-stop bench search did not find a retained case within its
+specified candidate set. Upper-stop support and arrival are nevertheless
+covered by the reference launch, which reaches that stop at approximately
+\SI{6.782}{s}. Coverage therefore concerns the arrangements actually observed
+across the audit, rather than success of every individual candidate search.
+
 \begin{table}[H]
 \centering
 \small
-\caption{Canonical engaged contact cases retained by the mechanical-invariants audit.  Dwell is the time spent on the requested initial branch before the first transition or the end of the 30 ms audit window.}
-\label{tab:invariants_contact_cases}
-\begin{tabular}{@{}p{0.25\textwidth}p{0.22\textwidth}r p{0.28\textwidth}@{}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}p{0.24\textwidth}p{0.17\textwidth}p{0.14\textwidth}p{0.39\textwidth}@{}}
 \toprule
-Contact regime & Reproduction class & Initial dwell & First exit \\ \midrule
-Stick--stick, forward & standard & 30.000 ms & none within 30 ms \\
-Stick--stick, reverse & standard & 13.114 ms & primary static-capacity exit \\
-Primary slip \((+)\) & standard & 26.225 ms & primary restick \\
-Primary slip $(-)$ & standard & 5.624 ms & primary restick \\
-Secondary slip \((+)\) & targeted anchor & \SI{414.44}{\micro\second} & secondary restick \\
-Secondary slip $(-)$ & standard & 30.000 ms & none within 30 ms \\
-Both slip \((+,+)\) & standard, transient & \SI{31.71}{\micro\second} & secondary restick \\
-Both slip \((+,-)\) & standard & 30.000 ms & none within 30 ms \\
-Both slip \((-,+)\) & targeted anchor & \SI{9.82}{\micro\second} & secondary restick \\
-Both slip \((-,-)\) & standard & 1.757 ms & primary restick \\
+Initial contact & Initial-state source & Initial dwell & First change in contact \\ \midrule
+Stick--stick, forward & ordinary search & $\geq30$ ms & none within 30 ms \\
+Stick--stick, reverse & ordinary search & 13.114 ms & primary static limit reached; both contacts slide \\
+Primary slip $(+)$ & ordinary search & 26.225 ms & primary sticks; secondary begins sliding \\
+Primary slip $(-)$ & ordinary search & 5.624 ms & primary reverses sliding; secondary begins sliding \\
+Secondary slip $(+)$ & supplied anchor & \SI{414.44}{\micro\second} & secondary sticks \\
+Secondary slip $(-)$ & ordinary search & $\geq30$ ms & none within 30 ms \\
+Both slip $(+,+)$ & ordinary search & \SI{31.71}{\micro\second} & secondary sticks \\
+Both slip $(+,-)$ & ordinary search & $\geq30$ ms & none within 30 ms \\
+Both slip $(-,+)$ & supplied anchor & \SI{9.82}{\micro\second} & secondary sticks \\
+Both slip $(-,-)$ & ordinary search & 1.757 ms & primary reverses sliding; secondary continues sliding \\
 \bottomrule
 \end{tabular}
+\caption{Canonical engaged contact cases. Dwell is measured from the selected
+audit's event records; no-exit cases give lower bounds. Slip signs describe
+the initial state. The final column describes the inspected continuation,
+not merely the name of the event that triggered its evaluation.}
+\label{tab:invariants_contact_cases}
 \end{table}
 
 The two targeted reproduction anchors are frozen explicitly in the shared case
@@ -15345,6 +15365,40 @@ derivative checks away from one-sided boundaries. The two targeted contact
 anchors are first screened with the 0.5 ms maximum step shown in
 \Cref{tab:invariants_numerics}; once accepted, they are rerun by the main contact
 audit with the same 1 ms maximum step used for every selected contact case.
+The contact-case audit samples each continuous segment at \SI{0.5}{ms}
+spacing and includes both of its endpoints, even when the segment lasts less
+than that spacing. Every exact post-transition state is also inspected
+separately. The \(9.82~\mu\mathrm{s}\) branch is therefore not inferred from
+interpolation across a \SI{0.5}{ms} output interval.
+
+For each engaged state, the analytical wrap tension is monotone in wrap angle,
+so its minimum occurs at an endpoint. The radial inertial offset in
+\Cref{eq:wrap_normal_gradient} is constant along that wrap, giving its least
+normal loading at the same endpoint. Figure~\ref{fig:verification_contact_regimes}
+takes the minimum of these spatial minima over the audited engaged states in
+each \SI{30}{ms} case. Deadzone intervals are excluded because the engaged
+full-wrap field is not defined there. Minima on different pulleys, or of local
+and integrated loads, need not describe the same state.
+
+For the case initialized in both-slip $(-,-)$, the least primary local load,
+\SI{0.0481989}{N/rad}, occurs on the outgoing side of the first transition at
+\SI{1.757127}{ms}, where $N_p=\SI{410.851}{N}$. The smaller integrated
+minimum, \SI{374.309}{N}, occurs on the incoming side of that same event.
+Both states are retained. The new traction changes the force solution even
+though the velocities are continuous at this sliding-direction reversal.
+
+The selected figure is generated by the maintained
+\ResultsCode{studies/mechanical-invariants/run.py}{run.py} entry point, with
+\texttt{--plot-only} available for identified retained outputs. Its
+\ResultsCode{studies/mechanical-invariants/analysis/publication_plots.py}{publication_plots.py}
+postprocessor checks the saved input/output hashes, recomputes the state and
+successor guards, and records the case selection and engaged-state mask.
+
+
+All 25 required coverage classes were reached across 6,257 sampled states
+and 81 transitions. The recorded mechanical checks passed at every sampled
+state and every exact post-transition state. The largest row-scaled closure
+residual was $1.43\times10^{-14}$, using the normalization below.
 
 For the engaged closure, let
 \(

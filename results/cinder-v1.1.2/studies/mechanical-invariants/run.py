@@ -1,6 +1,6 @@
 """Canonical results entry point for the v1.1.2 mechanical-invariants audit.
 
-The large ``run.py`` remains the core audit implementation.  This wrapper keeps
+``infrastructure/core.py`` remains the core audit implementation. This wrapper keeps
 results-only reference-model policy local to this study process:
 
 1. public simulation documents are decoded with the shared results helper, which
@@ -16,6 +16,7 @@ shared results decoder.
 """
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -31,6 +32,9 @@ from defaults.reference_model import (
     reference_model_status,
     write_reference_model_provenance,
 )
+from analysis.execution_record import capture_inputs, write_execution_record
+from analysis.publication_plots import main as publication_plots
+from analysis.build_capability_map import main as capability_map
 
 CORE_PATH = HERE / "infrastructure" / "core.py"
 spec = importlib.util.spec_from_file_location("mechanical_invariants_core", CORE_PATH)
@@ -187,9 +191,37 @@ def _stamp_summary() -> None:
 
 
 def main() -> int:
-    code = int(core.main())
-    _stamp_summary()
-    return code
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--plot-only", action="store_true",
+                        help="Verify and reuse identified audit outputs; do not rerun dynamics.")
+    parser.add_argument("--artifacts-dir", type=Path, default=HERE / "artifacts",
+                        help="Audit output/input directory (a full run recreates this directory).")
+    parser.add_argument("--figure-dir", type=Path,
+                        help="Publication outputs; default: <artifacts-dir>/publication.")
+    args = parser.parse_args()
+    artifacts = args.artifacts_dir.resolve()
+    # Protect source directories from the core's documented output recreation.
+    if artifacts == HERE or artifacts in HERE.parents or any(
+        artifacts == p for p in (HERE / "analysis", HERE / "infrastructure", HERE / "provenance")
+    ):
+        parser.error("--artifacts-dir must be a dedicated generated-output directory.")
+    figures = (args.figure_dir or artifacts / "publication").resolve()
+    core.ARTIFACTS = artifacts
+    if args.plot_only:
+        core.verify_environment()
+    else:
+        inputs = capture_inputs()
+        code = int(core.main())
+        _stamp_summary()
+        write_execution_record(
+            artifacts, inputs,
+            command="python results/cinder-v1.1.2/studies/mechanical-invariants/run.py",
+        )
+        if code:
+            return code
+    publication_plots(artifacts, figures, core)
+    capability_map(artifacts)
+    return 0
 
 
 if __name__ == "__main__":

@@ -106,8 +106,9 @@ This is the formal release-level work/energy audit.
 
 ```powershell
 python results/cinder-v1.1.2/studies/mechanical-invariants/verify_study.py
-python results/cinder-v1.1.2/studies/mechanical-invariants/run_reference.py
-python results/cinder-v1.1.2/studies/mechanical-invariants/build_capability_map.py
+python results/cinder-v1.1.2/studies/mechanical-invariants/run.py
+# Reuse identified outputs, including the selected Section 4.2.1 figure:
+python results/cinder-v1.1.2/studies/mechanical-invariants/run.py --plot-only
 ```
 
 The completed bilateral-reference run is summarized by
@@ -144,4 +145,3 @@ study executions and fresh generated artifacts.
 ## Maintained-study repository contract
 
 Study layout and manifest rules are defined in `STUDY_STRUCTURE.md`. The root `run.py` in each maintained study is the canonical reproduction entry point; exploration tooling is excluded from that contract. `verify_all_studies.py` validates the common manifest envelope and then runs each available study-local verifier.
-

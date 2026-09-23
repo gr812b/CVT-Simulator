@@ -56,13 +56,14 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer=csv.DictWriter(handle, fieldnames=fields); writer.writeheader(); writer.writerows(rows)
 
 
-def main() -> int:
-    if not ARTIFACTS.is_dir():
+def main(artifacts: Path = ARTIFACTS) -> int:
+    if not artifacts.is_dir():
         raise SystemExit("Run run.py first; artifacts/ does not exist.")
     library=json.loads(CASE_LIBRARY.read_text(encoding="utf-8"))
-    cases={r["case_id"]:r for r in read_csv(ARTIFACTS/"case_summary.csv")}
-    attempts=read_csv(ARTIFACTS/"candidate_search_log.csv")
-    transitions=read_csv(ARTIFACTS/"post_transition_audit.csv")
+    cases={r["case_id"]:r for r in read_csv(artifacts/"case_summary.csv")}
+    attempts=read_csv(artifacts/"candidate_search_log.csv")
+    transitions=read_csv(artifacts/"post_transition_audit.csv")
+    samples=read_csv(artifacts/"sample_audit.csv")
     targeted=set(library.get("targeted_contact_states",{}))
 
     rows=[]
@@ -71,9 +72,12 @@ def main() -> int:
         mine=[r for r in attempts if r.get("case_id")==cid]
         accepted=[r for r in mine if truth(r.get("accepted"))]
         chosen=accepted[0] if accepted else {}
-        dwell=number(chosen.get("requested_mode_dwell_s"))
+        screening_dwell=number(chosen.get("requested_mode_dwell_s"))
         exits=[r for r in transitions if r.get("case_id")==cid]
         first_exit=min(exits,key=lambda r:number(r.get("time_s"))) if exits else {}
+        mine_samples=[r for r in samples if r.get("case_id")==cid]
+        dwell=(number(first_exit.get("time_s")) if first_exit else
+               max((number(r.get("time_s")) for r in mine_samples), default=float("nan")))
         flags=[]
         if cid in targeted: flags.append("targeted_reproduction_anchor")
         if math.isfinite(dwell) and dwell < 1e-3: flags.append("sub_millisecond_initial_branch")
@@ -93,6 +97,8 @@ def main() -> int:
             "logged_search_attempts":len(mine),
             "accepted_search_stage":chosen.get("search_stage",""),
             "requested_branch_dwell_s":dwell,
+            "screening_requested_branch_dwell_s":screening_dwell,
+            "dwell_is_lower_bound":not bool(first_exit),
             "first_transition_event":first_exit.get("fired_event_names",""),
             "first_transition_reason":first_exit.get("transition_reason",""),
             "min_belt_tension_N":number(c.get("min_belt_tension_N")),
@@ -103,7 +109,7 @@ def main() -> int:
             "max_scaled_closure_residual":number(c.get("max_scaled_closure_residual")),
         })
 
-    write_csv(ARTIFACTS/"capability_map_draft.csv",rows)
+    write_csv(artifacts/"capability_map_draft.csv",rows)
     lines=[
         "# Draft contact-domain capability map", "",
         "This file is an interpretation aid generated from the invariant artifacts. "
@@ -117,7 +123,7 @@ def main() -> int:
         lines.append(f"| `{r['case_id']}` | {r['draft_capability_flag']} | {dwell_text} | {exit_text} |")
     lines += ["", "## Next refinement", "",
         "For a publication-quality capability claim, perturb each canonical operating point over a common local neighbourhood and report separately: (1) forced requested-branch physical admissibility, (2) production-classifier retention of the requested topology, (3) branch dwell / exit event, and (4) the first violated physical inequality. The slotted results reference topology keeps secondary helix flank selection out of that belt-domain map."]
-    (ARTIFACTS/"capability_map_draft.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+    (artifacts/"capability_map_draft.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
     print("Wrote capability_map_draft.csv and capability_map_draft.md")
     return 0
 
