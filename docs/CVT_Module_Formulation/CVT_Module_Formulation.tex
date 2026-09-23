@@ -2001,12 +2001,15 @@ shown are illustrative.
 
 % ==============================================================
 
+% ==============================================================
+
 \section{CVT State Variables}
 \label{sec:continuous_state_variables}
 
-At any instant, the modeled CVT's motion and configuration are described by
-five internal numerical quantities. These quantities are collected in the
-state vector,
+With the retained motions and coordinates now defined, the next question is
+what information about the CVT must be carried from one instant to the next.
+The formulation uses five continuous state variables, collected in the state
+vector,
 
 \bigeq{eq:state-vector}{State Vector}{
 \vect{x}(t)=
@@ -2019,36 +2022,41 @@ v_b
 \end{bmatrix}
 }
 
-Here, \(\omega_p\) and \(\omega_s\) are the primary and secondary shaft
-speeds. The shift coordinate \(s\) uniquely identifies the positions of both
-movable sheaves, while \(\dot{s}\) is the corresponding shift velocity. The
-geometric relation between \(s\) and the local coordinates \(x_p\) and \(x_s\)
-is established in \Cref{sec:pulley_coordinate_mapping}. The remaining entry,
-\(v_b\), is the belt transport speed.
+The five entries follow the three retained motions: rotation of the two shafts,
+shift of the movable sheaves, and transport of the belt. For the shafts, both
+\(\omega_p\) and \(\omega_s\) are retained because the belt couples their
+motion without, in general, fixing one speed from the other. No corresponding
+shaft-angle states are needed because the retained CVT mechanics do not depend
+on the absolute angular orientation of either pulley.
 
-The primary and secondary pulley assemblies rotate about separate shafts.
-Although the belt couples their motion, neither shaft speed can generally be
-reconstructed from the other. Both \(\omega_p\) and \(\omega_s\) must therefore
-be retained. Absolute shaft angles are not required because the internal CVT
-mechanics depend on the current angular velocities, but not on the angular
-orientation of either pulley about its shaft.
+The shift motion requires both a position and a speed. Its position is
+represented by \(s\), chosen to increase in the upshift direction. In the
+present geometry, this follows closing of the primary movable sheave. Once the
+belt is engaged, the fixed belt length and prescribed path of
+\AssRef{assump:constant_belt_length} and
+\AssRef{assump:prescribed_belt_path} link that primary motion to opening of the
+secondary. This gives the physical reason for using one shift coordinate
+rather than carrying \(x_p\) and \(x_s\) independently. The exact relation,
+including the primary deadzone before engagement, is established in
+\Cref{sec:pulley_coordinate_mapping}.
 
-The current pulley geometry and the configurations of the retained actuation
-mechanisms depend on the shift position, so \(s\) must also be retained. Shift
-motion has inertia and is governed by a second-order balance. Its present
-velocity \(\dot{s}\) is therefore required alongside its position.
+The corresponding shift speed \(\dot{s}\) must also be retained because the
+moving sheaves and actuation hardware carry inertia. Pulley radii and actuator
+configurations are instead obtained from the current shift position through
+the geometric and mechanism relations developed in
+\Cref{chap:derivation}.
 
-The belt transport speed is retained independently because belt motion need
-not equal the surface speed of either pulley when tangential slip is present.
-Under the uniform-belt and single-transport-coordinate assumptions, the
-mechanics do not depend on which material point occupies a particular location
-around the loop. No belt-phase or accumulated belt-displacement coordinate is
-therefore required.
+The remaining state variable, \(v_b\), describes transport of belt material
+around the loop. It is retained independently because tangential slip allows
+the belt speed to differ from the surface speed of either pulley. Under
+\AssRef{assump:single_belt_speed}, the model carries no separate transport
+history for individual belt material points; together with the uniform belt
+properties of \AssRef{assump:fixed-belt-cross-section}, this removes the need
+for an additional belt-phase coordinate.
 
-Together, these five values contain all of the internal position and velocity
-information that must be carried from one instant to the next. For the
-selected CVT, these values, the current shaft-interface conditions, and the
-active mechanical constraints are sufficient for the formulation to determine
+Taken together, these five entries are the continuous information carried
+forward in time. Their derivative makes clear what must be determined to
+advance that state:
 
 \begin{equation}
 \dot{\vect{x}}(t)
@@ -2063,17 +2071,16 @@ active mechanical constraints are sufficient for the formulation to determine
 \label{eq:state-derivative}
 \end{equation}
 
-This derivative gives the time rate of change of every state quantity.
-While the active constraints remain unchanged, advancing the state using these
-rates produces its value at the next instant, where the same evaluation is
-repeated. No other internal position or velocity variable must be retained.
+In this derivative, \(\dot{s}\) is already known from the current state. The
+mechanics must supply the two shaft accelerations, the shift acceleration, and
+the belt-transport acceleration. Once those rates are known, the continuous
+state can be advanced to the next instant.
 
-The vector in \Cref{eq:state-vector} describes only the modeled CVT. An engine,
-vehicle, dynamometer, or other attached system may carry additional states in
-its own model and use them when determining the torque and equivalent inertia
-presented at a shaft interface.
+That still does not completely specify how the CVT can evolve. The same values
+of \(\vect{x}\) can occur under different contact or support conditions, for
+which the allowable motion need not be the same. The next section introduces
+that remaining distinction.
 
-% ==============================================================
 \section{Mechanical Regimes and State Evolution}
 \label{sec:mechanical_regimes_state_evolution}
 
