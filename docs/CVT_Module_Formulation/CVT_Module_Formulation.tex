@@ -700,7 +700,6 @@ $\ell$ & \si{\meter} & Length of either straight belt span for the current two-p
 $\delta$ & \si{\radian} & Signed angle of the straight spans relative to the pulley-centre line. \\
 $\phi_p,\ \phi_s$ & \si{\radian} & Primary and secondary belt wrap angles. \\
 $\theta$ & \si{\radian} & Local angular coordinate through a pulley wrap, increasing in the positive belt-transport direction. \\
-$R_g$ & 1 & Instantaneous geometric CVT ratio $r_s/r_p$ used in the ratio analysis. \\
 $\omega_{s,M}$ & \si{\radian\per\second} & Absolute angular speed of the secondary movable assembly. \\
 $\bar\omega_j$ & \si{\radian\per\second} & Representative angular speed of the belt-contact surface on pulley $j$. \\
 $v_{\mathrm{rel},j}$ & \si{\meter\per\second} & Relative tangential belt--pulley speed at contact $j$. \\
@@ -2895,7 +2894,7 @@ geometry shown in \Fig{fig:belt_loop_geometry}.
 
 Consider the right triangle in the upper span in
 \Fig{fig:belt_loop_geometry}. The line joining the pulley centres forms its
-hypotenuse and has length \(C\). One side lies along the straight belt span
+hypotenuse and has length \(d_c\). One side lies along the straight belt span
 and therefore has length \(l\).
 
 The other side is perpendicular to the span. The primary and secondary radii
@@ -2905,7 +2904,7 @@ and are therefore parallel. As shown by the orange construction in
 remaining side of the triangle, \(r_s-r_p\). The triangle therefore satisfies
 
 \begin{equation}
-    l^2+\left(r_s-r_p\right)^2=C^2,
+    l^2+\left(r_s-r_p\right)^2=d_c^2,
 \end{equation}
 
 and the length of either straight span is
@@ -2913,19 +2912,19 @@ and the length of either straight span is
 \begin{equation}
     l
     =
-    \sqrt{C^2-\left(r_s-r_p\right)^2}.
+    \sqrt{d_c^2-\left(r_s-r_p\right)^2}.
     \label{eq:belt_straight_span_length}
 \end{equation}
 
 This expression requires
 
 \begin{equation}
-    \left|r_s-r_p\right|<C.
+    \left|r_s-r_p\right|<d_c.
 \end{equation}
 
 This condition is already enforced by the physical separation of the
 pulleys. The pulley circles must remain apart, requiring
-\(C>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
+\(d_c>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
 \(\left|r_s-r_p\right|\).
 
 The straight-span length accounts for only two parts of the belt path. The
@@ -2940,7 +2939,7 @@ When the radii differ, the straight spans rotate through the angle
 \begin{equation}
     \sin\delta
     =
-    \frac{r_s-r_p}{C},
+    \frac{r_s-r_p}{d_c},
 \end{equation}
 
 and therefore
@@ -2948,7 +2947,7 @@ and therefore
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right).
     \label{eq:belt_span_angle}
 \end{equation}
 
@@ -2976,16 +2975,16 @@ into \Cref{eq:belt_length_components} gives
 {Exact geometric belt length}
 {
 \begin{aligned}
-L_{\mathrm{geo}}(r_p,r_s,C)
+L_{\mathrm{geo}}(r_p,r_s,d_c)
 ={}&
 \pi\left(r_p+r_s\right)
 \\
 &+
 2\left(r_s-r_p\right)
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right)
 \\
 &+
-2\sqrt{C^2-\left(r_s-r_p\right)^2}
+2\sqrt{d_c^2-\left(r_s-r_p\right)^2}
 \end{aligned}
 }
 
@@ -2994,46 +2993,46 @@ the combined half-circle contribution from the two pulley wraps. The second
 accounts for the unequal wrap angles, and the third is the combined length of
 the two straight spans.
 
-For any chosen values of \(r_p\), \(r_s\), and \(C\),
+For any chosen values of \(r_p\), \(r_s\), and \(d_c\),
 \Cref{eq:belt_length_exact} tells us how much belt is required to follow that
 path. The installed belt cannot change its total length as the pulleys shift.
 Under \AssRef{assump:constant_belt_length}, every possible pulley position must
 therefore satisfy
 
 \begin{equation}
-    L_{\mathrm{geo}}(r_p,r_s,C)=L_b,
+    L_{\mathrm{geo}}(r_p,r_s,d_c)=L_b,
     \label{eq:belt_length_compatibility}
 \end{equation}
 
 where \(L_b\) is the fixed length of the same outer-surface path described by
 \(r_p\) and \(r_s\), consistent with the convention in
 \Cref{eq:geometry_radius_convention}. This is the geometric compatibility
-condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(C\) are
+condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(d_c\) are
 known, the condition determines the third.
 
 For a particular CVT, the first quantity to determine is the centre distance
-\(C\). The pulley radii change as the sheaves move, but the pulley shafts do
-not move with them. Once the CVT is assembled, \(C\) remains fixed throughout
+\(d_c\). The pulley radii change as the sheaves move, but the pulley shafts do
+not move with them. Once the CVT is assembled, \(d_c\) remains fixed throughout
 operation.
 
 The fixed centre distance can be found from any installed pulley position
 that can be measured. At that position, the belt length and the two pulley
 radii are known. Denoting the measured radii by
 \(r_{p,\mathrm{ref}}\) and \(r_{s,\mathrm{ref}}\), the only unknown in
-\Cref{eq:belt_length_compatibility} is \(C\).
+\Cref{eq:belt_length_compatibility} is \(d_c\).
 
-In the general unequal-radius case, \(C\) appears both inside the square root
+In the general unequal-radius case, \(d_c\) appears both inside the square root
 and inside the inverse sine. The exact relation therefore cannot be
-rearranged into a useful explicit expression for \(C\). Instead, the centre
+rearranged into a useful explicit expression for \(d_c\). Instead, the centre
 distance is found with a one-dimensional root solve.
 
 For a trial centre distance, the difference between the belt length required
 by the geometry and the belt length actually available is
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)
+    \mathcal{R}_L(r_p,r_s,d_c)
     =
-    L_{\mathrm{geo}}(r_p,r_s,C)-L_b.
+    L_{\mathrm{geo}}(r_p,r_s,d_c)-L_b.
     \label{eq:belt_length_residual}
 \end{equation}
 
@@ -3047,77 +3046,24 @@ match:
     \left(
         r_{p,\mathrm{ref}},
         r_{s,\mathrm{ref}},
-        C
+        d_c
     \right)
     =0.
     \label{eq:center_distance_root}
 \end{equation}
 
-The root solver varies \(C\) until this condition is satisfied.
+The root solver varies \(d_c\) until this condition is satisfied.
 
-\begin{remarkbox}[Remark (Simplified Belt-Length Relation)]
-
-The exact root solve is required because changing pulley radii alter both the
-straight-span lengths and the wrap angles. When the radius difference is
-small relative to the centre distance,
-
-\[
-\frac{\left|r_s-r_p\right|}{C}\ll 1,
-\]
-
-the straight-span angle is also small:
-
-\[
-\delta
-=
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-\approx 0.
-\]
-
-A common simplification is to neglect the resulting wrap-angle correction
-while retaining the exact straight-span length. The compatibility relation
-then becomes
-
-\[
-L_b
-\approx
-\pi\left(r_p+r_s\right)
-+
-2\sqrt{C^2-\left(r_s-r_p\right)^2}.
-\]
-
-Unlike the exact relation, this approximation can be rearranged directly.
-For example, the centre distance is
-
-\[
-C
-\approx
-\sqrt{
-    \left(r_s-r_p\right)^2
-    +
-    \frac{1}{4}
-    \left[
-        L_b-\pi\left(r_p+r_s\right)
-    \right]^2
-}.
-\]
-
-The present model retains the exact relation. The effect of using the
-simplified form is examined in
-\Cref{sec:approximation-validation}.
-
-\end{remarkbox}
-
-Once the initial root solve has determined \(C\), both the centre distance and
+Once the initial root solve has determined \(d_c\), both the centre distance and
 the belt length are known constants. The compatibility condition can then be
 used to connect the two pulley radii at every subsequent position.
 
-Suppose the primary radius \(r_p\) is known. Substituting \(r_p\), \(C\), and
+Suppose the primary radius \(r_p\) is known. Substituting \(r_p\), \(d_c\), and
 \(L_b\) into \Cref{eq:belt_length_residual} leaves the secondary radius as the
 only unknown. Its compatible value is found from
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)=0
+    \mathcal{R}_L(r_p,r_s,d_c)=0
     \qquad
     \text{solved for } r_s.
     \label{eq:secondary_radius_compatibility}
@@ -3129,13 +3075,13 @@ direction. If \(r_s\) is known instead, the compatible primary radius follows
 from
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)=0
+    \mathcal{R}_L(r_p,r_s,d_c)=0
     \qquad
     \text{solved for } r_p.
     \label{eq:primary_radius_compatibility}
 \end{equation}
 
-Thus, once \(C\) has been established, either pulley radius can be used to
+Thus, once \(d_c\) has been established, either pulley radius can be used to
 determine the other. The two radii remain local geometric quantities, but
 they cannot vary independently while belonging to the same fixed-length belt
 loop.
@@ -3174,7 +3120,7 @@ Substituting those radii into the belt-length residual gives
     \!\left(
         r_p(x_p),
         r_s(x_s),
-        C
+        d_c
     \right)
     =0.
     \label{eq:axial_coordinate_compatibility}
@@ -3186,7 +3132,7 @@ compatibility curve.
 
 To reveal the shape of this curve, either local coordinate could be chosen as
 a starting point. Take $x_p$ simply as an arbitrary choice. For each value of
-$x_p$, the primary relation gives $r_p(x_p)$. The shaft spacing fixes $C$, and
+$x_p$, the primary relation gives $r_p(x_p)$. The shaft spacing fixes $d_c$, and
 $L_b$ remains fixed by \AssRef{assump:constant_belt_length}, so the belt-length
 residual can then be solved for the required secondary radius $r_s$. The local
 secondary relation finally gives the corresponding position $x_s$:
@@ -3211,7 +3157,7 @@ compatibility curve in \Fig{fig:pulley_coordinate_compatibility}.
     \caption{
     Representative compatibility curve between the local primary and
     secondary axial coordinates for an admissible belt--pulley geometry. Both
-    coordinates are normalized by the same centre distance $C$, so their
+    coordinates are normalized by the same centre distance $d_c$, so their
     relative travel and the changing slope of the engaged branch are shown on
     a common scale. The dimensions are illustrative and do not represent a
     particular CVT.
@@ -3240,7 +3186,7 @@ of $x_s$.
 
 The primary coordinate is therefore adopted as the system shift coordinate.
 This is the same $s$ included in the state vector of
-\Cref{sec:state_vector}:
+\Cref{sec:continuous_state_variables}:
 
 \bigeq{eq:system_shift_coordinate}
 {System shift coordinate}
@@ -3354,11 +3300,11 @@ secondary must move. That motion is set by the fixed belt loop.
 At every compatible position,
 
 \begin{equation}
-    L_{\mathrm{geo}}\!\left(r_p(s),r_s(s),C\right)=L_b.
+    L_{\mathrm{geo}}\!\left(r_p(s),r_s(s),d_c\right)=L_b.
     \label{eq:belt_length_along_shift}
 \end{equation}
 
-The centre distance \(C\) is fixed by the pulley shafts, while \(L_b\) is
+The centre distance \(d_c\) is fixed by the pulley shafts, while \(L_b\) is
 constant under \AssRef{assump:constant_belt_length}. A small change in \(s\)
 therefore cannot change the geometric length of the belt path:
 
@@ -3393,11 +3339,11 @@ in the form needed for differentiation,
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right),
     \qquad
     l
     =
-    \sqrt{C^2-(r_s-r_p)^2},
+    \sqrt{d_c^2-(r_s-r_p)^2},
     \label{eq:belt_rate_geometry_recalled}
 \end{equation}
 
@@ -3417,7 +3363,7 @@ span. Using these quantities, the exact path length from
     \label{eq:belt_length_rate_form}
 \end{equation}
 
-First, hold \(r_s\) and \(C\) fixed and increase \(r_p\). The radius difference
+First, hold \(r_s\) and \(d_c\) fixed and increase \(r_p\). The radius difference
 \(r_s-r_p\) then decreases at the same rate:
 
 \begin{equation}
@@ -3431,19 +3377,19 @@ Using this result in the definitions of \(\delta\) and \(l\) gives
     \frac{\partial\delta}{\partial r_p}
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
-    \left(-\frac{1}{C}\right)
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
+    \left(-\frac{1}{d_c}\right)
     \nonumber\\
     &=
     -\frac{1}
-    {\sqrt{C^2-(r_s-r_p)^2}}
+    {\sqrt{d_c^2-(r_s-r_p)^2}}
     =
     -\frac{1}{l},
     \label{eq:span_angle_primary_derivative}\\[8pt]
     \frac{\partial l}{\partial r_p}
     &=
     \frac{1}
-    {2\sqrt{C^2-(r_s-r_p)^2}}
+    {2\sqrt{d_c^2-(r_s-r_p)^2}}
     \left[2(r_s-r_p)\right]
     \nonumber\\
     &=
@@ -3494,8 +3440,8 @@ The corresponding derivatives of \(\delta\) and \(l\) are
     \frac{\partial\delta}{\partial r_s}
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
-    \left(\frac{1}{C}\right)
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
+    \left(\frac{1}{d_c}\right)
     \nonumber\\
     &=
     \frac{1}{l},
@@ -3503,7 +3449,7 @@ The corresponding derivatives of \(\delta\) and \(l\) are
     \frac{\partial l}{\partial r_s}
     &=
     \frac{1}
-    {2\sqrt{C^2-(r_s-r_p)^2}}
+    {2\sqrt{d_c^2-(r_s-r_p)^2}}
     \left[-2(r_s-r_p)\right]
     \nonumber\\
     &=
@@ -3824,7 +3770,7 @@ The required geometric quantities were defined in
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right),
     \qquad
     \phi_p=\pi-2\delta,
     \qquad
@@ -3849,14 +3795,14 @@ Applying the chain rule to \(\delta\), and using the straight-span length from
     \delta'
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
     \left(
-        \frac{r_s'-r_p'}{C}
+        \frac{r_s'-r_p'}{d_c}
     \right)
     \nonumber\\
     &=
     \frac{r_s'-r_p'}
-    {\sqrt{C^2-(r_s-r_p)^2}}
+    {\sqrt{d_c^2-(r_s-r_p)^2}}
     \nonumber\\
     &=
     \frac{r_s'-r_p'}{l}.
@@ -4142,16 +4088,6 @@ in \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
 apply within the deadzone and engaged branches, while first contact is treated
 as the transition between them.
 
-% TODO: Add a cross-reference once the numerical transition section exists.
-\end{remarkbox}
-
-\begin{remarkbox}[Remark (Practical Consequences of the Pulley Geometry)]
-The radius, rate, and acceleration relations derived in this section describe
-how the pulley geometry evolves as the CVT shifts. \Cref{app:ratio-rate}
-explores the practical consequences of these results in more detail. In
-particular, it examines the resulting geometric CVT ratio and ratio-change
-rate across the shift travel, together with how the current pulley geometry
-and sheave angle shape the available ratio range and ratio-change sensitivity.
 \end{remarkbox}
 
 % --------------------------------------------------------------
@@ -13661,9 +13597,9 @@ pivot \(P\): \(u\) along the nominal arm from the pivot toward the roller
 centre, \(v\) perpendicular to \(u\) in the axial--radial mechanism plane, and
 \(z\) circumferentially along the pivot axis.
 
-For one flyweight define
+For one flyweight, whose mass is \(m_f/n_f\), define
 \begin{align}
-    m_f &= \int dm,\\
+    \frac{m_f}{n_f} &= \int dm,\\
     M_u &= \int u\,dm,
     &M_v &= \int v\,dm,\\
     S_u &= \int u^2\,dm,
@@ -13699,7 +13635,7 @@ flyweight inertia about the primary shaft:
 \begin{aligned}
     J_{f,p}(q_f)
     =n_f\Big[{}
-    &m_f r_P^2
+    &\frac{m_f}{n_f} r_P^2
     +2r_P(M_u\sin q_f+M_v\cos q_f)\\
     &+S_u\sin^2q_f
     +S_v\cos^2q_f\\
@@ -13782,7 +13718,7 @@ with
 \begin{equation}
     M_v=S_v=S_{uv}=S_z=0,
     \qquad
-    m_f=m_a+m_t.
+    m_f=n_f(m_a+m_t).
 \end{equation}
 
 The resulting pivot inertia is
@@ -14185,13 +14121,13 @@ closure are found with SciPy's \texttt{scipy.optimize.brentq} routine
 \citep{Virtanen2020}.
 
 The first such solve is performed once, during construction, to determine the
-fixed pulley centre distance $C$ from the specified zero-shift radii
+fixed pulley centre distance $d_c$ from the specified zero-shift radii
 $r_{p,0}$ and $r_{s,0}$.  A physical bracket can be obtained directly from the
 same belt geometry.  The centre distance cannot be smaller than the sum of the
 two radii,
 
 \begin{equation}
-    C_{\mathrm{lo}}=r_{p,0}+r_{s,0},
+    d_{c,\mathrm{lo}}=r_{p,0}+r_{s,0},
     \label{eq:appendix_center_distance_lower_bound}
 \end{equation}
 
@@ -14202,7 +14138,7 @@ from the finite belt length. The total wrapped length is
 \begin{aligned}
     r_p\phi_p+r_s\phi_s
     & = \pi(r_p+r_s)
-      +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\\
+      +2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right)\\
     & \geq \pi(r_p+r_s).
 \end{aligned}
 \label{eq:appendix_minimum_wrapped_length}
@@ -14221,7 +14157,7 @@ span.  The two straight spans can then use no more than
 From the exact span relation in \Cref{eq:belt_straight_span_length},
 
 \begin{equation}
-    \ell_0^2=C^2-\Delta r_0^2,
+    \ell_0^2=d_c^2-\Delta r_0^2,
     \qquad
     \Delta r_0=r_{s,0}-r_{p,0}.
     \label{eq:appendix_zero_shift_span_geometry}
@@ -14230,7 +14166,7 @@ From the exact span relation in \Cref{eq:belt_straight_span_length},
 Combining these relations gives the upper bracket
 
 \begin{equation}
-    C_{\mathrm{hi}}
+    d_{c,\mathrm{hi}}
     =
     \sqrt{
         \Delta r_0^2
@@ -14271,7 +14207,7 @@ closure.  This one setup solve uses the broad physical bracket
     r_{s,\mathrm{hi}}^{\mathrm{setup}}
     &=
     \min\!\left(
-        C-r_{p,\max},
+        d_c-r_{p,\max},
         \frac{L_b}{\pi}-r_{p,\max}
     \right).
 \end{aligned}
@@ -14735,7 +14671,7 @@ Group & Quantity & Symbol & Value \\ \midrule
 \endlastfoot
 \multicolumn{4}{@{}l}{\textbf{Primary}} \\
 Primary & Number of flyweights & $n_f$ & $3$ \\[3pt]
-Primary & Mass per flyweight & $m_f$ & \SI{0.263646}{\kilogram} \\[3pt]
+Primary & Total flyweight-set mass & $m_f$ & \SI{0.790938}{\kilogram} \\[3pt]
 Primary & Flyweight pivot radius & --- & \SI{0.042545}{\meter} \\[3pt]
 Primary & Pivot-to-roller-center distance & --- & \SI{0.0315214}{\meter} \\[3pt]
 Primary & Roller radius & --- & \SI{0.0065}{\meter} \\[3pt]
