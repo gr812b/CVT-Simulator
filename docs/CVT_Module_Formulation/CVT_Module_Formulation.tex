@@ -10774,11 +10774,16 @@ result to every admissible initial state or every possible transition.
 \subsection{Energy Consistency}
 \label{sec:results_energy_consistency}
 
-The energy audit follows the reference launch for ten seconds on flat road,
-with the numerical settings in \Cref{app:study_energy_consistency}. Its
-inventory includes the retained kinetic stores and conservative
-actuator-spring energy. The boundary
-work is the signed net work supplied at the two shafts,
+The shaft loading does more than transmit power through the CVT. During a
+launch it also accelerates the retained inertias and changes spring
+deformation. An energy balance must therefore distinguish stored energy
+from dissipation, and continue to hold when an event changes the velocities.
+The audit follows the ten-second, flat-road reference launch using the
+settings in \Cref{app:study_energy_consistency}.
+
+The stored-energy inventory includes the retained CVT motions, the attached
+engine and referred vehicle inertias, and conservative actuator-spring
+energy. The work supplied to this inventory is the signed net shaft work,
 \begin{equation}
   W_{\mathrm B}(t)
   =\int_0^t
@@ -10790,83 +10795,98 @@ so a resisting vehicle load contributes negative work. The audited balance is
 \begin{equation}
   W_{\mathrm B}(t)
   =\Delta E_{\mathrm{stored}}(t)
-   +E_{\mathrm{slip}}(t)+E_{\mathrm{capture}}(t)+R_E(t),
+   +E_{\mathrm{slip}}(t)+E_{\mathrm{capture}}(t)+R_E(t).
   \label{eq:verification_energy_balance}
 \end{equation}
-where \(R_E\) is the unexplained numerical residual, not an additional loss
-mechanism.
+Relative sliding removes mechanical energy through the work of kinetic
+traction. A perfectly inelastic capture instead removes kinetic energy
+instantaneously as the new constraint is established, according to
+\Cref{eq:finite_event_energy_loss}. Work and slip loss are consequently
+integrated within each continuous segment, while capture losses are added
+at the events. Both sides of each velocity reset are retained. The remainder
+\(R_E\) is the unexplained balance residual; it is not assigned to another
+loss mechanism.
 
-\Cref{fig:verification_energy_balance} compares this accounting on the
-throughput scale and then resolves the much smaller balance defect. The final
-residual is \(0.0254~\mathrm{J}\) against \(52.17~\mathrm{kJ}\) of net
-boundary work, giving \(\epsilon_E=4.88\times10^{-7}\) under
-\Cref{eq:energy_final_balance_fraction}. The final energy ledger in
-\Cref{tab:verification_energy_ledger} distinguishes the two retained
-irreversible channels from stored energy: kinetic belt--pulley slip accounts
-for approximately \(1.588~\mathrm{kJ}\), whereas the cumulative inelastic
-capture loss is only \(0.254~\mathrm{J}\) in this trajectory. Spring storage
-and inertial storage are not counted as dissipation. The omitted mechanisms
-remain those stated in \AssRef{assump:no_parasitic_losses}; this ledger
-quantifies the losses represented by the model.
+\Cref{fig:verification_energy_balance}(a) shows the work increasing mainly
+as stored energy. By ten seconds, stored energy has increased by
+approximately \SI{50.58}{kJ}, while \SI{1.588}{kJ} has been dissipated by
+kinetic slip.
+The cumulative capture loss is only \SI{0.254}{J}, but this is about ten
+times the final residual. Its small share of the launch work therefore does
+not make it negligible for this accounting check. The 13 nominal capture
+projections reproduce their stored-energy drops to within
+\(2.27\times10^{-13}~\mathrm{J}\), checked separately from continuous work.
 
-% FIGURE 2 -- Assemble existing plots from the energy recap.
-% Source: CINDER_v1.1.2_energy_audit_interpretation.pdf, pp. 2--4.
-% (a) W_B and Delta E_stored + E_slip + E_capture, in kJ (p. 2).
-% (b) Signed raw residual history, in J (p. 3), retaining all event-scale features.
-% (c) Summed continuous defect versus audit spacing squared (p. 4).
-% The 0.024510 J line is a zero-spacing extrapolate, not an error bar and not
-% a direct estimate of the quadrature error remaining at the finest spacing.
-% The channel values are tabulated below; p. 8 is an optional channel-history view.
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
-  \CINDERVerificationFigure[62mm]{figures/results/verification/energy_balance.pdf}{%
-    (a) Cumulative net work and accounted energy.\par
-    (b) Signed energy-residual history on a joule-scale axis.\par
-    (c) Continuous-defect refinement against audit spacing squared.\par
-    Source: energy-audit recap, pages 2--4.}
-  \caption{Mechanical-energy accounting for the reference launch.
-  (a) Net boundary work and stored-energy change plus modeled dissipation.
-  (b) Their signed residual, shown separately from the kilojoule-scale
-  throughput. (c) Refinement of the summed continuous-segment defect using
-  audit spacings of 5, 2.5, 1.25, and 0.625 ms; the horizontal line is the
-  Richardson zero-spacing estimate. Capture losses are accounted for at the
-  discrete events rather than integrated across the velocity resets.}
+  \includegraphics[width=\linewidth]{figures/results/verification/energy_balance.pdf}
+  \caption{Energy accounting for the reference launch. (a) Nominal net work,
+  stored-energy change, and storage plus modeled losses; work and accounted
+  energy overlap at this scale. (b) Signed residuals for the nominal and
+  tighter ODE trajectories, both audited at 0.625 ms maximum spacing.
+  (c) Detail around each trajectory's upper-stop capture; the incoming and
+  outgoing residuals coincide at the open markers. (d) Continuous-segment
+  defect with the nominal trajectory held fixed.
+  The open point and dashed line mark the two-finest-grid, second-order
+  zero-spacing estimate. Native event sides are retained; lines and work
+  quadrature do not bridge velocity resets.}
   \label{fig:verification_energy_balance}
 \end{figure}
+
+The kilojoule-scale overlap cannot resolve the accuracy of the balance.
+Panel (b) instead shows its signed residual in joules. At the finest audit
+spacing, the nominal final residual is \(+0.0254~\mathrm{J}\) against
+\SI{52.17}{kJ} of net work, or \(\epsilon_E=4.88\times10^{-7}\) under
+\Cref{eq:energy_final_balance_fraction}. The sampled residual remains
+within \SI{0.040}{J} in both trajectories. Panel (c) resolves the apparent
+jump near the upper stop: the residual is continuous across the native
+capture and changes during the adjoining continuous integration. The visible
+change belongs to the continuous-segment defect rather than a mismatch in
+the capture-energy update. The final ledgers are compared in
+\Cref{tab:verification_energy_ledger}; spring and inertial storage are kept
+separate from the irreversible channels.
 
 \begin{table}[H]
   \centering
   \small
-  \caption{Final energy ledger for the reference audit. The residual is
-  evaluated from unrounded quantities; displayed entries are rounded.}
-  \label{tab:verification_energy_ledger}
-  \begin{tabular}{@{}lr@{}}
+  \begin{tabular}{@{}lrr@{}}
     \toprule
-    Quantity & Energy [J] \\
+    Quantity & Nominal [J] & Tighter ODE [J] \\
     \midrule
-    Net boundary work & \(52\,168.893\) \\
-    Stored-energy change & \(50\,580.274\) \\
-    Kinetic-slip dissipation & \(1\,588.340\) \\
-    Inelastic capture dissipation & \(0.253859\) \\
-    Balance residual & \(0.025444\) \\
+    Net boundary work & \(52\,168.893\) & \(52\,168.858\) \\
+    Stored-energy change & \(50\,580.274\) & \(50\,580.287\) \\
+    Kinetic-slip dissipation & \(1\,588.340\) & \(1\,588.339\) \\
+    Inelastic capture dissipation & \(0.253859\) & \(0.253884\) \\
+    Balance residual & \(+0.025445\) & \(-0.022841\) \\
     \bottomrule
   \end{tabular}
+  \caption{Energy ledgers at ten seconds, both evaluated at the finest audit
+  spacing. Residuals use unrounded quantities; displayed entries are rounded.}
+  \label{tab:verification_energy_ledger}
 \end{table}
 
-The refinement panel is important because coincident cumulative curves alone
-would conceal a small systematic defect. Reducing the quadrature spacing
-approaches a finite continuous-defect estimate of \(0.024510~\mathrm{J}\):
-post-processing refinement alone does not drive the fixed-trajectory residual
-to zero. A tighter trajectory integration gives a final residual of
-\(-0.022843~\mathrm{J}\), changing its sign while retaining the same small
-scale. The maximum normalized final-state change is
-\(1.30\times10^{-7}\), using
-\Cref{eq:energy_final_state_normalization}. Discrete captures separately
-satisfy the recorded energy-drop relation to within
-\(2.27\times10^{-13}~\mathrm{J}\). These checks support energy consistency
-at the observed numerical-error scale across both the continuous motion and
-the discrete updates. The residual fraction measures accounting accuracy; it
-is not a transmission-efficiency estimate.
+\begin{samepage}
+Two refinements distinguish the numerical trajectory from the integration
+of power along it. In panel (d), reducing the quadrature spacing from 5 to
+0.625 ms leaves a finite continuous-segment defect, with a zero-spacing
+estimate of \(+0.024511~\mathrm{J}\). Across these grids, finer quadrature reduces the defect without removing
+it. Recomputing the trajectory
+with tighter ODE settings changes the final residual to
+\(-0.022841~\mathrm{J}\), while the maximum normalized final-state change
+is only \(1.30\times10^{-7}\)
+(\Cref{eq:energy_final_state_normalization}). Thus the small remainder is
+sensitive to the trajectory integration as well as to work quadrature.
+These two ODE settings do not isolate its source or establish an order of
+convergence.\par
+\end{samepage}
+
+The result supports consistency of the retained energy accounting at the
+observed residual scale. It does not establish a complete physical loss
+budget: an omitted loss contributes to neither side of the computed balance,
+so close agreement cannot establish that the omissions in
+\AssRef{assump:no_parasitic_losses} are small. The residual fraction
+measures accounting accuracy, not transmission efficiency. Convergence of
+the motion and contact history requires the separate comparison that follows.
 \FloatBarrier
 
 \subsection{Solver Convergence}
@@ -15471,13 +15491,16 @@ Exact settings supporting \Cref{sec:results_energy_consistency} are defined in
 The audited trajectory uses the physical reference configuration of
 \Cref{app:common_physical_configuration} and the reference shaft boundaries of
 \Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}, with
-\(\gamma=0\) throughout the 10 s interval.
+\(\gamma=0\) throughout the 10 s interval. Both integrations use LSODA;
+only the tolerances and maximum time step in
+\Cref{tab:energy_study_numerics} change between them. The released kinetic
+metric includes the attached engine and referred vehicle inertias, as well
+as the retained CVT motions. Conservative axial- and torsional-spring
+potentials complete the stored-energy inventory.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Case and numerical settings used by the mechanical-energy audit.}
-\label{tab:energy_study_numerics}
 \begin{tabular}{@{}p{0.27\textwidth}p{0.14\textwidth}p{0.14\textwidth}p{0.15\textwidth}p{0.14\textwidth}@{}}
 \toprule
 Configuration & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Duration \\ \midrule
@@ -15485,18 +15508,23 @@ Nominal audit & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & 10 s \\
 Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & 10 s \\
 \bottomrule
 \end{tabular}
+\caption{Case and numerical settings used by the mechanical-energy audit.}
+\label{tab:energy_study_numerics}
 \end{table}
 
 The final balance fraction is
 \begin{equation}
 \epsilon_E
 =
-\frac{|R_E(t_f)|}{|W_{\mathrm{B}}(t_f)|},
+\frac{|R_E(t_f)|}{\max\!\left(|W_{\mathrm{B}}(t_f)|,1~\mathrm{J}\right)},
 \label{eq:energy_final_balance_fraction}
 \end{equation}
 where \(R_E\) is the raw mechanical-energy residual and \(W_{\mathrm{B}}\) is
-the net work supplied through the shaft boundaries. The ODE-refinement
-final-state metric compares the nominal and tight solutions componentwise. For
+the net work supplied through the shaft boundaries. The 1 J denominator
+floor is inactive in this launch.
+
+\begin{samepage}
+The ODE-refinement final-state metric compares the nominal and tight solutions componentwise. For
 \(x_k\in\{\omega_p,\omega_s,v_b,s,\dot s\}\),
 \begin{equation}
 S_k
@@ -15518,18 +15546,44 @@ with floors
 The impact momentum and active-constraint residuals are the residuals returned
 by the finite-speed boundary projection described in
 \Cref{sec:finite_speed_shift_boundary_arrival}; they are audited independently
-of the energy defect.
+of the energy defect.\par
+\end{samepage}
+
+
+Power is integrated separately within each continuous hybrid segment using
+composite trapezoids on retained dense output. For requested maximum spacing
+\(h\), a segment of duration \(\Delta t_i\) receives
+\(\max(\lceil\Delta t_i/h\rceil,12)\) intervals. Its stored-energy change
+uses the exact native endpoint states. Equal-time incoming and outgoing
+states are retained separately in both exported traces. No quadrature
+interval crosses a reset: cumulative work and slip loss remain continuous,
+while the recorded capture loss is added only on the outgoing side. Each
+recorded capture is checked against its exact stored-energy drop; transitions
+without a capture projection are retained in the complete event ledger too.
+
+Let \(D(h)\) denote the sum of the continuous-segment defects
+\(W_i-\Delta E_i-E_{\mathrm{slip},i}\). The four quadrature grids reuse the
+same nominal trajectory. The reported second-order zero-spacing estimate is
+\begin{equation}
+  D_0=\frac{4D(h)-D(2h)}{3},
+  \qquad h=0.625~\mathrm{ms},
+  \label{eq:energy_quadrature_extrapolate}
+\end{equation}
+using only the two finest grids. This extrapolates the defect of the fixed
+numerical trajectory; it is neither an error bar nor the quadrature error
+remaining at \(h\). The tighter ODE trajectory is audited at the same
+finest spacing. Signed work from velocity drift at a contact declared
+sticking remains a numerical diagnostic. It is neither kinetic-slip
+dissipation nor a correction to \(R_E\).
 
 \begin{table}[H]
 \centering
 \small
-\caption{Quadrature and review settings used by the mechanical-energy audit.}
-\label{tab:energy_acceptance_criteria}
 \begin{tabular}{@{}p{0.66\textwidth}r@{}}
 \toprule
 Quantity & Value \\ \midrule
 Continuous-work quadrature steps & 5, 2.5, 1.25, 0.625 ms \\
-Maximum final $\lvert R_E\rvert/\lvert W_{\mathrm{B}}\rvert$ & $10^{-4}$ \\
+Maximum final balance fraction $\epsilon_E$ & $10^{-4}$ \\
 Maximum absolute event-energy defect & $10^{-8}$ J \\
 Maximum impact momentum residual & $10^{-7}$ \\
 Maximum impact constraint residual & $10^{-8}$ \\
@@ -15538,7 +15592,17 @@ Allowed negative computed capture loss & $10^{-9}$ J \\
 Maximum finest-to-previous continuous-defect ratio & $1.25$ \\
 \bottomrule
 \end{tabular}
+\caption{Quadrature and review settings used by the mechanical-energy audit.}
+\label{tab:energy_acceptance_criteria}
 \end{table}
+
+The maintained \texttt{energy-consistency/run.py} regenerates the numerical
+ledgers and publication figure. Its \texttt{--plot-only} option checks the
+retained input/output hashes, energy identities, both native event sides,
+and refinement quantities before regenerating the figure. Exact executed
+inputs, package versions and output hashes accompany the study's execution
+record; the reproduction commands and figure provenance are documented
+with the maintained study.
 
 \section{Solver Convergence}
 \label{app:study_solver_convergence}

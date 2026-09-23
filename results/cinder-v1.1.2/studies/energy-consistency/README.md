@@ -149,3 +149,69 @@ from the model is negligible. Belt longitudinal elasticity, local seating and
 creep, radial face friction, straight-span transverse path motion, rubber
 hysteresis, and other higher-fidelity effects remain outside this accounting
 unless they are explicitly represented by the release.
+
+## Manuscript Section 4.2.2 publication path
+
+The final figure is maintained in `analysis/publication_plots.py`; its numerical
+checks are in `analysis/verification.py`. Canonical `run.py` invokes this path
+after a complete run. From the repository root, using the isolated release
+interpreter:
+
+```bash
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/verify_environment.py
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/studies/energy-consistency/verify_study.py
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/studies/energy-consistency/run.py
+```
+
+For already verified outputs, restore the delivered `artifacts/` directory,
+including `execution_provenance.json` and `execution_inputs/`, then use:
+
+```bash
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/studies/energy-consistency/run.py --plot-only
+```
+
+An optional `--publication-dir /absolute/output/path` writes the four publication
+assets to a clean directory for byte-comparison. The default destination is
+`docs/CVT_Module_Formulation/figures/results/verification/`, containing
+`energy_balance.pdf`, `.png`, `_values.json`, and `_provenance.json`.
+`--no-plots` generates the complete numerical evidence and execution record
+without figures. `--quick` is a smoke run and cannot support the publication
+figure; `--plot-only` rejects incomplete evidence.
+
+The 23 September execution used the frozen installed CINDER wheel, Python
+3.12.14, NumPy 2.5.2, SciPy 1.18.1 and Matplotlib 3.11.1. The complete observed
+package set is pinned in `provenance/requirements-executed.txt`; see the release
+README to construct the isolated environment. Do not import the newer live
+simulator. Exact executed source/input bytes and all numeric output hashes are
+in the portable execution record; `provenance/execution_2026-09-23.json` is its
+committed copy. Figure regeneration checks those identities and the isolated
+import before trusting the evidence. Merely matching a CSV filename is not
+sufficient.
+
+The export now retains both exact native event sides, with `segment_index` and
+`sample_location`; equal timestamps must not be deduplicated. Capture loss is
+added only on the outgoing side. The new `native_transitions.csv` and
+`native_transitions_tight.csv` include all transitions, including those without
+capture projections. `event_energy_balance_tight.csv` supplements the original
+nominal capture table. No work quadrature spans a reset, and signed sticking
+work remains a diagnostic, not dissipation. These are accounting/export changes;
+case inputs, dynamics, solver settings, quadrature spacings and acceptance
+limits are unchanged.
+
+The fourth figure panel was not imposed by the handoff placeholder. A short-time
+view is necessary because the ten-second residual curve compresses the interval
+around the upper stop into an apparent jump. The detail retains each native
+side and separates continuous integration from the energy update at capture.
+See `provenance/SECTION_4_2_2.md` for the complete selection, numerical comparison
+with the draft, limitations, and source locators.
+
+The focused integrity regressions use the retained evidence and make in-memory
+corruptions only (dropped incoming endpoint, unsigned residual, and capture loss
+assigned to the incoming side):
+
+```bash
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/studies/energy-consistency/analysis/test_publication_integrity.py
+```
+
+They supplement the full data checks performed automatically by `--plot-only`;
+they are not independent scientific validation.
