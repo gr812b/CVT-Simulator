@@ -1,0 +1,31 @@
+{
+  "command": "python studies/closure-conditioning/run.py --plot-only --artifacts-dir <reviewed-evidence> --figure-dir <output>",
+  "figures": {
+    "closure_robustness.pdf": {
+      "label": "fig:verification_closure_robustness",
+      "panels": [
+        "Unmasked 241-square static-map maxima contrasted with root-only values; same equilibrated eight-variable matrix.",
+        "All 49 mid-shift starts and actual acceptance outcomes. No iteration paths or inferred basin boundary."
+      ]
+    },
+    "sticking_closure_fold.pdf": {
+      "label": "fig:verification_closure_fold",
+      "panels": [
+        "Focused dimensional acceleration-zero contours at the exact selected pair of shaft-boundary torques.",
+        "Locally corrected open fixed-primary-torque branch, parameterized by secondary traction, with the same two roots/load slice. Failed contact portions dotted."
+      ]
+    }
+  },
+  "output_sha256": {
+    "closure_robustness.pdf": "fd91a96c4e85a2dd2a83a5eb77262419effe614e85973cf1d9918e44c0f75c0d",
+    "closure_robustness.png": "4c5146c832046f3ffd4835df229772abaff1ca5354c3be1aed9ec891aee638f9",
+    "closure_values.json": "5ff9c57e4a8cbef2f9a34e1c05d58c854cd66fd90f28a093b5e2811aa7c4127b",
+    "sticking_closure_fold.pdf": "affad9419336f816ca7b83bd31a095d3f01e4ef38f2f568449a35e6d3ac0c57d",
+    "sticking_closure_fold.png": "af5a665f00a4c5a20d8f37d24b4b1b9b2e3848200cfb7ed298a542ec1bb54816"
+  },
+  "plot_script_sha256": "714346316cf72cb39f3453ea3b8dd0645403d24626c3ee6a50f81483ab86dbda",
+  "retained_sources": "results/cinder-v1.1.2/studies/closure-conditioning/provenance/retained_archives.json",
+  "run_id": "closure-conditioning-2cd896930d63882e",
+  "scope": "Frozen algebraic mechanics; no hybrid time traces, event alignment or physical-state continuation in these plots.",
+  "source_script": "results/cinder-v1.1.2/studies/closure-conditioning/analysis/publication_plots.py"
+}

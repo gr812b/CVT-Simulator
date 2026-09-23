@@ -80,7 +80,7 @@ from defaults.reference_model import decode_reference_case
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
 CASE_LIBRARY_FILE = RELEASE_ROOT / "defaults" / "verification" / "operating_cases.json"
-ARTIFACTS = HERE / "artifacts"
+ARTIFACTS = HERE / "artifacts" / "full_recomputed"
 EXPECTED_CINDER_VERSION = "1.1.2"
 
 
@@ -107,6 +107,12 @@ def parse_args():
         action="store_true",
         help="Use reduced map and multi-start resolution for a fast structural preview.",
     )
+    parser.add_argument("--import-retained", nargs=3, type=Path,
+        metavar=("FULL_ZIP", "TWO_CONTACT_ZIP", "ONE_CONTACT_ZIP"),
+        help="Import registered full evidence, audit the selected frozen roots, and make publication figures.")
+    parser.add_argument("--plot-only", action="store_true", help="Verify retained evidence and regenerate publication figures without mechanics evaluation.")
+    parser.add_argument("--artifacts-dir", type=Path, default=HERE / "artifacts/reviewed")
+    parser.add_argument("--figure-dir", type=Path, default=None)
     return parser.parse_args()
 
 
@@ -1056,14 +1062,27 @@ def feature_rows(data, label):
 
 
 def main():
+    global ARTIFACTS
     args = parse_args()
     verify_environment()
+    if args.import_retained or args.plot_only:
+        if args.quick or (args.import_retained and args.plot_only):
+            raise ValueError("Choose one of import-retained, plot-only or quick.")
+        from analysis.evidence import prepare
+        from analysis.publication_plots import build
+        if args.import_retained:
+            prepare(sys.modules[__name__], args.artifacts_dir,
+                    dict(zip(("full", "two_contact", "one_contact"), args.import_retained)))
+        build(args.artifacts_dir, args.figure_dir or args.artifacts_dir / "publication")
+        return
+    # New core sweeps remain separate from the registered publication evidence.
+    ARTIFACTS = HERE / "artifacts" / ("quick" if args.quick else "full_recomputed")
     spec = load_json(SPEC_FILE)
     case_library = load_case_library(CASE_LIBRARY_FILE)
     base_path = (HERE / spec["base_document"]).resolve()
 
     if ARTIFACTS.exists():
-        shutil.rmtree(ARTIFACTS)
+        raise FileExistsError(f"Refusing to erase existing core outputs: {ARTIFACTS}")
     ARTIFACTS.mkdir(parents=True)
 
     print("Running frozen baseline launch reference...")

@@ -10929,116 +10929,114 @@ trajectories retain their own study-specific numerical settings and checks.
 \subsection{Closure Conditioning and Root Structure}
 \label{sec:results_closure_structure}
 
-The engaged solve separates into a linear mechanical response at fixed
-\((\lambda_p,\lambda_s)\) and a nonlinear selection of the traction required
-by sticking contact. The eight-variable form, including the retained pulley
-torques, is given in \Cref{eq:appendix_eight_unknown_closure}. These two
-levels are assessed separately: uniqueness of the fixed-traction response
-does not imply uniqueness of the traction pair that enforces stick.
+Sticking requires the belt and the represented pulley surface to keep
+matching tangential accelerations. As developed in
+\Cref{sec:sticking_traction_closure}, a trial traction pair first determines
+the coupled accelerations and contact loads; the sticking search then adjusts
+that pair until the relative accelerations vanish. These are different
+questions. A definite response to each prescribed pair does not establish
+that only one pair can preserve sticking. Changing traction also changes
+the normal loads and transmitted torques through the coupled balances, so
+the returned sticking residuals need not vary monotonically with traction.
 
-At the frozen states drawn from the reference launch and constructed
-operating cases, no rank-deficient mechanical system is found in the sampled
-static-capacity or expanded traction maps. Each sampled fixed-traction system
-therefore has a unique linear response. The condition numbers in
-\Cref{fig:verification_closure_robustness}(a) use the equilibrated matrix of
-\Cref{eq:appendix_equilibrated_system}; the largest reported value among the
-four representative static-capacity maps is \(3.38\times10^5\).
-Full rank does not imply uniform sensitivity, and some trial points violate
-contact or support admissibility even within the static-capacity box. The
-map domains and mechanical-admissibility checks are distinguished in
-\Cref{app:study_closure_conditioning}.
+The fixed-traction calculation was examined at frozen states from the
+reference launch and constructed operating cases. The implementation retains
+eight unknowns, including the two pulley torques; eliminating those torques
+recovers the six-variable formulation, without changing the mechanics
+(\Cref{eq:appendix_eight_unknown_closure}). All sampled systems in the four
+static-capacity maps and their expanded maps have rank eight.
+\Cref{fig:verification_closure_robustness}(a) nevertheless shows substantial
+variation in sensitivity. The largest equilibrated condition number in the
+static maps is \(1.05\times10^6\), at an upper-stop trial, compared with
+\(8.56\times10^3\) at that state's accepted sticking root. That extreme
+trial also fails the compressive belt-loading checks. Being inside
+\(\lvert\lambda_j\rvert\leq\mu_s\) has limited the traction coefficient,
+but has not ensured that the resulting loads can be carried by the belt.
 
-% FIGURE 5 -- Ordinary-case evidence before the targeted fold.
-% Source: CINDER_closure_conditioning_multiroot_summary_2026-09-15.pdf,
-% p. 3 table and p. 5 left-hand multistart basin.
-% (a) Replot ONLY max equilibrated kappa(A) for the four static-capacity maps:
-% low_ratio_seat 1.33e4; mid_shift 3.70e4; upper_stop 3.38e5;
-% free_shift_opening_70 8.26e3. These are map maxima, NOT root-only values.
-% (b) Existing mid_shift multistart basin: distinguish not accepted from accepted.
-% Do not draw iteration paths: the recap records starting points/outcomes, not paths.
-% Keep the reported 375 TOTAL attempts distinct from the current appendix's
-% 7x7/9x9 manifest settings; the archived run specification needs reconciliation.
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \CINDERVerificationFigure[60mm]{figures/results/verification/closure_robustness.pdf}{%
-    (a) Four representative static-capacity-map maxima of equilibrated
-    \(\kappa(\vect A_s)\), replotted from the closure recap, page 3.\par
-    (b) Mid-shift multistart outcomes, closure recap, page 5.\par
-    Distinguish accepted roots from unsuccessful starts.}
-  \caption{Representative fixed-traction and sticking-root behaviour.
-  (a) Maximum equilibrated mechanical-matrix condition number in each of four
-  sampled static-capacity maps; these are map maxima rather than values at
-  the accepted sticking root. (b) Starting guesses and acceptance outcomes
-  for the mid-shift sticking solve. Accepted solutions belong to one root
-  cluster; unsuccessful starts are shown separately. Mechanical admissibility
-  is assessed independently of membership in the static-capacity box.}
+  \includegraphics[width=\linewidth]{figures/results/verification/closure_robustness.pdf}
+  \caption{Fixed-traction conditioning and sticking-search outcomes.
+  (a) Unmasked maxima over four \(241\times241\) static-capacity maps,
+  contrasted with values at the accepted roots. All use the same
+  row/column-equilibrated eight-variable matrix of
+  \Cref{eq:appendix_equilibrated_system}. Opening denotes the constructed
+  state at \(70\%\) engaged travel and \(-20~\mathrm{mm/s}\).
+  (b) All \(7\times7\) mid-shift starting guesses: 42 are accepted and
+  seven are not. The star marks the common accepted root, not a starting
+  guess or an iteration path. Neither panel establishes global uniqueness.}
   \label{fig:verification_closure_robustness}
 \end{figure}
 
-The representative nonlinear solves are also reproducible across starting
-estimates. Across 15 states and 375 multistart attempts in total, all accepted
-solutions for each state belong to one physical root cluster.
-\Cref{fig:verification_closure_robustness}(b) illustrates this result at
-mid-shift. The statement concerns the accepted roots: it neither assumes
-that every initial guess succeeds nor proves nonlinear uniqueness outside
-the tested states.
+The nonlinear search was tested separately with 49 starting guesses at each
+of 15 states. Of the 735 attempts, 666 are accepted, and every accepted
+solution at a given state belongs to the same root cluster.
+Panel~(b) makes both parts of that result visible at mid-shift: the accepted
+starts recover one solution, but not every start succeeds. Repeating the
+search from the wider traction box at the four mapped states also recovers
+only their existing root clusters. These are results for the sampled states
+and starting guesses; they leave open whether another state or loading can
+admit more than one sticking response.
 
-Targeted continuation reveals a different structure elsewhere in the
-reduced contact equations. In the selected stick--stick example of
-\Cref{fig:verification_closure_fold}, a continuous solution branch turns back
-in loading space. A fixed loading then intersects that branch twice,
-producing two traction pairs that satisfy both sticking residuals and the
-physical admissibility checks. The smaller static-capacity reserve of the
-selected pair is \(0.098\), so the multiplicity is not explained simply by
-including an above-capacity mathematical root. It occurs in the nonlinear
-traction selection while the fixed-traction mechanics still give a definite
-response at either root.
+A deliberately selected late-shift opening state exposes the limit of this
+single-cluster result. Its position and velocities are held fixed while the
+shaft torques are varied, rather than following a vehicle trajectory.
+At the selected loading, \Cref{fig:verification_closure_fold}(a) shows two
+intersections of the primary and secondary zero-relative-acceleration
+contours. Both traction pairs therefore preserve sticking. Both also pass
+the static-friction, belt-loading and actuator-contact checks; the smaller
+static margin, defined as \(\mu_s-\lvert\lambda_j\rvert\), is 0.098.
+The roots predict different mechanical responses: the secondary normal
+resultant is \SI{2.401}{kN} at root 1 and
+\SI{1.669}{kN} at root 2, with different accelerations as well.
 
-% FIGURE 6 -- Existing selected stick-stick example, recap p. 6.
-% Case: sf0p950_sdotm40_rpm3000.
-% Use (a) focused lambda-plane view and (b) one-dimensional fold/crossing view.
-% Retain the same root colours/identifiers and load slice in both panels.
-% The 3-D LOCAL CURVE on p. 6 is optional, not a required extra panel.
-% Do not relabel its continuation coordinate as a physical state variable.
-% The mixed scalar example on pp. 8--9 remains supporting evidence for a later
-% appendix slot; it is not substituted for this two-contact example.
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \CINDERVerificationFigure[60mm]{figures/results/verification/sticking_closure_fold.pdf}{%
-    (a) Focused traction-plane view with two admissible stick--stick roots.\par
-    (b) Continuation curve and fixed-load line intersecting both sides of the fold.\par
-    Source: closure recap, page 6; selected late-shift opening case.}
-  \caption{Two admissible sticking solutions in a deliberately selected
-  frozen-state example. The traction-plane view identifies the two roots;
-  the continuation view shows that they lie on opposite sides of one folded
-  branch at the same applied loading. Multiple nonlinear sticking roots can
-  therefore coexist with a unique mechanical response for each prescribed
-  traction pair.}
+  \includegraphics[width=\linewidth]{figures/results/verification/sticking_closure_fold.pdf}
+  \caption{Two sticking roots at one frozen state: \(95\%\) engaged travel,
+  \(-40~\mathrm{mm/s}\) opening speed and \(3000~\mathrm{rpm}\) primary
+  speed. (a) Both acceleration residuals vanish at each marked intersection
+  under the displayed shaft-boundary torques. (b) The required secondary
+  boundary torque along the same locally corrected sticking branch, with
+  primary boundary torque fixed. The horizontal line intersects it at the
+  same two roots. Secondary traction is a branch coordinate, not time or
+  shift position. The dotted continuation beyond loss of local wrap
+  compression is mathematical only. Exact inputs and signed responses are
+  given in \Cref{app:study_closure_conditioning}.}
   \label{fig:verification_closure_fold}
 \end{figure}
 
-Multiplicity also occurs in a mixed branch with primary slip at
-\(-\mu_k\) and secondary stick. The targeted 62-state investigation found
-one distinct scalar-fold geometry, with secondary sticking roots near
-\(0.434\) and \(0.546\) on the selected loading slice. One approaches
-local wrap-contact loss. The examples establish that neither the two-contact
-nor the one-contact sticking problem is globally single-rooted; their
-frequency in this targeted search is not an operating probability.
+Panel~(b) explains how the two roots arise. Along this connected branch,
+increasing secondary traction first raises the secondary torque compatible
+with sticking, then lowers it. The required torque turns near
+\SI{197.39}{N.m}, so the selected \SI{189.96}{N.m} loading cuts both sides
+of the turn. A loading above this local maximum would no longer intersect
+this part of the branch. The mechanical matrix remains full-rank through
+the turn: what folds is the relation selecting sticking traction, not the
+linear response once traction is specified.
 
-These folded branches were exposed by deliberate frozen-state searches.
-No spontaneous ambiguity of this type was observed in the maintained
-transient studies. During smooth evolution, the continuation strategy in
-\Cref{app:num_contact_continuation} reuses the previous accepted traction
-solution, encouraging the solver to remain on the nearby branch. Fresh
-mechanical-residual and admissibility checks still apply, as described in
-\Cref{app:num_contact_search}. Continuation reduces arbitrary root changes
-but cannot remove a fold or guarantee a unique continuation when a branch
-ends. The positive sampled solvability results and the global multiplicity
-finding therefore describe different, compatible properties of the reduced
-closure.
+The distinction also applies with only one sticking contact. A separate
+targeted search of 62 frozen states found one distinct scalar-fold geometry
+on the primary-slip branch at \(-\mu_k\), with secondary sticking. Its selected
+loading admits secondary tractions near 0.434 and 0.546. The latter leaves
+only \SI{0.00616}{N/rad} of minimum local wrap-normal loading, so a positive
+integrated normal force alone would conceal its proximity to contact loss.
+At this zero-relative-speed onset, the primary relative acceleration has
+the sign required to enter the selected slip direction
+(\Cref{app:study_closure_conditioning}). The search is evidence of existence,
+not a measure of how often such a state occurs in operation.
+
+During smooth evolution, CINDER reuses the preceding accepted traction
+solution to follow the nearby branch, while rechecking residuals and
+admissibility (\Cref{app:num_contact_continuation,app:num_contact_search}).
+The maintained transients did not report spontaneous ambiguity of the kind
+exposed here, but continuation cannot remove a fold or establish what happens
+after a branch ends. Thus the earlier trajectory-convergence tests can
+reproduce a locally followed response even when the instantaneous state and
+loading admit more than one acceleration. In that case, the numerical
+continuation history contributes to branch selection; these tests do not
+establish a unique physical selection rule.
 \FloatBarrier
-
-\endgroup
 
 % Replace the block from \section{Independent Transient-Model Benchmark}
 % to immediately before \section{Coupled Operation Across Regimes}.
@@ -15715,62 +15713,247 @@ original-versus-replayed distinction are recorded in
 \section{Closure Conditioning and Root Structure}
 \label{app:study_closure_conditioning}
 
-Configuration details for \Cref{sec:results_closure_structure} are defined in
-\ResultsCode{studies/closure-conditioning/study.json}{closure-conditioning/study.json}.
-The accepted operating states are drawn from the reference launch and the shared
-verification case library used by \Cref{app:study_mechanical_invariants}.
+The study separates the linear response at prescribed traction from the
+nonlinear traction selection required by sticking. Its fixed-traction
+condition number is \(\kappa_2(\vect A_s)\), where \(\vect A_s\) is the
+row/column-equilibrated eight-variable matrix in
+\Cref{eq:appendix_eight_unknown_closure,eq:appendix_equilibrated_system}.
+The retained pulley torques are implementation unknowns; eliminating them
+recovers the six-variable mechanical formulation. The sticking-root
+Jacobian is a different object: the derivative of the frozen dimensional
+relative-acceleration residuals with respect to the two tractions.
+It is reconstructed by central differences at the reported root, using
+\(h=10^{-5}\). The optimizer's working Jacobian is not substituted for
+this derivative, because continuation can update that matrix from previous
+states. Across all 15 roots, the relative spread in \(\kappa_2(\vect J_R)\)
+over \(10^{-6}\leq h\leq3\times10^{-4}\) is at most
+\(2.01\times10^{-6}\).
 
-\begin{table}[H]
-\centering
-\small
-\caption{Reference-trajectory and multistart settings used by the closure-conditioning study.}
-\label{tab:closure_study_settings}
-\begin{tabular}{@{}p{0.48\textwidth}p{0.42\textwidth}@{}}
+\subsection{Operating-State Maps and Starting-Guess Census}
+
+The retained full run uses the configuration in
+\ResultsCode{studies/closure-conditioning/study.json}{closure-conditioning/study.json}.
+Four states come from the reference launch; eleven are constructed
+stick--stick cases from the shared verification library. The low-ratio
+seat, mid-shift, upper-stop and \texttt{free\_shift\_opening\_70} states
+receive traction-plane maps. The last is a free opening state at \(70\%\)
+engaged travel and \(-20~\mathrm{mm/s}\). The low-ratio seat already has
+both the largest actual-root mechanical condition number and the largest
+actual-root Jacobian condition number, so the worst-state selection adds
+no fifth map.
+
+\begin{table}[!htbp]
+\centering\small
+\begin{tabular}{@{}p{0.48\textwidth}p{0.44\textwidth}@{}}
 \toprule
 Quantity & Value \\ \midrule
-Reference launch duration & 10 s \\
-Reference launch sampling interval & 2 ms \\
-Reference launch $\mathrm{rtol}$ / $\mathrm{atol}$ & $10^{-4}$ / $10^{-7}$ \\
-Reference launch maximum step & 10 ms \\
-Physical-box multistart grid & $7\times7$ \\
-Expanded-box multistart grid & $9\times9$ \\
-Root-clustering tolerance & $10^{-6}$ \\
+Reference launch duration / reporting interval & 10 s / 2 ms \\
+Reference launch rtol / atol / maximum step & $10^{-4}$ / $10^{-7}$ / 10 ms \\
+Static / kinetic traction magnitudes & $\mu_s=0.65$ / $\mu_k=0.55$ \\
+Static-box starting grid & $7\times7$ at each of 15 states \\
+Expanded-box starting grid & $9\times9$ at each of four mapped states \\
+Root-clustering distance & $10^{-6}$ in $(\lambda_p,\lambda_s)$ \\
 \bottomrule
 \end{tabular}
+\caption{Retained full-run settings. Starting grids include their endpoints;
+the expanded census is separate from the 735 static-box attempts.}
+\label{tab:closure_study_settings}
 \end{table}
 
-\begin{table}[H]
-\centering
-\small
-\caption{Named frozen states selected for closure maps.}
-\label{tab:closure_named_states}
-\begin{tabular}{@{}p{0.34\textwidth}p{0.54\textwidth}@{}}
+\begin{table}[!htbp]
+\centering\small
+\begin{tabular}{@{}p{0.23\textwidth}p{0.18\textwidth}p{0.51\textwidth}@{}}
 \toprule
-Case ID & Role \\ \midrule
-\texttt{low\_ratio\_seat} & Engaged low-ratio support state \\
-\texttt{mid\_shift} & Interior shifting state and broad-map showcase \\
-\texttt{upper\_stop} & Engaged upper-travel support state \\
-\texttt{free\_shift\_opening\_70} & Late-ratio opening/backshift state \\
-Worst actual $A$ state & Largest encountered mechanical-closure condition number \\
-Worst actual $J_R$ state & Largest encountered stick-root Jacobian condition number \\
+Domain & Grid per state & Definition and scope \\ \midrule
+Static capacity & $241\times241$ & $[-0.65,0.65]^2$, four states. Contact and support checks remain separate. \\
+Expanded & $321\times321$ & $[-2.6,2.6]^2$, four states; mathematical continuation. \\
+Broad & $501\times501$ & $[-10,10]^2$, mid-shift only; structural diagnostic. \\
 \bottomrule
 \end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\small
-\caption{Traction domains used by the closure-conditioning maps.}
+\caption{Retained traction domains. The expanded half-width is
+$\max(2.5,4\mu_s)=2.6$. Map maxima are sampled values, not bounds between
+grid points or condition numbers at the accepted roots.}
 \label{tab:closure_lambda_domains}
-\begin{tabular}{@{}p{0.20\textwidth}p{0.20\textwidth}p{0.52\textwidth}@{}}
+\end{table}
+
+All 644,488 sampled systems in the static and expanded maps have numerical
+rank eight. This statement does not extend to the broad diagnostic: 76,746
+of its 251,001 points are numerically rank deficient. The static-map maxima
+shown in \Cref{fig:verification_closure_robustness} are, in plotted order,
+\(1.3260\times10^4\), \(3.6957\times10^4\), \(1.0540\times10^6\) and
+\(8.2612\times10^3\). The upper-stop maximum occurs at
+\((\lambda_p,\lambda_s)=(-0.216667,-0.254583)\); negative integrated
+normal force, tension and local wrap-normal loading make that trial
+inadmissible independently of the friction limits.
+
+Every map retains signed normal resultants, minimum belt tension, minimum
+local wrap-normal loading, actuator-contact margin and support reaction.
+The archived admissibility masks use the original release's one-sided
+secondary-helix contact guard. Those masks are retained with that meaning;
+they are not relabeled as results for the current bilateral slotted-helix
+reference. The unmasked matrix values in the figure do not depend on that
+choice of contact guard. The selected roots below are also checked with
+the bilateral reference and give identical mechanical responses.
+
+\begin{table}[!htbp]
+\centering\small
+\begin{tabular}{@{}lrrrr@{}}
 \toprule
-Domain & Grid & Definition \\ \midrule
-Static Coulomb box & $241\times241$ & Exact static-capacity intervals at the frozen state; mechanical admissibility is evaluated separately. \\
-Expanded continuation & $321\times321$ & Signed half-width $\max(2.5,4\lambda_{\max,\mathrm{phys}})$; normally about $[-2.6,2.6]^2$. \\
-Broad diagnostic & $501\times501$ & $[-10,10]^2$, generated for the configured showcase state. \\
+Frozen state & Accepted & Not accepted & $\kappa_2(A_s)$ & $\kappa_2(J_R)$ \\ \midrule
+\texttt{low\_ratio\_seat} & 49 & 0 & $1.04\times10^4$ & 280 \\
+\texttt{mid\_shift} & 42 & 7 & $9.44\times10^3$ & 22.8 \\
+\texttt{late\_shift} & 42 & 7 & $8.02\times10^3$ & 28.0 \\
+\texttt{upper\_stop} & 35 & 14 & $8.56\times10^3$ & 93.8 \\
+\texttt{stick\_mid\_forward} & 49 & 0 & $1.57\times10^3$ & 1.97 \\
+\texttt{stick\_mid\_reverse} & 49 & 0 & $1.57\times10^3$ & 1.97 \\
+\texttt{stick\_low\_forward} & 42 & 7 & $5.90\times10^3$ & 21.8 \\
+\texttt{stick\_high\_forward} & 46 & 3 & $2.52\times10^3$ & 4.68 \\
+\texttt{stick\_mid\_stressed} & 45 & 4 & $1.82\times10^3$ & 6.62 \\
+\texttt{free\_shift\_closing\_30} & 42 & 7 & $3.76\times10^3$ & 22.0 \\
+\texttt{free\_shift\_closing\_50} & 49 & 0 & $1.62\times10^3$ & 2.39 \\
+\texttt{free\_shift\_closing\_70} & 42 & 7 & $3.17\times10^3$ & 18.5 \\
+\texttt{free\_shift\_opening\_30} & 42 & 7 & $3.83\times10^3$ & 20.3 \\
+\texttt{free\_shift\_opening\_50} & 49 & 0 & $1.52\times10^3$ & 1.66 \\
+\texttt{free\_shift\_opening\_70} & 43 & 6 & $3.62\times10^3$ & 13.6 \\
+\midrule
+Total & 666 & 69 & & \\
 \bottomrule
 \end{tabular}
+\caption{All 735 static-box starts and condition numbers at the accepted
+operating roots. Every state's accepted solutions form one cluster.
+Forward/reverse and closing/opening cases remain distinct.}
+\label{tab:closure_named_states}
 \end{table}
+
+Numerical acceptance requires optimizer success and the release's
+sticking-compatibility checks. It does not itself certify every contact
+inequality. Here the accepted solutions all lie within the static limits
+and coincide, within the clustering tolerance, with the mechanically
+accepted operating roots. The expanded census accepts 66, 27, 37 and 33 of
+81 starts at the low-ratio seat, mid-shift, upper stop and opening state,
+respectively. Thus 163 of 324 expanded starts are accepted, again in one
+cluster per state, and none supplies an additional root. Unsuccessful
+starts remain in both censuses. These finite searches neither exhaust
+traction space nor establish global uniqueness.
+\FloatBarrier
+
+\subsection{Selected Folded Branches}
+
+The two-contact example in \Cref{fig:verification_closure_fold} fixes
+position at \(95\%\) of engaged travel and shift speed at
+\(-40~\mathrm{mm/s}\). Primary speed is \(3000~\mathrm{rpm}\);
+secondary speed is \(3286.525553~\mathrm{rpm}\) and belt speed is
+\(22.72382860~\mathrm{m/s}\), chosen to match both represented surfaces.
+The attached primary and secondary bench inertias are
+\(0.03\) and \(0.05~\mathrm{kg\,m^2}\), respectively. They are not the
+nominal engine and vehicle boundaries. At the selected slice, the primary
+boundary torque is \(-81.14811271~\mathrm{N\,m}\) and the secondary
+boundary torque is \(+189.96446922~\mathrm{N\,m}\): with both shafts
+rotating positively, the secondary boundary supplies power and the primary
+boundary absorbs it.
+
+\begin{table}[!htbp]
+\centering\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Quantity & Root 1 & Root 2 \\ \midrule
+Primary traction $\lambda_p$ & $-0.2676104653$ & $-0.3003678175$ \\
+Secondary traction $\lambda_s$ & $+0.3340981242$ & $+0.5521247953$ \\
+Primary normal resultant [N] & 3077.56 & 3122.29 \\
+Secondary normal resultant [N] & 2400.85 & 1668.60 \\
+Primary acceleration [rad/s$^2$] & $-575.334$ & $-346.401$ \\
+Secondary acceleration [rad/s$^2$] & $+2919.426$ & $+2736.666$ \\
+Belt acceleration [m/s$^2$] & $-72.4980$ & $-55.9388$ \\
+Shift acceleration [m/s$^2$] & $+142.544$ & $+128.944$ \\
+Minimum belt tension [N] & 174.100 & 170.668 \\
+Minimum primary local normal loading [N/rad] & 65.7586 & 44.8540 \\
+Minimum secondary local normal loading [N/rad] & 20.8365 & 0.242602 \\
+$\kappa_2(A_s)$ & 6305.92 & 4364.80 \\
+$\kappa_2(J_R)$ & 13.8870 & 27.5920 \\
+\bottomrule
+\end{tabular}
+\caption{Fresh evaluation of the two retained traction pairs under installed
+CINDER 1.1.2, at identical state and boundary torques. Both satisfy the
+friction and mechanical-contact inequalities. The signed accelerations
+show that the two roots define different local responses.}
+\label{tab:closure_selected_roots}
+\end{table}
+
+The smaller static margin over both roots and interfaces is
+\(\mu_s-|\lambda_j|=0.0978752\); it is not a normalized percentage.
+Both fixed-traction matrices have rank eight. The fresh
+two-component sticking-residual norms are below
+\(5.5\times10^{-11}~\mathrm{m/s^2}\). Each root's relative
+\(\kappa_2(\vect J_R)\) spread over the same step range is below
+\(1.57\times10^{-6}\).
+
+The fixed-primary-torque branch is corrected from the retained inverse-grid
+curve by solving both sticking residuals for \(\lambda_p\) and secondary
+boundary torque at each prescribed \(\lambda_s\). The displayed open
+segment has 184 points over \(0.30\leq\lambda_s\leq0.59\), including both
+roots and the refined turn. Direct CINDER evaluation checks each point;
+no endpoint is joined to the other. Its local maximum is
+\(197.3901853~\mathrm{N\,m}\) at
+\((\lambda_p,\lambda_s)=(-0.2856750,0.4134494)\),
+\(7.4257161~\mathrm{N\,m}\) above the selected loading.
+The turn is mechanically admissible and the fixed-traction matrix remains
+rank eight throughout this segment. The root Jacobian becomes nearly
+singular there, as expected when the traction response to loading turns;
+this is a numerical local-extremum calculation, not an exact singularity
+certificate. The dotted part of the curve has negative secondary local
+wrap-normal loading and is excluded from the admissible branch.
+
+The mixed example fixes the same travel fraction and opening speed but
+uses \(2500~\mathrm{rpm}\) primary speed,
+\(2736.737483~\mathrm{rpm}\) secondary speed and
+\(18.93652384~\mathrm{m/s}\) belt speed. It retains the same bench
+inertias. Boundary torques are \(-260~\mathrm{N\,m}\) primary and
+\(+59.34019609~\mathrm{N\,m}\) secondary. With
+\(\lambda_p=-\mu_k=-0.55\), the secondary sticking roots are
+\(0.4342879568\) and \(0.5458610486\). Their scalar residual slopes
+\(\partial R_s/\partial\lambda_s\) are approximately
+\(+54.6254\) and \(-28.0426~\mathrm{m/s^2}\), respectively; a two-contact
+Jacobian condition number is not used for this scalar problem.
+Both roots have zero relative speed at the selected instant. Primary
+relative accelerations of \(+364.835\) and
+\(+379.770~\mathrm{m/s^2}\) have the required sign for onset of the
+negative-traction slip branch. The secondary residual magnitudes are
+below \(1.8\times10^{-10}~\mathrm{m/s^2}\).
+Both roots pass the contact checks, although the minimum secondary local
+normal loading falls from \(2.60109\) to
+\(0.00616308~\mathrm{N/rad}\). The targeted search has 62 states and
+15 candidate rows, but those rows represent one distinct state/branch
+fold geometry under different fixed primary torques. They are not 15
+independent fold discoveries or a frequency estimate.
+\FloatBarrier
+
+\subsection{Retained Evidence and Reproduction}
+
+The earlier recap used \texttt{artifacts(10).zip}: 25 starts at each of
+15 states, and \(81^2\), \(101^2\) and \(121^2\) maps. Its 375 attempts
+and upper-stop static-map maximum \(3.38405\times10^5\) therefore do not
+describe the full protocol above. The later retained
+\texttt{artifacts(20260912-044618).zip} supplies the full census and maps;
+no launch, broad map or multistart sweep was rerun for this finalization.
+The selected folded branches come from separately registered targeted
+archives. The two-contact curve's archived interpolated maximum,
+\(197.4374~\mathrm{N\,m}\), is replaced by the locally corrected value
+above, with both versions retained in the evidence.
+
+The canonical
+\ResultsCode{studies/closure-conditioning/run.py}{run.py}
+provides a checked \texttt{--import-retained} path for those three archives
+and a \texttt{--plot-only} path for the delivered evidence. The import
+performs only the selected frozen-root, derivative, local-curve and focused
+residual-grid checks under installed \texttt{cinder-cvt==1.1.2}; it does
+not import the newer live simulator. It uses the full archive's embedded
+case library. Original archive/member hashes,
+executed input snapshots, numerical-output hashes and exact reproduction
+commands are recorded in
+\ResultsCode{studies/closure-conditioning/provenance/SECTION_4_2_4.md}{the study provenance note}.
+The retained archives do not contain a complete original machine and
+dependency lock, so plot reproduction and selected fresh checks do not
+establish bitwise regeneration of the historical full search.
 
 
 \section{Independent Ballew Benchmark}

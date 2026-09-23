@@ -1,4 +1,64 @@
-# Closure conditioning — operating-domain upgrade
+# Closure conditioning — Results 4.2.4
+
+## Final publication reproduction
+
+Use the release-local environment with **installed `cinder-cvt==1.1.2`**, source
+tag commit `7637a38b4fb9ec21dfb953c1c80a27ec5f389654`. The newer live simulator
+must not enter this study. Commands below run from `results/cinder-v1.1.2`:
+
+```bash
+.venv/bin/python verify_environment.py
+.venv/bin/python studies/closure-conditioning/verify_study.py
+.venv/bin/python studies/closure-conditioning/run.py --plot-only \
+  --artifacts-dir studies/closure-conditioning/artifacts/reviewed \
+  --figure-dir studies/closure-conditioning/artifacts/reviewed/publication
+.venv/bin/python studies/closure-conditioning/tests/test_publication.py
+```
+
+Place the delivered `reviewed/` directory at the indicated artifact path first.
+`--plot-only` verifies registered input/output hashes, all retained map masks,
+both censuses, root derivatives and selected fresh checks before plotting. It
+performs no simulation. It emits two vector PDFs, two 300 dpi PNGs, checked
+values and a figure provenance record. The manuscript uses the two PDFs at
+6.5-inch width. The code is `analysis/publication_plots.py`, connected to this
+canonical runner; no exploration script is required.
+
+To recover the evidence from the exact original archives and repeat only the
+selected frozen calculations:
+
+```bash
+.venv/bin/python studies/closure-conditioning/run.py --import-retained \
+  '/path/artifacts(20260912-044618).zip' \
+  '/path/best-visual-multiroot-story(1).zip' \
+  '/path/one-contact-multiroot-fold-search.zip' \
+  --artifacts-dir studies/closure-conditioning/artifacts/reviewed \
+  --figure-dir studies/closure-conditioning/artifacts/reviewed/publication
+```
+
+Archive identities are registered in `provenance/retained_archives.json`.
+The first archive supplies the **735-start full census and 241/321/501 maps**.
+The older `artifacts(10).zip` supplies only the superseded recap (375 starts,
+81/101/121 maps); it must not be substituted. The import retains original
+member bytes, uses the embedded historical case library, and records exact
+executed input snapshots. It re-evaluates selected roots, finite differences,
+an open local curve and a focused residual grid. It does **not** repeat the
+launch, full maps, broad search or multistart sweeps.
+
+The original maps' one-sided helix contact masks are preserved and identified
+as historical. The publication's matrix maxima are unmasked. Selected two- and
+one-contact roots also pass the current bilateral reference, with identical
+mechanical responses. Read `provenance/SECTION_4_2_4.md` for exact values,
+case/hash reconciliation, limits and the distinction between a numerical
+acceptance flag and complete contact admissibility.
+
+The default runner and `--quick` remain available for new full/quick core
+experiments. They now write to `artifacts/full_recomputed` and `artifacts/quick`
+and refuse to erase existing output directories. These are new executions with
+the current release-scoped defaults; they are not substitutions for the
+registered historical evidence and do not automatically reconstruct the
+targeted fold archives.
+
+## Core study and retained diagnostics
 
 This study asks two distinct questions:
 
@@ -73,7 +133,7 @@ R_p=0,\qquad R_s=0.
 
 The baseline physical root is the simultaneous intersection that is also statically admissible and mechanically/topologically admissible. Expanded maps may contain additional mathematical branches or apparent intersections outside that region. The study therefore performs two different multi-start tests:
 
-- the physical static box, for the production physical-root uniqueness claim;
+- the static box, for a finite physical-root census;
 - the expanded mathematical box, to catalogue additional mathematical root clusters without confusing them with physical solutions.
 
 
@@ -132,7 +192,7 @@ the actual root with the expanded-domain maximum of scaled `kappa(A)`, the
 worst topology-admissible expanded point, and the nearest point on the top
 0.5% high-conditioning ridge.  It writes the weakest right singular vector,
 the matching left singular vector, and a focused `(tau_s,N_s)` row-alignment
-diagnostic under `artifacts/singular_vector_diagnostics/`.
+diagnostic under `artifacts/full_recomputed/singular_vector_diagnostics/`.
 
 The singular vectors are taken from the same row/column-equilibrated matrix
 used by the study's scaled closure condition number.  Therefore the vector
