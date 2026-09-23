@@ -2363,12 +2363,8 @@ instant.
 The fixed CVT data are the physical and geometric quantities that define the
 selected hardware. Some may be specified directly and others calculated once
 from those inputs during initialization; in either case, they remain unchanged
-while that simulation is advanced. The complete fixed-data set is collected in
-\Cref{tab:cvt_fixed_data}, while
-\Cref{tab:cvt_instantaneous_results_by_regime} lists the instantaneous
-quantities returned in each mechanical regime.
-\Cref{tab:model_quantity_roles} summarizes the different roles these quantities
-play during one model evaluation.
+while that simulation is advanced. \Cref{tab:model_quantity_roles} places these
+data alongside the three roles that can change from one evaluation to the next.
 
 \begin{table}[H]
 \centering
@@ -2376,48 +2372,56 @@ play during one model evaluation.
 \caption{Roles of the quantities used during a CVT model evaluation.}
 \label{tab:model_quantity_roles}
 \begin{tabular}{
->{\raggedright\arraybackslash}p{0.19\linewidth}
->{\raggedright\arraybackslash}p{0.28\linewidth}
->{\raggedright\arraybackslash}p{0.43\linewidth}}
+>{\raggedright\arraybackslash}p{0.16\linewidth}
+>{\raggedright\arraybackslash}p{0.22\linewidth}
+>{\raggedright\arraybackslash}p{0.36\linewidth}
+>{\raggedright\arraybackslash}p{0.14\linewidth}}
 \toprule
-\textbf{Quantity role} & \textbf{Contents} & \textbf{Use during evaluation} \\
+\textbf{Quantity role}
+& \textbf{Contents}
+& \textbf{Use during evaluation}
+& \textbf{Inventory} \\
 \midrule
 Fixed CVT data
 & Physical and geometric data for the selected hardware, including values
   calculated once during initialization
 & Define the selected CVT and the mechanical relations used to represent it;
-  remain unchanged during one simulation. \\
+  remain unchanged during one simulation.
+& \Cref{tab:cvt_fixed_data} \\
 \addlinespace[3pt]
 
 Current CVT condition
 & State vector \(\vect{x}(t)\) and mechanical regime \(q(t)\)
 & Carry the current internal motion and active mechanical arrangement from the
-  preceding instant. \\
+  preceding instant.
+& \Cref{tab:cvt_current_condition} \\
 \addlinespace[3pt]
 
-Shaft-interface data
+Shaft-interface conditions
 & Applied torque \(\tau_{\mathrm{B},j}\) and equivalent inertia
   \(I_{\mathrm{B},j}\) at each shaft
 & Supply the current mechanical loading presented by the systems attached to
-  the primary and secondary shafts. \\
+  the primary and secondary shafts.
+& \Cref{tab:cvt_shaft_interface_conditions} \\
 \addlinespace[3pt]
 
-Instantaneous CVT results
-& State derivative \(\dot{\vect{x}}(t)\) and other mechanical quantities required for the current
-  evaluation, including regime-admissibility measures
-& Are determined from the fixed data, current CVT condition, and
-  shaft-interface data; determine how the state can advance and whether the
-  current regime can continue. \\
+Instantaneous CVT quantities
+& State derivative \(\dot{\vect{x}}(t)\) and other mechanical quantities
+  required for the current evaluation, including regime-admissibility measures
+& Are determined from the fixed CVT data, current CVT condition, and
+  shaft-interface conditions; determine how the state can advance and whether
+  the current regime can continue.
+& \Cref{tab:cvt_instantaneous_quantities} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Taken together, these roles separate what defines an instantaneous CVT problem
 from what the mechanics return. The fixed data identify the hardware, the
-shaft-interface data provide its current external loading, and
+shaft-interface conditions provide its current external loading, and
 \(\bigl(\vect{x},q\bigr)\) gives the internal condition to which that loading
-is applied. The instantaneous results are the response of that condition. One
-evaluation can therefore be stated compactly:
+is applied. The instantaneous quantities are the response of that condition.
+One evaluation can therefore be stated compactly:
 
 \begin{enumerate}
     \item The current time, state \(\vect{x}(t)\), and regime \(q(t)\) identify
@@ -2426,9 +2430,9 @@ evaluation can therefore be stated compactly:
           torque and equivalent inertia presented at their respective
           interfaces under the current shaft conditions.
     \item The CVT mechanics use the fixed CVT data, current internal condition,
-          and shaft-interface data to determine the instantaneous mechanical
-          response. This provides \(\dot{\vect{x}}(t)\) together with the
-          quantities needed to test whether the current regime remains
+          and shaft-interface conditions to determine the instantaneous
+          mechanical response. This provides \(\dot{\vect{x}}(t)\) together
+          with the quantities needed to test whether the current regime remains
           admissible.
     \item If the regime remains admissible, the state is advanced using
           \(\dot{\vect{x}}\) and the regime is retained. If an event changes
