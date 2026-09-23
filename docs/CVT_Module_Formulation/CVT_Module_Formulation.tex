@@ -338,22 +338,32 @@
 % =========================
 % Title
 % =========================
-\title{A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Simulation\\[0.4em]\large With Mechanical Actuation and Traction-Limited Torque Transfer}
-\author{
-Kai Arseneau\thanks{Independent Researcher}
-\and
-W.~Spencer Smith\thanks{Department of Computing and Software, McMaster University}
+\title{
+A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Simulation\\[0.4em]
+\large With Mechanical Actuation and Traction-Limited Torque Transfer
 }
 
-% \author{
-% Kai Arseneau\\
-% \small Independent Researcher
-% \and
-% W.~Spencer Smith\\
-% \small Department of Computing and Software\\
-% \small McMaster University
-% }
-\hypersetup{pdfauthor={Kai Arseneau; W. Spencer Smith}}
+\author{
+Kai Arseneau\textsuperscript{1}
+\and
+W.~Spencer Smith\textsuperscript{2}
+\\[0.6em]
+\small
+\textsuperscript{1}Independent Researcher
+\qquad
+\textsuperscript{2}McMaster University
+\\[0.4em]
+\small
+\href{mailto:kai@kaiarseneau.dev}{kai@kaiarseneau.dev}
+\quad $\cdot$ \quad
+\href{https://orcid.org/0009-0003-7811-9634}
+{ORCID 0009-0003-7811-9634}
+}
+
+\hypersetup{
+    pdfauthor={Kai Arseneau; W. Spencer Smith}
+}
+
 \date{\today}
 
 \begin{document}
@@ -12188,7 +12198,7 @@ mass moments are changed consistently.
     D02\_M & D02 with the flyweight tip mass restored to the reference value. \\
     D02\_P & D02 with the primary installed spring compression restored to the
       reference value. \\
-    D02\_M150 & D02 with the flyweight tip mass increased to \(150\%\) of
+    D02\_M170 & D02 with the flyweight tip mass increased to \(170\%\) of
       the reference value; elevated primary spring compression retained. \\
     \bottomrule
   \end{tabular}
@@ -12212,7 +12222,7 @@ included to expose whether the more demanding parts of the road bring out
 limitations that are not apparent near the reference configuration. D02\_M and
 D02\_P then separate two of the primary-side changes contained in D02 by
 restoring, one at a time, the nominal flyweight mass and the nominal primary
-spring preload. D02\_M150 extends the mass correction to test how stronger
+spring preload. D02\_M170 extends the mass correction to test how stronger
 primary closing affects both clamping and backshift. Together, the set
 provides several distinct mechanical routes
 away from the reference before any of their course responses are interpreted.
@@ -15634,101 +15644,467 @@ Broad diagnostic & $501\times501$ & $[-10,10]^2$, generated for the configured s
 \section{Independent Ballew Benchmark}
 \label{app:study_ballew}
 
-Exact benchmark inputs supporting \Cref{sec:results_ballew_benchmark} are defined
-in \ResultsCode{studies/ballew-2015/study.json}{study.json}. The
-benchmark assembly and shaft boundaries are constructed in
+Exact benchmark inputs supporting \Cref{sec:results_ballew_benchmark} are
+defined in
+\ResultsCode{studies/ballew-2015/study.json}{study.json}. The reconstruction
+choices that translate Ballew's distributed-belt case into the quantities
+required by CINDER are recorded in
+\ResultsCode{studies/ballew-2015/provenance/RECONSTRUCTION.md}{RECONSTRUCTION.md}.
+The benchmark assembly and shaft boundaries are constructed in
 \ResultsCode{studies/ballew-2015/infrastructure/benchmark/case.py}{case.py},
-with published and reconstructed constants collected in
+with the source and reconstructed constants collected in
 \ResultsCode{studies/ballew-2015/infrastructure/benchmark/constants.py}{constants.py}.
+The comparison is model-to-model; the reference traces are Ballew's simulated
+vehicle-acceleration results rather than experimental measurements.
 
-\subsection{Shaft boundaries}
-\label{app:ballew_boundaries}
+\subsection{Source Data and Reconstruction}
+\label{app:ballew_reconstruction}
+
+The reconstruction retains Ballew's published pulley geometry, belt mass,
+shaft inertias, vehicle data, initial shaft speeds, applied torque, secondary
+clamp, and controller gains where they are reported. Quantities required by
+CINDER but not specified by the source are introduced explicitly rather than
+fitted to the digitized trajectories.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Shaft-boundary quantities used by the independent Ballew benchmark.}
-\label{tab:ballew_boundary_values}
-\begin{tabular}{@{}p{0.47\textwidth}p{0.17\textwidth}r@{}}
+\begin{tabular}{@{}p{0.48\textwidth}r@{}}
 \toprule
-Quantity & CINDER boundary & Value \\ \midrule
-Primary applied torque $\tau_{\mathrm{B},p}$ & Constant torque--inertia & \SI{18}{\newton\meter} \\
-Primary referred inertia $I_{\mathrm{B},p}$ & Constant torque--inertia & \SI{0.008}{\kilogram\meter\squared} \\
-Final-drive reduction $G$ & Locked final drive & $8.93$ \\
-Tire radius $r_w$ & Locked final drive & \SI{0.317}{\meter} \\
-ATV mass $m_v$ & Locked final drive & \SI{226}{\kilogram} \\
-Wheel rotational inertia $I_w$ & Locked final drive & \SI{0}{\kilogram\meter\squared} \\
-Rolling-resistance coefficient $C_{rr}$ & Road load & $0.048$ \\
-Aerodynamic drag coefficient $C_d$ & Road load & $1.0$ \\
-Frontal area $A_f$ & Road load & \SI{1.39}{\meter\squared} \\
-Road grade $\gamma$ & Constant grade & $0$ \\
-Air density $\rho$ & Reconstructed road load & \SI{1.225}{\kilogram\per\meter\cubed} \\
-Gravity $g$ & Reconstructed road load & \SI{9.80665}{\meter\per\second\squared} \\
-Rolling-speed regularization $v_\epsilon$ & Reconstructed road load & \SI{0.01}{\meter\per\second} \\
-Reflected ATV translation $m_v(r_w/G)^2$ & Locked final drive & \SI{0.28478955}{\kilogram\meter\squared} \\
-Direct secondary-boundary inertia $I_{s,\mathrm{dir}}$ & Locked final drive & \SI{0.98821045}{\kilogram\meter\squared} \\
-Total secondary boundary inertia $I_{\mathrm{B},s}$ & Locked final drive & \SI{1.273}{\kilogram\meter\squared} \\
+Source-native quantity & Value \\
+\midrule
+Sheave half-angle & \(15^\circ\) \\
+Pulley centre distance & \SI{0.2421}{\meter} \\
+Published primary radius limits & \SIrange{0.0159}{0.0838}{\meter} \\
+Published secondary radius limits & \SIrange{0.0159}{0.0838}{\meter} \\
+One-dimensional belt length & \SI{0.8636}{\meter} \\
+Belt mass & \SI{1.000}{\kilogram} \\
+Primary pulley + engine inertia & \SI{0.008}{\kilogram\meter\squared} \\
+Secondary pulley inertia & \SI{0.002}{\kilogram\meter\squared} \\
+Secondary pulley + ATV inertia & \SI{1.275}{\kilogram\meter\squared} \\
+Static / kinetic friction coefficients & \(0.55 / 0.40\) \\
+Final-drive reduction & \(8.93\) \\
+ATV mass & \SI{226}{\kilogram} \\
+Tire radius & \SI{0.317}{\meter} \\
+Rolling-resistance coefficient & \(0.048\) \\
+Aerodynamic drag coefficient & \(1.0\) \\
+Frontal area & \SI{1.39}{\meter\squared} \\
+Primary applied torque & \SI{18}{\newton\meter} \\
+Secondary closing force & \SI{2000}{\newton} \\
+Initial primary / secondary speed & \(2500 / 1136~\mathrm{rpm}\) \\
+Simulated interval & \SI{5}{\second} \\
 \bottomrule
 \end{tabular}
+\caption{Source-native quantities retained in the Ballew reconstruction.}
+\label{tab:ballew_source_quantities}
 \end{table}
 
-The Ballew assembly assigns a further
-\(\SI{0.002}{\kilogram\meter\squared}\) to the output pulley inside the CVT.
-Thus the internal output-pulley inertia plus the secondary boundary inertia is
-\(0.002+1.273=\SI{1.275}{\kilogram\meter\squared}\), matching the published
-combined output-pulley--ATV inertia used by the reconstruction.
+Ballew's transient belt is one-dimensional, whereas CINDER distinguishes the
+outer belt geometry from the cord-line effective path. The reconstruction
+identifies Ballew's published \SI{0.8636}{m} belt length with the CINDER
+effective path. The smooth section taken from Ballew's Figure~39 is treated as
+an equivalent load-carrying core with height \SI{7.62}{mm}, outer width
+\SI{29.972}{mm}, inner width \SI{26.670}{mm}, and cord depth
+\SI{1.270}{mm}. The corresponding CINDER outer length is
+\SI{0.871579645}{m}. An effective density of
+\SI{5316.543}{\kilogram\per\meter\cubed} then preserves the published
+\SI{1.000}{kg} belt mass exactly. This density is a mass-preserving
+reconstruction parameter, not a measured material density.
 
-\subsection{Actuation and host state}
+The published minimum radii are search limits rather than a simultaneously
+compatible fixed-length endpoint. At the reconstructed low-ratio end, the
+secondary effective radius is fixed at its published maximum,
+\SI{0.0838}{m}, and belt-length closure gives the compatible primary effective
+radius \SI{0.033647778}{m}. The always-engaged Ballew case uses zero deadzone
+width, and the resulting CINDER shift range is \SI{0.026876495}{m}. Solving
+within that geometry for the exact published shaft-speed ratio gives
+\begin{equation}
+\begin{aligned}
+n_p(0)&=2500~\mathrm{rpm},&
+n_s(0)&=1136~\mathrm{rpm},\\
+s(0)&=\SI{0.001754497}{m},&
+\dot s(0)&=0,\\
+r_{p,\mathrm{eff}}(0)&=\SI{0.036921714}{m},&
+r_{s,\mathrm{eff}}(0)&=\SI{0.081253771}{m},\\
+v_b(0)&=\SI{9.666082}{m/s}.&&
+\end{aligned}
+\label{eq:ballew_reconstructed_initial_state}
+\end{equation}
+
+The two models use different normal-force conventions. Preserving the same
+gross tangential capacity gives
+\begin{equation}
+\lambda=\frac{\mu\cos\beta}{2},
+\label{eq:ballew_friction_translation}
+\end{equation}
+and therefore \(\lambda_s=0.2656296022\) and
+\(\lvert\lambda_k\rvert=0.1931851653\) for \(\beta=15^\circ\).
+This is a force-normalization translation rather than a friction fit.
+
+The source traces are digitized from Ballew's Figures~41 and~45. Their raw
+WebPlotDigitizer exports, project files, prepared CSVs, and the source thesis
+are stored under
+\ResultsCode{studies/ballew-2015/reference}{reference/}; file hashes are
+recorded in
+\ResultsCode{studies/ballew-2015/reference/manifest.json}{manifest.json}.
+Preparation adds explicit headers, preserves the two native Figure~41 time
+grids, averages exact duplicate Figure~45 timestamps, and extends the first
+visible Figure~45 force back to \(t=0\) by zero-order hold. No smoothing,
+filtering, curve fitting, or resampling is applied.
+
+\subsection{Shaft Boundaries}
+\label{app:ballew_boundaries}
+
+Ballew publishes a combined primary-pulley/engine inertia, so the full
+\SI{0.008}{\kilogram\meter\squared} is assigned to the primary shaft boundary
+and is not duplicated inside the CVT. On the secondary side, CINDER owns the
+published \SI{0.002}{\kilogram\meter\squared} output-pulley inertia. Vehicle
+translation reflected through the fixed \(8.93\) reduction contributes
+\SI{0.28478955}{\kilogram\meter\squared}; the remaining
+\SI{0.98821045}{\kilogram\meter\squared} is carried as direct
+secondary-boundary inertia so that the published
+\SI{1.275}{\kilogram\meter\squared} output-pulley--ATV total is preserved.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{0.47\textwidth}p{0.17\textwidth}r@{}}
+\toprule
+Quantity & CINDER boundary & Value \\
+\midrule
+Primary applied torque \(\tau_{\mathrm{B},p}\) & Constant torque--inertia & \SI{18}{\newton\meter} \\
+Primary referred inertia \(I_{\mathrm{B},p}\) & Constant torque--inertia & \SI{0.008}{\kilogram\meter\squared} \\
+Final-drive reduction \(G\) & Locked final drive & \(8.93\) \\
+Tire radius \(r_w\) & Locked final drive & \SI{0.317}{\meter} \\
+ATV mass \(m_v\) & Locked final drive & \SI{226}{\kilogram} \\
+Wheel rotational inertia \(I_w\) & Locked final drive & \SI{0}{\kilogram\meter\squared} \\
+Rolling-resistance coefficient \(C_{rr}\) & Road load & \(0.048\) \\
+Aerodynamic drag coefficient \(C_d\) & Road load & \(1.0\) \\
+Frontal area \(A_f\) & Road load & \SI{1.39}{\meter\squared} \\
+Road grade \(\gamma\) & Constant grade & \(0\) \\
+Air density \(\rho\) & Reconstruction choice & \SI{1.225}{\kilogram\per\meter\cubed} \\
+Gravity \(g\) & Reconstruction choice & \SI{9.80665}{\meter\per\second\squared} \\
+Rolling-speed regularization \(v_\epsilon\) & Reconstruction choice & \SI{0.01}{\meter\per\second} \\
+Reflected ATV translation \(m_v(r_w/G)^2\) & Locked final drive & \SI{0.28478955}{\kilogram\meter\squared} \\
+Direct secondary-boundary inertia \(I_{s,\mathrm{dir}}\) & Locked final drive & \SI{0.98821045}{\kilogram\meter\squared} \\
+Total secondary boundary inertia \(I_{\mathrm{B},s}\) & Locked final drive & \SI{1.273}{\kilogram\meter\squared} \\
+\bottomrule
+\end{tabular}
+\caption{Shaft-boundary quantities used by the independent Ballew benchmark.}
+\label{tab:ballew_boundary_values}
+\end{table}
+
+\subsection{Actuation and Host State}
 \label{app:ballew_protocol_implementation}
 
 The benchmark-specific axial-force laws are defined in
-\Cref{app:ballew_actuator_implementations}. Their use in the two comparison
-protocols is fixed as follows.
+\Cref{app:ballew_actuator_implementations}. Both protocols retain the same
+reconstructed geometry, inertias, friction translation, secondary clamp, and
+vehicle boundary; only the primary clamping law differs.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Actuator and host configuration of the two Ballew benchmark protocols.}
-\label{tab:ballew_actuator_protocols}
 \begin{tabular}{@{}p{0.18\textwidth}p{0.29\textwidth}p{0.22\textwidth}p{0.23\textwidth}@{}}
 \toprule
-Protocol & Primary actuator & Secondary actuator & Host state \\ \midrule
+Protocol & Primary actuator & Secondary actuator & Host state \\
+\midrule
 Force replay & Prepared Figure~45 force history; piecewise-linear interpolation & Constant \SI{2000}{\newton} closing force & Secondary-shaft angle \\
-Closed loop & PI force law of \Cref{eq:ballew_pi_force_law} & Constant \SI{2000}{\newton} closing force & Secondary-shaft angle and controller integral $\eta$ \\
+Closed loop & PI force law of \Cref{eq:ballew_pi_force_law} & Constant \SI{2000}{\newton} closing force & Secondary-shaft angle and controller integral \(\eta\) \\
 \bottomrule
 \end{tabular}
+\caption{Actuator and host configuration of the two Ballew benchmark protocols.}
+\label{tab:ballew_actuator_protocols}
 \end{table}
 
-The common initial shaft speeds are
-\begin{equation}
- n_p(0)=2500~\mathrm{rpm},
- \qquad
- n_s(0)=1136~\mathrm{rpm},
- \qquad
- \dot s(0)=0.
-\label{eq:ballew_initial_shaft_state}
-\end{equation}
-The initial shift coordinate is the engaged geometry that makes those two shaft
-speeds compatible with one belt speed. In the closed-loop protocol,
-\(\eta(0)=0\). The exact construction is implemented in
-\ResultsCode{studies/ballew-2015/infrastructure/benchmark/simulation.py}{simulation.py}.
+For the reconstructed closed-loop protocol, the controller uses
+\(e=n_p-2500~\mathrm{rpm}\), \(K_{\mathrm{ff}}=1.2\), \(K_p=5\), and
+\(K_i=75\). The feed-forward term is interpreted as
+\(K_{\mathrm{ff}}F_{s,\mathrm{act}}=\SI{2400}{N}\), with \(\eta(0)=0\).
+No saturation or anti-windup law is added because neither is specified by the
+source.
 
-\subsection{Numerical settings}
+\subsection{Numerical Settings}
 \label{app:ballew_numerics}
 
 \begin{table}[H]
 \centering
 \small
-\caption{Numerical settings used by the two Ballew benchmark protocols.}
-\label{tab:ballew_numerics}
 \begin{tabular}{@{}p{0.19\textwidth}p{0.12\textwidth}p{0.12\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.10\textwidth}@{}}
 \toprule
-Protocol & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Report step & Duration \\ \midrule
-Force replay & $10^{-7}$ & $10^{-9}$ & 1 ms & 5 ms & 5 s \\
-Closed loop & $10^{-7}$ & $10^{-9}$ & 1 ms & 0.2 ms & 5 s \\
+Protocol & \(\mathrm{rtol}\) & \(\mathrm{atol}\) & Max. step & Report step & Duration \\
+\midrule
+Force replay & \(10^{-7}\) & \(10^{-9}\) & 1 ms & 5 ms & 5 s \\
+Closed loop & \(10^{-7}\) & \(10^{-9}\) & 1 ms & 0.2 ms & 5 s \\
 \bottomrule
 \end{tabular}
+\caption{Numerical settings used by the two Ballew benchmark protocols.}
+\label{tab:ballew_numerics}
 \end{table}
-Both protocols permit up to 2000 hybrid transitions and retain dense output for the benchmark comparison.
+
+Both protocols use LSODA, permit up to 2000 hybrid transitions, and retain
+dense output. The separate closed-loop refinement check is defined in
+\ResultsCode{studies/ballew-2015/provenance/NUMERICAL_STABILITY.md}{NUMERICAL_STABILITY.md}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Refinement case & \(\mathrm{rtol}\) & \(\mathrm{atol}\) & Max. step \\
+\midrule
+Nominal & \(10^{-7}\) & \(10^{-9}\) & 1.00 ms \\
+Nominal, refined step & \(10^{-7}\) & \(10^{-9}\) & 0.50 ms \\
+Nominal, further refined step & \(10^{-7}\) & \(10^{-9}\) & 0.25 ms \\
+Tighter tolerances & \(3\times10^{-8}\) & \(3\times10^{-10}\) & 0.50 ms \\
+\bottomrule
+\end{tabular}
+\caption{Closed-loop numerical-refinement cases defined for the Ballew benchmark.}
+\label{tab:ballew_refinement_settings}
+\end{table}
+
+\section{Common-Course Operation and Tuning}
+\label{app:study_course_tuning}
+
+Exact inputs supporting \Cref{sec:results_coupled_regimes} are defined by
+\ResultsCode{studies/course-tuning/study.json}{study.json}. The selected road
+and hardware cases are frozen in
+\ResultsCode{studies/course-tuning/inputs/course.json}{course.json} and
+\ResultsCode{studies/course-tuning/inputs/competitors.json}{competitors.json};
+their selected-input hashes are recorded in
+\ResultsCode{studies/course-tuning/inputs/selection.lock.json}{selection.lock.json}.
+The maintained selection revision is
+\texttt{section4p5-final-v3-r26b7-m170}.
+
+All selected cases use CINDER~1.1.2, the reference CVT of
+\Cref{app:common_physical_configuration}, the bilateral secondary-helix
+topology of \Cref{app:reference_helix_topology}, the full-throttle primary
+boundary of \Cref{app:primary_engine_boundary}, and the locked-final-drive
+vehicle boundary of \Cref{app:secondary_vehicle_boundary}. They begin from the
+common state in \Cref{eq:results_reference_initial_state}. The hardware
+variants therefore change the CVT itself without changing the engine, vehicle,
+belt/contact model, initial state, or numerical method.
+
+\subsection{Distance-Indexed Road}
+\label{app:course_profile}
+
+Road position is signed travelled distance along the road surface. Constant
+grades are joined by the \(C^2\) quintic transition
+\begin{equation}
+S(u)=u^3\left(10-15u+6u^2\right),
+\qquad 0\le u\le1,
+\label{eq:course_smoothstep}
+\end{equation}
+so a ramp from \(\gamma_0\) to \(\gamma_1\) over length \(L\) is
+\(\gamma(x)=\gamma_0+(\gamma_1-\gamma_0)S((x-x_0)/L)\).
+The cyclic region uses a \SI{12}{m}-wavelength sinusoidal grade with amplitude
+\(32^\circ\), multiplied by the same smooth envelope over the first and last
+\SI{6}{m}. The complete selected road is listed in
+\Cref{tab:course_profile}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}r r p{0.52\textwidth}@{}}
+\toprule
+Start [m] & End [m] & Road feature \\
+\midrule
+0 & 120 & Level launch and opening upshift \\
+120 & 132 & Smooth \(0\rightarrow38^\circ\) entry \\
+132 & 212 & Constant \(38^\circ\) climb \\
+212 & 224 & Smooth \(38^\circ\rightarrow0\) exit \\
+224 & 264 & Level recovery \\
+264 & 336 & Six \SI{12}{m} cycles at \(\pm32^\circ\), zero mean, with \SI{6}{m} end envelopes \\
+336 & 348 & Level separation \\
+348 & 356 & Smooth \(0\rightarrow18^\circ\) entry \\
+356 & 596 & Constant \(18^\circ\) climb \\
+596 & 604 & Smooth \(18^\circ\rightarrow0\) exit \\
+604 & 624 & Level recovery \\
+624 & 636 & Smooth \(0\rightarrow-22^\circ\) descent entry \\
+636 & 696 & Constant \(-22^\circ\) descent \\
+696 & 708 & Smooth \(-22^\circ\rightarrow0\) exit \\
+708 & 732 & Final level segment \\
+\bottomrule
+\end{tabular}
+\caption{Distance-indexed road used by every selected common-course case.}
+\label{tab:course_profile}
+\end{table}
+
+The road implementation is defined in
+\ResultsCode{studies/course-tuning/infrastructure/course.py}{course.py}.
+The signed distance is road arc length, so the elevation derivative is
+\(\sin\gamma\), not \(\tan\gamma\). Full throttle is retained throughout; the
+course changes only the road grade supplied to the secondary vehicle boundary.
+
+\subsection{Selected Hardware Configurations}
+\label{app:course_configurations}
+
+The reference flyweight has a fixed arm/body mass of
+\SI{13.646}{g} and a replaceable tip mass of \SI{250}{g} per flyweight.
+Mass-scale cases change the tip mass and its associated first and second mass
+moments consistently while leaving the arm/body mass unchanged. Spring-rate
+case P300 triples the primary spring stiffness while choosing the installed
+compression that preserves the reference spring force at the low-ratio
+engagement geometry. The scalar actuator quantities resolved by
+\ResultsCode{studies/course-tuning/infrastructure/tunes.py}{tunes.py} are
+listed in \Cref{tab:course_resolved_actuation}.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Case & Tip [g] & \(k_p\) [kN/m] & \(c_{p,0}\) [mm] & \(c_{s,0}\) [mm] & \(\theta_{s,\mathrm{pre}}\) [deg] & Helix [deg] \\
+\midrule
+R00 & 250.0 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+W85 & 212.5 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+P300 & 250.0 & 38.352 & 29.704 & 110.0 & 300 & 20 \\
+RC10 & 250.0 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+R26B7 & 250.0 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+RC40L & 250.0 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+H28 & 250.0 & 12.784 & 94.090 & 110.0 & 300 & 28 \\
+U55 & 137.5 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+D01 & 325.0 & 12.784 & 75.272 & 88.0 & 240 & 28 \\
+D02 & 162.5 & 12.784 & 108.204 & 110.0 & 300 & 20 \\
+D02\_M & 250.0 & 12.784 & 108.204 & 110.0 & 300 & 20 \\
+D02\_M170 & 425.0 & 12.784 & 108.204 & 110.0 & 300 & 20 \\
+D02\_P & 162.5 & 12.784 & 94.090 & 110.0 & 300 & 20 \\
+\bottomrule
+\end{tabular}
+\caption{Resolved scalar actuator quantities for the thirteen selected
+common-course configurations. \(c_{p,0}\) and \(c_{s,0}\) are installed axial
+spring compressions. The helix angle is measured from the circumferential
+direction. Unlisted actuator quantities retain the R00 reference values.}
+\label{tab:course_resolved_actuation}
+\end{table}
+
+The three selected ramp cases retain the same fixed-pivot hardware and
+flyweight mass properties as R00. Only the contacted ramp profile is changed.
+The baseline profile consists of a \SI{5}{mm} linear \(35^\circ\) segment, a
+\SI{3}{mm} \(C^3\) blend, and a \SI{30}{mm} circular segment from
+\(35^\circ\) to \(20^\circ\). The selected modifications are
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Case & Unchanged prefix [mm] & \(C^3\) blend [mm] & Arc-tail end angle \\
+\midrule
+RC10 & 10 & 5 & \(10^\circ\) \\
+R26B7 & 10 & 7 & \(26^\circ\) \\
+RC40L & 18 & 5 & \(40^\circ\) \\
+\bottomrule
+\end{tabular}
+\caption{Selected primary-ramp modifications used on the common course. The
+prefix and blend distances are physical coordinates along the ramp, not
+movable-sheave travel.}
+\label{tab:course_ramp_variants}
+\end{table}
+
+All other selected cases retain the baseline ramp. In particular,
+\texttt{D02\_M} restores the reference tip mass while retaining D02's
+\(115\%\) primary preload, \texttt{D02\_P} restores the reference primary
+preload while retaining D02's \(65\%\) tip mass, and
+\texttt{D02\_M170} uses \(170\%\) tip mass while retaining the \(115\%\)
+primary preload. No quasi-static actuator replacement, force scaling, or
+fitted speed curve is introduced in these course cases.
+
+\subsection{Numerical and Stopping Controls}
+\label{app:course_numerics}
+
+The selected common-course study runs thirteen cases on the \SI{732}{m} road
+and two supporting cases, R00 and U55, on a separate \SI{800}{m} flat road.
+All fifteen trajectories use the same tight numerical settings.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{0.55\textwidth}r@{}}
+\toprule
+Setting & Value \\
+\midrule
+Integrator & LSODA \\
+Relative tolerance & \(3\times10^{-5}\) \\
+Absolute tolerance & \(3\times10^{-8}\) \\
+Maximum integration step & \SI{5}{ms} \\
+Diagnostic/report interval & \SI{5}{ms} \\
+Maximum simulated time & \SI{180}{s} \\
+Maximum total hybrid transitions & 5000 \\
+Checkpoint interval & \SI{2}{s} \\
+Maximum transitions per checkpoint & 600 \\
+Event-time tolerance & \(10^{-10}~\mathrm{s}\) \\
+Per-case wall timeout & \SI{1800}{s} \\
+Progress monitor begins after & \SI{20}{s} \\
+No-progress review window & \SI{15}{s} \\
+Minimum progress over review window & \SI{0.25}{m} \\
+Rollback stop speed & \SI{-0.25}{m/s} \\
+\bottomrule
+\end{tabular}
+\caption{Numerical and execution controls of the selected common-course study.}
+\label{tab:course_numerics}
+\end{table}
+
+A progress or rollback stop is recorded as a physical observed outcome of the
+specified case rather than as a numerical or model-domain failure. Conversely,
+integration, construction, or model-domain errors remain distinct stopping
+classes. The runner does not restart a sector from a prescribed state: each
+common-course trajectory is continuous from the shared initial condition until
+completion or its recorded stopping condition.
+
+The separate \SI{800}{m} flat experiment uses the same numerical settings and
+contains only R00 and U55. It is a supporting test of whether U55's incomplete
+opening shift on the common course is merely caused by the first hill arriving
+at \SI{120}{m}; it is not appended to the common road and does not alter the
+selected course.
+
+\subsection{Settling and Archived Case Records}
+\label{app:course_reporting}
+
+Interior settling checks use a \SI{5}{s} window advanced in
+\SI{0.25}{s} increments. A candidate window must remain at least
+\SI{0.25}{mm} from either shift stop, maintain forward speed above
+\SI{0.1}{m/s}, and remain on constant grade. The principal variation limits
+are listed in \Cref{tab:course_settling_criteria}; the complete criteria are
+defined in
+\ResultsCode{studies/course-tuning/inputs/settling_criteria.json}{settling_criteria.json}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{0.62\textwidth}r@{}}
+\toprule
+Settling criterion & Limit \\
+\midrule
+Maximum \(\lvert\dot s\rvert\) & \SI{0.05}{mm/s} \\
+Maximum vehicle acceleration magnitude & \SI{0.01}{m/s^2} \\
+Maximum primary RPM rate magnitude & \(2~\mathrm{rpm/s}\) \\
+Maximum secondary RPM rate magnitude & \(2~\mathrm{rpm/s}\) \\
+Maximum belt acceleration magnitude & \SI{0.01}{m/s^2} \\
+Maximum shift acceleration magnitude & \SI{5e-4}{m/s^2} \\
+Shift range within window & \SI{0.1}{mm} \\
+Vehicle-speed range within window & \SI{0.05}{m/s} \\
+Primary-speed range within window & \(10~\mathrm{rpm}\) \\
+Secondary-speed range within window & \(10~\mathrm{rpm}\) \\
+Belt-speed range within window & \SI{0.05}{m/s} \\
+\bottomrule
+\end{tabular}
+\caption{Principal finite-window settling criteria used by the common-course
+analysis. Passing a window establishes only the stated finite-window
+condition.}
+\label{tab:course_settling_criteria}
+\end{table}
+
+The final study output is self-describing. The top-level
+\texttt{suite.json} records the selected study identity, numerical controls,
+and environment. Each case stores a complete \texttt{resolved\_case.json},
+\texttt{model\_identity.json}, event history, sampled diagnostics, and stopping
+summary. The common-course report also stores the resolved physical tune table
+and the analytic road sectors. The intended appendix-facing inventory is
+summarized in
+\ResultsCode{studies/course-tuning/provenance/APPENDIX_HANDOFF.md}{APPENDIX_HANDOFF.md}.
+These records, rather than the human-readable case labels, define the exact
+simulation inputs used by the study.
 
 \end{document}
