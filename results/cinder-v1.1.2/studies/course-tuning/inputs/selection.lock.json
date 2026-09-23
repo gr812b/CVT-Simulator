@@ -1,11 +1,11 @@
 {
-  "selection_revision": "section4p5-final-v3-r26b7",
+  "selection_revision": "section4p5-final-v3-r26b7-m170",
   "inputs": {
-    "study.json": "1cbf1b9ec29743b1922f7283fdec9d086d724ec59cc6d7ce02a93635c8d63412",
-    "inputs/competitors.json": "22d0488671abec3807c52370e66ec062f5f3deca451829c3967118ff4cc90a22",
+    "study.json": "d689120fd2c08f618da0d00ae10188c1bf48ef4dc7b64b553859324ad916eccf",
+    "inputs/competitors.json": "faff79b9885075cd2472385998d85dec39ca89d89fd0728190c3fec7a3b6a09b",
     "inputs/course.json": "89e3feb75825e7e2c985238222a5146cfb1efeed4be27560fd3ea7e373bad88c",
     "inputs/flat_800m.json": "10737d72b664501483496e18eee9d42e45f26c1ca87b8385847284908132788d",
-    "inputs/presentation.json": "fc5afe7628c6c2443b3dbd5673f716a64b0c48b337c1c8d4a2c88327bbf28f5c",
+    "inputs/presentation.json": "77cc87d70e3864ff2d877c6c9e1de06158df806658861a5c1a89acfa9298811b",
     "inputs/settling_criteria.json": "4f97e1a33291cb004f4742b90dfc25c062342457fc6de191523d7f936c324111"
   },
   "baseline_canonical_sha256": "8abe09ab80d0b11dfbd89879e894ff063d2bf90f68ab981f84e76243f290c219",
@@ -28,7 +28,7 @@
       "D01",
       "D02",
       "D02_M",
-      "D02_M150",
+      "D02_M170",
       "D02_P"
     ],
     "supporting_800m_flat": [
@@ -53,8 +53,8 @@
       "RC28"
     ],
     "selected_d02_overcorrection_diagnostic": [
-      "D02_M150"
+      "D02_M170"
     ],
-    "d02_overcorrection_evidence_campaign": "unified38_c6a32w12_h18hold240__tight__a625698e273b"
+    "d02_overcorrection_selection_reason": "User-requested replacement of M150 by M170 to assess a stronger on-hill backshift consequence; M170 results pending."
   }
 }

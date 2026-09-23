@@ -25,7 +25,7 @@ class SelectionTests(unittest.TestCase):
         self.course=Course(load_json(ROOT/'inputs/course.json'))
     def test_selection_lock(self):validate_selection()
     def test_exact_final_fleet(self):
-        self.assertEqual([x['id'] for x in self.fleet],['R00','W85','P300','RC10','R26B7','RC40L','H28','U55','D01','D02','D02_M','D02_M150','D02_P'])
+        self.assertEqual([x['id'] for x in self.fleet],['R00','W85','P300','RC10','R26B7','RC40L','H28','U55','D01','D02','D02_M','D02_M170','D02_P'])
     def test_two_separate_experiments_fifteen_runs(self):
         self.assertEqual(len(self.spec['experiments']),2)
         self.assertEqual(sum(len(g['cars']) for g in self.spec['experiments']),15)
@@ -61,7 +61,7 @@ class SelectionTests(unittest.TestCase):
         by={t['id']:t['knobs'] for t in self.fleet}
         self.assertEqual(by['D02'],{'tip_mass_scale':.65,'primary_preload_scale':1.15})
         self.assertEqual(by['D02_M'],{'primary_preload_scale':1.15})
-        self.assertEqual(by['D02_M150'],{'tip_mass_scale':1.5,'primary_preload_scale':1.15})
+        self.assertEqual(by['D02_M170'],{'tip_mass_scale':1.7,'primary_preload_scale':1.15})
         self.assertEqual(by['D02_P'],{'tip_mass_scale':.65})
     def test_promoted_shape_cases(self):
         by={t['id']:t['knobs'] for t in self.fleet}

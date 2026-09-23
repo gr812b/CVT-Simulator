@@ -114,12 +114,12 @@
       }
     },
     {
-      "id": "D02_M150",
-      "label": "D02: 150% tip mass",
+      "id": "D02_M170",
+      "label": "D02: 170% tip mass",
       "family": "diagnostic_repair",
-      "intent": "High-primary-force intervention on D02: increase replaceable tip mass to 150% while retaining the 115% primary preload. Test whether stronger centrifugal closing restores traction but resists severe-hill backshift; no outcome is imposed.",
+      "intent": "High-primary-force intervention on D02: increase replaceable tip mass to 170% while retaining the 115% primary preload. Test whether stronger centrifugal closing restores traction but resists severe-hill backshift; no outcome is imposed.",
       "knobs": {
-        "tip_mass_scale": 1.5,
+        "tip_mass_scale": 1.7,
         "primary_preload_scale": 1.15
       }
     },
@@ -133,5 +133,5 @@
       }
     }
   ],
-  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit, and D02_M150 is the selected high-primary-force diagnostic on the D02 repair axis."
+  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit, and D02_M170 is the selected high-primary-force diagnostic on the D02 repair axis."
 }

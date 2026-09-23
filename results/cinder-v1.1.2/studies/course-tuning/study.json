@@ -90,7 +90,7 @@
     "d02_diagnostic_cases": [
       "D02",
       "D02_M",
-      "D02_M150",
+      "D02_M170",
       "D02_P"
     ]
   },
@@ -118,7 +118,7 @@
         "D01",
         "D02",
         "D02_M",
-        "D02_M150",
+        "D02_M170",
         "D02_P"
       ],
       "role": "main"
@@ -134,6 +134,6 @@
       "role": "supporting"
     }
   ],
-  "selection_revision": "section4p5-final-v3-r26b7",
+  "selection_revision": "section4p5-final-v3-r26b7-m170",
   "layout_revision": "single-study-v1"
 }

@@ -100,7 +100,7 @@ studies/course-tuning/
     └── layout_history/           # Original separate-final installation
 ```
 
-The course, numerical settings, stopping rules and shared model remain unchanged. The selected fleet is revision 3: P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 geometry rejected by the frozen CINDER 1.1.2 construction audit, and D02_M150 provides the selected high-primary-force comparison on the D02 repair axis. W115 and B01 remain exploratory/supporting cases. The final report includes focused spring/ramp shift-shape, severe-hill, repair/over-correction, and mechanism figures.
+The course, numerical settings, stopping rules and shared model remain unchanged. The selected fleet is revision 3: P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 geometry rejected by the frozen CINDER 1.1.2 construction audit, and D02_M170 provides the selected high-primary-force comparison on the D02 repair axis. W115 and B01 remain exploratory/supporting cases. The final report includes focused spring/ramp shift-shape, severe-hill, repair/over-correction, and mechanism figures.
 
 Activate the existing Results environment. The expected environment is Python
 3.12, `cinder-cvt==1.1.2`, NumPy 2.5.2, SciPy 1.18.1 and Matplotlib 3.11.1. Do not
@@ -124,7 +124,7 @@ model assemblies. It does not integrate trajectories. The second command runs:
 
 | Experiment | Cars | Road |
 |---|---|---|
-| `unified_course` | R00, W85, P300, RC10, R26B7, RC40L, H28, U55, D01, D02, D02_M, D02_M150, D02_P | The selected 732 m course |
+| `unified_course` | R00, W85, P300, RC10, R26B7, RC40L, H28, U55, D01, D02, D02_M, D02_M170, D02_P | The selected 732 m course |
 | `flat_800m` | R00, U55 | A separate 800 m flat |
 
 **Fifteen trajectories in total.** Both experiments use the final tight
@@ -223,7 +223,7 @@ Each modification is applied to the same baseline. Mass percentages refer to **r
 | D01 | 130% tip mass, 80% primary/secondary axial preload, 28° helix, 240° torsional twist |
 | D02 | 65% tip mass and 115% primary axial preload |
 | D02_M | Reference tip mass; retain D02's 115% primary preload |
-| D02_M150 | 150% tip mass; retain D02's 115% primary preload |
+| D02_M170 | 170% tip mass; retain D02's 115% primary preload |
 | D02_P | Retain D02's 65% tip mass; restore reference primary preload |
 
 W115 and B01 remain under `exploration/` and are not part of this selected final fleet. Every selected case retains the same full dynamic fixed-pivot flyweight mechanism, dynamic bilateral/slotted secondary helix, engine/vehicle boundaries, belt/contact model and initial state.
@@ -327,3 +327,9 @@ tail; any absorption there is not a measured closed-throttle CH440 law. Saved
 slip-work integrals are sampled diagnostics, not a replacement for the separate
 formal energy audit. Runtime records distinguish setup, integration and
 post-processing; machine and dependency versions accompany them.
+
+## Production M170 replacement
+
+Selection `section4p5-final-v3-r26b7-m170` replaces D02_M150 with D02_M170.
+See `provenance/FINAL_SELECTION_M170.md`. Previous M150 run records describe
+the earlier selection, not evidence for the new case.
