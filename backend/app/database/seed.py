@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.hashing import canonical_json_hash
+from app.database.resolver import resolve_simulation_case
 from app.database.models import (
     Account,
     AccountInstitutionAffiliation,
@@ -32,6 +33,7 @@ from app.database.models import (
     OutputSystemVersion,
     Tune,
     User,
+    ValidationWorkspace,
     VehicleAssembly,
     VehicleAssemblyVersion,
 )
@@ -58,6 +60,7 @@ SEED_LOAD_CASE_ID = "00000000-0000-4000-8000-000000000060"
 SEED_LOAD_CASE_HILL_20_ID = "00000000-0000-4000-8000-000000000061"
 SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID = "00000000-0000-4000-8000-000000000062"
 SEED_EXECUTION_PRESET_ID = "00000000-0000-4000-8000-000000000070"
+SEED_VALIDATION_WORKSPACE_ID = "00000000-0000-4000-8000-000000000080"
 
 POUND_TO_KG = 0.45359237
 SEED_HEAVY_VEHICLE_MASS_KG = 500.0 * POUND_TO_KG
@@ -131,6 +134,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     if session.get(Account, SEED_ACCOUNT_ID) is not None:
         _refresh_seed_tuning_surface(session, split)
         _refresh_seed_run_setups(session, split)
+        _seed_validation_workspace(session)
         return
 
     user = User(
@@ -494,6 +498,48 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
                 is_system_default=True,
             ),
         ]
+    )
+    session.flush()
+    _seed_validation_workspace(session)
+
+
+def _seed_validation_workspace(session: Session) -> None:
+    """Seed or upgrade the autosaved validation setup to RPM replay."""
+
+    # Import locally so seed.py remains independent of validation API startup,
+    # while sharing one canonical set of replay/workflow defaults.
+    from .validation import (
+        _apply_validation_integrator,
+        _default_controller_templates,
+        _default_workflow,
+        _upgrade_workspace,
+    )
+
+    existing = session.scalar(
+        select(ValidationWorkspace).where(ValidationWorkspace.account_id == SEED_ACCOUNT_ID)
+    )
+    if existing is not None:
+        _upgrade_workspace(existing)
+        session.flush()
+        return
+
+    resolved = resolve_simulation_case(
+        session,
+        vehicle_assembly_version_id=SEED_ASSEMBLY_VERSION_ID,
+        tune_id=SEED_TUNE_ID,
+        load_case_id=SEED_LOAD_CASE_ID,
+        execution_preset_id=SEED_EXECUTION_PRESET_ID,
+    )
+    resolved = _apply_validation_integrator(resolved)
+    session.add(
+        ValidationWorkspace(
+            id=SEED_VALIDATION_WORKSPACE_ID,
+            account_id=SEED_ACCOUNT_ID,
+            setup_document=copy.deepcopy(resolved),
+            metrology={},
+            controller_templates=_default_controller_templates(),
+            workflow_defaults=_default_workflow(resolved),
+        )
     )
 
 

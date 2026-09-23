@@ -1,0 +1,161 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.modal {
+  width: min(760px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--border-color) 82%, var(--text-color) 18%);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--secondary) 94%, var(--background) 6%);
+  color: var(--text-color);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48);
+}
+
+.header,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header h2 {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.callout,
+.derivedCard {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.callout p {
+  margin: 0.35rem 0 0.55rem;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+.callout code {
+  font-size: 0.84rem;
+  opacity: 0.86;
+}
+
+.fieldGrid,
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.fieldGrid label,
+.notesGrid label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+}
+
+.fieldGrid small {
+  line-height: 1.35;
+  opacity: 0.62;
+}
+
+.modal input,
+.modal textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.68rem 0.75rem;
+  background: color-mix(in srgb, var(--background) 88%, var(--secondary) 12%);
+  color: var(--text-color);
+  outline: none;
+}
+
+.modal input:focus,
+.modal textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.modal textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.derivedCard {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.derivedCard span {
+  font-size: 0.78rem;
+  opacity: 0.62;
+}
+
+.derivedCard strong {
+  font-size: 0.98rem;
+}
+
+.footer {
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.primaryButton {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.secondaryButton,
+.ghostButton {
+  border: 1px solid var(--border-color);
+  background: transparent;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.ghostButton:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .backdrop { padding: 0.75rem; }
+  .modal { border-radius: 14px; padding: 1rem; }
+  .header { align-items: flex-start; }
+  .footer { flex-wrap: wrap; }
+}

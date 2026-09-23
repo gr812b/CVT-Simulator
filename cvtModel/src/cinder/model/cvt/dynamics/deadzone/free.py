@@ -7,6 +7,7 @@ from math import isclose
 
 import numpy as np
 
+from cinder.model.cvt.contact import ContactKinematicTolerances
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
     ClosureGains,
@@ -20,14 +21,22 @@ from cinder.model.system.state import CVTState, CVTStateDerivative
 from .result import DeadzoneEvaluation
 from .snapshot import DeadzoneSnapshot, build_deadzone_snapshot
 
+# Deadzone's imposed belt-secondary lock is a velocity-level contact
+# compatibility condition. Use the same absolute relative-speed
+# resolution as engaged belt contact instead of demanding agreement
+# below the model's established kinematic numerical scale.
+_BELT_SECONDARY_LOCK_SPEED_TOLERANCE = (
+    ContactKinematicTolerances().relative_speed_tolerance
+)
+
 
 @dataclass(slots=True)
 class DeadzoneDynamicsEvaluator:
     """Evaluate neutral/free and neutral/lower-stop CVT mechanics."""
 
     model: MechanicalCVTPlant
-    belt_secondary_lock_absolute_tolerance: float = 1.0e-9
-    belt_secondary_lock_relative_tolerance: float = 1.0e-9
+    belt_secondary_lock_absolute_tolerance: float = _BELT_SECONDARY_LOCK_SPEED_TOLERANCE
+    belt_secondary_lock_relative_tolerance: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.model, MechanicalCVTPlant):

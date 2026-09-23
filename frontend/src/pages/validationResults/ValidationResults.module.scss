@@ -1,0 +1,242 @@
+@use '@styles/_colors';
+@use '@styles/_fonts';
+
+.page {
+  min-height: 100vh;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1.5rem 1.8rem 5rem;
+  background: var(--background);
+  color: var(--text-color);
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 12%, transparent), transparent 40%),
+    color-mix(in srgb, var(--secondary) 96%, white 2%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.header button,
+.page button {
+  border: 1px solid color-mix(in srgb, var(--border-color) 80%, var(--primary) 20%);
+  border-radius: 999px;
+  padding: 0.58rem 0.9rem;
+  background: color-mix(in srgb, var(--background) 88%, var(--primary) 12%);
+  color: var(--text-color);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.header button:hover,
+.page button:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.header h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  letter-spacing: -0.035em;
+}
+
+.header p {
+  margin: 0;
+  max-width: 900px;
+  opacity: 0.68;
+}
+
+.summaryCard,
+.errorCard,
+.emptyCard,
+.resultCard {
+  border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--secondary) 97%, white 1%);
+  color: var(--text-color);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
+}
+
+.summaryCard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.summaryCard > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.summaryCard span {
+  opacity: 0.6;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.summaryCard strong {
+  overflow-wrap: anywhere;
+}
+
+.errorCard,
+.emptyCard {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.errorCard {
+  border-color: var(--error);
+  background: color-mix(in srgb, var(--error) 8%, var(--secondary));
+}
+
+.resultCard {
+  min-width: 0;
+  padding: 1rem;
+}
+
+.resultHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.resultHeading h2 {
+  margin: 0 0 0.45rem;
+}
+
+.resultHeading p {
+  max-width: 44rem;
+  opacity: 0.7;
+  font-size: 0.84rem;
+}
+
+.targetBadge,
+.inputBadge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.3rem 0.62rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.targetBadge {
+  background: color-mix(in srgb, var(--confirm) 16%, var(--secondary));
+}
+
+.inputBadge {
+  background: color-mix(in srgb, var(--warning) 15%, var(--secondary));
+}
+
+.resultCard > section + section {
+  margin-top: 0.8rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
+}
+
+.metrics div {
+  border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: color-mix(in srgb, var(--background) 70%, transparent);
+}
+
+.metrics dt {
+  opacity: 0.58;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metrics dd {
+  margin: 0.3rem 0 0;
+  font-weight: 750;
+}
+
+.signalWarning {
+  margin: 0.75rem 0;
+  padding: 0.78rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--warning) 62%, var(--border-color));
+  border-radius: 12px;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.45rem 0 0.7rem;
+  padding: 0 0.15rem;
+}
+
+.sectionHeader h2 {
+  margin: 0 0 0.28rem;
+  letter-spacing: -0.02em;
+}
+
+.sectionHeader p,
+.diagnosticNote {
+  margin: 0;
+  opacity: 0.68;
+}
+
+.plotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.diagnosticNote {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--warning) 24%, var(--border-color));
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .plotGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .summaryCard { grid-template-columns: 1fr 1fr; }
+  .resultHeading { flex-direction: column; }
+}
+
+@media (max-width: 620px) {
+  .page { padding: 0.8rem 0.8rem 3rem; }
+  .header { border-radius: 16px; padding: 1rem; }
+  .summaryCard { grid-template-columns: 1fr; }
+}

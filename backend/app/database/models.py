@@ -23,6 +23,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Float,
     Integer,
     Index,
     JSON,
@@ -529,6 +530,31 @@ class ExecutionPreset(StringUUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_system_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
+class ValidationWorkspace(StringUUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Temporary one-per-account autosaved validation setup.
+
+    The singleton UX is intentionally temporary.  Validation runs freeze the
+    complete workspace snapshot, so later migration to named/revisioned setups
+    does not change historical evidence.
+    """
+
+    __tablename__ = "validation_workspaces"
+
+    account_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    setup_document: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    metrology: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
+    controller_templates: Mapped[list[JsonDict]] = mapped_column(
+        JsonPayload, nullable=False, default=list
+    )
+    workflow_defaults: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
+
+
 class RunCacheEntry(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "run_cache_entries"
     __table_args__ = (
@@ -612,6 +638,37 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
 
     cache_entry: Mapped[RunCacheEntry | None] = relationship(foreign_keys=[cache_entry_id])
     artifacts: Mapped[list["RunArtifact"]] = relationship(back_populates="run")
+
+
+class ValidationRun(StringUUIDPrimaryKeyMixin, Base):
+    """Immutable experimental evidence and the exact model snapshot it used."""
+
+    __tablename__ = "validation_runs"
+
+    account_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    simulation_run_id: Mapped[str | None] = mapped_column(
+        String(36),
+        nullable=True,
+        index=True,
+    )
+    source_filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    raw_csv: Mapped[str] = mapped_column(Text, nullable=False)
+    crop_start_s: Mapped[float] = mapped_column(Float, nullable=False)
+    crop_end_s: Mapped[float] = mapped_column(Float, nullable=False)
+    channel_config: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    initial_state_config: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    workspace_snapshot: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    resolved_document: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    result_snapshot: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    metrics: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
 
 
 class RunArtifact(StringUUIDPrimaryKeyMixin, Base):
