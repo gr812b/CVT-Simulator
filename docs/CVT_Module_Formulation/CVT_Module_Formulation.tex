@@ -2006,10 +2006,8 @@ shown are illustrative.
 \section{CVT State Variables}
 \label{sec:continuous_state_variables}
 
-With the retained motions and coordinates now defined, the next question is
-what information about the CVT must be carried from one instant to the next.
-The formulation uses five continuous state variables, collected in the state
-vector,
+To describe how the CVT evolves, five continuous quantities are carried from 
+one instant to the next. They are collected in the state vector,
 
 \bigeq{eq:state-vector}{State Vector}{
 \vect{x}(t)=
@@ -2037,14 +2035,9 @@ belt is engaged, the fixed belt length and prescribed path of
 \AssRef{assump:prescribed_belt_path} link that primary motion to opening of the
 secondary. This gives the physical reason for using one shift coordinate
 rather than carrying \(x_p\) and \(x_s\) independently. The exact relation,
-including the primary deadzone before engagement, is established in
-\Cref{sec:pulley_coordinate_mapping}.
-
-The corresponding shift speed \(\dot{s}\) must also be retained because the
-moving sheaves and actuation hardware carry inertia. Pulley radii and actuator
-configurations are instead obtained from the current shift position through
-the geometric and mechanism relations developed in
-\Cref{chap:derivation}.
+including the primary deadzone before engagement, is established later in 
+\Cref{sec:pulley_coordinate_mapping}. The corresponding shift speed \(\dot{s}\) 
+must also be retained because the moving sheaves and actuation hardware carry inertia. 
 
 The remaining state variable, \(v_b\), describes transport of belt material
 around the loop. It is retained independently because tangential slip allows
@@ -2052,7 +2045,7 @@ the belt speed to differ from the surface speed of either pulley. Under
 \AssRef{assump:single_belt_speed}, the model carries no separate transport
 history for individual belt material points; together with the uniform belt
 properties of \AssRef{assump:fixed-belt-cross-section}, this removes the need
-for an additional belt-phase coordinate.
+for any belt-position coordinate.
 
 Taken together, these five entries are the continuous information carried
 forward in time. Their derivative makes clear what must be determined to
@@ -2078,116 +2071,113 @@ state can be advanced to the next instant.
 
 That still does not completely specify how the CVT can evolve. The same values
 of \(\vect{x}\) can occur under different contact or support conditions, for
-which the allowable motion need not be the same. The next section introduces
-that remaining distinction.
+which the allowable motion need not be the same.
 
 \section{Mechanical Regimes and State Evolution}
 \label{sec:mechanical_regimes_state_evolution}
 
-Consider the shift coordinate at one of its travel limits with
-\(\dot{s}=0\). The same position and velocity can describe two different
-mechanical conditions. If the surrounding forces press the movable sheave
-against the limit, a stop reaction is required and further motion into the
-stop is prevented. If the unconstrained tendency is away from the limit, the
-stop reaction vanishes and the sheave is free to accelerate away. The values
-stored in \(\vect{x}\) are identical in both cases, but the motion that is
-allowed is not.
+As the CVT moves, the contacts and supports that carry load do not remain
+fixed. A movable sheave can reach or leave a travel stop, the primary can gain
+or lose belt contact, and a belt--pulley interface can change between sticking
+and sliding. Each change alters which reactions can exist and which motions the
+mechanism can support. The mechanical problem can therefore change even when
+the hardware passes through the same positions and velocities.
 
-The missing information is which contacts and mechanical constraints are
-currently active. Their active set is called the \emph{mechanical regime}.
-For the modeled CVT, a regime identifies which belt--pulley contacts exist,
-whether the shift coordinate is free or supported at a unilateral boundary,
-and whether each existing tangential contact is sticking or sliding. Let
-\(q(t)\) denote the current regime. This label is not another position or
-velocity and does not introduce another moving part; it records the mechanical
-arrangement under which the state is evolving.
+A travel stop gives the simplest example. Suppose the primary movable sheave is
+at the end of its closing travel with \(\dot{s}=0\). If the other forces on the
+movable assembly continue to drive it closed, the stop supplies a reaction and
+prevents further motion into the boundary. If those forces instead tend to open
+the pulley, the stop reaction vanishes and the sheave can accelerate away. The
+same continuous state can therefore describe two different mechanical
+situations, distinguished by which support is active.
 
-The complete internal condition needed to continue the model is therefore the
-pair \(\bigl(\vect{x}(t),q(t)\bigr)\). The state vector records the current
-motion and configuration, while the regime identifies the constraints that
-determine which motion is admissible. For the selected CVT and a fixed regime,
-the current state and shaft-interface conditions determine the state
-derivative. At this level, that relation may be written as
+The additional information is the current \emph{mechanical regime}. For the
+modeled CVT, the regime records which belt--pulley contacts exist, whether
+shift motion is free or held by a mechanical stop, and whether each existing
+tangential contact is sticking or sliding. Let \(q(t)\) denote the current
+regime. This label is not another mechanical coordinate; it is a compact
+description of the active mechanical arrangement.
+
+Together, \(\vect{x}(t)\) and \(q(t)\) describe the internal CVT condition
+carried from one instant to the next. While one regime persists, the same
+contacts, supports, and kinematic restrictions remain active, so the state
+follows one continuous set of mechanical balances. Within that regime, the 
+continuous mechanics must relate the current state and shaft loading to the 
+state derivative. This dependence can be represented schematically as
 
 \begin{equation}
 \dot{\vect{x}}
 =
 \mathcal{F}_{q}
 \!\left(
-t,\vect{x},
-\tau_{\mathrm{B},p},I_{\mathrm{B},p},
-\tau_{\mathrm{B},s},I_{\mathrm{B},s}
-\right),
+    t,\vect{x},
+    \tau_{\mathrm{B},p},I_{\mathrm{B},p},
+    \tau_{\mathrm{B},s},I_{\mathrm{B},s}
+\right).
 \label{eq:regime_dependent_evolution}
 \end{equation}
 
-The function \(\mathcal{F}_{q}\) represents the mechanics of the selected CVT
-under the current mechanical arrangement. Its subscript indicates that the
-active contacts and constraints select the applicable form of the mechanical
-balances. While that regime remains admissible, the state advances
-continuously according to \Cref{eq:regime_dependent_evolution}.
+Here, \(\mathcal{F}_{q}\) is only a compact representation of the continuous
+mechanics. Its subscript records that changing the active arrangement changes
+which balances and constraints apply. As long as the conditions defining the
+regime remain satisfied, \(q\) is unchanged and the state evolves
+continuously.
 
-Every regime is defined by physical conditions that must remain satisfied.
-An event occurs when the evolving motion reaches the boundary of those
-conditions: a contact forms or separates, a travel limit is reached or
-released, or an existing tangential contact can no longer maintain its current
-stick--slip condition. At that instant, the old mechanical arrangement no
-longer provides the admissible continuation of the motion and the regime must
-change.
+A regime persists only while those physical conditions can be maintained. As
+the CVT moves, a stop may be reached or released, belt contact may form or
+separate, or a tangential contact may reach the boundary between sticking and
+sliding. Such an event changes the active mechanical arrangement. Whether the
+state itself changes at that instant depends on what changed physically.
 
-Not every regime change alters the state instantaneously. he simplest case is
-a nonimpulsive regime change: the active force or constraint description
-changes without producing an impulse, so the positions and velocities pass
-through the event unchanged,
+If a stop releases from rest, or another contact condition changes without
+producing an impulse, the configuration and velocities pass through the event
+unchanged,
 
 \begin{equation}
     \vect{x}^{+}=\vect{x}^{-},
     \label{eq:nonimpulsive_regime_transition}
 \end{equation}
 
-where the superscripts \((-)\) and \((+)\) denote the values immediately
-before and after the event. The new regime changes the derivative obtained
-from \Cref{eq:regime_dependent_evolution}, even though the state itself is
-continuous.
+where the superscripts \(-\) and \(+\) denote values immediately before and
+after the event. The state is continuous, but its derivative can change
+immediately because the new regime applies a different set of balances and
+constraints.
 
-A different transition is required when a rigid kinematic constraint becomes
-active with a nonzero velocity into that constraint. The configuration remains
-continuous, but one or more velocity components may change over the
-effectively instantaneous event. In general, the compatible post-event state
-may be written as
+A different situation occurs when a new rigid kinematic constraint becomes
+active while the mechanism still has finite velocity into it. The incoming
+motion may then be incompatible with the motion allowed after the constraint
+forms. Under \AssRef{assump:inelastic_constraint_activation}, the activation is
+treated as instantaneous and perfectly inelastic. The CVT does not jump to a 
+new shift position during that instant, but its retained velocities may change 
+to satisfy the newly active constraint. Thus,
 
 \begin{equation}
-    \vect{x}^{+}
-    =
-    \Delta_{q^{-}\rightarrow q^{+}}
-    \!\left(\vect{x}^{-}\right).
+    s^{+}=s^{-},
+    \qquad
+    \begin{bmatrix}
+        \omega_p^{+}\\
+        \omega_s^{+}\\
+        \dot{s}^{+}\\
+        v_b^{+}
+    \end{bmatrix}
+    \;\text{need not equal}\;
+    \begin{bmatrix}
+        \omega_p^{-}\\
+        \omega_s^{-}\\
+        \dot{s}^{-}\\
+        v_b^{-}
+    \end{bmatrix}.
     \label{eq:impulsive_regime_transition}
 \end{equation}
 
-The transition law enforces the newly active kinematic constraint together
-with impulse--momentum balance for the retained inertia. It does not require
-each velocity or each coordinate momentum to remain unchanged. A constraint
-impulse can change the velocity components, and kinetic energy may decrease
-when the capture is inelastic. Once the transition is complete, continuous
-evolution resumes under the new regime.
+Once a compatible post-event motion has been established, continuous evolution 
+resumes under the new regime.
 
-The resulting motion has the repeated structure
-
-\begin{equation}
-\text{continuous evolution}
-\;\longrightarrow\;
-\text{event}
-\;\longrightarrow\;
-\text{constraint-consistent transition}
-\;\longrightarrow\;
-\text{new continuous evolution}.
-\label{eq:hybrid_evolution_sequence}
-\end{equation}
-
-Because the CVT combines continuous state evolution with discrete changes in
-its active mechanical arrangement, its motion forms a \emph{hybrid
-initial-value problem}. A complete initial condition specifies both an initial
-state and an initial regime,
+The CVT motion therefore consists of continuous intervals under a fixed regime
+connected by discrete changes in the active mechanical arrangement. Because
+both forms of evolution are part of the same problem, the model forms a
+\emph{hybrid initial-value problem}. A complete initial condition specifies an
+initial state together with an admissible initial regime,
 
 \begin{equation}
     \vect{x}(t_0)=\vect{x}_0,
@@ -2197,39 +2187,35 @@ state and an initial regime,
 \end{equation}
 
 with \(\vect{x}_0\) satisfying the contacts and constraints represented by
-\(q_0\). The regimes are therefore not separate CVT models. They are different
+\(q_0\). The regimes are not separate CVT models. They are different
 admissible arrangements of the same pulley assemblies, belt, actuation
 mechanisms, and shaft interfaces. The state vector records how that mechanism
 is moving; the regime records which motion is presently allowed.
 
-% ==============================================================
 \section{Model Quantities and Evaluation Flow}
 \label{sec:model_evaluation_flow}
 
-Advancing the CVT from one instant to the next requires more than the stored
-internal condition alone. The calculation also uses data that define the
-selected CVT and loading supplied through the two shaft interfaces, and it
-produces quantities that are needed only for the current evaluation. These
-quantities serve different roles in the model and should not all be treated as
-state.
+One CVT model evaluation brings together quantities that do not all play the
+same role. Some define the particular CVT being modeled, some describe its
+current internal condition, some enter through the two shaft interfaces, and
+some are determined only after the current mechanics are evaluated. Keeping
+these roles separate makes clear what is fixed, what is carried forward, what
+is supplied from outside the CVT, and what must be found again at the current
+instant.
 
-\Cref{tab:model_quantity_roles} separates the four roles used throughout the
-formulation. The fixed data represented by its first row are collected in
-\Cref{tab:cvt_fixed_data}, while the instantaneous quantities represented by
-its final row are listed by mechanical regime in
-\Cref{tab:cvt_instantaneous_results_by_regime}.
-% TODO: Reorganize the nomenclature parameter table as a CVT-only fixed-data
-% table and assign it the label tab:cvt_fixed_data.
-% TODO: Align the later regime table with the instantaneous-result role used
-% here and assign it the label tab:cvt_instantaneous_results_by_regime.
-Fixed CVT data may be specified directly or calculated once from the selected
-hardware during initialization. In either case, they define the CVT being
-modeled and remain unchanged while that simulation is advanced. The
-time-varying internal condition is instead carried by the state and regime
-introduced in the preceding sections.
+The fixed CVT data are the physical and geometric quantities that define the
+selected hardware. Some may be specified directly and others calculated once
+from those inputs during initialization; in either case, they remain unchanged
+while that simulation is advanced. The complete fixed-data set is collected in
+\Cref{tab:cvt_fixed_data}, while
+\Cref{tab:cvt_instantaneous_results_by_regime} lists the instantaneous
+quantities returned in each mechanical regime.
+\Cref{tab:model_quantity_roles} summarizes the different roles these quantities
+play during one model evaluation.
 
 \begin{table}[H]
 \centering
+\renewcommand{\arraystretch}{1.12}
 \caption{Roles of the quantities used during a CVT model evaluation.}
 \label{tab:model_quantity_roles}
 \begin{tabular}{
@@ -2240,40 +2226,41 @@ introduced in the preceding sections.
 \textbf{Quantity role} & \textbf{Contents} & \textbf{Use during evaluation} \\
 \midrule
 Fixed CVT data
-& Physical and geometric data for the selected hardware, including any
-  values calculated once during initialization
-& Define the particular CVT and the mechanical relations used to represent
-  it; they are not advanced through time. \\[5pt]
+& Physical and geometric data for the selected hardware, including values
+  calculated once during initialization
+& Define the selected CVT and the mechanical relations used to represent it;
+  remain unchanged during one simulation. \\
+\addlinespace[3pt]
 
 Current CVT condition
 & State vector \(\vect{x}(t)\) and mechanical regime \(q(t)\)
-& Record the time-varying internal information retained from the preceding
-  instant and identify the currently active constraints. \\[5pt]
+& Carry the current internal motion and active mechanical arrangement from the
+  preceding instant. \\
+\addlinespace[3pt]
 
 Shaft-interface data
 & Applied torque \(\tau_{\mathrm{B},j}\) and equivalent inertia
   \(I_{\mathrm{B},j}\) at each shaft
-& Supply the current mechanical effect of the systems attached to the primary
-  and secondary shafts. \\[5pt]
+& Supply the current mechanical loading presented by the systems attached to
+  the primary and secondary shafts. \\
+\addlinespace[3pt]
 
 Instantaneous CVT results
-& State derivative, current internal mechanical quantities, and regime
-  admissibility measures
-& Determine how the state can advance from the current instant and whether
-  the active regime can continue; they are recomputed rather than retained as
-  independent state. \\
+& State derivative \(\dot{\vect{x}}(t)\) and other mechanical quantities required for the current
+  evaluation, including regime-admissibility measures
+& Are determined from the fixed data, current CVT condition, and
+  shaft-interface data; determine how the state can advance and whether the
+  current regime can continue. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The pair \(\bigl(\vect{x},q\bigr)\) is therefore the only time-varying
-internal CVT condition passed from one model evaluation to the next. The
-shaft-interface quantities are supplied for the current evaluation. An
-attached system may use time, shaft speed, and states belonging to its own
-model to determine those quantities, but those external states do not become
-states of the CVT.
-
-Using these roles, one evaluation proceeds as follows:
+Taken together, these roles separate what defines an instantaneous CVT problem
+from what the mechanics return. The fixed data identify the hardware, the
+shaft-interface data provide its current external loading, and
+\(\bigl(\vect{x},q\bigr)\) gives the internal condition to which that loading
+is applied. The instantaneous results are the response of that condition. One
+evaluation can therefore be stated compactly:
 
 \begin{enumerate}
     \item The current time, state \(\vect{x}(t)\), and regime \(q(t)\) identify
@@ -2283,16 +2270,22 @@ Using these roles, one evaluation proceeds as follows:
           interfaces under the current shaft conditions.
     \item The CVT mechanics use the fixed CVT data, current internal condition,
           and shaft-interface data to determine the instantaneous mechanical
-          solution. This solution provides \(\dot{\vect{x}}(t)\) together with
-          the conditions used to test whether the current regime remains
+          response. This provides \(\dot{\vect{x}}(t)\) together with the
+          quantities needed to test whether the current regime remains
           admissible.
     \item If the regime remains admissible, the state is advanced using
-          \(\dot{\vect{x}}\) and the regime is retained. If an event is reached,
-          the event state is established, the applicable transition is applied
-          when required, and the new regime is selected.
+          \(\dot{\vect{x}}\) and the regime is retained. If an event changes
+          the active mechanical arrangement, any required finite-speed
+          transition establishes a compatible post-event state before
+          continuous evolution resumes under the resulting regime.
     \item The resulting state and regime become the current internal condition
           for the next evaluation, and the cycle repeats.
 \end{enumerate}
+
+The information required to pose each instantaneous CVT problem is now
+defined. What remains is the mechanical response itself: the coupled forces,
+torques, and accelerations implied by the current geometry, actuation, belt
+motion, and contact state.
 
 \chapter{Derivation}
 \label{chap:derivation}
@@ -12316,7 +12309,9 @@ low ratio D02 has already reached. At the seated geometry, the primary force
 balance relates that load to the difference between centrifugal closing and
 spring opposition. D02\_M restores the reference tip mass and its
 associated mass moments, strengthening centrifugal closing while retaining
-D02's elevated primary spring compression. D02\_P retains the light tips but
+D02's elevated primary spring compression. The same mass correction is also
+extended to \(170\%\) of the reference tip mass in D02\_M170, with
+corresponding mass moments and the same spring compression. D02\_P retains the light tips but
 restores the reference spring compression, reducing the opening force opposing
 the flyweights without changing the spring rate. A larger
 remaining closing force supports a larger primary belt normal load, and the
@@ -12324,115 +12319,71 @@ unchanged friction coefficient then permits a larger tangential force before
 sticking is lost. These are two physical ways to correct the same clamping
 weakness.
 
-D02\_M150 carries the mass correction farther, to \(150\%\) of the reference
-tip mass, with the associated mass moments changed consistently and D02's
-elevated spring compression retained. It also increases centrifugal closing at a
-given speed and geometry. That action supplies clamping, but it also opposes
-the primary opening needed for backshift. A change that preserves grip can
-therefore change how readily the CVT gears down under the hill load. The
-three corrections must be understood through both effects.
-
-Both D02\_M and D02\_P reach the same low-ratio seat as D02 and remain there
-through the rest of the constant \(38^\circ\) climb. This gives a direct way
-to distinguish increased clamping from a change in ratio or engine speed:
-their seated states can be compared at a common geometry and primary speed.
-\Cref{fig:results_d02_hill_repairs} therefore shows primary normal load and
-static use against decreasing primary speed on the constant slope.
-Matching speeds are reached at different times and road positions in each run.
+The changed primary forces also alter the backshift shown in
+\Cref{fig:results_d02_hill_repairs}(a). Both D02\_M and D02\_P reach the
+same low-ratio seat as D02 and remain there through the rest of the constant
+\(38^\circ\) climb, whereas D02\_M170 retains unused backshift travel.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{figures/results/course/d02_hill_repairs.png}
-  \caption{Restored primary clamping in D02\_M and D02\_P. (a) Total primary
-  normal load and (b) static utilization during seated sticking on the \(38^\circ\) hold,
-  after the seating transitions. Markers identify the comparison near
-  \(2975~\mathrm{rpm}\). D02 ends at sustained primary slip onset; repair
-  annotations refer to states near \SI{200}{m}. D02\_M150 is excluded because
-  it does not occupy seated sticking states in this speed range.}
+  \caption{Clamping and backshift under the three primary-side corrections.
+  (a) Approach to the common low-ratio seat, with the hill-entry taper shaded.
+  Equal road position retains the different states inherited from the opening
+  flat. (b) Total primary normal load and (c) static utilization during seated
+  sticking on the \(38^\circ\) hold, after the seating transitions. Markers
+  in (b,c) identify the comparison near \(2975~\mathrm{rpm}\); the repair
+  utilization annotations refer to states near \SI{200}{m}. D02 traces end
+  at sustained primary slip onset. D02\_M170 is absent from (b,c) because
+  it does not reach the seat on the constant \(38^\circ\) climb.}
   \label{fig:results_d02_hill_repairs}
 \end{figure}
 
-At the marked speed, the required primary tangential force is approximately
-\SI{683}{N} in all three cases. D02 has just exhausted its static capacity,
-but both repairs support greater normal load at the same seated geometry and
-speed. The increase is much larger when the tip mass is restored. Because
-the available static force is \(\mu_sN_p\), the greater normal loads in
-panel~(a) directly explain the lower fractions used in panel~(b). The repaired
-contacts can therefore remain stuck as speed falls below the point where the
-original D02 began sliding. The successful climb follows from restored
-clamping and traction capacity at the existing ratio limit.
+The stronger mass correction in D02\_M170 maintains ample clamping, but its
+centrifugal closing also opposes the primary opening needed for backshift.
+Both contacts stick throughout the constant \(38^\circ\) climb, yet the
+transmission remains above the seat in panel~(a). Near \SI{200}{m}, the
+primary uses only about \(0.20\) of its static capacity, while the engine
+turns near \(2660~\mathrm{rpm}\), compared with \(2870~\mathrm{rpm}\) in
+D02\_M. At this lower speed the supplied engine boundary delivers less power,
+and the vehicle climbs at approximately \SI{3.66}{m/s} instead of
+\SI{3.77}{m/s}. D02\_M170 still completes the course, but the stronger correction
+introduces the same kind of unfavourable ratio and engine operating condition
+seen in D01.
 
-Both repairs continue through the hill without the sustained primary traction
-loss seen in D02. Their normal loads still fall as primary speed decreases,
-and the fraction of available traction required rises. Near \SI{200}{m},
-D02\_M uses about \(0.40\) of its static capacity, whereas D02\_P uses about
-\(0.94\). Yet both climb near \SI{3.77}{m/s} at the same low-ratio seat.
-Once sticking is maintained, additional unused traction capacity does not
-itself deliver more power to the wheels. The almost equal climbing speeds
-therefore coexist with substantially different reserves: the preload repair
-succeeds much closer to its primary traction limit under this hill load.
+D02\_M and D02\_P restore grip while still allowing full backshift.
+Because they reach the same low-ratio seat as D02, their clamping can be
+compared at a common pulley geometry. Panels~(b) and (c) make this comparison
+at matching primary speeds, showing normal load and the fraction of static
+capacity used as each case slows on the constant \(38^\circ\) slope.
+Matching states occur at different times and road positions in each run.
 
-The closing force that restores this grip also resists the primary opening
-as the load calls for backshift. \Cref{fig:results_d02_hill_backshift} follows
-that motion together with primary speed. D02\_M and D02\_P reach the seat
-farther along the road than D02, and the stronger mass correction leaves
-D02\_M150 more upshifted during hill entry than D02\_M. Near \SI{150}{m}, its
-primary speed has fallen to approximately \(2750~\mathrm{rpm}\), compared
-with \(3240~\mathrm{rpm}\) in D02\_M. The stronger closing preserves
-clamping, but leaves the transmission more upshifted as the engine slows.
-Each case also arrives with a different speed and ratio from
-the opening flat, so the road-position comparison retains that history.
+At the marked speed, the primary must transmit approximately \SI{683}{N}
+of tangential force in each case. For D02, this demand has reached the
+static limit \(\mu_sN_p\). Restoring the tip mass in D02\_M strengthens
+centrifugal closing, while reducing the spring compression in D02\_P leaves
+less opening force to oppose it. Both corrections therefore produce greater
+normal loads in panel~(b), with the larger increase in D02\_M. This additional
+normal load raises the available static force, so the same tangential demand
+uses a smaller fraction of that capacity in panel~(c). Both repairs retain
+grip below D02's slip-onset speed, even as their own normal loads fall and
+the fractions of capacity used rise.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{figures/results/course/d02_hill_backshift.png}
-  \caption{Backshift consequences of the three primary-side corrections.
-  (a) Shift position and (b) primary speed, with the entry taper shaded and
-  the common low-ratio seat dashed in (a). D02 ends at sustained primary slip
-  onset. The inset enlarges the gap above the seat for D02\_M and D02\_M150.
-  Following its initial contact with the stop, D02\_M150 remains supported
-  over the shaded inset interval, from
-  about \SI{171.13}{m} to \SI{173.04}{m}, approximately \SI{0.51}{s}, then
-  leaves the seat while both contacts stick. The road remains at \(38^\circ\)
-  throughout the inset. Equal road position retains the different states
-  inherited from the opening flat.}
-  \label{fig:results_d02_hill_backshift}
-\end{figure}
-
-D02\_M150 eventually reaches the low-ratio seat, but the inset reveals that
-it cannot remain there. The reason is visible in the secondary force balance.
-The helix and spring push the secondary closed, while the belt pushes its
-sheaves apart; at the seat, the stop carries the excess of closing over belt
-opening force (\Cref{eq:low_ratio_stop_reaction}). The two pulley normal loads
-are connected through tension in the same belt. Here, stronger primary
-clamping is accompanied by a larger secondary normal load and hence a larger
-belt-opening force. Just after D02\_M150 has seated and regained sticking,
-only about \SI{11}{N} of closing force remains for the stop to carry.
-As primary speed and normal load recover slightly, the belt-opening force
-increases until that surplus reaches zero. Continuing to hold the secondary
-closed would then require the stop to pull, so the secondary leaves the stop
-while the road still holds the same grade.
-
-Both contacts continue sticking after release. D02\_M150 approaches an
-interior position only about \SI{0.029}{mm} above the seat, using approximately
-\(0.20\) of its primary static capacity near \SI{200}{m}. Its climbing speed
-there is about \SI{3.763}{m/s}, compared with \SI{3.775}{m/s} for D02\_M,
-and it completes the course. The small positional difference therefore marks
-a change in how the forces balance, with only a small late climbing-speed
-penalty. Ample traction does not ensure that the lowest geometric ratio can
-remain supported; the actuator and belt forces must also allow the secondary
-to stay against its stop.
+The two repairs nevertheless leave different margins against slip. Near
+\SI{200}{m}, D02\_M uses about \(0.40\) of its primary static capacity,
+leaving a substantial reserve, whereas D02\_P uses about \(0.94\) and is
+close to its traction limit. Yet both climb near \SI{3.77}{m/s} at the same
+low-ratio seat. Both already transmit the required force without sliding.
+The larger normal load in D02\_M increases the force the primary could
+support at that state, but does not itself supply more power to the wheels.
 
 The hill has separated an unfavourable ratio and engine speed with unused
 backshift travel from a loss of belt traction after full backshift. Following
 the latter failure through the primary force balance identifies two ways to
 restore enough clamping, with different remaining traction reserves. The
-stronger mass correction then shows why that improvement cannot be judged
-from clamping alone: the same closing action changes backshift, engine speed,
-and whether the low-ratio stop can remain loaded. These effects follow from
-the same hardware change within the coupled motion. The next repeated
-changes in road load turn attention back to the motion itself, and to how
-much shift travel remains available when each new disturbance arrives.
+stronger mass correction shows why that improvement cannot be judged from
+clamping alone: the same closing action also changes backshift, engine speed,
+and climbing speed.
 
 \FloatBarrier
 
