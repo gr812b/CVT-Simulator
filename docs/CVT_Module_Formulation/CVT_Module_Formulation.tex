@@ -12418,10 +12418,11 @@ the contact conditions and loading in return.
 \subsection*{Actuator Friction and Directional Shifting}
 \label{sec:future_work_mechanism_friction}
 
-The same mechanism position need not produce the same clamping force while the
-CVT shifts in opposite directions. Acceleration can already contribute to this
-distinction in the present model because part of the applied loading
-accelerates the actuator itself. Friction in the ramps, helix, and guides
+The actuator mechanisms can also resist motion in a direction-dependent way.
+The same mechanism position therefore need not produce the same clamping force
+while the CVT shifts in opposite directions. Acceleration can already
+contribute to this distinction in the present model because part of the applied
+loading accelerates the actuator itself. Friction in the ramps, helix, and guides
 would add resistance that changes direction with the relative motion. Static
 friction could also delay the start of motion or hold a sheave away from a
 travel stop. These effects are excluded by
@@ -12514,8 +12515,10 @@ which depends on the normal loading at the belt--sheave interface.
 \subsection*{Belt Deformation, Transport, and Contact}
 \label{sec:future_work_belt_material}
 
-The belt couples the two pulleys through its length, motion, and loading. With
-the fixed length of \AssRef{assump:constant_belt_length}, the compatibility
+Beyond the actuator mechanisms, the belt itself can be given more freedom to
+move and deform. In the present formulation, it couples the two pulleys through
+a fixed length, a single transport speed, and prescribed section geometry.
+With the fixed length of \AssRef{assump:constant_belt_length}, the compatibility
 relation in \Cref{eq:belt_length_compatibility} determines the secondary
 position from the shared shift coordinate. The belt could instead stretch to
 take up part of a sheave displacement. Tension would then depend on how much
@@ -12621,9 +12624,11 @@ by \citet{Ballew2015}.
 \subsection*{Belt Path, Support, and Re-engagement}
 \label{sec:future_work_belt_path}
 
-Local traction can be refined while the belt path remains prescribed. The
-circular wraps and straight spans of \AssRef{assump:prescribed_belt_path}
-remove possible motions before the force balances are solved. The checks in
+The above belt motions can still be described while the loop remains on the
+prescribed circular wraps and straight spans. Relaxing the path itself is a
+separate extension. The circular wraps and straight spans of
+\AssRef{assump:prescribed_belt_path} remove possible motions before the force
+balances are solved. The checks in
 \Cref{eq:wrap_contact_admissibility} can identify a negative tension or local
 normal load. They cannot determine the shape of a slack belt or one that has
 partly lifted away from a pulley. Solving for the belt's shape and where it
@@ -12659,8 +12664,10 @@ effect would need to be compared with that of rubber deformation.
 \subsection*{Friction and Compliance During Finite-Speed Events}
 \label{sec:future_work_events}
 
-When engagement or a travel stop imposes a new constraint at finite relative
-speed, the impulse--momentum balance in
+The extensions above concern how the CVT moves while its active constraints
+remain unchanged. Once engagement or a travel stop creates a new constraint at
+finite relative speed, the event itself introduces a different set of contact
+questions. The impulse--momentum balance in
 \Cref{eq:finite_event_generalized_impulse_momentum} determines the resulting
 velocity change. This treatment allows the simulation to continue through the
 event. Two extensions would examine which contact details can change its
@@ -12709,24 +12716,12 @@ available as traction recovers. Its importance at the belt--sheave interface
 remains to be established. A nearly unchanged bulk temperature during a short
 maneuver would not, by itself, show that flash heating is negligible.
 
-\subsection*{Parasitic Component Losses}
-\label{sec:future_work_component_losses}
-
-Bearing, seal, and windage resistance are excluded by
-\AssRef{assump:no_parasitic_losses}. Measuring these resistances independently
-and applying them to the bodies and relative motions that produce them would
-allow their effect on acceleration and efficiency to be examined alongside the
-belt losses. The shaft interface in \Cref{eq:shaft_boundary_interface}
-identifies which belong inside the CVT and which are supplied by the attached
-machine. Each resistance would enter the force or torque balance where it
-acts, rather than a single efficiency correction for the complete
-transmission.
-
 \subsection*{Experimental Validation and Characterisation}
 \label{sec:future_work_validation}
 
-Different operating conditions allow different parts of the model to be
-tested. While a travel stop holds the sheaves in place, loading can be varied
+These extensions also require experiments that can separate the effects they
+are intended to represent. Different operating conditions allow different
+parts of the model to be tested. While a travel stop holds the sheaves in place, loading can be varied
 without changing the pulley geometry. Free shifting then allows the
 predicted sheave motion to be tested. A travel stop also carries a reaction:
 the belt load need not equal the actuator force because the stop carries the
@@ -12768,8 +12763,8 @@ reversal, while belt tests must distinguish elastic storage from dissipation
 under relevant stretching, compression, shear, and bending. The tests
 described by \citet{Ballew2015} and \citet{Messick2018} provide foundations,
 with further work needed on damping and dependence on loading history.
-Belt--sheave friction and parasitic losses also require independent
-characterisation over the relevant loads, speeds, and temperatures. These
+Belt--sheave friction also requires independent characterisation over the
+relevant loads, speeds, and temperatures. These
 measurements would allow complete-CVT experiments to test how the belt,
 pulleys, and actuators respond together without adjusting the physical
 parameters to match each maneuver.
