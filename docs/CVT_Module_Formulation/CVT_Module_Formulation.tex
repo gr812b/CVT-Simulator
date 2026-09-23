@@ -12387,6 +12387,274 @@ and climbing speed.
 
 \FloatBarrier
 
+\subsection{Repeated Loading and Upper-Stop Support}
+\label{sec:results_cyclic_loading}
+
+After the first hill, the level recovery allows the vehicle to regain speed
+and the CVT to upshift. The next road feature repeatedly reverses the
+gravitational contribution to the load: six \SI{12}{m} grade cycles alternate
+between climbing and descending. Increased resistance can again promote
+backshift through the torque-sensitive secondary, while the reduction in
+load gives primary closing action more opportunity to upshift. Repeating
+these changes tests whether the sheaves continue moving or become held at a
+travel limit as the vehicle accelerates. This remains a longitudinal-load
+test; suspension motion, wheel unloading and airborne dynamics are not
+represented.
+
+The primary spring and ramp changes examined in
+\Cref{sec:results_launch_upshift} also change the recovery from the hill and
+the state carried into these cycles. \Cref{fig:results_cyclic_support}
+compares R00 with P300 and the two ramp cases, R26B7 and RC10. R26B7 has
+already returned to the common \SI{19.05}{mm} upper primary stop before
+the first cycle begins. The other three enter below it, with room for
+further closure. Shift position shows whether that room is used; the stop
+reaction shows when the hardware carries closing load instead of allowing
+further motion.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/cyclic_shift_and_support.png}
+  \caption{Repeated loading from \SI{264}{m} to \SI{336}{m}. (a) Road grade,
+  with cycles numbered and the \SI{6}{m} end tapers shaded; cycles 2--5 have
+  the full \(\pm32^\circ\) amplitude throughout. (b) Shift position; supported
+  traces coincide at the common upper stop. (c) Primary stop reaction, zero
+  while the primary is away from the stop. Open circles mark recorded
+  releases from support. Equal road position aligns the imposed grade, not
+  elapsed time or the states inherited from the preceding road.}
+  \label{fig:results_cyclic_support}
+\end{figure}
+
+R26B7 remains at the upper stop throughout all six cycles, but panel~(c)
+shows that its loading is not constant. The stop carries the primary
+closing force left after spring opposition and the belt's opening reaction
+have been balanced. Its reaction varies with the drive yet remains positive,
+so the primary stays pressed against the stop. This does not mean that
+backshift has been mechanically blocked. The stop prevents further closure,
+but cannot pull the primary closed: if holding that position would require
+a tensile reaction, the primary must leave the stop and open.
+
+R00 and P300 show that release directly. R00 reaches the stop during the
+first cycle, reopens during the second, and then returns to remain supported
+from the third cycle onward. With its greater spring opposition to closure,
+P300 continues releasing during the third and fourth cycles. Its largest
+backshift within a cycle falls from approximately
+\SI{0.73}{mm} in cycle 2 to just \SI{0.03}{mm} in cycle 4; by cycle 5 it too
+remains at the stop. The open circles in panel~(c) connect those departures
+to the reaction falling to zero. Once the later load changes no longer
+unload the stop, shift position stays fixed even though the grade continues
+to vary. At that fixed geometry, the rising primary speed during continued
+acceleration strengthens centrifugal closing, increasing the load available
+to keep the primary pressed against the stop.
+
+RC10's weaker late-travel centrifugal closing instead leaves the primary
+below the upper stop throughout this region. Its shift continues to
+rise overall, but each cycle still produces a distinct backshift: the
+largest fall from an earlier shift maximum is approximately
+\SI{0.81}{mm} in cycle 2 and \SI{0.79}{mm} in cycle 5. These opening
+excursions distinguish the repeated response from the underlying upshift:
+the primary continues to reopen appreciably even as its mean position moves
+closer to the high-ratio limit.
+
+Both belt contacts stick throughout this region in all four cases, so the
+contrast is not caused by a loss of traction. Nor does the disappearing
+shift oscillation in R00 and P300, by itself, establish damping: the reaction
+and release history show how their motion gives way to sustained support.
+Following the load carried by the stop makes that distinction visible even
+when position alone becomes unchanging. The longer climb that follows asks
+a different question: where the coupled transmission and engine operate
+when the increased load is sustained rather than repeatedly reversed.
+
+\subsection{Operating Conditions on a Sustained Grade}
+\label{sec:results_moderate_hill}
+
+The next climb holds the increased gravitational resistance long enough to
+examine where the transmission operates after its initial backshift. The
+road rises to \(18^\circ\) between \SI{348}{m} and \SI{356}{m}, then maintains
+that grade for \SI{240}{m}. As before, backshift allows the vehicle to slow
+without requiring the same reduction in engine speed. The useful comparison
+is therefore not just how far the
+CVT backshifts, but where that ratio places the engine and how much power it
+can supply for the climb.
+
+\Cref{fig:results_moderate_operating_conditions} follows the resulting
+backshift and primary speed for R00 and five hardware variations. Each
+trajectory retains the state inherited from the preceding road.
+The adjoining engine characteristic relates the primary speed in panel~(b)
+to the input power supplied for the climb.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/moderate_hill_operating_conditions.png}
+  \caption{Approach to sustained climbing on the \(18^\circ\) hill.
+  (a) Shift position, with the common upper primary stop and low-ratio seat
+  marked. (b) Primary speed. The engine-power curve on the right shares its
+  speed scale, with coloured markers at the late mean primary speeds.
+  Time is measured from each vehicle's arrival at
+  \SI{348}{m}; each trace ends at \SI{596}{m}, before the grade decreases.
+  Equal elapsed time does not imply equal road position. The later R00 and
+  RC40L traces nearly coincide in both panels; their power-curve markers
+  also overlap.}
+  \label{fig:results_moderate_operating_conditions}
+\end{figure}
+
+R00 initially slows while still at the upper stop. Falling primary speed
+weakens centrifugal closing until the primary can reopen under the
+secondary's closing action. It then backshifts, limiting the further fall in
+engine speed. The motion becomes small well before reaching the low-ratio
+seat. Unlike the supported states in the preceding subsection, this nearly
+fixed geometry is maintained within the available travel: primary
+flyweight closing balances the spring and belt opening forces, while the
+secondary spring and helix closing balance its belt reaction. Both balances
+are satisfied without a stop reaction. The belt contacts remain
+sticking throughout the displayed climb in all six cases.
+
+RC40L takes a different path to almost the same final condition.
+Its modified late ramp sustains primary closing farther into the hill,
+delaying departure from the upper stop to about \SI{407}{m}, compared with
+\SI{370}{m} for R00. Engine speed falls farther while the ratio stays fixed,
+then recovers as the rapid backshift begins. At their common
+later shift position of approximately \SI{9.55}{mm}, the roller contact lies
+about \SI{15}{mm} along the physical ramp, within the first \SI{18}{mm} that
+RC40L leaves unchanged. The altered ramp delays backshift, but the later
+climbing geometry brings the roller back onto the reference profile and
+leaves the local force balance almost unchanged.
+
+The remaining cases show what happens when the hardware change continues to
+affect that interior balance. \Cref{tab:results_moderate_operating_conditions}
+pairs the late shift positions and engine speeds with vehicle speed and
+engine input power. These quantities must be read together: once
+acceleration becomes small, the engine must supply approximately the power
+consumed by gravity, rolling resistance and aerodynamic drag at the
+resulting climbing speed.
+
+\begin{table}[H]
+  \centering\small
+  \setlength{\tabcolsep}{8pt}
+  \renewcommand{\arraystretch}{1.14}
+  \caption{Late operating conditions on the constant \(18^\circ\) grade.
+  Values are time-weighted means over the final five-second window
+  before \SI{596}{m}; all six cases have free shift and sticking contacts
+  throughout these windows.}
+  \label{tab:results_moderate_operating_conditions}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    Case & Shift [mm] & Primary [rpm] & Speed [m/s] & Input power [kW] \\
+    \midrule
+    R00 & 9.55 & 3132 & 7.23 & 7.03 \\
+    RC40L & 9.55 & 3132 & 7.23 & 7.03 \\
+    W85 & 8.54 & 3360 & 7.20 & 7.00 \\
+    H28 & 10.67 & 2877 & 7.19 & 6.99 \\
+    D01 & 11.83 & 2368 & 6.42 & 6.22 \\
+    D02\_P & 4.55 & 3719 & 5.85 & 5.64 \\
+    \bottomrule
+  \end{tabular}
+
+\end{table}
+
+W85 and H28 move to opposite sides of R00 in ratio and engine speed, yet
+climb at almost the same vehicle speed. W85's lighter tips weaken primary
+centrifugal closing at a given speed and geometry, allowing more backshift.
+Its lower ratio keeps the engine turning faster for nearly the same output
+speed. H28 changes the opposing side of this balance: its larger helix angle
+reduces secondary axial closing for a given reacted torque, permitting
+greater primary closure and a higher ratio. Its engine consequently turns
+more slowly. Despite spanning approximately \(2877\)--\(3360~\mathrm{rpm}\),
+these cases and R00 all operate in the nearly constant-power region of the
+engine curve, at about \SI{7.0}{kW}. Their similar climbing speeds therefore coexist
+with distinctly different internal ratios and shaft speeds.
+
+Moving farther in either direction does not preserve that power. D01's
+combined changes leave it farther upshifted, with the engine near
+\(2368~\mathrm{rpm}\), supplying only \SI{6.22}{kW}. D02\_P retains the light
+flyweights and backshifts much farther, raising engine speed to about
+\(3719~\mathrm{rpm}\). At that speed the supplied engine characteristic is
+already on its falling-power side, so the higher speed supplies only
+\SI{5.64}{kW}. Their lower powers support lower climbing speeds of about
+\SI{6.42}{m/s} and \SI{5.85}{m/s}, respectively, while both contacts still
+stick. The difference is therefore attributable to where the coupled
+mechanism places the engine, rather than to exhausted belt traction or a
+travel stop. Additional backshift is useful when it preserves engine power;
+beyond that, a lower ratio alone does not make the vehicle climb faster.
+
+\subsection{Reverse Power on the Descent}
+\label{sec:results_descent_reverse_power}
+
+On the final \(-22^\circ\) descent, gravity can drive the vehicle and return
+power through the CVT to the engine. Both shafts continue to turn forward;
+the change is in which side drives the belt. \Cref{fig:results_descent_power}
+follows R00 from the level approach through the descent and onto the final
+level road. The two boundary powers use the same sign convention: positive
+power adds energy to the corresponding shaft-side system, while negative
+power removes it.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/course/descent_reverse_power.png}
+  \caption{R00 boundary powers during the final descent.
+  The primary trace is \(\tau_{\mathrm{B},p}\omega_p\); the secondary trace is
+  \(\tau_{\mathrm{B},s}\omega_s\), equal to the net road force times vehicle
+  speed. Grey shading marks the descent, with darker shading for the constant
+  \(-22^\circ\) grade. Negative primary power denotes absorption by the engine
+  boundary. These powers need not balance while the vehicle and transmission
+  gain or lose kinetic energy.}
+  \label{fig:results_descent_power}
+\end{figure}
+
+The road-side power becomes positive once gravity exceeds rolling resistance
+and aerodynamic drag. Initially the engine still supplies power as well.
+Near \SI{652}{m}, the primary passes \(4000~\mathrm{rpm}\), where the supplied
+engine torque changes sign. The engine now absorbs part of the energy
+supplied by the descent. The road supplies more power than the engine absorbs,
+so the vehicle continues to accelerate
+on the constant slope. The faster descent also releases more gravitational
+energy each second. Over the speeds reached here, the increase in gravitational
+power exceeds the increase in aerodynamic and rolling losses, so net road-side
+power continues to rise. On the final level road, both boundary powers become
+negative. The vehicle then slows, and its stored kinetic energy sustains the
+remaining return of power to the engine.
+
+This return path still requires sufficient belt clamping. R00 reaches the
+upper primary stop near \SI{637}{m} and remains there, but fixing the pulley
+geometry does not remove the traction limits. During reverse power, the belt
+resists the secondary and drives the primary. Both contacts remain sticking:
+over the descent entry, hold and exit, the primary uses at most about
+\(0.19\) of its static capacity and the secondary about \(0.20\). The existing
+clamping therefore carries the reversed torque with substantial capacity
+remaining.
+
+Full throttle remains prescribed throughout this calculation. The negative
+engine torque comes from the extrapolated high-speed extension described in
+\Cref{app:primary_engine_boundary}, not a measured closed-throttle CH440
+braking characteristic. The absorption magnitude consequently depends on
+that supplied boundary. The CVT carries this reverse power through the same
+coupled shaft, belt and support mechanics used earlier for forward drive.
+
+\subsection{What the Common Course Establishes}
+\label{sec:results_course_synthesis}
+
+The common course has shown the CVT responding as a complete dynamic
+component between the engine and vehicle. Its motion and the internal
+conditions needed to sustain it have been determined together as the
+loading changes. Successful drive and loss of progress have therefore been
+explained within the same formulation, through the forces carried by the
+hardware and the limits of its contacts and supports.
+
+The sheaves that squeeze the belt also set its running radii, so the
+actuation responsible for grip participates in changing or holding the
+ratio. While both contacts stick, that ratio links engine and vehicle
+speeds. The resulting shaft speeds and transmitted torque influence primary
+centrifugal and secondary helix action, while sheave motion changes spring
+loading and actuator geometry. A hardware change therefore alters the
+forces and the operating conditions under which those forces are produced.
+
+A tune must consequently be judged by the loaded drive it produces.
+Enough traction and a ratio that makes useful engine power available have
+to be achieved by the same hardware as it responds to changing loads.
+Within the adopted component and boundary laws, the formulation makes that
+connection traceable. A vehicle response can be followed back to the forces
+and constraints that produced it, and a proposed hardware change can be
+followed forward through the operating conditions it creates.
+
 \chapter{Conclusion and Future Work}
 \label{sec:conclusion_and_future_work}
 
