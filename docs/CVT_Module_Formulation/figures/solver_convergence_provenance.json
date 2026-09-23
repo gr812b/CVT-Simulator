@@ -1,0 +1,15 @@
+{
+  "command": "python studies/solver-convergence/run.py --plot-only",
+  "evidence_record_sha256": "a4b1ff74585b12bd2349dc9fd88923c91b855c53f1400d841ab2526ba2c5125f",
+  "figure_1": "All 40 main cells and all 7 absolute-tolerance rows. No contours or interpolated pass boundary. Missing aligned metrics remain undefined. All four guards and signature retained.",
+  "figure_2": "All 4681 completed dense rows, exact signature grouping, four-state absolute-time RMS excluding shift speed. 264 failures have no trajectory norm. Selected median settings replayed once. Shift plotted by native segment, never joined across resets; timeline uses native absolute time, including zero-duration transitions in supporting records.",
+  "figure_labels": [
+    "fig:verification_solver_refinement",
+    "fig:verification_gross_hybrid_agreement"
+  ],
+  "figure_width_inches": 6.5,
+  "run_id": "solver-convergence-4f39af8ca42a9693",
+  "script": "results/cinder-v1.1.2/studies/solver-convergence/analysis/publication_plots.py",
+  "script_sha256": "f4bae64a3f85db7b93d023653fe0d57df441ead29287b8089b6d2686ca47de16",
+  "verification_scope": "All tabulated guards recomputed; canonical metrics and three retained/replayed histories audited from native segment endpoints. Other individual dense/formal caches were not retained."
+}

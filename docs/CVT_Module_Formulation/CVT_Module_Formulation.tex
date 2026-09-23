@@ -10892,111 +10892,102 @@ the motion and contact history requires the separate comparison that follows.
 \subsection{Solver Convergence}
 \label{sec:results_solver_convergence}
 
-A hybrid trajectory includes the contact history as well as the shaft speeds
-and shift motion. Its numerical convergence therefore requires both parts to
-agree. The convergence benchmark uses the ten-second reference launch, with a
-tight LSODA solution at \(\mathrm{rtol}=10^{-7}\),
-\(\mathrm{atol}=10^{-10}\), and a 2.5 ms maximum step as the numerical
-reference. The physical case and tested settings are specified in
+Nearly coincident shaft-speed or shift curves do not establish that the same contacts
+and supports carried the motion. During a brief primary separation, for
+example, the primary belt force and torque vanish from the active balances
+even if the later upshift changes little
+(\Cref{eq:deadzone_primary_disengaged}). Numerical refinement must therefore
+resolve both the continuous motion and the changes in mechanical arrangement.
+The test uses the ten-second reference launch, compared with a tighter LSODA
+solution at \(\mathrm{rtol}=10^{-7}\), \(\mathrm{atol}=10^{-10}\), and
+a 2.5 ms maximum step. This is a numerical reference, not an exact solution.
+The unchanged physical case and tested controls are specified in
 \Cref{app:study_solver_convergence}.
 
-The transition signature records the ordered events, successor modes, and
-occurrence of velocity resets. State differences are evaluated between
-corresponding smooth segments after matching that signature; a different
-signature is itself a convergence failure. Each segment is sampled at the
-same fractional progress between its endpoint events rather than at the same
-absolute time, so a small event-time offset does not compare a pre-reset state
-with a post-reset state. Event-time
-error is reported separately, together with the fraction of time spent in
-different regimes. The normalization and duration-weighted root-mean-square (RMS) error
-are defined by
-\Cref{eq:solver_state_scale,eq:solver_normalized_state_error,eq:solver_event_aligned_rms}.
-The acceptance criteria in \Cref{tab:solver_convergence_guards} require an
-exact transition signature as well as bounds on the state and timing errors.
+The comparison first checks the ordered event names, outgoing modes and
+recorded state updates, rather than only counting transitions. When that
+signature agrees, corresponding smooth segments are compared at equal
+fractional progress between their endpoint events. This keeps a small timing
+offset from comparing an incoming velocity with an already-reset outgoing
+velocity. The offset is not discarded: event-time errors and the duration
+spent in different regimes are checked separately. All five states, including
+shift speed, enter the aligned state errors. The definitions and acceptance
+limits are given in
+\Cref{eq:solver_event_aligned_rms,tab:solver_convergence_guards}.
 
-% FIGURE 3 -- Assemble existing formal-grid and absolute-tolerance evidence.
-% Source: CINDER_v1.1.2_Solver_Convergence_Final_Recap(1).pdf, pp. 3--4.
-% (a) Formal 8 x 5 error grid; mark the research point and all-guards-passing cells.
-% (b) Independent atol error plot; annotate reference-signature recovery if
-%     adding labels from the reported seven-point sweep. Do not interpret
-%     event count alone as the full transition-signature test.
-% Keep the grid as sampled cells; do not interpolate a sharper pass/fail boundary.
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \CINDERVerificationFigure[60mm]{figures/results/verification/solver_refinement.pdf}{%
-    (a) Formal relative-tolerance / maximum-step convergence grid.\par
-    (b) Independent absolute-tolerance sweep.\par
-    Mark the research setting and distinguish state error from all-guard acceptance.\par
-    Source: solver-convergence recap, pages 3--4.}
-  \caption{Convergence of the reference hybrid trajectory.
-  (a) Event-aligned normalized state error over the formal relative-tolerance
-  and maximum-step grid. (b) Independent absolute-tolerance sensitivity at
-  \(\mathrm{rtol}=10^{-4}\) and a 10 ms maximum step. The research setting
-  is \(\mathrm{rtol}=10^{-4}\), \(\mathrm{atol}=10^{-7}\), and a
-  10 ms maximum step. The maximum step is an upper bound on the adaptive
-  integration, not a fixed time increment.}
+  \includegraphics[width=\linewidth]{figures/results/verification/solver_refinement.pdf}
+  \caption{Formal numerical refinement. (a) Each cell is one of the 40 tested
+  tolerance/maximum-step combinations. Colour shows the five-state aligned
+  RMS; circles additionally require every state, timing and history guard
+  to pass; F marks the failed integration. (b) Each error is divided by its own guard limit, so values above
+  one fail. Crosses identify different signatures, for which aligned state
+  and corresponding event-time errors are undefined. Regime-duration error
+  remains defined. Gold marks the research setting. No boundary is inferred
+  between sampled settings; maximum step is a cap on adaptive integration.}
   \label{fig:verification_solver_refinement}
 \end{figure}
 
-\Cref{fig:verification_solver_refinement}(a) shows a contiguous passing
-region: every tested maximum step from 5 to 100 ms satisfies all criteria
-when \(\mathrm{rtol}\leq10^{-4}\), with
-\(\mathrm{atol}=10^{-3}\mathrm{rtol}\) in that sweep. At the research
-setting, the event-aligned trajectory RMS is \(4.27\times10^{-7}\), the
-maximum normalized state error is \(6.96\times10^{-5}\), and the largest
-corresponding event-time difference is \(7.99~\mu\mathrm{s}\). The complete
-16-transition signature is reproduced, and the regime-mismatch fraction is
-\(8.46\times10^{-6}\).
+{\clubpenalty=10000
+Twenty-five of the 40 combinations pass every guard. In particular, all
+20 cells with \(\mathrm{rtol}\leq10^{-4}\) pass across the tested
+5--100 ms step caps, using \(\mathrm{atol}=10^{-3}\mathrm{rtol}\).
+At the research setting of \(10^{-4}\), \(10^{-7}\) and 10 ms, the
+aligned RMS is \(4.27\times10^{-7}\) and the largest event-time difference
+is \(7.99~\mu\mathrm{s}\); the entire 16-transition signature agrees.
+The coarsest combination, \(\mathrm{rtol}=10^{-2}\) with a 100 ms cap,
+instead fails in an inadmissible primary flyweight-contact state. That failed
+calculation is retained in \Cref{fig:verification_solver_refinement}(a);
+it does not demonstrate physical contact loss on the converged trajectory.\par}
 
-The independent absolute-tolerance sweep in
-\Cref{fig:verification_solver_refinement}(b) matters because the angular
-speeds, shift position, and shift speed have different numerical scales.
-Loose absolute tolerances alter the transition history; the tighter tested
-range from \(3\times10^{-7}\) to \(10^{-8}\) recovers the reference
-history, with \(10^{-7}\) satisfying all criteria. The one failed formal
-integration uses the coarsest combination,
-\(\mathrm{rtol}=10^{-2}\) and a 100 ms maximum step, and reaches an
-inadmissible primary flyweight-contact state. This is a numerical/domain
-failure of that calculation, not evidence of physical lift-off on the
-converged trajectory.
+Absolute tolerance deserves a separate check because the shaft speeds,
+millimetre-scale shift position and shift speed have very different numerical
+scales. In panel~(b), \(10^{-5}\) and \(10^{-6}\) give different histories.
+All four tested values from \(3\times10^{-7}\) down to \(10^{-8}\)
+recover the reference signature, but \(3\times10^{-8}\) still exceeds
+the maximum-state-error limit. The research value \(10^{-7}\) passes all
+guards. Thus neither a tighter scalar tolerance nor recovery of the event
+sequence alone guarantees improvement in every error measure.
 
-% FIGURE 4 -- Ready existing evidence, not an invented two-run example.
-% Source: solver-convergence recap, p. 9, Figure 8:
-% gross trajectory error vs native solver points, grouped by transition count.
-% Gross metric includes omega_p, omega_s, v_b, s; excludes sdot and is NOT the
-% event-aligned five-state RMS used for formal convergence.
-% A more intuitive trajectory + regime-timeline replacement remains optional,
-% pending selection of a specific DIFFERENT-signature run from archived outputs.
-% The p. 8 Figure 7 overlay is SAME-signature and must not be used to claim a
-% missed transition. Keep data/normalization consistent if replacing this slot.
-\begin{figure}[H]
+The separate exploratory sweep shows why this distinction matters to the
+mechanical interpretation. Its gross-motion diagnostic compares shaft speeds,
+belt speed and shift position in absolute time, excluding shift speed; it is
+not the formal five-state aligned norm. Among its 609 completed runs with a
+different signature, the median gross RMS is only \(1.225\times10^{-4}\).
+\Cref{fig:verification_gross_hybrid_agreement} places that population beside
+a replay of the settings at its median, selected before examining the
+reconstructed history.
+
+\begin{figure}[!htbp]
   \centering
-  \CINDERVerificationFigure{figures/results/verification/gross_motion_hybrid_history.pdf}{%
-    Gross trajectory error versus native solver points, grouped by transition count.\par
-    Source: solver-convergence recap, page 9, Figure 8.\par
-    This existing population plot supports the current text without selecting a new case.}
-  \caption{Macroscopic agreement and hybrid-history agreement are distinct.
-  The dense exploratory sweep is shown using the absolute-time gross-state
-  error for \((\omega_p,\omega_s,v_b,s)\), excluding \(\dot s\), and
-  grouped by transition count. A low gross error need not reproduce the
-  reference contact history. Native solver points are a work proxy; they are
-  not right-hand-side evaluation counts.}
+  \includegraphics[width=\linewidth]{figures/results/verification/gross_motion_hybrid_history.pdf}
+  \caption{Gross motion and contact history. (a) All 4,681 completed exploratory
+  runs, grouped by exact signature agreement, not transition count; the 264
+  failed runs have no trajectory norm. Native solver points are a work proxy,
+  not function evaluations. The star selects the median different-signature
+  setting. (b) Its replay and the tight reference have nearly coincident
+  ten-second shift curves. (c) Their native absolute-time histories differ
+  during engagement and seating. The shortest intervals cannot be resolved
+  at this scale; their durations are retained in
+  \Cref{tab:solver_separation_intervals}. Traces are not joined across resets.}
   \label{fig:verification_gross_hybrid_agreement}
 \end{figure}
 
-The dense sweep makes the distinction visible in
-\Cref{fig:verification_gross_hybrid_agreement}. Among 609 completed runs
-with a different transition signature, the median absolute-time gross-state
-RMS error is only \(1.23\times10^{-4}\). This diagnostic includes shaft
-speeds, belt speed, and shift position, but excludes shift speed; it is not
-the event-aligned five-state metric used for acceptance. Gross motion can
-remain close while brief contact transitions differ. Resolving internal
-traction and shift mechanisms therefore requires the hybrid checks, not only
-a visually converged speed or ratio curve. The demonstrated tolerance range
-applies to this benchmark; settings for other cases remain part of their
-individual study definitions.
-% APPENDIX FOLLOW-UP (not inserted in this pass): retain the measured runtime /
-% native-point comparison from recap p. 10, with hardware and timing-scope context.
+The replay has 12 transitions rather than 16. After first engagement, the
+primary separates and regains belt contact three times before settling at the
+low-ratio seat, compared with five times in the reference. Seating occurs at
+64.830 rather than 66.012 ms, while the later shift curves remain almost
+indistinguishable in panel~(b). The different contact-free intervals nevertheless
+remove and restore the primary belt loading at different instants. Their
+small contribution to a ten-second gross-motion average cannot establish
+agreement of those local mechanics.
+
+The numerical resolution needed therefore depends on what is being inferred
+from a trajectory. A setting adequate to reproduce the overall upshift can
+still be inadequate for explaining contact or support changes along it.
+The research setting passes the state and history checks on this launch; other
+trajectories retain their own study-specific numerical settings and checks.
 \FloatBarrier
 
 \subsection{Closure Conditioning and Root Structure}
@@ -15607,93 +15598,183 @@ with the maintained study.
 \section{Solver Convergence}
 \label{app:study_solver_convergence}
 
-Exact settings supporting \Cref{sec:results_solver_convergence} are defined in
+The study supporting \Cref{sec:results_solver_convergence} uses the reference
+configuration and shaft boundaries of
+\Cref{app:reference_configuration,app:results_boundary_models}, with full
+throttle and zero road grade for ten seconds. Only the LSODA controls change.
+The maintained definition is
 \ResultsCode{studies/solver-convergence/study.json}{solver-convergence/study.json}.
-The benchmark trajectory uses the reference configuration and shaft boundaries
-of \Cref{app:reference_configuration,app:results_boundary_models}.
+\Cref{tab:solver_convergence_design} separates the formal verification grid
+from the supplementary dense exploration.
 
 \begin{table}[H]
-\centering
-\small
-\caption{Numerical reference, formal sweep, and retained comparison point of the solver-convergence study.}
-\label{tab:solver_convergence_design}
-\begin{tabular}{@{}p{0.23\textwidth}p{0.20\textwidth}p{0.20\textwidth}p{0.21\textwidth}@{}}
+\centering\small
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.20\linewidth}p{0.20\linewidth}p{0.23\linewidth}@{}}
 \toprule
-Component & Relative tolerance & Absolute tolerance & Maximum step \\ \midrule
-Tight numerical reference & $10^{-7}$ & $10^{-10}$ & 2.5 ms \\
-Canonical comparison point & $10^{-4}$ & $10^{-7}$ & 10 ms \\
-Formal main sweep & $10^{-2}$ to $3\times10^{-6}$, 8 values & $10^{-3}\,\mathrm{rtol}$ & 5, 10, 20, 50, 100 ms \\
-Independent $\mathrm{atol}$ sweep & $10^{-4}$ & $10^{-5}$ to $10^{-8}$, 7 values & 10 ms \\
+Calculation & Relative tolerance & Absolute tolerance & Maximum step \\
+\midrule
+Tight reference & $10^{-7}$ & $10^{-10}$ & 2.5 ms \\
+Research setting & $10^{-4}$ & $10^{-7}$ & 10 ms \\
+Formal main grid & $10^{-2}$, $3\times10^{-3}$, $10^{-3}$, $3\times10^{-4}$,
+ $10^{-4}$, $3\times10^{-5}$, $10^{-5}$, $3\times10^{-6}$
+ & $10^{-3}\,\mathrm{rtol}$ & 5, 10, 20, 50, 100 ms \\
+Independent $\mathrm{atol}$ sweep & $10^{-4}$ & $10^{-5}$, $3\times10^{-6}$,
+ $10^{-6}$, $3\times10^{-7}$, $10^{-7}$, $3\times10^{-8}$, $10^{-8}$ & 10 ms \\
+Dense exploration & $3\times10^{-6}$--$3\times10^{-2}$; 115 levels
+ & $10^{-3}\,\mathrm{rtol}$ & 5--150 ms; 43 levels \\
 \bottomrule
 \end{tabular}
+\caption{Solver-convergence designs. The dense grid contains 4,945 combinations
+and includes the formal main-grid axes. It does not replace the formal guards.}
+\label{tab:solver_convergence_design}
 \end{table}
 
-Continuous-state error is evaluated only after matching the complete hybrid
-transition signature. Corresponding candidate and reference segments are each
-parameterized by normalized within-segment phase
+\paragraph{Formal state and history comparison.}
+The archived transition signature is the ordered sequence of fired event
+names, outgoing mode strings and the Boolean \texttt{has\_successor\_state}.
+That flag records the provision of an outgoing state, not necessarily a
+nonzero velocity jump. The retained reference and research caches were also
+checked directly on both sides of every event: each has 16 transitions and
+13 velocity discontinuities, with the same locations in the event sequence.
+Stop release and primary resticking do not acquire fictitious jumps merely
+because an outgoing state is recorded. An absolute component difference
+above $10^{-12}$ is used only to distinguish resolved jumps from endpoint
+roundoff in this supplementary audit; it is not a new integration tolerance.
+
+For an exact signature match, corresponding smooth segments are parameterized
+by their own endpoint times,
 \begin{equation}
-u=\frac{t-t_m}{t_{m+1}-t_m}\in[0,1],
+u=\frac{t-t_m}{t_{m+1}-t_m}\in[0,1].
 \label{eq:solver_event_aligned_phase}
 \end{equation}
-and each retained dense interpolant is evaluated directly on the same
-2049-point phase grid. No interpolation is performed across a reset. For each
-state component \(x_k\), the normalization scale is
+Each retained dense interpolant is evaluated at the same 2,049 phase points.
+Incoming and outgoing event sides remain separate. A zero-duration segment
+retains its endpoint state, contributes to the maximum comparison, and has
+zero duration weight in the RMS. For each component, the scale is
 \begin{equation}
-S_k
-=
-\max\!\left(
-\max_t|x_{k,\mathrm{ref}}|,
-\operatorname{range}(x_{k,\mathrm{ref}}),
-S_{k,\min}
-\right),
+S_k=\max\!\left(\max_i|x_{k,\mathrm{ref}}(t_i)|,
+\operatorname{range}_i x_{k,\mathrm{ref}}(t_i),S_{k,\min}\right),
 \label{eq:solver_state_scale}
 \end{equation}
-with floors
-\((100~\mathrm{rad/s},100~\mathrm{rad/s},5~\mathrm{m/s},0.02~\mathrm{m},0.05~\mathrm{m/s})\)
-for \((\omega_p,\omega_s,v_b,s,\dot s)\), respectively. The normalized error
-on segment \(m\) is
+evaluated on the reference's 1 ms segmentwise reporting trace with exact
+endpoints and the outgoing value retained at a shared timestamp. The scale
+floors are 100 rad/s for each shaft speed, 5 m/s for belt speed, 0.02 m for
+shift position and 0.05 m/s for shift speed. In that order and those units,
+the resulting scales are approximately
+\[
+(S_{\omega_p},S_{\omega_s},S_{v_b},S_s,S_{\dot s})
+=(397.040,463.848,29.7486,0.0200,0.647974).
+\]
+Thus
 \begin{equation}
-e_{k,m}(u)
-=
-\frac{x_{k,m}^{\mathrm{cand}}(u)-x_{k,m}^{\mathrm{ref}}(u)}{S_k}.
+e_{k,m}(u)=\frac{x_{k,m}^{\mathrm{cand}}(u)-x_{k,m}^{\mathrm{ref}}(u)}{S_k},
 \label{eq:solver_normalized_state_error}
 \end{equation}
-Using the reference segment duration \(\Delta t_m\) and total reference duration
-\(T\), the reported aggregate RMS is
+and, using reference durations $\Delta t_m$ and total duration $T$,
 \begin{equation}
-\epsilon_{\mathrm{RMS}}
-=
-\left[
-\frac{1}{5T}
-\sum_k\sum_m
-\Delta t_m
-\int_0^1 e_{k,m}^2(u)\,du
-\right]^{1/2},
+\epsilon_{\mathrm{RMS}}=
+\left[\frac{1}{5T}\sum_k\sum_m\Delta t_m
+\int_0^1 e_{k,m}^2(u)\,du\right]^{1/2}.
 \label{eq:solver_event_aligned_rms}
 \end{equation}
-while the maximum metric is
-\(\epsilon_{\max}=\max_{k,m,u}|e_{k,m}(u)|\). Event-time error is compared
-separately between corresponding transitions. The regime-mismatch fraction is
-the exact fraction of total time for which the two mode labels differ after the
-union of all candidate and reference event times partitions the interval; it is
-therefore not evaluated on an arbitrary reporting grid.
+The integral is evaluated by the trapezoidal rule on the common phase grid;
+$\epsilon_{\max}=\max_{k,m,u}|e_{k,m}(u)|$ is its sampled maximum.
+Corresponding event-time errors are calculated separately. For regime
+mismatch, the union of all candidate and reference boundaries partitions
+absolute time into intervals of constant mode. Summing durations with
+different mode labels gives the mismatch fraction without a reporting-grid
+approximation. A different signature makes the aligned comparison undefined
+and fails acceptance even if other diagnostics are small.
 
 \begin{table}[H]
-\centering
-\small
-\caption{Formal review guards used in the solver-convergence study.}
-\label{tab:solver_convergence_guards}
-\begin{tabular}{@{}p{0.66\textwidth}r@{}}
+\centering\small
+\begin{tabular}{@{}lrr@{}}
 \toprule
-Metric & Required value \\ \midrule
-Event-aligned normalized trajectory RMS & $\le10^{-4}$ \\
-Event-aligned normalized maximum error & $\le10^{-3}$ \\
-Maximum corresponding event-time error & $\le1$ ms \\
-Exact regime-history mismatch fraction & $\le10^{-3}$ \\
-Hybrid transition signature & exact match \\
+Metric & Guard & Research setting \\
+\midrule
+Aligned five-state RMS & $\leq10^{-4}$ & $4.27408\times10^{-7}$ \\
+Aligned maximum & $\leq10^{-3}$ & $6.96223\times10^{-5}$ \\
+Maximum event-time difference & $\leq1$ ms & $7.98615~\mu$s \\
+Regime-mismatch fraction & $\leq10^{-3}$ & $8.45730\times10^{-6}$ \\
+Transition signature & Exact & Exact, 16 transitions \\
 \bottomrule
 \end{tabular}
+\caption{Formal guards and the retained research-setting result. All guards
+must pass. The formal sweep has 39 completed integrations and 25 passes;
+the other main-grid run is an explicitly retained integration/domain failure.}
+\label{tab:solver_convergence_guards}
 \end{table}
+
+\paragraph{Separate gross-motion diagnostic and selected history.}
+The exploratory population uses the archived absolute-time RMS for
+$(\omega_p,\omega_s,v_b,s)$, omitting $\dot s$. Its combined value is the
+square root of the mean of the four squared component RMS values, using
+the scales above. Unlike the formal norm, it is an unweighted average over
+the compact reference sample times. The original candidate trace has a
+2 ms reporting spacing plus event endpoints and is linearly interpolated
+onto that reference trace. Shared timestamps retain the outgoing state.
+This compact diagnostic can therefore interpolate across a reset and
+includes timing and reporting-grid effects. It is retained as a gross-motion
+description, not used for formal hybrid acceptance or to infer a convergence
+order. The plotted shift traces instead retain separate native segments.
+
+Of 4,681 completed dense runs, 4,072 have the exact reference signature and
+609 do not; 264 integrations fail. The latter completed group has a median
+gross RMS of $1.2248411\times10^{-4}$ and a 90th percentile of
+$3.493\times10^{-4}$. Sorting that group by gross RMS selects the middle
+row at $\mathrm{rtol}=0.012684971009663653$,
+$\mathrm{atol}=1.2684971009663654\times10^{-5}$ and
+$\Delta t_{\max}=0.025041423884469123~\mathrm{s}$. Its trajectory was not
+retained in the original dense archive, so those settings were replayed with
+the installed frozen release and current study decoder. The replay reproduces
+12 transitions and 486 native solver points, with gross RMS
+$1.2249757\times10^{-4}$ rather than the archived $1.2248411\times10^{-4}$.
+These are identified as separate executions; the replay supplies the displayed
+history, not a claimed recovery of the original event timestamps.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{@{}crr@{}}
+\toprule
+Contact-free excursion & Reference duration [$\mu$s] & Replay duration [$\mu$s] \\
+\midrule
+1 & 1878.269 & 1412.204 \\
+2 & 331.672 & 192.146 \\
+3 & 60.418 & 7.219 \\
+4 & 11.051 & --- \\
+5 & 2.023 & --- \\
+\bottomrule
+\end{tabular}
+\caption{Successive primary-separated intervals after first engagement and
+before low-ratio seating. Dashes mean that no further excursion occurs, not
+an interval of zero duration. The replay also retains a zero-duration engaged
+segment at its final engagement/seating timestamp; neither event is discarded.}
+\label{tab:solver_separation_intervals}
+\end{table}
+
+The small gross RMS is not a uniform dimensional bound. In the replay's
+compact absolute-time comparison, the sampled maximum differences are
+0.12045 rad/s in primary speed, 0.07551 rad/s in secondary speed,
+0.21239 m/s in belt speed and 0.13422 mm in shift position. These maxima
+include the differing event times and the reporting convention just described.
+Native solver-point count likewise has a limited role: it sums retained
+adaptive points over segments, including repeated boundary timestamps, and is
+not a count of right-hand-side evaluations. In the archived formal execution,
+the research setting retains 1,156 points and takes 7.257 s for hybrid
+integration, compared with 4,451 points and 25.665 s for the tight reference.
+The original machine is not identified, so these are within-execution
+comparisons, not a portable speed claim or an optimal-setting result.
+
+The maintained \texttt{solver-convergence/run.py} provides an archive-import
+path, the selected-history replay and a checked \texttt{--plot-only} path.
+Registered archive and member hashes identify the retained formal and dense
+tables; both-side caches permit direct recomputation of the research-setting
+metrics. The other per-point caches were not retained, so their tabulated
+guards are rechecked without claiming a fresh integration or native-history
+audit for every row. Exact replay inputs, numerical output hashes and the
+original-versus-replayed distinction are recorded in
+\ResultsCode{studies/solver-convergence/provenance/SECTION_4_2_3.md}{the study provenance note}.
 
 \section{Closure Conditioning and Root Structure}
 \label{app:study_closure_conditioning}
