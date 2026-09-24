@@ -1766,12 +1766,12 @@ models retain some of these spatial and compliance effects explicitly
 % --------------------------------------------------------------
 \subsection{Belt Geometry and Kinematics}
 
-\begin{assumptionblock}{assump:axis_alignment}{Aligned Pulley Axes and Fixed Center Distance}
+\begin{assumptionblock}{assump:axis_alignment}{Aligned Pulley Axes and Fixed Centre Distance}
 The primary and secondary pulley axes remain parallel at a fixed spacing. The
-pulley centers and shaft directions therefore do not change as the CVT shifts.
+pulley centres and shaft directions therefore do not change as the CVT shifts.
 
 \AssumptionConsequences
-Shaft misalignment, eccentricity, geometric runout, bearing-center motion, and
+Shaft misalignment, eccentricity, geometric runout, bearing-centre motion, and
 the associated changes in belt path and face loading are not represented.
 Removing this assumption would require the belt geometry and contact loading
 to respond to the additional shaft and bearing motion.
@@ -1836,7 +1836,7 @@ Progressive or spiral radial migration within a wrap, seating and unseating
 trajectories, span sag, transverse belt vibration, and transverse inertia
 associated with straight-span reorientation are omitted. The same planar
 description also excludes the out-of-plane span skew, twist, and axial belt
-inertia that would arise when the two physical groove centerplanes move
+inertia that would arise when the two physical groove centreplanes move
 differently during shift. More detailed belt and shift-mechanics models
 resolve subsets of these path and contact effects explicitly
 \citep{Sorge2008,KongParker2005,Messick2018}.
@@ -1994,7 +1994,7 @@ empirical efficiency factor is inserted to represent these omitted mechanisms.
 \AssumptionConsequences
 Energy loss and damping within the CVT arise only from mechanisms represented
 explicitly by the formulation, including gross kinetic slip and perfectly
-inelastic boundary or topology-capture events. Predicted transmission
+inelastic constraint-activation events. Predicted transmission
 efficiency may therefore be optimistic when the omitted component losses are
 significant, and it should not be interpreted as a complete transmission-loss
 prediction.
@@ -2849,7 +2849,7 @@ complete loop.
 
 Under \AssRef{assump:prescribed_belt_path}, the modeled belt path consists
 of a circular wrap on each pulley joined by two straight tangent spans. The
-aligned, fixed-center geometry of \AssRef{assump:axis_alignment} makes the two
+aligned, fixed-centre geometry of \AssRef{assump:axis_alignment} makes the two
 spans equal. If each straight span has length \(l\), and the primary and
 secondary wrap angles are \(\phi_p\) and \(\phi_s\), the total geometric length
 of the loop is
@@ -13209,7 +13209,7 @@ primary mechanism.
 
 The construction follows the physical mechanism directly. A ramp attached to
 the movable sheave defines the contact surface. The finite roller radius offsets
-that surface to a roller-center locus. Intersecting that locus with the rigid
+that surface to a roller-centre locus. Intersecting that locus with the rigid
 flyweight-arm circle determines the assembled flyweight pose and therefore
 \(q_f(x_p)\). Differentiating the same geometric constraint supplies the motion
 ratios required by the acceleration-level actuator model. Finally, the
@@ -14663,7 +14663,7 @@ Group & Quantity & Symbol & Value \\ \midrule
 Primary & Number of flyweights & $n_f$ & $3$ \\[3pt]
 Primary & Total flyweight-set mass & $m_f$ & \SI{0.790938}{\kilogram} \\[3pt]
 Primary & Flyweight pivot radius & --- & \SI{0.042545}{\meter} \\[3pt]
-Primary & Pivot-to-roller-center distance & --- & \SI{0.0315214}{\meter} \\[3pt]
+Primary & Pivot-to-roller-centre distance & --- & \SI{0.0315214}{\meter} \\[3pt]
 Primary & Roller radius & --- & \SI{0.0065}{\meter} \\[3pt]
 Primary & Linear ramp angle & --- & $35^\circ$ \\[3pt]
 Primary & Linear ramp span & --- & \SI{0.005}{\meter} \\[3pt]
