@@ -2476,10 +2476,13 @@ closes the mechanics of the belt itself, relating its transport motion,
 tension, pulley loading, and transmitted torque. These pieces are assembled in
 \Cref{sec:engaged_dynamic_closure}, where the admissible belt--pulley contact
 state completes the instantaneous dynamics of the freely shifting engaged CVT.
-Finally, \Cref{sec:shift_regime_dynamics} extends this result to the remaining
+\Cref{sec:shift_regime_dynamics} then extends this result to the remaining
 mechanical regimes, showing how the continuous equations reduce when additional
 constraints become active and how the state is carried consistently through
-transitions between them.
+transitions between them. Finally, \Cref{sec:complete_system_evaluation}
+brings these results together in the complete-system evaluation outlined in
+\Cref{sec:model_evaluation_flow}, showing how the CVT can be followed through
+time.
 
 \section{Pulley Geometry}
 \label{sec:geometry}
@@ -6512,11 +6515,12 @@ belt pulls away from the isolated piece.
 Because the belt curves around the pulley, those two tension forces do not
 point in the same direction. The belt tangent turns through \(d\theta\) from
 one cut to the other. It is therefore convenient to draw the local directions
-at the midpoint of the element: \(\hat{\mathbf e}_r\) points radially outward
-from the pulley axis, while \(\hat{\mathbf e}_\theta\) points with increasing
-\(\theta\). Each end tangent is inclined by \(d\theta/2\) from the midpoint
-tangent. The left-hand view in \Cref{fig:infinitesimal_belt_element} shows this
-in-plane geometry.
+at the midpoint of the element. Using the radial and tangential convention
+introduced in \Cref{sec:radial_direction}, \(\hat{\mathbf e}_r\) points
+radially outward from the pulley axis, while \(\hat{\mathbf e}_\theta\) points
+with increasing \(\theta\). Each end tangent is inclined by \(d\theta/2\) from
+the midpoint tangent. The left-hand view in
+\Cref{fig:infinitesimal_belt_element} shows this in-plane geometry.
 
 The pulley also acts on the element through both sheave faces. To complete the
 free-body diagram, these contact forces must be added to the cut-end tensions.
@@ -9592,7 +9596,11 @@ determines the acceleration away from the stop. For the reverse crossing,
 arrival is detected simply by reaching the stop position. The difficulty
 is the shift velocity with which the sheaves arrive. Bringing that motion
 to rest requires an impulse, and the motion immediately after the event
-must be determined before the continuous solution can proceed.
+must be determined before the continuous solution can proceed. This is the
+finite-speed case distinguished in
+\Cref{sec:mechanical_regimes_state_evolution}: reaching the boundary does not
+cause a jump in the sheave positions, but the incoming motion may not be
+compatible with the new constraint.
 
 At the upper primary stop, for example, free upshift can reach
 \(s=s_{\max}\) while the primary is still closing. The movable sheave
@@ -10513,8 +10521,10 @@ evaluations of \(\dot{\vect{x}}\) and retains \(q\). After a transition,
 it resumes at the event time from the accepted outgoing state and regime.
 In either case, the next evaluation begins with an updated state and an
 established regime, and the cycle repeats. Together, the continuous balances
-and transition laws thus determine the CVT's motion from the prescribed
-initial condition and shaft loading.
+and transition laws complete the process introduced in
+\Crefrange{sec:mechanical_regimes_state_evolution}{sec:model_evaluation_flow},
+determining the CVT's motion from the prescribed initial condition and shaft
+loading as its contacts and supports change.
 
 \chapter{Results and Discussion}
 \label{chap:results}
