@@ -829,7 +829,8 @@ actuation. \Cref{sec:literature-review} contains a literature review that
 organizes prior work by modelling emphasis and identifies the foundations
 available for mechanical actuation, belt contact, and transient CVT dynamics.
 Given this context, \Cref{sec:aim-scope-contributions} then states the aim,
-scope, assumptions, and contributions of the present formulation.
+scope, and contributions of the present formulation, while
+\Cref{sec:document-roadmap} outlines the development that follows.
 % --------------------------------------------------------------
 
 
@@ -1011,33 +1012,6 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 \centering
 \includegraphics[width=\textwidth]{figures/overview/cvt_low_med_high_ratio.png}
 
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Full CVT in low, middle, and high ratio states}
-
-% \vspace{0.5cm}
-% Show the primary and secondary pulleys connected by the same belt in three
-% states:
-% \begin{enumerate}
-%     \item launch/low-speed state: primary radius small, secondary radius large,
-%     \item intermediate state: primary radius increasing, secondary radius decreasing,
-%     \item shifted/high-speed state: primary radius large, secondary radius small.
-% \end{enumerate}
-
-% Label:
-% \begin{itemize}
-%     \item primary pulley,
-%     \item secondary pulley,
-%     \item belt,
-%     \item direction of upshift,
-%     \item primary radius increasing,
-%     \item secondary radius decreasing.
-% \end{itemize}
-% \vspace{0.8cm}
-% \end{minipage}
-% }
 
 \caption{Low-, intermediate-, and high-ratio states of a belt--sheave CVT. 
 As the belt moves outward on the primary pulley and inward on the secondary pulley, 
@@ -1074,6 +1048,18 @@ clamping force to create enough available traction at the belt--pulley
 interface. More clamping force increases the normal contact force, which in
 turn increases the tangential force that friction can support.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/overview/traction.png}
+\caption{Clamping and traction in a rubber V-belt CVT. The axial clamping
+force \(F_{\mathrm{clamp}}\) presses the movable sheave toward the fixed
+sheave. At the circled location, the enlarged cross-section shows representative
+local face-normal forces \(F_N\) acting on the belt. These normal forces set
+the frictional capacity for the local tangential traction shown around the
+wrap, whose distributed action transfers torque between pulley and belt.}
+\label{fig:belt_sheave_forces}
+\end{figure}
+
 If the available traction is not sufficient for the torque being transferred,
 the belt slips relative to the pulley. Slip reduces useful torque transfer and
 can produce heat, wear, and efficiency loss. A working CVT must therefore do
@@ -1086,21 +1072,6 @@ determines how the speed ratio changes. The contact mechanics determine how
 much torque can actually be carried through the belt--pulley contacts. A CVT is
 therefore not only a variable-geometry mechanism; it is also a clamping and
 traction problem.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/overview/traction.png}
-\caption{Clamping and traction in a rubber V-belt CVT. A representative
-location on the wrapped belt--pulley contact is circled and enlarged to show
-the local belt cross-section within the V-groove. Motion of the movable sheave
-toward the fixed sheave creates normal contact forces on the belt faces. These
-normal forces allow tangential frictional traction to act continuously along
-the wrap, collectively transmitting torque between the pulley and belt. The
-indicated tangential forces are representative local contributions to this
-distributed traction.}
-\label{fig:belt_sheave_forces}
-\end{figure}
-
 
 \subsection{Mechanical Actuation in the Present CVT}
 \label{subsec:cvt_actuation_overview}
@@ -1517,35 +1488,43 @@ The primary flyweight mechanism is treated as a moving inertial subsystem rather
 than as an instantaneous centrifugal-force relation. The derivation retains the
 effect of flyweight acceleration in the axial force balance and the
 configuration-dependent contribution of the flyweights to primary shaft angular
-momentum. The same actuator motion therefore participates consistently in both
-the shift and rotational dynamics.
+momentum. During engagement and shift, flyweight acceleration changes the
+closing force at the same time that the changing shaft-axis inertia contributes
+to the rotational response of the primary.
 
 \item \textbf{Dynamic axial--rotational coupling of the torque-reactive
 secondary.}
 The movable secondary sheave is allowed to rotate relative to the shaft as
 required by the helix geometry while translating axially. Its retained
-rotational inertia consequently enters both the axial dynamics of the movable
-assembly and the angular-momentum balance of the secondary shaft. This produces
-the reciprocal coupling required between shift motion, helix reaction,
-movable-sheave rotation, and shaft dynamics.
+rotational inertia enters both the axial dynamics of the movable assembly and
+the angular-momentum balance of the secondary shaft. Changes in transmitted
+torque can alter the helix reaction, secondary clamping, and shift motion, while
+acceleration of the movable sheave feeds back into the secondary shaft response.
 
 \item \textbf{Reduced transient belt, geometry, and traction closure.}
 The pulley geometry and fixed belt length are carried through position,
 velocity, and acceleration level so that the evolving pulley radii enter the
 dynamic balances consistently. The belt retains an independent transport
 motion, and the reduced wrap mechanics preserve the radial and tangential
-acceleration terms implied by the selected kinematics. Belt reactions and traction admissibility are then coupled directly to the
-pulley and shift dynamics.
+acceleration terms implied by the selected kinematics. As the radii change, the
+same belt mechanics determine transport acceleration, wrap loading, and the
+normal forces and torques that act back on the pulley and shift dynamics. They
+also determine whether each contact has enough static traction to remain
+sticking. When the required traction exceeds the static limit, that contact
+slides.
 
 \item \textbf{Common mechanics across CVT operating regimes.}
-The formulation includes the mechanical constraints associated with
-disengaged or deadzone motion, engagement, seated ratio limits, free shift, and
+The formulation includes the mechanical constraints associated with primary
+deadzone motion, engagement, seated ratio limits, free shift, and
 traction-limited stick--slip operation within one regime-dependent model.
-Transitions are selected from the admissibility of the current mechanical state
-rather than from a scripted operating sequence. When activation of a rigid
-constraint changes the allowable velocity, the post-transition motion is
-obtained from the retained inertia and impulse--momentum balance rather than an
-arbitrary state reset.
+Contact conditions, support reactions, and travel boundaries determine when those
+constraints can be retained and when the mechanics must change. If a rigid
+constraint is reached at finite speed, the outgoing velocities are obtained
+from the retained inertia and impulse--momentum balance rather than an arbitrary
+state reset. Starting from a physically admissible initial condition, the same
+mechanics can follow engagement, upshift and backshift, arrival at and release
+from the ratio limits, and traction loss and recovery without prescribing that
+sequence in advance.
 
 \end{enumerate}
 
@@ -1569,13 +1548,16 @@ pulley and belt geometry to axial actuation, pulley rotational dynamics, belt
 transport and contact, and finally the coupled transient model and its regime
 transitions.
 
-\Cref{chap:results} presents the simulation results and discussion using
-representative launch cases to examine the model behaviour and its response to
-targeted CVT tuning changes. It also documents the implementation and
-reproducibility artifacts and concludes the present study. The appendices
-collect supporting derivations and numerical details that are useful for
-reproducing or extending the formulation but would interrupt the main
-development.
+\Cref{chap:results} documents the numerical implementation and begins the
+numerical investigation by verifying the coupled model and comparing it with an
+independent transient formulation. It then examines when the retained actuator
+and belt dynamics change the predicted behaviour before bringing these
+mechanisms together in full transient simulations over a common off-road
+course. \Cref{sec:conclusion_and_future_work} draws together the conclusions of
+the study and identifies directions for extending the present formulation. The
+appendices collect supporting derivations, implementation details, reference
+inputs, and study configurations that are useful for reproducing or extending
+the work but would interrupt the main development.
 
 
 \chapter{Model Definition and Simulation Problem}
