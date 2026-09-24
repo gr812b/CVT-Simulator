@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "feature_flat800",
+  "description": "Supporting 800 m flat: reference versus U55; finite-run high-ratio attainment and tail behavior.",
+  "hill_angle_deg": 0.0,
+  "cyclic_amplitude_deg": 0.0,
+  "cyclic_wavelength_m": 6.0,
+  "cyclic_count": 6,
+  "cyclic_envelope_periods": 1.0,
+  "downhill_angle_deg": 0.0,
+  "lengths_m": {
+    "launch_flat": 120.0,
+    "hill_entry": 12.0,
+    "hill_hold": 80.0,
+    "hill_exit": 12.0,
+    "recovery_flat": 40.0,
+    "post_cyclic_flat": 12.0,
+    "descent_entry": 12.0,
+    "descent_hold": 60.0,
+    "descent_exit": 12.0,
+    "finish_flat": 24.0
+  },
+  "distance_convention": "Signed travelled distance along the road; height derivative is sin(grade), not tan(grade).",
+  "driver": "Unchanged full-throttle engine boundary everywhere; no throttle schedule or imposed braking torque.",
+  "selection_status": "Selected supporting experiment; not an extra portion of the common course.",
+  "flat_probe_length_m": 800.0
+}

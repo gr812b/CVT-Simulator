@@ -1,0 +1,9 @@
+# Final course-tuning revision 3 handoff check
+
+Revision 3 contains the selected 13-car common-course fleet plus the independent R00/U55 supporting flat. The 732 m road, final tight numerical settings, full-throttle boundary, dynamic fixed-pivot flyweights, bilateral dynamic helix, common initial state, and shared belt/contact model remain unchanged across the selected cases.
+
+The ramp-shape selection is supported by the user's frozen Results-environment `rc28_replacement_v1__tight__14b9d13706e4` campaign. RC28 was rejected at construction. R26B7 passed the released fixed-pivot audit (513 requested/traced positions, one mathematical contact candidate maximum, no findings) and completed the same 732 m course in 75.886206448 s with no recorded inspection errors or sampled admissibility-review flags.
+
+The D02 high-primary-force diagnostic is supported by the user's frozen Results-environment `unified38_c6a32w12_h18hold240__tight__a625698e273b` campaign. The environment matched the frozen manuscript stack (Python 3.12.4, CINDER 1.1.2, NumPy 2.5.2, SciPy 1.18.1, Matplotlib 3.11.1). D02_M150 completed the 732 m course in 76.821904879 s with zero inspection errors and no sampled review flag. During the 38-degree hold it reached the low-ratio seat at approximately 171.132 m and released it at approximately 173.041 m by `low_ratio_seat_released_by_tensile_reaction`. The neighboring 100-140% tip cases in that screen reached the hill low-ratio seat without a corresponding hill-seat release, so D02_M150 is retained as the selected over-correction diagnostic.
+
+This drop-in updates the final fleet, presentation groups, tests, selection lock, reporting text, and current provenance records. It does not hard-code the observed hill outcome and it does not claim that the final root campaign has already been rerun after the source selection changed. The next root `run.py` execution regenerates the manuscript-facing final campaign under the updated fingerprint.

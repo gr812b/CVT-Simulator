@@ -1,0 +1,137 @@
+{
+  "schema_version": 2,
+  "description": "Selected thirteen common-course configurations: reference, familiar flyweight change, spring-rate and admissible ramp-shape cases, isolated secondary change, adverse cases, and a mechanism-resolved D02 intervention family including a high-primary-force over-correction diagnostic.",
+  "competitors": [
+    {
+      "id": "R00",
+      "label": "Baja reference",
+      "family": "reference",
+      "intent": "Unchanged reference hardware; the common point of comparison.",
+      "knobs": {}
+    },
+    {
+      "id": "W85",
+      "label": "Tip hardware 85%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 0.85
+      }
+    },
+    {
+      "id": "P300",
+      "label": "Primary spring rate 3x",
+      "family": "primary_rate",
+      "intent": "Strong rate contrast; test rising work-speed characteristic and possible incomplete shift; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "primary_rate_scale": 3.0
+      }
+    },
+    {
+      "id": "RC10",
+      "label": "Ramp arc tail 10 deg",
+      "family": "ramp_shape",
+      "intent": "Keep first 10 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 10 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 10,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "R26B7",
+      "label": "Ramp 26 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Keep the first 10 mm of the physical ramp unchanged, C3-blend over 7 mm, then use an arc tail ending at 26 degrees. Selected from the frozen-environment RC28 replacement screen as an admissible falling working-speed characteristic.",
+      "knobs": {
+        "ramp_end_deg": 26,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.007,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "RC40L",
+      "label": "Ramp arc tail 40 deg late",
+      "family": "ramp_shape",
+      "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 40 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 40,
+        "ramp_prefix_m": 0.018,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "H28",
+      "label": "Helix 28 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 28
+      }
+    },
+    {
+      "id": "U55",
+      "label": "Very-light-tip flat-limit probe",
+      "family": "under_shift_probe",
+      "intent": "Larger single-knob mass reduction: distinguish persistent under-shifting from merely late high-ratio arrival.",
+      "knobs": {
+        "tip_mass_scale": 0.55
+      }
+    },
+    {
+      "id": "D01",
+      "label": "Premature-shift stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: early primary closing and weak secondary opposition may pull the engine down under load.",
+      "knobs": {
+        "tip_mass_scale": 1.3,
+        "primary_preload_scale": 0.8,
+        "helix_angle_deg": 28,
+        "secondary_preload_scale": 0.8,
+        "secondary_twist_deg": 240
+      }
+    },
+    {
+      "id": "D02",
+      "label": "Late-engagement stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: weak centrifugal closing against high preload may delay engagement or maintain primary slip.",
+      "knobs": {
+        "tip_mass_scale": 0.65,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M",
+      "label": "D02: restore reference tip mass",
+      "family": "diagnostic_repair",
+      "intent": "One-change intervention on D02: restore tip mass and its consistent mass moments while retaining the 115% primary preload. Assess traction, launch and shifting; no improvement is imposed.",
+      "knobs": {
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_M170",
+      "label": "D02: 170% tip mass",
+      "family": "diagnostic_repair",
+      "intent": "High-primary-force intervention on D02: increase replaceable tip mass to 170% while retaining the 115% primary preload. Test whether stronger centrifugal closing restores traction but resists severe-hill backshift; no outcome is imposed.",
+      "knobs": {
+        "tip_mass_scale": 1.7,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D02_P",
+      "label": "D02: restore reference primary preload",
+      "family": "diagnostic_repair",
+      "intent": "One-change intervention on D02: retain 65% tips but restore reference primary spring compression. Distinguish a lower spring opposition from increasing centrifugal actuation.",
+      "knobs": {
+        "tip_mass_scale": 0.65
+      }
+    }
+  ],
+  "selection_note": "W115 and B01 remain available in exploration but are not part of the selected final fleet; P300, RC10 and RC40L are retained from the shift-shape exploration, R26B7 replaces the RC28 definition rejected by the frozen CINDER 1.1.2 construction audit, and D02_M170 is the selected high-primary-force diagnostic on the D02 repair axis."
+}

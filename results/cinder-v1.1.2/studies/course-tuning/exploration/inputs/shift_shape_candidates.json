@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "id": "shift_shape_v1",
+  "description": "Twelve rate/profile candidates plus R00/W85/W115 comparison controls; exploratory only.",
+  "competitors": [
+    {
+      "id": "R00",
+      "label": "Baja reference",
+      "family": "reference",
+      "intent": "Unchanged reference hardware; the common point of comparison.",
+      "knobs": {}
+    },
+    {
+      "id": "W85",
+      "label": "Tip hardware 85%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 0.85
+      }
+    },
+    {
+      "id": "W115",
+      "label": "Tip hardware 115%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 1.15
+      }
+    },
+    {
+      "id": "P050",
+      "label": "Primary spring rate 0.5x",
+      "family": "primary_rate",
+      "intent": "Softer return spring: less increase in opposition with primary closure; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "primary_rate_scale": 0.5
+      }
+    },
+    {
+      "id": "P200",
+      "label": "Primary spring rate 2x",
+      "family": "primary_rate",
+      "intent": "Stiffer return spring: greater increase in opposition across the shift; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "primary_rate_scale": 2.0
+      }
+    },
+    {
+      "id": "P300",
+      "label": "Primary spring rate 3x",
+      "family": "primary_rate",
+      "intent": "Strong rate contrast; test rising work-speed characteristic and possible incomplete shift; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "primary_rate_scale": 3.0
+      }
+    },
+    {
+      "id": "S050",
+      "label": "Secondary spring rate 0.5x",
+      "family": "secondary_rate",
+      "intent": "Softer secondary compression spring with matched initial closing force; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "secondary_rate_scale": 0.5
+      }
+    },
+    {
+      "id": "S200",
+      "label": "Secondary spring rate 2x",
+      "family": "secondary_rate",
+      "intent": "Stiffer secondary compression spring with matched initial closing force; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "secondary_rate_scale": 2.0
+      }
+    },
+    {
+      "id": "T067",
+      "label": "Torsional spring rate 0.666667x",
+      "family": "torsional_rate",
+      "intent": "Softer torsional spring with matched initial torque; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "torsional_rate_scale": 0.6666666666666666
+      }
+    },
+    {
+      "id": "T150",
+      "label": "Torsional spring rate 1.5x",
+      "family": "torsional_rate",
+      "intent": "Stiffer torsional spring with matched initial torque; installed preload is explicitly adjusted at engagement geometry.",
+      "knobs": {
+        "torsional_rate_scale": 1.5
+      }
+    },
+    {
+      "id": "RC10",
+      "label": "Ramp arc tail 10 deg",
+      "family": "ramp_shape",
+      "intent": "Keep first 10 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 10 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 10,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "RC28",
+      "label": "Ramp arc tail 28 deg",
+      "family": "ramp_shape",
+      "intent": "Keep first 10 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 28 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 28,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "RL30",
+      "label": "Ramp straight tail 30 deg",
+      "family": "ramp_shape",
+      "intent": "Keep first 10 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a straight tail ending at 30 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 30,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "straight"
+      }
+    },
+    {
+      "id": "RC35L",
+      "label": "Ramp arc tail 35 deg late",
+      "family": "ramp_shape",
+      "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 35 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 35,
+        "ramp_prefix_m": 0.018,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "RC40L",
+      "label": "Ramp arc tail 40 deg late",
+      "family": "ramp_shape",
+      "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 40 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+      "knobs": {
+        "ramp_end_deg": 40,
+        "ramp_prefix_m": 0.018,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    }
+  ]
+}

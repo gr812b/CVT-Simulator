@@ -1,93 +1,89 @@
-# Solver convergence
+# Solver convergence — Results 4.2.3
 
-This study asks whether the **complete hybrid CINDER trajectory** converges as
-LSODA numerical controls are tightened.
+This study distinguishes agreement of the motion from agreement of the contact
+and support history. Only LSODA controls change; the physical case remains
+`../../defaults/baja/simulation_case.json`. The installed mechanics must be
+`cinder-cvt==1.1.2`, never the live simulator source.
 
-It loads only:
+## Reproduce the reviewed figures without simulation
 
-```text
-../../defaults/baja/simulation_case.json
+From `results/cinder-v1.1.2`, using its verified Python 3.12 environment:
+
+```bash
+.venv/bin/python verify_environment.py
+.venv/bin/python studies/solver-convergence/run.py --plot-only
 ```
 
-and changes only the integrator settings recorded in `study.json`; the comparison grid is a study-local postprocessing choice. It does
-not import setup helpers from another study or copy a `cvtModel` source tree.
+On Windows, use the corresponding `.venv\Scripts\python.exe`. Restore the
+delivered `evidence/artifacts/` directory into this study's `artifacts/` first.
+Ignored numerical evidence is intentionally delivered separately from Git.
+The command verifies recorded source snapshots and numerical output hashes,
+rechecks every formal guard and audits retained native endpoints before drawing.
+It does not call the simulator. An alternative destination is supported:
 
-The full paper-facing sweep evaluates:
-
-\[
-r_{\rm tol}
-=
-10^{-2},3\times10^{-3},10^{-3},3\times10^{-4},
-10^{-4},3\times10^{-5},10^{-5},3\times10^{-6}
-\]
-
-against
-
-\[
-\Delta t_{\max}=100,50,20,10,5\ {\rm ms}
-\]
-
-with `atol = 1e-3 * rtol`, plus an independent seven-level absolute-tolerance
-sweep.
-
-Each run is compared with a tighter numerical reference using:
-
-- all five CVT state trajectories;
-- normalized RMS / maximum / final-state errors;
-- transition count;
-- exact transition signature;
-- corresponding event-time errors;
-- regime-history mismatch fraction;
-- pure hybrid-integration wall time;
-- native solver-point count as a transparent cost proxy.
-
-The figures include the accuracy heatmap, hybrid-stability map, event-time
-heatmap, cost curves, absolute-tolerance sensitivity, and loose/canonical/tight
-trajectory overlays.
-
-This study alone keeps a local `work/cache/` because the 40+ independent
-integrations are expensive. That cache contains only outputs of this study and
-can be deleted with `--fresh`.
-
-Run from `results/cinder-v1.1.2`:
-
-```powershell
-python .\studies\solver-convergence\run.py
+```bash
+.venv/bin/python studies/solver-convergence/run.py --plot-only --publication-dir /absolute/output/path
 ```
 
-Quick machinery preview:
+The two vector PDFs, 300 dpi PNG companions, values and provenance JSON go by
+default to `docs/CVT_Module_Formulation/figures/results/verification/`.
+`analysis/publication_plots.py` is a module invoked through canonical `run.py`,
+not a separate script command.
 
-```powershell
-python .\studies\solver-convergence\run.py --quick
+## Reconstruct from the registered historical archives
+
+If the delivered evidence is unavailable but the original archives are present:
+
+```bash
+.venv/bin/python studies/solver-convergence/run.py --import-retained "/path/to/artifacts(3).zip" "/path/to/dense-overnight.zip"
 ```
 
-Delete this study's cache and rerun:
+Both complete archive SHA-256 identities must match
+`provenance/retained_archives.json`. This imports the 40-point revision-4 formal
+sweep, seven independent absolute-tolerance rows, 4,945-point dense exploration
+and its three retained caches. It selects the median gross-RMS
+different-signature row before viewing its history, then runs **only that
+missing trajectory**, or reuses an identical study-local cache.
+The new replay receives its own input snapshots and output hashes; it is not
+renamed as the original archived execution. Re-import refuses to overwrite
+different retained data. Use a fresh checkout when reconstructing a new replay.
 
-```powershell
-python .\studies\solver-convergence\run.py --fresh
+The complete original historical dependency lock was not supplied. Its recorded
+CINDER version is 1.1.2; the new replay environment is recorded separately.
+Last digits need not reproduce the original archived run, and any changed
+signature or failed audit blocks publication rather than being hidden.
+
+## Optional new formal integration (not needed for these figures)
+
+```bash
+.venv/bin/python studies/solver-convergence/run.py
+.venv/bin/python studies/solver-convergence/run.py --quick
 ```
 
-<!-- solver-convergence finalization companions v1 -->
-## Publication polish and optional dense explorer
+The default recomputes the formal 8-by-5 grid and seven-level absolute-tolerance
+sweep, with a tighter reference. `--quick` is a machinery check, not publication
+evidence. Outputs now remain separately under `artifacts/formal_recomputed/`
+or `artifacts/quick/`, including execution snapshots and native reference and
+research caches. They do not overwrite or automatically replace the reviewed
+historical evidence. `--fresh` explicitly clears only this study's `work/cache/`
+before integrating. These integration paths were not rerun during finalization;
+the retained formal results were sufficient.
 
-The formal revision-4 numerical sweep is intentionally left unchanged.
+The optional `exploration/overnight_dense.py` is never invoked automatically.
+Its archived population is used as a supplementary gross-motion diagnostic,
+not a replacement for formal hybrid acceptance and not an inferred continuous
+pass boundary. Old candidate plots generated by the numerical runner are not
+the final manuscript figures.
 
-Paper-facing figures can be regenerated from the frozen artifacts without
-rerunning CINDER:
+## Checks and provenance
 
-```powershell
-python .\studies\solver-convergence\analysis/publication_plots.py
+From this study directory:
+
+```bash
+../../.venv/bin/python -m unittest analysis.test_publication_integrity -v
 ```
 
-A separate exploratory dense sweep is available for high-resolution heatmaps,
-contours, breakdown-boundary exploration, and high-density cost plots. It is
-**never called by `run.py`** and writes only beneath `artifacts/dense-overnight/`:
-
-```powershell
-python .\studies\solver-convergence\exploration/overnight_dense.py --plan-only
-python .\studies\solver-convergence\exploration/overnight_dense.py
-```
-
-The dense explorer is supplementary/exploratory and does not replace the frozen
-formal verification dataset.
-
+See `provenance/SECTION_4_2_3.md` for raw locators, transformations, the archived
+versus replayed distinction, known limits, panel purposes and exact results.
+The scientific comparison functions in `run.py` are unchanged; the new CLI
+routes and publication audits do not alter dynamics or formal acceptance.

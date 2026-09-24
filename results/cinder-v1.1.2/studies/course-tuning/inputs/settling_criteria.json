@@ -1,0 +1,19 @@
+{
+  "window_s": 5.0,
+  "window_stride_s": 0.25,
+  "maximum_sample_gap_s": 0.1,
+  "interior_clearance_mm": 0.25,
+  "minimum_forward_speed_m_s": 0.1,
+  "grade_tolerance_deg": 1e-06,
+  "max_abs_shift_rate_mm_s": 0.05,
+  "max_abs_vehicle_acceleration_m_s2": 0.01,
+  "max_abs_primary_rpm_rate_rpm_s": 2.0,
+  "max_abs_secondary_rpm_rate_rpm_s": 2.0,
+  "max_abs_belt_acceleration_m_s2": 0.01,
+  "max_abs_shift_acceleration_m_s2": 0.0005,
+  "shift_range_mm": 0.1,
+  "vehicle_speed_range_m_s": 0.05,
+  "primary_rpm_range": 10.0,
+  "secondary_rpm_range": 10.0,
+  "belt_speed_range_m_s": 0.05
+}

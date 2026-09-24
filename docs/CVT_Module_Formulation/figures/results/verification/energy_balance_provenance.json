@@ -1,0 +1,95 @@
+{
+  "manuscript_label": "fig:verification_energy_balance",
+  "manuscript_asset": "docs/CVT_Module_Formulation/figures/results/verification/energy_balance.pdf",
+  "run_id": "energy-consistency-63428236f0140f5c",
+  "execution_record_sha256": "ce9df27d2331f384398535e1a093f54acd31f5cc8d8a69dda19145ca5f1753e2",
+  "mechanics_version": "1.1.2",
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "plotting_sources": {
+    "publication_plots.py": "b7939dc5db6c8b706b747a3d1018b9d06c5c04d68c35cafcadf09b5b3f842c92",
+    "verification.py": "fc5c60eebedf8f066fee9b0a238b1015770b3ad43585f8de42f5082fbf55c3cb",
+    "execution_record.py": "f6547d9f361e6b990f5f9523f4e9b486f4a9bf354bfdb85de721c12b40553ed8"
+  },
+  "size_inches": [
+    6.5,
+    4.25
+  ],
+  "transformations": {
+    "selection": "Complete 0-10 s nominal and tight canonical trajectories. No event, regime, negative residual or endpoint excluded.",
+    "work_storage": "J to kJ only. Both attached boundary inertias are included in retained kinetic energy. Net work adds the two signed external-torque works.",
+    "residual": "Signed dimensional W - storage - kinetic slip - discrete capture. No sticking-drift work subtraction. Same 0.625 ms maximum audit spacing for both ODE settings.",
+    "events": "Both exact native sides retained at every equal-time event. Separate line per continuous segment; no smoothing or trapezoid across resets. Capture loss added only to outgoing side.",
+    "upper_stop_detail": "Each trajectory uses its own native upper-stop event time as zero, with -20 to +40 ms shown. Open circles show both native sides, which coincide in residual. This is a display alignment, not an event-aligned convergence metric.",
+    "quadrature": "Sum of continuous-segment defects at 5, 2.5, 1.25, 0.625 ms maximum spacing, each segment at least 12 intervals. Nominal trajectory held fixed. Second-order Richardson extrapolate uses only two finest spacings; not an uncertainty or remaining-quadrature-error bar."
+  },
+  "checks": {
+    "trace_rows": {
+      "nominal": 16145,
+      "tight": 16145
+    },
+    "native_transitions": {
+      "nominal": 16,
+      "tight": 16
+    },
+    "capture_projections": {
+      "nominal": 13,
+      "tight": 13
+    },
+    "all_native_sides_checked": true,
+    "energy_identity_at_every_row_checked": true,
+    "quadrature_and_event_ledgers_checked": true,
+    "guards_recomputed": {
+      "nominal": {
+        "ten_seconds": true,
+        "balance_fraction": true,
+        "event_energy": true,
+        "momentum": true,
+        "constraint": true,
+        "nonnegative_capture": true
+      },
+      "tight": {
+        "ten_seconds": true,
+        "balance_fraction": true,
+        "event_energy": true,
+        "momentum": true,
+        "constraint": true,
+        "nonnegative_capture": true
+      },
+      "refinement": {
+        "final_state": true,
+        "transition_count": true,
+        "continuous_defect_ratio": true
+      }
+    },
+    "nominal_continuous_defect_J": 0.025444535531278234,
+    "richardson_zero_spacing_estimate_J": 0.024511321140814214,
+    "max_normalized_final_state_delta": 1.2972799733193834e-07,
+    "signed_stick_pair_work_J_diagnostic_only": 0.0010158023171125787,
+    "upper_stop_detail": {
+      "nominal": {
+        "time_s": 6.781920912090633,
+        "recorded_loss_J": 1.603747659828514e-05,
+        "native_residual_jump_J": 0.0,
+        "detail_window_from_native_event_ms": [
+          -20,
+          40
+        ]
+      },
+      "tight": {
+        "time_s": 6.781924983147974,
+        "recorded_loss_J": 1.616402732906863e-05,
+        "native_residual_jump_J": 0.0,
+        "detail_window_from_native_event_ms": [
+          -20,
+          40
+        ]
+      }
+    }
+  },
+  "outputs": {
+    "energy_balance.pdf": "a2294ed02a30d3fd3fe8c69090277a225abb4da6aab20ef0c3f1d6b33ed458cb",
+    "energy_balance.png": "aeb0fe5bb4dc3dc707870c63dbd542967ca4bba7c0b068ad985f4a077071c483",
+    "energy_balance_values.json": "86d9ba895a505354f6c4308ac92a1d9b3f55ee495214b81c6e1d792cb28a6fa8"
+  },
+  "author_status": "ready_for_author_review_not_author_accepted"
+}

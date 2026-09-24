@@ -64,6 +64,7 @@ if str(RELEASE_ROOT) not in sys.path:
     sys.path.insert(0, str(RELEASE_ROOT))
 
 from defaults.reference_model import decode_reference_case
+from analysis.execution_record import capture_inputs, write_execution_record
 VERIFY_ENVIRONMENT = RELEASE_ROOT / "verify_environment.py"
 STUDY_FILE = STUDY_ROOT / "study.json"
 ARTIFACTS = STUDY_ROOT / "artifacts"
@@ -73,6 +74,10 @@ EXPECTED_CINDER_VERSION = "1.1.2"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--plot-only", action="store_true",
+                        help="Verify retained evidence and rebuild publication assets without simulation.")
+    parser.add_argument("--publication-dir", type=Path,
+                        help="Override the publication output directory (also useful for reproducibility checks).")
     parser.add_argument(
         "--keep-artifacts",
         action="store_true",
@@ -168,7 +173,10 @@ def sampled_segment_quantities(system, segment, step: float):
     times = segment_times(segment.start_time, segment.end_time, step=step)
     if not segment.has_dense_output:
         raise RuntimeError("Energy study requires retained dense output.")
-    states = segment.dense_state_at(times)
+    states = np.array(segment.dense_state_at(times), copy=True)
+    # Retain the exact one-sided native states at each hybrid boundary.
+    states[:, 0] = segment.state[:, 0]
+    states[:, -1] = segment.state[:, -1]
 
     primary_power = np.zeros(times.size, dtype=float)
     secondary_power = np.zeros(times.size, dtype=float)
@@ -336,13 +344,13 @@ def continuous_segment_balance(system, result, audit_steps: tuple[float, ...]):
     return rows
 
 
-def event_balance(system, result):
+def event_balance(system, result, *, include_unprojected=False):
     """Compare exact pre/post stored-energy jump with recorded impact loss."""
 
     rows: list[dict] = []
     for index, record in enumerate(result.transitions):
         meta = impact_metadata(record)
-        if meta is None:
+        if meta is None and not include_unprojected:
             continue
 
         pre_segment = result.segments[index]
@@ -366,7 +374,15 @@ def event_balance(system, result):
             boundaries=post_boundaries,
         )
         exact_drop = pre.total_J - post.total_J
-        recorded_loss = float(meta["impact_dissipated_energy_J"])
+        recorded_loss = float(meta["impact_dissipated_energy_J"]) if meta else 0.0
+        states = {}
+        for side, full_state in (("pre", pre_state), ("post", post_state)):
+            state = CVTState.from_vector(system.layout.view(full_state, "cvt"))
+            for name, value in zip(
+                ("omega_p_rad_s", "omega_s_rad_s", "belt_speed_m_s",
+                 "shift_position_m", "shift_speed_m_per_s"), state.as_vector(), strict=True
+            ):
+                states[f"{side}_{name}"] = float(value)
         rows.append(
             {
                 "transition_index": index,
@@ -374,13 +390,15 @@ def event_balance(system, result):
                 "reason": str(record.transition.reason),
                 "previous_mode": mode_string(record.previous_mode),
                 "next_mode": mode_string(record.transition.next_mode),
+                "has_capture_projection": meta is not None,
                 "pre_stored_energy_J": pre.total_J,
                 "post_stored_energy_J": post.total_J,
                 "exact_stored_energy_drop_J": exact_drop,
                 "recorded_impact_loss_J": recorded_loss,
                 "event_energy_defect_J": exact_drop - recorded_loss,
-                "momentum_residual": float(meta["impact_momentum_residual"]),
-                "constraint_residual": float(meta["impact_constraint_residual"]),
+                "momentum_residual": float(meta["impact_momentum_residual"]) if meta else "",
+                "constraint_residual": float(meta["impact_constraint_residual"]) if meta else "",
+                **states,
             }
         )
     return rows
@@ -395,12 +413,11 @@ def cumulative_energy_trace(system, result, initial_state, initial_mode, step: f
         full_state=initial_state,
         mode=initial_mode,
     )
-    transitions = sorted(result.transitions, key=lambda record: record.time)
-    impact_times = np.asarray([record.time for record in transitions], dtype=float)
-    impact_losses = np.asarray(
-        [impact_loss_from_transition(record) for record in transitions], dtype=float
-    )
-    cumulative_impact = np.cumsum(impact_losses) if impact_losses.size else impact_losses
+    # Transition i follows segment i. Count its loss only on the outgoing
+    # side, not at the incoming endpoint with the same timestamp.
+    if len(result.segments) != len(result.transitions) + 1:
+        raise ValueError("Unexpected segment/transition topology in completed trajectory.")
+    cumulative_impact = 0.0
 
     rows: list[dict] = []
     cumulative_primary_work = 0.0
@@ -408,7 +425,7 @@ def cumulative_energy_trace(system, result, initial_state, initial_mode, step: f
     cumulative_primary_slip = 0.0
     cumulative_secondary_slip = 0.0
 
-    for segment in result.segments:
+    for segment_index, segment in enumerate(result.segments):
         sampled = sampled_segment_quantities(system, segment, step)
         times = sampled["time"]
 
@@ -427,13 +444,7 @@ def cumulative_energy_trace(system, result, initial_state, initial_mode, step: f
 
         for i, time_s in enumerate(times):
             time_s = float(time_s)
-            if impact_times.size:
-                j = np.searchsorted(
-                    impact_times, time_s + 1.0e-12, side="right"
-                ) - 1
-                impact = float(cumulative_impact[j]) if j >= 0 else 0.0
-            else:
-                impact = 0.0
+            impact = cumulative_impact
 
             primary_work = cumulative_primary_work + float(primary_work_increment[i])
             secondary_work = cumulative_secondary_work + float(secondary_work_increment[i])
@@ -458,7 +469,13 @@ def cumulative_energy_trace(system, result, initial_state, initial_mode, step: f
             rows.append(
                 {
                     "time_s": time_s,
+                    "segment_index": segment_index,
+                    "sample_location": ("segment_start" if i == 0 else
+                                        "segment_end" if i == len(times) - 1 else "interior"),
                     "mode": mode_string(segment.mode),
+                    "omega_p_rad_s": float(cvt_state.primary_angular_speed),
+                    "omega_s_rad_s": float(cvt_state.secondary_angular_speed),
+                    "belt_speed_m_s": float(cvt_state.belt_speed),
                     "shift_position_m": float(cvt_state.shift_position),
                     "shift_speed_m_per_s": float(cvt_state.shift_speed),
                     "primary_boundary_work_J": primary_work,
@@ -480,13 +497,13 @@ def cumulative_energy_trace(system, result, initial_state, initial_mode, step: f
         cumulative_secondary_work += float(secondary_work_increment[-1])
         cumulative_primary_slip += float(primary_slip_increment[-1])
         cumulative_secondary_slip += float(secondary_slip_increment[-1])
-
-    # At a transition timestamp keep the successor-segment row so that the mode
-    # label and cumulative impact accounting are post-transition.
-    deduplicated: dict[float, dict] = {}
-    for row in rows:
-        deduplicated[round(float(row["time_s"]), 12)] = row
-    return [deduplicated[key] for key in sorted(deduplicated)]
+        if segment_index < len(result.transitions):
+            transition = result.transitions[segment_index]
+            successor = result.segments[segment_index + 1]
+            if not (segment.end_time == transition.time == successor.start_time):
+                raise ValueError("Transition does not join the two native segment endpoints.")
+            cumulative_impact += impact_loss_from_transition(transition)
+    return rows
 
 
 def step_tag(step: float) -> str:
@@ -938,6 +955,13 @@ def write_summary_markdown(summary: dict) -> None:
 def main() -> int:
     args = parse_args()
 
+    if args.plot_only:
+        if args.quick or args.no_plots:
+            raise SystemExit("--plot-only cannot be combined with --quick or --no-plots.")
+        from analysis.publication_plots import publish
+        publish(ARTIFACTS, args.publication_dir)
+        return 0
+
     subprocess.run([sys.executable, str(VERIFY_ENVIRONMENT)], check=True)
     if cinder.__version__ != EXPECTED_CINDER_VERSION:
         raise SystemExit(
@@ -965,6 +989,7 @@ def main() -> int:
     if ARTIFACTS.exists() and not args.keep_artifacts:
         shutil.rmtree(ARTIFACTS)
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    executed_inputs = capture_inputs()
 
     (ARTIFACTS / "resolved_simulation_case_nominal.json").write_text(
         json.dumps(nominal_document, indent=2) + "\n",
@@ -985,6 +1010,7 @@ def main() -> int:
     finest_step = audit_steps[-1]
 
     event_rows = event_balance(system, nominal)
+    transition_rows = event_balance(system, nominal, include_unprojected=True)
     nominal_trace_rows = cumulative_energy_trace(
         system,
         nominal,
@@ -1023,6 +1049,10 @@ def main() -> int:
             finest_step,
         )
         tight_trace = trace_summary(tight_trace_rows)
+        write_csv(ARTIFACTS / "event_energy_balance_tight.csv",
+                  event_balance(tight_decoded.system, tight))
+        write_csv(ARTIFACTS / "native_transitions_tight.csv",
+                  event_balance(tight_decoded.system, tight, include_unprojected=True))
         print(
             "  max normalized final-state delta: "
             f"{refinement['max_normalized_final_state_delta']:.6g}"
@@ -1044,6 +1074,7 @@ def main() -> int:
     write_csv(ARTIFACTS / "continuous_segment_balance.csv", segment_rows)
     write_csv(ARTIFACTS / "quadrature_convergence.csv", quadrature_rows)
     write_csv(ARTIFACTS / "event_energy_balance.csv", event_rows)
+    write_csv(ARTIFACTS / "native_transitions.csv", transition_rows)
     if tight_trace_rows is not None:
         write_csv(ARTIFACTS / "energy_trace_tight_finest.csv", tight_trace_rows)
 
@@ -1075,6 +1106,14 @@ def main() -> int:
         encoding="utf-8",
     )
     write_summary_markdown(summary)
+    write_execution_record(
+        ARTIFACTS, executed_inputs,
+        command="results/cinder-v1.1.2/.venv/bin/python "
+                "results/cinder-v1.1.2/studies/energy-consistency/run.py"
+                + (" --no-plots" if args.no_plots else "")
+                + (" --quick" if args.quick else ""),
+        note="Native event sides retained; no dynamics, input, quadrature-grid or acceptance-limit changes."
+    )
 
     if not args.no_plots:
         save_plots(
@@ -1084,6 +1123,9 @@ def main() -> int:
             event_rows=event_rows,
             finest_step=finest_step,
         )
+        if not args.quick:
+            from analysis.publication_plots import publish
+            publish(ARTIFACTS, args.publication_dir)
 
     print("\n=== Energy-study summary ===")
     print(f"status: {status}")

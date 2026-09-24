@@ -1,0 +1,378 @@
+{
+  "accepted_starts": 666,
+  "census": [
+    {
+      "accepted": 49,
+      "not_accepted": 0,
+      "starts": 49,
+      "state": "low_ratio_seat"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "mid_shift"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "late_shift"
+    },
+    {
+      "accepted": 35,
+      "not_accepted": 14,
+      "starts": 49,
+      "state": "upper_stop"
+    },
+    {
+      "accepted": 49,
+      "not_accepted": 0,
+      "starts": 49,
+      "state": "stick_mid_forward"
+    },
+    {
+      "accepted": 49,
+      "not_accepted": 0,
+      "starts": 49,
+      "state": "stick_mid_reverse"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "stick_low_forward"
+    },
+    {
+      "accepted": 46,
+      "not_accepted": 3,
+      "starts": 49,
+      "state": "stick_high_forward"
+    },
+    {
+      "accepted": 45,
+      "not_accepted": 4,
+      "starts": 49,
+      "state": "stick_mid_stressed"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "free_shift_closing_30"
+    },
+    {
+      "accepted": 49,
+      "not_accepted": 0,
+      "starts": 49,
+      "state": "free_shift_closing_50"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "free_shift_closing_70"
+    },
+    {
+      "accepted": 42,
+      "not_accepted": 7,
+      "starts": 49,
+      "state": "free_shift_opening_30"
+    },
+    {
+      "accepted": 49,
+      "not_accepted": 0,
+      "starts": 49,
+      "state": "free_shift_opening_50"
+    },
+    {
+      "accepted": 43,
+      "not_accepted": 6,
+      "starts": 49,
+      "state": "free_shift_opening_70"
+    }
+  ],
+  "expanded_accepted": 163,
+  "expanded_census": [
+    {
+      "accepted": 66,
+      "not_accepted": 15,
+      "starts": 81,
+      "state": "low_ratio_seat"
+    },
+    {
+      "accepted": 27,
+      "not_accepted": 54,
+      "starts": 81,
+      "state": "mid_shift"
+    },
+    {
+      "accepted": 37,
+      "not_accepted": 44,
+      "starts": 81,
+      "state": "upper_stop"
+    },
+    {
+      "accepted": 33,
+      "not_accepted": 48,
+      "starts": 81,
+      "state": "free_shift_opening_70"
+    }
+  ],
+  "expanded_starts": 324,
+  "frozen": {
+    "boundary_inertia_kg_m2": [
+      0.03,
+      0.05
+    ],
+    "continuation_coordinate": "secondary traction utilization lambda_s; frozen position and velocities; no time evolution",
+    "curve_points": 184,
+    "fixed_primary_torque_Nm": -81.14811270784904,
+    "fold": {
+      "A_condition_scaled": 5479.576910047508,
+      "A_max_equation_residual": 2.5011104298755527e-12,
+      "A_rank": 8,
+      "J_condition": 134224670.31765682,
+      "J_determinant": -0.03793040723129516,
+      "J_sigma_min": 1.681038190352891e-05,
+      "N_p_N": 3084.7867045038197,
+      "N_s_N": 2085.515420935416,
+      "R_p": -3.126388037344441e-13,
+      "R_s": -1.6910917111090384e-11,
+      "alpha_p_rad_s2": -459.79557042396686,
+      "alpha_s_rad_s2": 2976.26412390549,
+      "belt_acceleration_m_s2": -64.14086436496157,
+      "direct_vs_affine_residual_max": 4.595435143528448e-12,
+      "lambda_p": -0.2856750279272083,
+      "lambda_s": 0.4134494072456925,
+      "mechanism_margin": 7.8165955806954734,
+      "min_local_normal_p_N_per_rad": 53.11539355582591,
+      "min_local_normal_s_N_per_rad": 5.90159580613925,
+      "min_tension_N": 171.69837959911325,
+      "physical": true,
+      "primary_boundary_torque_Nm": -81.14811270784904,
+      "primary_relative_speed_m_s": 0.0,
+      "secondary_boundary_torque_Nm": 197.39018531193705,
+      "secondary_relative_speed_m_s": 0.0,
+      "shift_acceleration_m_s2": 140.34629200410598,
+      "static_margin_p": 0.36432497207279174,
+      "static_margin_s": 0.2365505927543075,
+      "tau_p_Nm": 63.74249391098829,
+      "tau_s_Nm": -56.720768203645314,
+      "topology_failure_code": 0
+    },
+    "historical_guard": "Original cinder-cvt 1.1.2 one-sided helix contact checked; selected two-contact and one-contact roots additionally pass current bilateral reference with identical response.",
+    "kinematics": {
+      "resolved_belt_speed_m_s": 22.723828604026963,
+      "resolved_primary_rpm": 3000.0,
+      "resolved_secondary_rpm": 3286.525552894801,
+      "shift_fraction": 0.95,
+      "shift_speed_mm_s": -40.0
+    },
+    "new_work": "Only selected frozen roots, central derivatives, local curve correction and focused residual grid; retained full maps and censuses are not rerun.",
+    "selected_secondary_torque_Nm": 189.9644692158431,
+    "state_id": "sf0p950_sdotm40_rpm3000"
+  },
+  "historical_quick_starts": 375,
+  "map_points_checked": 895489,
+  "map_values": [
+    {
+      "max_lambda_p": 0.65,
+      "max_lambda_s": 0.65,
+      "max_topology_failure_code": 24,
+      "maximum": 13260.18608920877,
+      "root": 10404.7070570235,
+      "samples": 241,
+      "state": "low_ratio_seat",
+      "topology_admissible_fraction": 0.4231676451851724
+    },
+    {
+      "max_lambda_p": -0.65,
+      "max_lambda_s": -0.65,
+      "max_topology_failure_code": 0,
+      "maximum": 36956.50789492616,
+      "root": 9441.125318278111,
+      "samples": 241,
+      "state": "mid_shift",
+      "topology_admissible_fraction": 0.8814930872402335
+    },
+    {
+      "max_lambda_p": -0.21666666666666667,
+      "max_lambda_s": -0.25458333333333333,
+      "max_topology_failure_code": 15,
+      "maximum": 1054035.159800384,
+      "root": 8560.906484771036,
+      "samples": 241,
+      "state": "upper_stop",
+      "topology_admissible_fraction": 0.616673266644858
+    },
+    {
+      "max_lambda_p": 0.65,
+      "max_lambda_s": -0.65,
+      "max_topology_failure_code": 4,
+      "maximum": 8261.22259750279,
+      "root": 3621.353444035546,
+      "samples": 241,
+      "state": "free_shift_opening_70",
+      "topology_admissible_fraction": 0.8601952445722353
+    }
+  ],
+  "max_root_jacobian_plateau_relative_span": 2.0083174094538977e-06,
+  "max_selected_jacobian_plateau_relative_span": 1.566288418105894e-06,
+  "mixed_candidate_rows": 15,
+  "mixed_distinct_state_branch_geometries": 1,
+  "mixed_roots": [
+    {
+      "A_condition_scaled": 3066.2499138079024,
+      "A_max_equation_residual": 2.5011104298755527e-12,
+      "A_rank": 8.0,
+      "J_condition": 3.695248756635164,
+      "J_determinant": 73454.09919710326,
+      "J_sigma_min": 140.9893079530893,
+      "N_p_N": 1371.4414311653961,
+      "N_s_N": 1688.2984989342287,
+      "R_p": 364.83471431098405,
+      "R_s": -1.7420376252630376e-10,
+      "alpha_p_rad_s2": -5672.591048655615,
+      "alpha_s_rad_s2": 377.1559228487593,
+      "belt_acceleration_m_s2": -71.21193807144257,
+      "bilateral_physical": true,
+      "bilateral_response_max_abs_difference": 0.0,
+      "dR_s_dlambda_s_m_s2": 54.62538406604266,
+      "lambda_p": -0.55,
+      "lambda_s": 0.43428795683927435,
+      "mechanism_margin": 5.620482289570962,
+      "min_local_normal_p_N_per_rad": 4.515890211161414,
+      "min_local_normal_s_N_per_rad": 2.601087936735097,
+      "min_tension_N": 114.83191717206118,
+      "physical": true,
+      "primary_boundary_torque_Nm": -260.0,
+      "primary_relative_speed_m_s": 0.0,
+      "root_id": 1.0,
+      "secondary_boundary_torque_Nm": 59.34019609296814,
+      "secondary_relative_speed_m_s": -3.552713678800501e-15,
+      "shift_acceleration_m_s2": 59.57030823378519,
+      "slip_direction_consistent": true,
+      "static_margin_p": 0.09999999999999998,
+      "static_margin_s": 0.21571204316072567,
+      "tau_p_Nm": 54.5596514324012,
+      "tau_s_Nm": -48.231786176712085,
+      "topology_failure_code": 0.0
+    },
+    {
+      "A_condition_scaled": 3147.629014780006,
+      "A_max_equation_residual": 7.958078640513122e-13,
+      "A_rank": 8.0,
+      "J_condition": 30.69742126171938,
+      "J_determinant": 8087.455176258159,
+      "J_sigma_min": 16.23136321751989,
+      "N_p_N": 1405.0068018525906,
+      "N_s_N": 1386.585758298858,
+      "R_p": 379.7702430161863,
+      "R_s": 4.035882739117369e-12,
+      "alpha_p_rad_s2": -5635.59908170048,
+      "alpha_s_rad_s2": 318.8678397176956,
+      "belt_acceleration_m_s2": -53.60069927424667,
+      "bilateral_physical": true,
+      "bilateral_response_max_abs_difference": 0.0,
+      "dR_s_dlambda_s_m_s2": -28.042625840285492,
+      "lambda_p": -0.55,
+      "lambda_s": 0.5458610486479887,
+      "mechanism_margin": 3.3491927948849494,
+      "min_local_normal_p_N_per_rad": 3.8255930123378676,
+      "min_local_normal_s_N_per_rad": 0.0061630813618318145,
+      "min_tension_N": 115.24649020495929,
+      "physical": true,
+      "primary_boundary_torque_Nm": -260.0,
+      "primary_relative_speed_m_s": 0.0,
+      "root_id": 2.0,
+      "secondary_boundary_torque_Nm": 59.34019609296814,
+      "secondary_relative_speed_m_s": -3.552713678800501e-15,
+      "shift_acceleration_m_s2": 49.36560975525644,
+      "slip_direction_consistent": true,
+      "static_margin_p": 0.09999999999999998,
+      "static_margin_s": 0.10413895135201134,
+      "tau_p_Nm": 55.89497271063945,
+      "tau_s_Nm": -49.78920197297537,
+      "topology_failure_code": 0.0
+    }
+  ],
+  "mixed_search_states": 62,
+  "no_transient_rerun": true,
+  "root_jacobian_matrices_checked": 150,
+  "run_id": "closure-conditioning-2cd896930d63882e",
+  "selected_roots": [
+    {
+      "A_condition_scaled": 6305.923640521496,
+      "A_max_equation_residual": 5.229594535194337e-12,
+      "A_rank": 8.0,
+      "J_condition": 13.886970576267144,
+      "J_determinant": 552178.1551550507,
+      "J_sigma_min": 199.40491238527844,
+      "N_p_N": 3077.5585267313504,
+      "N_s_N": 2400.8545495070152,
+      "R_p": 3.8980374483799096e-11,
+      "R_s": -3.7346126191550866e-11,
+      "alpha_p_rad_s2": -575.3337059537736,
+      "alpha_s_rad_s2": 2919.426142378409,
+      "belt_acceleration_m_s2": -72.49799107900512,
+      "bilateral_physical": true,
+      "bilateral_response_max_abs_difference": 0.0,
+      "lambda_p": -0.267610465261353,
+      "lambda_s": 0.3340981241613598,
+      "mechanism_margin": 10.290324968204903,
+      "min_local_normal_p_N_per_rad": 65.75861571675237,
+      "min_local_normal_s_N_per_rad": 20.8364621599805,
+      "min_tension_N": 174.10011929596618,
+      "physical": true,
+      "primary_boundary_torque_Nm": -81.14811270784904,
+      "primary_relative_speed_m_s": 0.0,
+      "root_id": 1.0,
+      "secondary_boundary_torque_Nm": 189.9644692158431,
+      "secondary_relative_speed_m_s": 0.0,
+      "shift_acceleration_m_s2": 142.54383587766182,
+      "static_margin_p": 0.382389534738647,
+      "static_margin_s": 0.3159018758386402,
+      "tau_p_Nm": 59.57184434785358,
+      "tau_s_Nm": -52.765032784998844,
+      "topology_failure_code": 0.0
+    },
+    {
+      "A_condition_scaled": 4364.797682239974,
+      "A_max_equation_residual": 2.9558577807620168e-12,
+      "A_rank": 8.0,
+      "J_condition": 27.592024929821005,
+      "J_determinant": -146802.41836106236,
+      "J_sigma_min": 72.9415215065073,
+      "N_p_N": 3122.2926681556905,
+      "N_s_N": 1668.5962419509287,
+      "R_p": 3.3359981443936704e-11,
+      "R_s": -4.3520742565306136e-11,
+      "alpha_p_rad_s2": -346.40140015640594,
+      "alpha_s_rad_s2": 2736.666132375362,
+      "belt_acceleration_m_s2": -55.93881535990639,
+      "bilateral_physical": true,
+      "bilateral_response_max_abs_difference": 0.0,
+      "lambda_p": -0.3003678174934274,
+      "lambda_s": 0.5521247953296619,
+      "mechanism_margin": 4.646210594382225,
+      "min_local_normal_p_N_per_rad": 44.85402063898912,
+      "min_local_normal_s_N_per_rad": 0.24260198727793608,
+      "min_tension_N": 170.66835103738924,
+      "physical": true,
+      "primary_boundary_torque_Nm": -81.14811270784904,
+      "primary_relative_speed_m_s": 0.0,
+      "root_id": 2.0,
+      "secondary_boundary_torque_Nm": 189.9644692158431,
+      "secondary_relative_speed_m_s": 0.0,
+      "shift_acceleration_m_s2": 128.94355631616008,
+      "static_margin_p": 0.34963218250657263,
+      "static_margin_s": 0.09787520467033817,
+      "tau_p_Nm": 67.8357514706658,
+      "tau_s_Nm": -60.603099639397584,
+      "topology_failure_code": 0.0
+    }
+  ],
+  "superseded_static_map_maximum": 338405.4991605586,
+  "total_starts": 735
+}

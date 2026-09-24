@@ -63,6 +63,12 @@ def parse_args():
         action="store_true",
         help="Delete this study's numerical cache before running.",
     )
+    parser.add_argument("--plot-only", action="store_true",
+                        help="Verify retained evidence and regenerate the two manuscript figures.")
+    parser.add_argument("--import-retained", nargs=2, type=Path,
+                        metavar=("FORMAL_ZIP", "DENSE_ZIP"),
+                        help="Import the registered archives and recover the selected different-history run.")
+    parser.add_argument("--publication-dir", type=Path, default=None)
     return parser.parse_args()
 
 
@@ -1085,16 +1091,34 @@ def coarsest_completed(rows):
     )
 
 def main():
+    global ARTIFACTS
     args = parse_args()
     verify_environment()
+    if args.plot_only or args.import_retained:
+        if args.quick or args.fresh:
+            raise ValueError("Retained-evidence operations cannot use --quick or --fresh.")
+        from analysis.evidence import prepare_retained
+        from analysis.publication_plots import publish
+        if args.import_retained:
+            prepare_retained(sys.modules[__name__], *args.import_retained)
+        publish(ARTIFACTS, args.publication_dir)
+        return 0
     spec = load_json(SPEC_FILE)
+
+    if args.publication_dir:
+        raise ValueError("--publication-dir requires --plot-only or --import-retained.")
+    # A new integration is a separate execution, not replacement evidence for
+    # the reviewed archived sweep. Quick checks must not overwrite it either.
+    ARTIFACTS = ARTIFACTS / ("quick" if args.quick else "formal_recomputed")
+    from analysis.evidence import capture_inputs
+    formal_inputs = capture_inputs()
 
     if args.fresh and CACHE.exists():
         shutil.rmtree(CACHE)
     CACHE.mkdir(parents=True, exist_ok=True)
-    if ARTIFACTS.exists():
-        shutil.rmtree(ARTIFACTS)
-    ARTIFACTS.mkdir(parents=True)
+    # Numerical cache deletion is explicit; retained publication evidence stays
+    # at the parent artifacts directory and is never erased by these runs.
+    ARTIFACTS.mkdir(parents=True, exist_ok=True)
 
     ref = spec["reference"]
     ref_cfg = config(
@@ -1304,6 +1328,10 @@ def main():
     )
 
     print(f"\nSolver convergence complete: {ARTIFACTS}")
+    from analysis.evidence import record_formal_execution
+    record_formal_execution(ARTIFACTS, formal_inputs, reference_path, canonical_path,
+                            run_mode="quick" if args.quick else "full")
+    print("New execution retained separately; publication uses the checked --plot-only path.")
     return 0
 
 if __name__ == "__main__":

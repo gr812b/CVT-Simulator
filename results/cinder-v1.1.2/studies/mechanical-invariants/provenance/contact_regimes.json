@@ -1,0 +1,57 @@
+{
+  "manuscript_label": "fig:verification_contact_regimes",
+  "manuscript_asset": "docs/CVT_Module_Formulation/figures/results/verification/contact_regimes.pdf",
+  "run_id": "mechanical-invariants-58a8a3a5272cf2c8",
+  "execution_record_sha256": "36305912a89fbdbc160b969dd09879b20e6139775d0dfd4b6238083f01d95935",
+  "mechanics_version": "1.1.2",
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "plot_script": "analysis/publication_plots.py",
+  "plot_script_sha256": "5de6e24fa88ef54b6f81c64ae188fff3e701ae877cd65ad9ee6c2bc19277ad87",
+  "size_inches": [
+    6.5,
+    3.25
+  ],
+  "transformations": {
+    "case_subset": [
+      "stick_stick_forward",
+      "stick_stick_reverse",
+      "primary_slip_plus",
+      "primary_slip_minus",
+      "secondary_slip_plus",
+      "secondary_slip_minus",
+      "both_slip_pp",
+      "both_slip_pm",
+      "both_slip_mp",
+      "both_slip_mm"
+    ],
+    "duration": "First native selected-audit transition; absent exit is a verified 30 ms lower bound.",
+    "local_normal": "Minimum over engaged sample_audit.csv states from 0 to 30 ms, including every engaged segment endpoint and successor segment start; deadzone states have no full-wrap field and are excluded explicitly. Each spatial minimum is analytic under the reduced wrap law.",
+    "targeted": "Actual accepted search_stage equals targeted_seed; no operating-frequency inference.",
+    "normalization": "None; seconds converted to milliseconds. Dimensional logarithmic axes require strictly positive values and reject others.",
+    "events": "No interpolation, smoothing or lines across resets. Local extrema can occur in later regimes and at different times."
+  },
+  "checks": {
+    "audited_states": 6257,
+    "exact_successors": 81,
+    "required_coverage_classes": 25,
+    "hard_state_and_successor_failures_recomputed": 0,
+    "geometry_samples": 501,
+    "row_scaled_closure_max": 1.4271624271944376e-14,
+    "no_exit_cases": [
+      "stick_stick_forward",
+      "secondary_slip_minus",
+      "both_slip_pm"
+    ],
+    "targeted_cases": [
+      "secondary_slip_plus",
+      "both_slip_mp"
+    ],
+    "selection_count": 10
+  },
+  "outputs": {
+    "contact_regimes.pdf": "30f0194af13f28f69f5b8edb2a32ae6d4270c66a344ae01a21cc47d87fd5bbb8",
+    "contact_regimes.png": "6876c16e99f1abb2403895ff997f5f3e55c7d0f1495a575646990834e713a85f",
+    "contact_regimes_values.csv": "269318714d37b8179757f40cf25010c5eda93416bca2ab2ce0af764f4b0b12dc"
+  },
+  "author_status": "ready_for_author_review_not_author_accepted"
+}

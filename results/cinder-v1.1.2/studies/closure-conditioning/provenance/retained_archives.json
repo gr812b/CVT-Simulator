@@ -1,0 +1,29 @@
+{
+  "historical_quick": {
+    "filename": "artifacts(10).zip",
+    "library_file_id": "libfile_1a9b33beb1d081919c2832cedf531f40",
+    "sha256": "9bf3782efe2b3f09c638f49b544ed2cd5a8861c448093d84ffffcdae92102b54",
+    "role": "Superseded recap source: 375 starts, 81/101/121 maps; reconciliation only"
+  },
+  "full": {
+    "filename": "artifacts(20260912-044618).zip",
+    "library_file_id": "libfile_d7e07da3f8488191af13594cccaa7565",
+    "sha256": "1dc56ba040e19e8a626b289a9abb599c9e3127791b6f5810d776311f74191bf3",
+    "prefix": "artifacts/",
+    "role": "Retained full 735-start census and 241/321/501 maps"
+  },
+  "two_contact": {
+    "filename": "best-visual-multiroot-story(1).zip",
+    "library_file_id": "libfile_1e5a3e20f5908191b65b4cda657f46d0",
+    "sha256": "c1bca37d2024e05a1251eba55d2f12677df2382dfd4ed77755abf0457e1483dd",
+    "prefix": "best-visual-multiroot-story/02_row_050_sf0p950_sdotm40_rpm3000/manifold/",
+    "role": "Selected frozen state, exact two-root recipe and retained inverse/continuation data"
+  },
+  "one_contact": {
+    "filename": "one-contact-multiroot-fold-search.zip",
+    "library_file_id": "libfile_ce91cb0ec5ac8191a23ba0368be2bbbd",
+    "sha256": "2f7e8d117185e454f45955eae0d63597bc2e4c4b34cb5139bb0a5995a0f2becd",
+    "prefix": "one-contact-multiroot-fold-search/",
+    "role": "62-state targeted census and selected mixed-branch roots"
+  }
+}

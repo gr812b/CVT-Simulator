@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "id": "course_feature_discovery_v2",
+  "baseline_course": "inputs/course.json",
+  "competitors": "inputs/competitors_features.json",
+  "preset": "research",
+  "maximum_time_s": 180.0,
+  "flat_probe_length_m": 800.0,
+  "flat_cars": [
+    "R00",
+    "D02",
+    "U70",
+    "U55",
+    "U40",
+    "P130",
+    "S480",
+    "UHR"
+  ],
+  "feature_cars": [
+    "R00",
+    "W85",
+    "H28",
+    "B01"
+  ],
+  "secondary_hill": {
+    "entry_m": 8.0,
+    "hold_m": 45.0,
+    "exit_m": 8.0,
+    "recovery_m": 20.0,
+    "angles_deg": [
+      0.0,
+      12.0,
+      18.0,
+      24.0
+    ]
+  },
+  "cyclic_length_m": 36.0,
+  "cyclic_envelope_length_m": 6.0,
+  "cyclic_variants": [
+    {
+      "id": "cyc_a12_w6_b0",
+      "amplitude_deg": 12.0,
+      "wavelength_m": 6.0,
+      "mean_grade_deg": 0.0,
+      "role": "Original zero-mean cyclic control"
+    },
+    {
+      "id": "cyc_a24_w6_b0",
+      "amplitude_deg": 24.0,
+      "wavelength_m": 6.0,
+      "mean_grade_deg": 0.0,
+      "role": "Double amplitude at unchanged wavelength"
+    },
+    {
+      "id": "cyc_a32_w6_b0",
+      "amplitude_deg": 32.0,
+      "wavelength_m": 6.0,
+      "mean_grade_deg": 0.0,
+      "role": "Stronger amplitude at unchanged wavelength"
+    },
+    {
+      "id": "cyc_a32_w3_b0",
+      "amplitude_deg": 32.0,
+      "wavelength_m": 3.0,
+      "mean_grade_deg": 0.0,
+      "role": "Higher frequency at the same amplitude and sector length"
+    },
+    {
+      "id": "cyc_a32_w12_b0",
+      "amplitude_deg": 32.0,
+      "wavelength_m": 12.0,
+      "mean_grade_deg": 0.0,
+      "role": "Longer individual load pulses; still only a 36 m sector"
+    },
+    {
+      "id": "cyc_a24_w6_b8",
+      "amplitude_deg": 24.0,
+      "wavelength_m": 6.0,
+      "mean_grade_deg": 8.0,
+      "role": "Oscillating load about an uphill bias, not just a frequency change"
+    },
+    {
+      "id": "cyc_a0_w6_b8",
+      "amplitude_deg": 0.0,
+      "wavelength_m": 6.0,
+      "mean_grade_deg": 8.0,
+      "role": "Matched mean-grade envelope without oscillation: isolates the bias effect"
+    }
+  ],
+  "notes": [
+    "All variants start at the common initial state and run the complete course; no sector resets or imposed speed/ratio trajectories.",
+    "One road per campaign. Secondary-hill and cyclic screens are separate; final combined course selection remains a later decision.",
+    "The 0-degree secondary hill retains all added distances, to distinguish grade effects from simply spending longer on level road.",
+    "Feature numerics use the research preset. Strongest selected cases need tighter refinement before manuscript claims."
+  ]
+}

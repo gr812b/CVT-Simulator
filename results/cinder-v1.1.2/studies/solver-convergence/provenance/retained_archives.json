@@ -1,0 +1,16 @@
+{
+  "formal": {
+    "name": "artifacts(3).zip",
+    "library_file_id": "libfile_96166b4fbf788191b42cf785b54c4f56",
+    "sha256": "a9a72ee218d47fe06e7ff1cbfcbb85bd10ecb82229e1052b7249f73921b7f19b",
+    "member_root": "artifacts/",
+    "scope": "40 main and 7 absolute-tolerance rows, revision-4 metrics and summary; no per-point caches"
+  },
+  "dense": {
+    "name": "dense-overnight.zip",
+    "library_file_id": "libfile_24b4c6376aac81918742e24dfbe59ba9",
+    "sha256": "34695fa192d3e56cb9775de8c3cca31c1f79290bb5c6750991f25bf4b018b16b",
+    "member_root": "dense-overnight/",
+    "scope": "4945-row exploratory table, grid and three retained caches; none of the retained overlays has a different signature"
+  }
+}

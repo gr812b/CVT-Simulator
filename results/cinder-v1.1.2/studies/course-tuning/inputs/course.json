@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "unified38_c6a32w12_h18hold240",
+  "description": "Final 732 m common course selected for Section 4.5.",
+  "hill_angle_deg": 38.0,
+  "cyclic_amplitude_deg": 32.0,
+  "cyclic_wavelength_m": 12.0,
+  "cyclic_count": 6,
+  "cyclic_envelope_periods": 1.0,
+  "downhill_angle_deg": -22.0,
+  "lengths_m": {
+    "launch_flat": 120.0,
+    "hill_entry": 12.0,
+    "hill_hold": 80.0,
+    "hill_exit": 12.0,
+    "recovery_flat": 40.0,
+    "post_cyclic_flat": 12.0,
+    "descent_entry": 12.0,
+    "descent_hold": 60.0,
+    "descent_exit": 12.0,
+    "finish_flat": 24.0
+  },
+  "distance_convention": "Signed travelled distance along the road; height derivative is sin(grade), not tan(grade).",
+  "driver": "Unchanged full-throttle engine boundary everywhere; no throttle schedule or imposed braking torque.",
+  "selection_status": "Selected final course; one uninterrupted trajectory per entrant.",
+  "cyclic_envelope_length_m": 6.0,
+  "cyclic_mean_grade_deg": 0.0,
+  "secondary_hill": {
+    "enabled": true,
+    "angle_deg": 18.0,
+    "entry_m": 8.0,
+    "hold_m": 240.0,
+    "exit_m": 8.0,
+    "recovery_m": 20.0
+  }
+}

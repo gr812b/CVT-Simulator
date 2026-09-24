@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "id": "rc28_replacement_v1",
+  "description": "Narrow ramp-profile search to replace the RC28 profile rejected by the frozen CINDER 1.1.2 construction audit. Every candidate preserves the reference nose and full dynamic fixed-pivot mechanism; only the smooth tail geometry changes.",
+  "selection_rule": "The original RC28 profile is a preflight rejection control and is never executed. Replacement candidates must first pass decode_reference_case / released fixed-pivot construction audit in the user's frozen Results environment; only accepted definitions are integrated on the unchanged 732 m final course.",
+  "competitors": [
+    {
+      "id": "R00",
+      "label": "Baja reference",
+      "family": "reference",
+      "intent": "Unchanged reference hardware; comparison anchor.",
+      "knobs": {}
+    },
+    {
+      "id": "RC28X",
+      "label": "Original RC28 rejection control",
+      "family": "ramp_shape",
+      "intent": "Exact RC28 geometry from final_v2. It is retained only to confirm the frozen environment reproduces the construction-audit rejection; it is never integrated.",
+      "expected_preflight_rejection": true,
+      "knobs": {
+        "ramp_end_deg": 28,
+        "ramp_prefix_m": 0.01,
+        "ramp_blend_m": 0.005,
+        "ramp_tail_kind": "arc"
+      }
+    },
+    {
+      "id": "R22B7",
+      "label": "Ramp 22 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Early reshaping with a milder endpoint and longer blend than RC28; seek a robust falling working-speed characteristic.",
+      "knobs": {"ramp_end_deg": 22, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R23B7",
+      "label": "Ramp 23 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Early reshaping with a milder endpoint and longer blend than RC28; seek a robust falling working-speed characteristic.",
+      "knobs": {"ramp_end_deg": 23, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R24B7",
+      "label": "Ramp 24 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Early reshaping with a milder endpoint and longer blend than RC28; seek a robust falling working-speed characteristic.",
+      "knobs": {"ramp_end_deg": 24, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R25B7",
+      "label": "Ramp 25 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Early reshaping with a milder endpoint and longer blend than RC28; seek a robust falling working-speed characteristic.",
+      "knobs": {"ramp_end_deg": 25, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R26B7",
+      "label": "Ramp 26 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Early reshaping with a milder endpoint and longer blend than RC28; seek a robust falling working-speed characteristic.",
+      "knobs": {"ramp_end_deg": 26, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R27B7",
+      "label": "Ramp 27 deg, 7 mm blend",
+      "family": "ramp_shape",
+      "intent": "Near-RC28 endpoint with a gentler 7 mm C3 blend; tests whether smoothing removes the competing contact branch.",
+      "knobs": {"ramp_end_deg": 27, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R24B9",
+      "label": "Ramp 24 deg, 9 mm blend",
+      "family": "ramp_shape",
+      "intent": "Spread the early geometry change over a long 9 mm blend while retaining a falling-curve target.",
+      "knobs": {"ramp_end_deg": 24, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.009, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R26B9",
+      "label": "Ramp 26 deg, 9 mm blend",
+      "family": "ramp_shape",
+      "intent": "Spread the early geometry change over a long 9 mm blend while retaining a falling-curve target.",
+      "knobs": {"ramp_end_deg": 26, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.009, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R28B9",
+      "label": "Ramp 28 deg, 9 mm blend",
+      "family": "ramp_shape",
+      "intent": "Retain the original RC28 endpoint but distribute the transition over 9 mm; included only if the released construction audit accepts it.",
+      "knobs": {"ramp_end_deg": 28, "ramp_prefix_m": 0.01, "ramp_blend_m": 0.009, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R24M",
+      "label": "Ramp 24 deg, 12 mm prefix",
+      "family": "ramp_shape",
+      "intent": "Preserve more of the reference ramp before a 7 mm blend; seek a delayed but still downward shift-curve change.",
+      "knobs": {"ramp_end_deg": 24, "ramp_prefix_m": 0.012, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R26M",
+      "label": "Ramp 26 deg, 12 mm prefix",
+      "family": "ramp_shape",
+      "intent": "Preserve more of the reference ramp before a 7 mm blend; seek a delayed but still downward shift-curve change.",
+      "knobs": {"ramp_end_deg": 26, "ramp_prefix_m": 0.012, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R28M",
+      "label": "Ramp 28 deg, 12 mm prefix",
+      "family": "ramp_shape",
+      "intent": "Later-onset 28 degree tail; included to test whether preserving more of the original contact path avoids RC28's competing branch.",
+      "knobs": {"ramp_end_deg": 28, "ramp_prefix_m": 0.012, "ramp_blend_m": 0.007, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R26L",
+      "label": "Ramp 26 deg, 14 mm prefix",
+      "family": "ramp_shape",
+      "intent": "Later-onset moderate falling-tail candidate with an 8 mm smooth blend.",
+      "knobs": {"ramp_end_deg": 26, "ramp_prefix_m": 0.014, "ramp_blend_m": 0.008, "ramp_tail_kind": "arc"}
+    },
+    {
+      "id": "R28L",
+      "label": "Ramp 28 deg, 14 mm prefix",
+      "family": "ramp_shape",
+      "intent": "Later-onset 28 degree candidate with an 8 mm smooth blend; tests whether moving the modification away from RC28's rejected branch is sufficient.",
+      "knobs": {"ramp_end_deg": 28, "ramp_prefix_m": 0.014, "ramp_blend_m": 0.008, "ramp_tail_kind": "arc"}
+    }
+  ]
+}

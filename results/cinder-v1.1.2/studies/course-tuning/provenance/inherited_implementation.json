@@ -1,0 +1,18 @@
+{
+  "source": "Uploaded exploration package + v2 and v3 updates",
+  "numerical_kernel_unchanged": true,
+  "identical_files": {
+    "infrastructure/common.py": "0076decf92bde250234be8e221ad27b770dfef266c61da4a0b9e8ba03fbdede1",
+    "infrastructure/course.py": "b7eddde794b2989abd5d5383a25488c203198dba18e2a6271ecd66479506c206",
+    "infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "infrastructure/model.py": "286c77dd2b87e4b6f82b42b6bf92faa771a922d9ed2f0c28742246e444c765d0",
+    "infrastructure/diagnostics.py": "b240e7f33678c4bc91dedda9c33bcb1abeaa197c7d75cfd8b2b498a54cf888fd",
+    "infrastructure/tunes.py": "c3e67e7e093bb20f75f414f61f8c2cfb8c84e446d2b9abc604897dd8f9607762",
+    "experiments/fleet.py": "b632fc39ca0f8532de2fbde5c0c38f39508b4e1a3e2a17ab0c7b98adb13d3f49",
+    "experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/inspect_event.py": "88328a3a2186719f623347eeaf562db634d8d8bb7d9ae3f84d1cb397f30911b2",
+    "analysis/metrics.py": "7997f7b241233e45be0138ee85ac938c1cd732ccef1c4ca225e1f5357957d071",
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/feature_metrics.py": "c73144d420cd6b20ed987385abc2e3e3ef0933d5e651f591a51432c9b4fbeb63"
+  }
+}

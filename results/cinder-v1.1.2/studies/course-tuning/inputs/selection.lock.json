@@ -1,0 +1,60 @@
+{
+  "selection_revision": "section4p5-final-v3-r26b7-m170",
+  "inputs": {
+    "study.json": "d689120fd2c08f618da0d00ae10188c1bf48ef4dc7b64b553859324ad916eccf",
+    "inputs/competitors.json": "faff79b9885075cd2472385998d85dec39ca89d89fd0728190c3fec7a3b6a09b",
+    "inputs/course.json": "89e3feb75825e7e2c985238222a5146cfb1efeed4be27560fd3ea7e373bad88c",
+    "inputs/flat_800m.json": "10737d72b664501483496e18eee9d42e45f26c1ca87b8385847284908132788d",
+    "inputs/presentation.json": "77cc87d70e3864ff2d877c6c9e1de06158df806658861a5c1a89acfa9298811b",
+    "inputs/settling_criteria.json": "4f97e1a33291cb004f4742b90dfc25c062342457fc6de191523d7f936c324111"
+  },
+  "baseline_canonical_sha256": "8abe09ab80d0b11dfbd89879e894ff063d2bf90f68ab981f84e76243f290c219",
+  "shared_helpers_normalized_sha256": {
+    "__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+    "reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+    "slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+    "policy.json": "28cf7e53897b471ab561c6fd4f5f12035f0936792c4f44d70710fd67bd98cb14"
+  },
+  "basis": {
+    "selected_unified_entrants": [
+      "R00",
+      "W85",
+      "P300",
+      "RC10",
+      "R26B7",
+      "RC40L",
+      "H28",
+      "U55",
+      "D01",
+      "D02",
+      "D02_M",
+      "D02_M170",
+      "D02_P"
+    ],
+    "supporting_800m_flat": [
+      "R00",
+      "U55"
+    ],
+    "promoted_from_shift_shape_exploration": [
+      "P300",
+      "RC10",
+      "RC40L"
+    ],
+    "demoted_to_exploration_only": [
+      "W115",
+      "B01"
+    ],
+    "course": "unchanged 732 m unified course confirmed before fleet revision",
+    "numerical_settings": "unchanged final tight settings",
+    "promoted_from_rc28_replacement_exploration": [
+      "R26B7"
+    ],
+    "rejected_final_v2_definition": [
+      "RC28"
+    ],
+    "selected_d02_overcorrection_diagnostic": [
+      "D02_M170"
+    ],
+    "d02_overcorrection_selection_reason": "User-requested replacement of M150 by M170 to assess a stronger on-hill backshift consequence; M170 results pending."
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "results_manifest_schema": 1,
+  "schema_version": 1,
+  "study_slug": "course-tuning",
+  "name": "Common-course CVT operation and tuning",
+  "title": "Common-course CVT operation and tuning",
+  "description": "Selected Section 4.5 common-course runs, admissible promoted shift-curve shape cases, D02 repair/over-correction diagnostics, and supporting long-flat comparison.",
+  "maintenance_status": "maintained",
+  "paper_role": "section_4_5",
+  "classification": "system",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "scientific_question": "Where does each tune gain or lose course progress, and which actuator, shift, contact or travel-limit mechanism explains the difference?",
+  "base_document": "../../defaults/baja/simulation_case.json",
+  "base_configuration": "../../defaults/baja/simulation_case.json",
+  "reference_model": {
+    "policy": "bilateral-slotted",
+    "source": "../../defaults/reference_model/policy.json"
+  },
+  "entrypoints": {
+    "run": "run.py",
+    "verify": "verify_study.py"
+  },
+  "outputs": {
+    "directory": "artifacts",
+    "committed": false
+  },
+  "runtime_scope": {
+    "requires": [
+      "cinder-cvt==1.1.2",
+      "release-scoped Results defaults"
+    ],
+    "forbids": [
+      "editable cvtModel/src",
+      "runtime Git materialization",
+      "test-only CVT mechanics"
+    ]
+  },
+  "source_ownership": {
+    "shared_cross_study": "../../defaults",
+    "study_specific": "infrastructure/, experiments/, analysis/, inputs/",
+    "exploration": "exploration/ (independent tools and artifacts; excluded from run.py)"
+  },
+  "run_contract": "Run the selected thirteen-car common course and the R00/U55 supporting 800 m flat; build one self-contained report including shift-curve shape, severe-hill repair/over-correction, and mechanism comparisons. No exploratory sweeps or automatic selection.",
+  "inputs": {
+    "competitors": "inputs/competitors.json",
+    "settling": "inputs/settling_criteria.json",
+    "presentation": "inputs/presentation.json"
+  },
+  "execution": {
+    "checkpoint_interval_s": 2.0,
+    "maximum_transitions_per_checkpoint": 600,
+    "maximum_total_transitions": 5000,
+    "event_time_tolerance_s": 1e-10,
+    "case_wall_timeout_s": 1800.0,
+    "progress_monitor_after_s": 20.0,
+    "no_progress_window_s": 15.0,
+    "no_progress_distance_m": 0.25,
+    "rollback_stop_speed_m_s": -0.25
+  },
+  "diagnostics": {
+    "distance_grid_step_m": 0.25,
+    "mechanism_map_points": 41,
+    "event_window_s": 0.25,
+    "physical_margin_review_tolerance": 1e-05
+  },
+  "interpretation": [
+    "The course and configurations are fixed inputs; finishes, failures, settling and slip are measured outcomes.",
+    "A returned vehicle progress/rollback stop is distinct from an integration or model-domain failure.",
+    "Full throttle uses the original engine map including its extrapolated overspeed-resisting tail.",
+    "Pure rolling, permanent tyre contact, no suspension or wheel-lift model.",
+    "The supporting long-flat experiment uses the final tight settings; the earlier exploratory flat used the research preset."
+  ],
+  "study_specific": {
+    "stage": "selected_final_case_set_v3_r26b7",
+    "course_length_m": 732.0,
+    "primary_cases": 13,
+    "supporting_cases": 2,
+    "no_equilibrium_or_failure_is_enforced": true,
+    "promoted_shift_shape_cases": [
+      "P300",
+      "RC10",
+      "R26B7",
+      "RC40L"
+    ],
+    "d02_diagnostic_cases": [
+      "D02",
+      "D02_M",
+      "D02_M170",
+      "D02_P"
+    ]
+  },
+  "numerical_settings": {
+    "relative_tolerance": 3e-05,
+    "absolute_tolerance": 3e-08,
+    "max_step_s": 0.005,
+    "maximum_time_s": 180.0,
+    "diagnostic_step_s": 0.005
+  },
+  "experiments": [
+    {
+      "id": "unified_course",
+      "title": "732 m common off-road course",
+      "course": "inputs/course.json",
+      "cars": [
+        "R00",
+        "W85",
+        "P300",
+        "RC10",
+        "R26B7",
+        "RC40L",
+        "H28",
+        "U55",
+        "D01",
+        "D02",
+        "D02_M",
+        "D02_M170",
+        "D02_P"
+      ],
+      "role": "main"
+    },
+    {
+      "id": "flat_800m",
+      "title": "800 m flat: R00 and U55",
+      "course": "inputs/flat_800m.json",
+      "cars": [
+        "R00",
+        "U55"
+      ],
+      "role": "supporting"
+    }
+  ],
+  "selection_revision": "section4p5-final-v3-r26b7-m170",
+  "layout_revision": "single-study-v1"
+}

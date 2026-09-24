@@ -1,0 +1,377 @@
+{
+  "schema_version": 1,
+  "purpose": "Exploration candidates, not optimized or declared winners",
+  "unchanged": [
+    "full-throttle engine",
+    "vehicle and final-drive parameters",
+    "belt and friction law",
+    "dynamic fixed-pivot flyweight mechanism and ramp",
+    "dynamic bilateral zero-clearance secondary helix",
+    "shaft boundary model families",
+    "initial CVT and vehicle states"
+  ],
+  "tip_mass_model": "Add/remove concentrated hardware mass at the existing roller-centre station; preserve the reference arm/body moments. The reference tuning manifest identifies 0.250 kg tip hardware per flyweight.",
+  "competitors": [
+    {
+      "id": "R00",
+      "label": "Baja reference",
+      "family": "reference",
+      "intent": "Unchanged reference hardware; the common point of comparison.",
+      "knobs": {}
+    },
+    {
+      "id": "W85",
+      "label": "Tip hardware 85%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 0.85
+      }
+    },
+    {
+      "id": "W90",
+      "label": "Tip hardware 90%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 0.9
+      }
+    },
+    {
+      "id": "W95",
+      "label": "Tip hardware 95%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 0.95
+      }
+    },
+    {
+      "id": "W105",
+      "label": "Tip hardware 105%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 1.05
+      }
+    },
+    {
+      "id": "W110",
+      "label": "Tip hardware 110%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 1.1
+      }
+    },
+    {
+      "id": "W115",
+      "label": "Tip hardware 115%",
+      "family": "flyweight",
+      "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+      "knobs": {
+        "tip_mass_scale": 1.15
+      }
+    },
+    {
+      "id": "P90",
+      "label": "Primary preload 90%",
+      "family": "primary_spring",
+      "intent": "Change primary opening-spring preload; examine engagement versus loaded operating-speed tradeoff.",
+      "knobs": {
+        "primary_preload_scale": 0.9
+      }
+    },
+    {
+      "id": "P95",
+      "label": "Primary preload 95%",
+      "family": "primary_spring",
+      "intent": "Change primary opening-spring preload; examine engagement versus loaded operating-speed tradeoff.",
+      "knobs": {
+        "primary_preload_scale": 0.95
+      }
+    },
+    {
+      "id": "P105",
+      "label": "Primary preload 105%",
+      "family": "primary_spring",
+      "intent": "Change primary opening-spring preload; examine engagement versus loaded operating-speed tradeoff.",
+      "knobs": {
+        "primary_preload_scale": 1.05
+      }
+    },
+    {
+      "id": "P110",
+      "label": "Primary preload 110%",
+      "family": "primary_spring",
+      "intent": "Change primary opening-spring preload; examine engagement versus loaded operating-speed tradeoff.",
+      "knobs": {
+        "primary_preload_scale": 1.1
+      }
+    },
+    {
+      "id": "H16",
+      "label": "Helix 16 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 16
+      }
+    },
+    {
+      "id": "H18",
+      "label": "Helix 18 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 18
+      }
+    },
+    {
+      "id": "H22",
+      "label": "Helix 22 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 22
+      }
+    },
+    {
+      "id": "H25",
+      "label": "Helix 25 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 25
+      }
+    },
+    {
+      "id": "H28",
+      "label": "Helix 28 deg",
+      "family": "helix",
+      "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+      "knobs": {
+        "helix_angle_deg": 28
+      }
+    },
+    {
+      "id": "T240",
+      "label": "Torsional pretwist 240 deg",
+      "family": "torsional_preload",
+      "intent": "Change initial secondary torsional spring reaction without changing helix geometry.",
+      "knobs": {
+        "secondary_twist_deg": 240
+      }
+    },
+    {
+      "id": "T270",
+      "label": "Torsional pretwist 270 deg",
+      "family": "torsional_preload",
+      "intent": "Change initial secondary torsional spring reaction without changing helix geometry.",
+      "knobs": {
+        "secondary_twist_deg": 270
+      }
+    },
+    {
+      "id": "T330",
+      "label": "Torsional pretwist 330 deg",
+      "family": "torsional_preload",
+      "intent": "Change initial secondary torsional spring reaction without changing helix geometry.",
+      "knobs": {
+        "secondary_twist_deg": 330
+      }
+    },
+    {
+      "id": "T360",
+      "label": "Torsional pretwist 360 deg",
+      "family": "torsional_preload",
+      "intent": "Change initial secondary torsional spring reaction without changing helix geometry.",
+      "knobs": {
+        "secondary_twist_deg": 360
+      }
+    },
+    {
+      "id": "C85",
+      "label": "Secondary axial preload 85%",
+      "family": "secondary_spring",
+      "intent": "Change spring-supported secondary closing force independently of helix torque sensitivity.",
+      "knobs": {
+        "secondary_preload_scale": 0.85
+      }
+    },
+    {
+      "id": "C115",
+      "label": "Secondary axial preload 115%",
+      "family": "secondary_spring",
+      "intent": "Change spring-supported secondary closing force independently of helix torque sensitivity.",
+      "knobs": {
+        "secondary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "C130",
+      "label": "Secondary axial preload 130%",
+      "family": "secondary_spring",
+      "intent": "Change spring-supported secondary closing force independently of helix torque sensitivity.",
+      "knobs": {
+        "secondary_preload_scale": 1.3
+      }
+    },
+    {
+      "id": "B01",
+      "label": "Light weights + load reserve",
+      "family": "combined",
+      "intent": "Candidate: higher engine working speed plus stronger secondary load response.",
+      "knobs": {
+        "tip_mass_scale": 0.9,
+        "helix_angle_deg": 18,
+        "secondary_twist_deg": 330
+      }
+    },
+    {
+      "id": "B02",
+      "label": "Moderate weights + axial reserve",
+      "family": "combined",
+      "intent": "Candidate: combine modest working-speed change with greater spring-supported clamp.",
+      "knobs": {
+        "tip_mass_scale": 0.95,
+        "secondary_preload_scale": 1.25
+      }
+    },
+    {
+      "id": "B03",
+      "label": "Light weights + relaxed helix",
+      "family": "combined",
+      "intent": "Candidate: higher engine speed with less aggressive torque sensitivity, supported by torsional preload.",
+      "knobs": {
+        "tip_mass_scale": 0.9,
+        "helix_angle_deg": 22,
+        "secondary_twist_deg": 330
+      }
+    },
+    {
+      "id": "B04",
+      "label": "Heavier weights + responsive helix",
+      "family": "combined",
+      "intent": "Candidate: reconcile earlier primary closing with greater secondary torque sensitivity.",
+      "knobs": {
+        "tip_mass_scale": 1.05,
+        "helix_angle_deg": 18,
+        "secondary_twist_deg": 330
+      }
+    },
+    {
+      "id": "B05",
+      "label": "Light weights + softer primary preload",
+      "family": "combined",
+      "intent": "Candidate: offset some engagement delay of lighter weights with lower opening-spring preload; this does not guarantee matched engagement.",
+      "knobs": {
+        "tip_mass_scale": 0.85,
+        "primary_preload_scale": 0.92,
+        "secondary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "B06",
+      "label": "Spring-supported climb candidate",
+      "family": "combined",
+      "intent": "Candidate: moderately lighter weights, slightly steeper helix and increased axial reserve.",
+      "knobs": {
+        "tip_mass_scale": 0.95,
+        "helix_angle_deg": 22,
+        "secondary_preload_scale": 1.3
+      }
+    },
+    {
+      "id": "D01",
+      "label": "Premature-shift stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: early primary closing and weak secondary opposition may pull the engine down under load.",
+      "knobs": {
+        "tip_mass_scale": 1.3,
+        "primary_preload_scale": 0.8,
+        "helix_angle_deg": 28,
+        "secondary_preload_scale": 0.8,
+        "secondary_twist_deg": 240
+      }
+    },
+    {
+      "id": "D02",
+      "label": "Late-engagement stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: weak centrifugal closing against high preload may delay engagement or maintain primary slip.",
+      "knobs": {
+        "tip_mass_scale": 0.65,
+        "primary_preload_scale": 1.15
+      }
+    },
+    {
+      "id": "D03",
+      "label": "Weak-secondary stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: reduced axial and torsional spring support with weak torque feedback may expose contact limitations.",
+      "knobs": {
+        "secondary_preload_scale": 0.5,
+        "secondary_twist_deg": 150,
+        "helix_angle_deg": 30
+      }
+    },
+    {
+      "id": "U70",
+      "label": "Light-tip flat-limit probe",
+      "family": "under_shift_probe",
+      "intent": "Reduce centrifugal closing while keeping the original spring; test whether full shift is reached on a much longer flat.",
+      "knobs": {
+        "tip_mass_scale": 0.7
+      }
+    },
+    {
+      "id": "U55",
+      "label": "Very-light-tip flat-limit probe",
+      "family": "under_shift_probe",
+      "intent": "Larger single-knob mass reduction: distinguish persistent under-shifting from merely late high-ratio arrival.",
+      "knobs": {
+        "tip_mass_scale": 0.55
+      }
+    },
+    {
+      "id": "U40",
+      "label": "Extreme light-tip control",
+      "family": "under_shift_probe",
+      "intent": "Deliberately weak primary centrifugal action; may shift only partially or slip rather than support competitive operation.",
+      "knobs": {
+        "tip_mass_scale": 0.4
+      }
+    },
+    {
+      "id": "P130",
+      "label": "High primary-preload probe",
+      "family": "under_shift_probe",
+      "intent": "A different mechanism for delayed or incomplete upshift: greater primary opening-spring opposition.",
+      "knobs": {
+        "primary_preload_scale": 1.3
+      }
+    },
+    {
+      "id": "S480",
+      "label": "High secondary-twist probe",
+      "family": "under_shift_probe",
+      "intent": "Strong spring-supported secondary closing force without changing the motion ratio.",
+      "knobs": {
+        "secondary_twist_deg": 480.0
+      }
+    },
+    {
+      "id": "UHR",
+      "label": "Load-holding combination probe",
+      "family": "under_shift_probe",
+      "intent": "Combine lighter tips and stronger secondary opposition; compare its flat behavior to single-knob probes.",
+      "knobs": {
+        "tip_mass_scale": 0.7,
+        "helix_angle_deg": 16.0,
+        "secondary_twist_deg": 360.0
+      }
+    }
+  ],
+  "description": "Original 32 entrants, unchanged, plus six deliberately under-shift-biased probes; no new mechanisms or boundary changes."
+}

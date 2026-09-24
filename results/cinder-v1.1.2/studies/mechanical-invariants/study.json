@@ -1,5 +1,5 @@
 {
-  "name": "Mechanical invariants — operating-domain audit",
+  "name": "Mechanical invariants \u2014 operating-domain audit",
   "description": "Release-level operating-domain audit for CINDER 1.1.2 using the v1.1.2 results reference topology. Combines the frozen nominal trajectory with prescribed bench initial conditions, targeted rare-contact reproduction anchors, both overall rotation signs, short-lived contact-branch checks, static rest, structural-boundary arrivals, field-level belt admissibility, exact transition checks, geometry-domain checks, and invalid-state controls.",
   "cinder_release": {
     "distribution": "cinder-cvt",
@@ -63,9 +63,9 @@
   "shared_case_library": "../../defaults/verification/operating_cases.json",
   "results_manifest_schema": 1,
   "study_slug": "mechanical-invariants",
-  "title": "Mechanical invariants — operating-domain audit",
+  "title": "Mechanical invariants \u2014 operating-domain audit",
   "maintenance_status": "maintained",
-  "paper_role": "undecided",
+  "paper_role": "main-text",
   "classification": "verification",
   "scientific_question": "Release-level operating-domain audit for CINDER 1.1.2 using the v1.1.2 results reference topology. Combines the frozen nominal trajectory with prescribed bench initial conditions, targeted rare-contact reproduction anchors, both overall rotation signs, short-lived contact-branch checks, static rest, structural-boundary arrivals, field-level belt admissibility, exact transition checks, geometry-domain checks, and invalid-state controls.",
   "base_configuration": "../../defaults/baja/simulation_case.json",
@@ -98,5 +98,13 @@
     "shared_cross_study": "../../defaults",
     "study_specific": "infrastructure/, experiments/, analysis/",
     "exploration_excluded_from_run": true
+  },
+  "publication_selection": {
+    "section": "4.2.1",
+    "manuscript_label": "fig:verification_contact_regimes",
+    "plotter": "analysis/publication_plots.py",
+    "plot_only_command": "python run.py --plot-only",
+    "record": "provenance/SECTION_4_2_1.md",
+    "author_status": "ready_for_author_review_not_author_accepted"
   }
 }
