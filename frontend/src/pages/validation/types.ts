@@ -35,6 +35,14 @@ export interface ParsedDynoData {
   rawCsv: string;
   timeS: number[];
   columns: Record<string, number[]>;
+  /** Original acquisition layout. Wide is the historical validation CSV; per_tooth_raw is the RP2040 logger format. */
+  sourceFormat?: 'wide' | 'per_tooth_raw';
+  sourceMetadata?: {
+    primaryTeethPerRevolution?: number;
+    secondaryTeethPerRevolution?: number;
+    timestampUncertaintyS?: number;
+    edgeCountPresent?: boolean;
+  };
 }
 
 export interface MeasurementMetadata {

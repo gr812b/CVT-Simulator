@@ -32,6 +32,11 @@ import {
   rpmToRadPerS,
   summarizeUncertainty,
 } from './data';
+import {
+  RAW_DYNO_PRIMARY_TEETH,
+  RAW_DYNO_SECONDARY_TEETH,
+  RAW_DYNO_TIMESTAMP_UNCERTAINTY_S,
+} from './rawDynoAnalysis';
 import type {
   ChannelConfig,
   CropWindow,
@@ -87,13 +92,24 @@ function normalizeMode(mode: ValidationWorkflowDefaults['primaryMode']): ShaftVa
 
 function defaultRpmUncertainty(
   saved: ChannelConfig['uncertainty'] | undefined,
+  perToothTeeth?: number,
 ): ChannelConfig['uncertainty'] {
-  return {
+  const base: ChannelConfig['uncertainty'] = {
     status: 'pending',
     model: 'rpm_tooth_timing',
     unit: 'rpm',
     replaySampleIntervalS: 0.01,
     ...saved,
+  };
+  if (perToothTeeth === undefined) return base;
+  return {
+    ...base,
+    status: 'known',
+    model: 'rpm_tooth_timing',
+    unit: 'rpm',
+    teethPerRevolution: perToothTeeth,
+    timestampUncertaintyS: RAW_DYNO_TIMESTAMP_UNCERTAINTY_S,
+    source: 'RP2040 edge timestamp; conservative 1 µs timing uncertainty',
   };
 }
 
@@ -109,7 +125,7 @@ function defaultChannels(data: ParsedDynoData, workflow: ValidationWorkflowDefau
         role: 'comparison' as const,
         mapping: 'primary_speed' as const,
         initializeState: true,
-        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.primary),
+        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.primary, data.sourceFormat === 'per_tooth_raw' ? RAW_DYNO_PRIMARY_TEETH : undefined),
       };
       if (key === 'secondary_rpm') return {
         key,
@@ -119,7 +135,7 @@ function defaultChannels(data: ParsedDynoData, workflow: ValidationWorkflowDefau
         role: 'comparison' as const,
         mapping: 'secondary_speed' as const,
         initializeState: true,
-        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.secondary),
+        uncertainty: defaultRpmUncertainty(workflow.rpmMeasurementDefaults?.secondary, data.sourceFormat === 'per_tooth_raw' ? RAW_DYNO_SECONDARY_TEETH : undefined),
       };
       if (key === 'shift_position') return {
         key,
@@ -829,7 +845,7 @@ export const Validation = () => {
         <div>
           <span className={styles.stepLabel}>01 · Data</span>
           <h2>Load dyno data</h2>
-          <p>CSV timestamps remain authoritative. Crop the traces below to define simulation t = 0.</p>
+          <p>Wide validation CSVs and the RP2040 per-tooth raw logger format are accepted. Crop the reconstructed traces below to define simulation t = 0.</p>
         </div>
         <label className={styles.filePicker}>
           <span>{data === null ? 'Choose CSV' : 'Replace CSV'}</span>
@@ -843,6 +859,9 @@ export const Validation = () => {
             <strong>{data.filename}</strong>
             <span>{data.timeS.length} samples</span>
             <span>{(data.timeS.at(-1) ?? 0).toFixed(3)} s</span>
+            {data.sourceFormat === 'per_tooth_raw' && (
+              <span>Per-tooth raw · 16T primary / 12T secondary · 10 ms replay trace</span>
+            )}
           </div>
         )}
       </section>

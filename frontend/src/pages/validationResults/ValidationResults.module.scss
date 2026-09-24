@@ -226,6 +226,62 @@
   line-height: 1.45;
 }
 
+
+.viewTabs {
+  display: inline-flex;
+  width: fit-content;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary) 94%, var(--background) 6%);
+}
+
+.viewTabs button {
+  min-width: 165px;
+  border-color: transparent;
+  background: transparent;
+  opacity: 0.62;
+  transform: none;
+}
+
+.viewTabs button:hover {
+  transform: none;
+  opacity: 1;
+}
+
+.viewTabs .viewTabActive {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--primary) 12%, var(--background));
+  opacity: 1;
+}
+
+.comparisonIntro {
+  margin: 0 0 0.9rem;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 14px 14px 0;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.comparisonIntro span {
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  opacity: 0.56;
+}
+
+.comparisonIntro h2 {
+  margin: 0.2rem 0 0.25rem;
+}
+
+.comparisonIntro p {
+  margin: 0;
+  opacity: 0.66;
+}
+
 @media (max-width: 1100px) {
   .plotGrid { grid-template-columns: 1fr; }
 }
@@ -233,6 +289,16 @@
 @media (max-width: 900px) {
   .summaryCard { grid-template-columns: 1fr 1fr; }
   .resultHeading { flex-direction: column; }
+}
+
+@media (max-width: 620px) {
+  .viewTabs {
+    display: grid;
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .viewTabs button { width: 100%; min-width: 0; }
 }
 
 @media (max-width: 620px) {

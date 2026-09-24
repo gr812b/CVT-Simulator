@@ -3,6 +3,7 @@ import type {
   ParsedDynoData,
   SignalMetric,
 } from './types';
+import { isPerToothDynoCsv, perToothCsvToParsedDynoData } from './rawDynoAnalysis';
 
 const RPM_TO_RAD_PER_S = (2 * Math.PI) / 60;
 export const RAD_PER_S_TO_RPM = 60 / (2 * Math.PI);
@@ -32,6 +33,7 @@ function parseCsvRow(line: string): string[] {
 }
 
 export function parseDynoCsv(filename: string, rawCsv: string): ParsedDynoData {
+  if (isPerToothDynoCsv(rawCsv)) return perToothCsvToParsedDynoData(filename, rawCsv);
   const lines = rawCsv.replace(/\r/g, '').split('\n').filter((line) => line.trim().length > 0);
   if (lines.length < 2) throw new Error('CSV must contain a header and at least one data row.');
   const headers = parseCsvRow(lines[0]);
@@ -56,7 +58,7 @@ export function parseDynoCsv(filename: string, rawCsv: string): ParsedDynoData {
   for (let index = 1; index < timeS.length; index += 1) {
     if (timeS[index] <= timeS[index - 1]) throw new Error('CSV timestamps must be strictly increasing.');
   }
-  return { filename, rawCsv, timeS, columns };
+  return { filename, rawCsv, timeS, columns, sourceFormat: 'wide' };
 }
 
 export function nearestIndex(timeS: number[], targetS: number): number {

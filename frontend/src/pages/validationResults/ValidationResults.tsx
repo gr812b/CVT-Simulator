@@ -8,6 +8,7 @@ import {
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { ValidationTraceChart } from '@components/validation/ValidationTraceChart';
 import { ValidationXYChart } from '@components/validation/ValidationXYChart';
+import { DynoAnalysisSection } from '@components/validation/DynoAnalysisSection';
 import { useLoading } from '@contexts/LoadingContext';
 import { reportAxisTimes, reportColumn } from '@utils/reportTable';
 import {
@@ -430,6 +431,7 @@ export const ValidationResults = () => {
   const { isLoading, loadingMessage, setLoading } = useLoading();
   const [run, setRun] = useState<ValidationRunRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'analysis' | 'comparison'>('analysis');
 
   useEffect(() => {
     if (runId === undefined) {
@@ -609,6 +611,32 @@ export const ValidationResults = () => {
             </div>
           </section>
 
+          <section className={styles.viewTabs} aria-label="Validation result view">
+            <button
+              type="button"
+              className={activeView === 'analysis' ? styles.viewTabActive : ''}
+              onClick={() => setActiveView('analysis')}
+            >
+              Experimental analysis
+            </button>
+            <button
+              type="button"
+              className={activeView === 'comparison' ? styles.viewTabActive : ''}
+              onClick={() => setActiveView('comparison')}
+            >
+              CINDER comparison
+            </button>
+          </section>
+
+          {activeView === 'analysis' ? (
+            <DynoAnalysisSection run={run} />
+          ) : (
+            <>
+              <section className={styles.comparisonIntro}>
+                <span>Model comparison</span>
+                <h2>CINDER against the frozen experimental run</h2>
+                <p>The plots below retain the existing validation comparison and metrics. They are intentionally separate from the experimental analysis view.</p>
+              </section>
           <section className={styles.sectionHeader}>
             <div>
               <h2>Direct RPM validation</h2>
@@ -738,6 +766,8 @@ export const ValidationResults = () => {
               )}
             </article>
           </section>
+            </>
+          )}
         </>
       )}
     </main>
