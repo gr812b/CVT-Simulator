@@ -34,17 +34,6 @@ function cssColor(name: string, fallback: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 
-function rgba(hex: string, alpha: number): string {
-  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
-    const value = Number.parseInt(hex.slice(1), 16);
-    const r = (value >> 16) & 255;
-    const g = (value >> 8) & 255;
-    const b = value & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  return `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)`;
-}
-
 function formatNumber(value: number): string {
   const magnitude = Math.abs(value);
   if (magnitude >= 1000) return value.toFixed(0);
@@ -53,10 +42,11 @@ function formatNumber(value: number): string {
   return value.toFixed(3);
 }
 
-function pointBounds(point: DynoTracePoint): [number, number] | null {
-  if (typeof point.lower === 'number' && Number.isFinite(point.lower) && typeof point.upper === 'number' && Number.isFinite(point.upper)) {
-    return [point.lower, point.upper];
-  }
+function finiteBounds(point: DynoTracePoint): [number, number] | null {
+  if (
+    typeof point.lower === 'number' && Number.isFinite(point.lower)
+    && typeof point.upper === 'number' && Number.isFinite(point.upper)
+  ) return [point.lower, point.upper];
   if (typeof point.uncertainty === 'number' && Number.isFinite(point.uncertainty)) {
     return [point.value - point.uncertainty, point.value + point.uncertainty];
   }
@@ -67,54 +57,39 @@ function traceSeries(
   selected: DynoAnalysisWindowMs[],
   traces: Record<DynoAnalysisWindowMs, DynoTracePoint[]>,
 ): Record<string, unknown>[] {
-  const series: Record<string, unknown>[] = [];
-  for (const windowMs of selected) {
+  return selected.map((windowMs) => {
     const color = WINDOW_COLORS[windowMs];
-    const trace = traces[windowMs];
-    if (windowMs === RECOMMENDED_DYNO_WINDOW_MS) {
-      const bounded = trace.filter((point) => pointBounds(point) !== null);
-      if (bounded.length > 0) {
-        series.push(
-          {
-            name: '__uncertainty_floor',
-            type: 'line',
-            stack: '__recommended_uncertainty',
-            symbol: 'none',
-            silent: true,
-            tooltip: { show: false },
-            lineStyle: { opacity: 0 },
-            areaStyle: { opacity: 0 },
-            data: bounded.map((point) => [point.timeS, pointBounds(point)?.[0] ?? point.value]),
-          },
-          {
-            name: '100 ms uncertainty',
-            type: 'line',
-            stack: '__recommended_uncertainty',
-            symbol: 'none',
-            silent: true,
-            tooltip: { show: false },
-            lineStyle: { opacity: 0 },
-            areaStyle: { color: rgba(color, 0.20), opacity: 1 },
-            data: bounded.map((point) => {
-              const bounds = pointBounds(point);
-              return [point.timeS, bounds === null ? 0 : bounds[1] - bounds[0]];
-            }),
-          },
-        );
-      }
-    }
-    series.push({
+    return {
       name: `${windowMs} ms`,
       type: 'line',
       symbol: 'none',
       showSymbol: false,
+      connectNulls: false,
       lineStyle: { color, width: windowMs === RECOMMENDED_DYNO_WINDOW_MS ? 2.6 : 1.6, opacity: 0.92 },
       itemStyle: { color },
       emphasis: { focus: 'series' },
-      data: trace.map((point) => [point.timeS, point.value]),
-    });
+      data: traces[windowMs].map((point) => ({
+        value: [point.timeS, point.value],
+        lower: finiteBounds(point)?.[0] ?? null,
+        upper: finiteBounds(point)?.[1] ?? null,
+      })),
+    };
+  });
+}
+
+function traceTimeDomain(traces: Record<DynoAnalysisWindowMs, DynoTracePoint[]>): [number, number] | null {
+  let minimum = Number.POSITIVE_INFINITY;
+  let maximum = Number.NEGATIVE_INFINITY;
+  for (const windowMs of DYNO_ANALYSIS_WINDOWS_MS) {
+    for (const point of traces[windowMs]) {
+      if (!Number.isFinite(point.timeS)) continue;
+      minimum = Math.min(minimum, point.timeS);
+      maximum = Math.max(maximum, point.timeS);
+    }
   }
-  return series;
+  return Number.isFinite(minimum) && Number.isFinite(maximum) && maximum > minimum
+    ? [minimum, maximum]
+    : null;
 }
 
 function AnalysisTimeChart({
@@ -134,6 +109,19 @@ function AnalysisTimeChart({
   yMin?: number;
   yMax?: number;
 }) {
+  const [zoomRange, setZoomRange] = useState<{ start: number; end: number } | null>(null);
+  const timeDomain = useMemo(() => traceTimeDomain(traces), [traces]);
+  const onEvents = useMemo(() => ({
+    datazoom: (event: unknown) => {
+      if (typeof event !== 'object' || event === null) return;
+      const record = event as { start?: unknown; end?: unknown; batch?: Array<{ start?: unknown; end?: unknown }> };
+      const source = Array.isArray(record.batch) && record.batch.length > 0 ? record.batch[0] : record;
+      if (typeof source.start === 'number' && Number.isFinite(source.start) && typeof source.end === 'number' && Number.isFinite(source.end)) {
+        setZoomRange({ start: source.start, end: source.end });
+      }
+    },
+    restore: () => setZoomRange(null),
+  }), []);
   const option = useMemo<EChartsOption>(() => {
     const text = cssColor('--text-color', '#f4f4f5');
     const grid = cssColor('--grid-color', '#404040');
@@ -148,7 +136,33 @@ function AnalysisTimeChart({
         borderColor: grid,
         textStyle: { color: text },
         axisPointer: { type: 'line', snap: false, lineStyle: { color: grid } },
-        valueFormatter: (value: unknown) => typeof value === 'number' ? `${formatNumber(value)} ${unit}` : String(value ?? '—'),
+        formatter: (params: unknown): string => {
+          const entries = Array.isArray(params) ? params : [params];
+          const lines: string[] = [];
+          let time: number | null = null;
+          for (const entry of entries) {
+            if (typeof entry !== 'object' || entry === null) continue;
+            const record = entry as { seriesName?: string; data?: unknown };
+            const data = record.data;
+            let value: unknown = data;
+            let lower: number | null = null;
+            let upper: number | null = null;
+            if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+              const point = data as { value?: unknown; lower?: unknown; upper?: unknown };
+              value = point.value;
+              lower = typeof point.lower === 'number' && Number.isFinite(point.lower) ? point.lower : null;
+              upper = typeof point.upper === 'number' && Number.isFinite(point.upper) ? point.upper : null;
+            }
+            if (!Array.isArray(value) || typeof value[0] !== 'number' || typeof value[1] !== 'number') continue;
+            time ??= value[0];
+            const suffix = lower !== null && upper !== null && record.seriesName === `${RECOMMENDED_DYNO_WINDOW_MS} ms`
+              ? ` · uncertainty ${formatNumber(lower)}–${formatNumber(upper)} ${unit}`
+              : '';
+            lines.push(`${record.seriesName ?? 'Trace'}: ${formatNumber(value[1])} ${unit}${suffix}`);
+          }
+          if (time === null) return lines.join('<br/>');
+          return [`<strong>${time.toFixed(3)} s</strong>`, ...lines].join('<br/>');
+        },
       },
       toolbox: {
         show: true,
@@ -160,9 +174,22 @@ function AnalysisTimeChart({
         },
         iconStyle: { borderColor: text },
       },
+      dataZoom: [{
+        type: 'inside',
+        xAxisIndex: 0,
+        filterMode: 'none',
+        start: zoomRange?.start ?? 0,
+        end: zoomRange?.end ?? 100,
+        zoomOnMouseWheel: false,
+        moveOnMouseWheel: false,
+        moveOnMouseMove: false,
+      }],
       grid: { left: 74, right: 32, top: 42, bottom: 62, containLabel: true },
       xAxis: {
         type: 'value',
+        scale: true,
+        min: timeDomain?.[0],
+        max: timeDomain?.[1],
         name: 'Time from run start [s]',
         nameLocation: 'middle',
         nameGap: 36,
@@ -187,7 +214,7 @@ function AnalysisTimeChart({
       },
       series: traceSeries(selected, traces),
     };
-  }, [selected, traces, unit, yMax, yMin]);
+  }, [selected, timeDomain, traces, unit, yMax, yMin, zoomRange]);
 
   return (
     <article className={styles.chartCard}>
@@ -197,7 +224,14 @@ function AnalysisTimeChart({
           {subtitle !== undefined && <p>{subtitle}</p>}
         </div>
       </div>
-      <ReactECharts option={option} className={styles.chart} notMerge />
+      <ReactECharts
+        option={option}
+        className={styles.chart}
+        notMerge={false}
+        replaceMerge={['series']}
+        lazyUpdate
+        onEvents={onEvents}
+      />
     </article>
   );
 }
@@ -236,43 +270,17 @@ function RecommendedTimeChart({
   );
 }
 
-function median(values: number[]): number | null {
-  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
-  if (finite.length === 0) return null;
-  const middle = Math.floor(finite.length / 2);
-  return finite.length % 2 === 0 ? 0.5 * (finite[middle - 1] + finite[middle]) : finite[middle];
-}
-
-function binnedEfficiency(points: EfficiencyRatioPoint[]): Array<{ ratio: number; efficiency: number; lower: number; upper: number }> {
-  const minRatio = 1;
-  const maxRatio = 6;
-  const bins = 16;
-  const width = (maxRatio - minRatio) / bins;
-  const output: Array<{ ratio: number; efficiency: number; lower: number; upper: number }> = [];
-  for (let bin = 0; bin < bins; bin += 1) {
-    const left = minRatio + bin * width;
-    const right = left + width;
-    const inside = points.filter((point) => point.ratio >= left && point.ratio < right && point.efficiencyPct >= 0 && point.efficiencyPct <= 120);
-    if (inside.length < 2) continue;
-    const ratio = median(inside.map((point) => point.ratio));
-    const efficiency = median(inside.map((point) => point.efficiencyPct));
-    const lower = median(inside.map((point) => point.lowerPct));
-    const upper = median(inside.map((point) => point.upperPct));
-    if (ratio === null || efficiency === null || lower === null || upper === null) continue;
-    output.push({ ratio, efficiency, lower, upper });
-  }
-  return output;
-}
-
 function EfficiencyRatioChart({ points }: { points: EfficiencyRatioPoint[] }) {
   const option = useMemo<EChartsOption>(() => {
     const text = cssColor('--text-color', '#f4f4f5');
     const grid = cssColor('--grid-color', '#404040');
     const primary = cssColor('--primary', '#bb0808');
     const tooltipBackground = cssColor('--tooltip-bg', '#202124');
-    const filtered = points.filter((point) => point.ratio >= 1 && point.ratio <= 6 && point.efficiencyPct >= 0 && point.efficiencyPct <= 120);
-    const trend = binnedEfficiency(filtered);
-    const bandColor = '#a78bfa';
+    const pointColor = '#a78bfa';
+    const filtered = points.filter((point) => (
+      point.ratio >= 1 && point.ratio <= 6
+      && point.efficiencyPct >= 0 && point.efficiencyPct <= 100
+    ));
     return {
       animation: false,
       backgroundColor: 'transparent',
@@ -285,8 +293,13 @@ function EfficiencyRatioChart({ points }: { points: EfficiencyRatioPoint[] }) {
         formatter: (params: unknown) => {
           if (typeof params !== 'object' || params === null) return '';
           const data = (params as { data?: unknown }).data;
-          if (!Array.isArray(data) || typeof data[0] !== 'number' || typeof data[1] !== 'number') return '';
-          return `<strong>Ratio ${data[0].toFixed(3)}</strong><br/>Efficiency: ${data[1].toFixed(1)}%`;
+          if (typeof data !== 'object' || data === null || Array.isArray(data)) return '';
+          const point = data as { value?: unknown; lower?: unknown; upper?: unknown };
+          if (!Array.isArray(point.value) || typeof point.value[0] !== 'number' || typeof point.value[1] !== 'number') return '';
+          const lower = typeof point.lower === 'number' && Number.isFinite(point.lower) ? point.lower : null;
+          const upper = typeof point.upper === 'number' && Number.isFinite(point.upper) ? point.upper : null;
+          const range = lower !== null && upper !== null ? `<br/>Uncertainty: ${lower.toFixed(1)}–${upper.toFixed(1)}%` : '';
+          return `<strong>Ratio ${point.value[0].toFixed(3)}</strong><br/>Efficiency: ${point.value[1].toFixed(1)}%${range}`;
         },
       },
       toolbox: {
@@ -300,6 +313,7 @@ function EfficiencyRatioChart({ points }: { points: EfficiencyRatioPoint[] }) {
       grid: { left: 74, right: 32, top: 42, bottom: 62, containLabel: true },
       xAxis: {
         type: 'value',
+        scale: true,
         min: 1,
         max: 6,
         name: 'Speed ratio  ωp / ωs',
@@ -326,38 +340,13 @@ function EfficiencyRatioChart({ points }: { points: EfficiencyRatioPoint[] }) {
         {
           name: '100 ms samples',
           type: 'scatter',
-          symbolSize: 5,
-          itemStyle: { color: bandColor, opacity: 0.5 },
-          data: filtered.map((point) => [point.ratio, point.efficiencyPct]),
-        },
-        {
-          name: '__band_floor',
-          type: 'line',
-          stack: '__ratio_band',
-          silent: true,
-          symbol: 'none',
-          tooltip: { show: false },
-          lineStyle: { opacity: 0 },
-          areaStyle: { opacity: 0 },
-          data: trend.map((point) => [point.ratio, point.lower]),
-        },
-        {
-          name: 'Timing + inertia range',
-          type: 'line',
-          stack: '__ratio_band',
-          silent: true,
-          symbol: 'none',
-          tooltip: { show: false },
-          lineStyle: { opacity: 0 },
-          areaStyle: { color: rgba(bandColor, 0.22), opacity: 1 },
-          data: trend.map((point) => [point.ratio, Math.max(0, point.upper - point.lower)]),
-        },
-        {
-          name: 'Binned median',
-          type: 'line',
-          symbol: 'none',
-          lineStyle: { color: bandColor, width: 2.8 },
-          data: trend.map((point) => [point.ratio, point.efficiency]),
+          symbolSize: 6,
+          itemStyle: { color: pointColor, opacity: 0.58 },
+          data: filtered.map((point) => ({
+            value: [point.ratio, point.efficiencyPct],
+            lower: point.lowerPct,
+            upper: point.upperPct,
+          })),
         },
       ],
     };
@@ -368,10 +357,10 @@ function EfficiencyRatioChart({ points }: { points: EfficiencyRatioPoint[] }) {
       <div className={styles.chartHeading}>
         <div>
           <h3>Efficiency vs speed ratio</h3>
-          <p>100 ms recommended window · shaded band includes RP2040 timing and the secondary-inertia bracket.</p>
+          <p>100 ms samples only. No fitted or binned trend line is imposed; hover a point to see its timing + inertia uncertainty range.</p>
         </div>
       </div>
-      <ReactECharts option={option} className={styles.chart} notMerge />
+      <ReactECharts option={option} className={styles.chart} notMerge={false} lazyUpdate />
     </article>
   );
 }
@@ -496,7 +485,7 @@ export function DynoAnalysisSection({ run }: Props) {
         <AnalysisTimeChart title="Primary RPM" subtitle="16-tooth primary · one-revolution reconstruction" unit="rpm" selected={selectedWindows} traces={primaryRpm} />
         <AnalysisTimeChart title="Secondary RPM" subtitle="12-tooth secondary · one-revolution reconstruction" unit="rpm" selected={selectedWindows} traces={secondaryRpm} />
         <AnalysisTimeChart title="Primary input power" subtitle="CH440 full-throttle torque curve evaluated at measured primary RPM" unit="kW" selected={selectedWindows} traces={primaryPower} yMin={0} yMax={8} />
-        <AnalysisTimeChart title="Secondary inertial output power" subtitle="P = J(ω₂² − ω₁²) / (2Δt) · shaded 100 ms band includes timing + inertia range" unit="kW" selected={selectedWindows} traces={secondaryPower} yMin={-10} yMax={10} />
+        <AnalysisTimeChart title="Secondary inertial output power" subtitle="P = J(ω₂² − ω₁²) / (2Δt) · 100 ms uncertainty is available on hover" unit="kW" selected={selectedWindows} traces={secondaryPower} yMin={-10} yMax={10} />
         <AnalysisTimeChart title="CVT speed ratio" subtitle="ωp / ωs from the measured RPM traces" unit="ωp / ωs" selected={selectedWindows} traces={ratio} yMin={0} yMax={6} />
       </div>
 
@@ -504,7 +493,7 @@ export function DynoAnalysisSection({ run }: Props) {
         <div>
           <span className={styles.eyebrow}>Recommended window · 100 ms</span>
           <h2>Estimated transmission efficiency</h2>
-          <p>Efficiency uses CH440 input power and positive flywheel energy gain only. The shaded region includes RP2040 timing uncertainty and Jₛ = 0.3134–0.3147 kg·m²; it does not claim uncertainty in the assumed CH440 torque curve or unmeasured parasitic losses.</p>
+          <p>Efficiency uses CH440 input power and positive flywheel energy gain only. RP2040 timing uncertainty and Jₛ = 0.3134–0.3147 kg·m² remain available on hover; no visually misleading filled band is drawn, and no uncertainty is claimed for the assumed CH440 torque curve or unmeasured parasitic losses.</p>
         </div>
       </div>
 
