@@ -10611,92 +10611,183 @@ work--energy balance check local and global consistency, while refinement of
 the time solution and examination of the instantaneous contact closure assess
 the numerical reliability of that response.
 
-\subsection{Mechanical Invariants and Operating-Domain Audit}
+\subsection{Mechanical Consistency Across Operating Conditions}
 \label{sec:results_mechanical_invariants}
 
-A launch can exercise engagement, slip and shifting without bringing either
-pulley into both directions of sliding or approaching every travel boundary
-from free motion. The audit therefore starts the CVT from additional
-admissible states and asks whether the coupled balances and contact conditions
-remain satisfied as each state evolves, including when its initial arrangement
-gives way to another.
+The formulation is intended to follow motion both with and without primary 
+belt contact, with either pulley sticking or sliding, and with the sheaves 
+shifting freely or held at a travel boundary.The cases in 
+\Cref{tab:verification_operating_conditions} examine this range of contact 
+and shift conditions. Reversing rotation and sliding direction also tests 
+the force signs.
 
-It combines a ten-second, flat-road Baja launch with
-constructed cases using constant shaft torques and attached inertias. The
-launch uses the engine and vehicle boundaries of
-\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}; the
-constructed cases use \Cref{app:fixed_shaft_boundary}, with both shaft speeds
-still determined dynamically. All retain the reference CVT and its
-zero-clearance bilateral secondary helix
-(\Cref{app:common_physical_configuration,app:reference_helix_topology}). The
-additional cases exercise rest, deadzone motion, free shift, travel supports
-and the different tangential contact states. The exact inputs, checks and
-coverage record are given in \Cref{app:study_mechanical_invariants}.
+Most cases apply constant torques to shafts with attached inertias, leaving
+the dynamics to determine the shaft speeds, belt speed and shift motion. The
+vehicle case instead uses the engine and vehicle boundaries of
+\Cref{app:results_boundary_models}. It starts with the vehicle and belt at
+rest and the engine running, then follows full-throttle acceleration on
+level ground for \SI{10}{s}.
 
-All 25 required coverage classes were reached. The mechanical checks passed
-at 6,257 sampled states and at each of the 81 exact post-transition states.
-Coverage records which arrangements were reached; the checks test whether
-their motion remains mechanically consistent.
+\begin{table}[H]
+  \centering\small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{0.23\linewidth}
+    >{\raggedright\arraybackslash}p{0.57\linewidth}
+    >{\raggedright\arraybackslash}p{\dimexpr0.20\linewidth-4\tabcolsep\relax}@{}}
+    \toprule
+    Operating condition & Selected cases & Examination \\
+    \midrule
+    Rest & All velocities and applied shaft torques zero; primary at its lower stop
+      & \SI{50}{ms} \\
+    \addlinespace[3pt]
+    Primary disengaged & One interior deadzone state, with the belt moving with the secondary
+      & One state \\
+    \addlinespace[3pt]
+    Both contacts sticking & Forward rotation; reverse rotation
+      & \SI{30}{ms} each \\
+    \addlinespace[3pt]
+    One contact sliding & Primary sliding in $+$ or $-$ with secondary sticking;
+      secondary sliding in $+$ or $-$ with primary sticking
+      & \SI{30}{ms} each \\
+    \addlinespace[3pt]
+    Both contacts sliding & Primary/secondary sliding signs
+      $(+,+)$, $(+,-)$, $(-,+)$ and $(-,-)$
+      & \SI{30}{ms} each \\
+    \addlinespace[3pt]
+    Free shifting & Initially closing; initially opening
+      & \SI{20}{ms} each \\
+    \addlinespace[3pt]
+    Boundary arrivals & Approaching the lower stop; primary engagement;
+      approaching the low-ratio seat
+      & \SI{30}{ms} each \\
+    \addlinespace[3pt]
+    Vehicle acceleration & Full-throttle, level-ground start;
+      reaches the upper travel stop
+      & \SI{10}{s} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Cases examined with the reference CVT. Each alternative is a
+  separate case, followed for the stated time. Sliding signs refer to belt
+  velocity relative to the pulley surface along the positive belt direction.
+  Exact inputs and numerical settings are given in
+  \Cref{app:study_mechanical_invariants}.}
+  \label{tab:verification_operating_conditions}
+\end{table}
 
-An admissible contact arrangement need not persist for long.
-\Cref{fig:verification_contact_regimes}(a) shows the time to the first change
-from each of ten selected initial contact states. A positive slip sign means
-the belt leads the representative pulley surface; a negative sign reverses
-that relation, following
-\Cref{eq:tangential_relative_speed}. The right-pointing markers indicate
-cases that retain their initial arrangement for the entire \SI{30}{ms}
-observation window. Their durations are lower bounds, rather than measured
-exit times.
+For each case, the checks ask whether the calculated loads account for the
+motion and can be sustained by the belt, contacts and supports. At engaged
+states, the calculated forces and accelerations are substituted back into
+the coupled equations. Contact consistency is tested separately. For a
+sticking contact, matching surface speeds must be preserved by the
+accelerations, and the required traction must lie within the static-friction
+limit. For a sliding contact, friction must oppose relative motion and remove
+energy from it. A supported sheave must remain stationary with a reaction in
+the direction its stop can exert. Finally, the belt must carry tension rather
+than compression, and the normal load must remain nonnegative everywhere
+along each engaged wrap. A positive total clamping force alone does not
+establish that last condition.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{figures/results/verification/contact_regimes.pdf}
-  \caption{Persistence and local contact loading for ten canonical initial
-  contact states. (a) Time to first transition; orange marks the supplied
-  initial-state anchors. (b) Least normal loading per unit wrap angle on each
-  pulley over engaged states in the \SI{30}{ms} continuation. Minima may follow
-  a contact change and need not coincide between pulleys. Deadzone intervals
-  are excluded because they have no engaged full-wrap field.}
-  \label{fig:verification_contact_regimes}
-\end{figure}
+These checks are applied along each continuation, including both ends of
+every continuous segment. When contact or support changes, the new forces
+can differ immediately, so the exact outgoing state is also checked using
+its new contact and support conditions. All listed continuations completed,
+and the applicable checks satisfied the numerical tolerances in
+\Cref{tab:invariants_review_guards}. \Cref{tab:verification_mechanical_results}
+reports the observed residuals and limiting values.
 
-The secondary-slip \((+)\) and both-slip \((-,+)\) cases instead leave
-their initial arrangements after approximately \(414~\mu\mathrm{s}\) and
-\(9.82~\mu\mathrm{s}\). In both, the secondary relative speed reaches
-zero and the required static traction lies within its available capacity, so
-the secondary begins sticking. The primary remains sticking in the first
-case and sliding in the second. These two initial states were supplied as
-targeted reproduction anchors, but short duration is not confined to them:
-the ordinary search also finds both-slip \((+,+)\), which reaches secondary
-sticking after \(31.7~\mu\mathrm{s}\). A brief branch can therefore be a
-resolved part of an admissible continuation. Neither its duration nor the
-way its initial state was found measures how frequently it occurs in a
-vehicle drive.
+\input{figures/results/verification/verification_values.tex}
+\input{figures/results/verification/sticking_drift_values.tex}
+\begin{table}[H]
+  \centering\small
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.16}
+  \begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{0.32\linewidth}
+    >{\raggedright\arraybackslash}p{\dimexpr0.68\linewidth-2\tabcolsep\relax}@{}}
+    \toprule
+    Mechanical requirement & Observed result \\
+    \midrule
+    Engaged force/torque balance
+      & Force residuals below \SI{4e-11}{N}; torque residuals below
+        \SI{4e-11}{N.m}. \\
+    \addlinespace[4pt]
+    Sticking motion and traction
+      & Largest speed mismatch \SI{\CinderStickSpeedMM}{mm/s}; largest
+        relative-acceleration residual \SI{\CinderStickAcceleration}{m/s^2}.
+        Minimum static-traction margin \num{\CinderStaticMargin}. \\
+    \addlinespace[4pt]
+    Sliding removes energy
+      & Largest signed net friction power
+        $+\SI{\CinderSlidingPower}{W}$; negative power denotes dissipation. \\
+    \addlinespace[4pt]
+    Belt tension and wrap contact
+      & Minimum tension \SI{\CinderBeltTension}{N}; minimum local normal
+        loading \SI{\CinderPrimaryLocal}{N/rad} on the primary and
+        \SI{\CinderSecondaryLocal}{N/rad} on the secondary. \\
+    \addlinespace[4pt]
+    Motion held by a stop
+      & Zero shift acceleration; speed at most
+        \SI{\CinderSupportedSpeed}{m/s}. Minimum signed stop reaction
+        \SI{\CinderStopReaction}{N}. \\
+    \addlinespace[4pt]
+    Geometric and disengaged constraints
+      & Largest belt-length mismatch \SI{\CinderBeltLength}{m}; largest
+        deadzone belt--secondary speed mismatch
+        \SI{\CinderDeadzoneSpeed}{m/s}. \\
+    \bottomrule
+  \end{tabular}
+  \caption{Mechanical results over the cases in
+  \Cref{tab:verification_operating_conditions}, including the states
+  immediately after transitions. Each quantity is checked only where its
+  contact or constraint applies. The static-traction margin is the remaining
+  allowance in traction utilization; a negative value exceeds a friction
+  limit. Net friction power sums the work rates on the belt and pulley.}
+  \label{tab:verification_mechanical_results}
+\end{table}
 
-The local loading in panel~(b) tests a different requirement. The sheaves may
-carry a substantial total normal force while one part of a wrap is only
-lightly loaded. Since \(N_j\) is the integral of that loading, its positive
-value alone cannot establish that contact is maintained everywhere. In the
-case initialized in both-slip \((-,-)\), the primary's least local loading
-falls to \SI{0.0482}{N/rad}. At that same state, the integrated primary
-normal force is still approximately \SI{411}{N}. This state occurs just
-after the primary sliding direction reverses at \SI{1.757}{ms}: the belt
-and primary momentarily match speeds, then their relative motion reverses.
-Reversing sliding reverses the kinetic traction, changing how tension varies
-along the wrap and, through the radial balance, how its normal load is
-distributed. Evaluating both sides of the change therefore matters even
-when the velocities remain continuous.
+The balance residuals are at floating-point scale. The small negative
+traction margin and stop reaction, and small positive sliding power, also
+lie within their respective tolerances
+of \num{1e-9}, \SI{1e-6}{N} and \SI{1e-3}{W}. To this accuracy, sticking
+stays within available traction, the stops do not have to pull on the sheaves,
+and sliding adds no energy. Positive tension and local normal loading also
+show that the belt remains taut and in contact throughout each wrap at the
+engaged states examined. \Cref{app:study_mechanical_invariants} describes
+the local-loading calculation in more detail, including how the loading
+changes when sliding reverses.
 
-The small positive local load remains admissible under the prescribed
-full-wrap description. A negative value would require the sheave to pull on
-the belt; similarly, negative tension would require the flexible belt to
-carry compression. As established in \Cref{eq:wrap_contact_admissibility},
-those outcomes would require local lift-off or slack, which the retained
-belt path does not describe. They would not simply select another
-stick--slip branch. The audit thus checks both continuation among the
-represented contact arrangements and continued use of the belt description
-itself. These are verified for the sampled cases, without extending the
-result to every admissible initial state or every possible transition.
+The speed check asks whether the belt and pulley surface speeds remain equal
+during sticking. Matching their accelerations preserves equal speeds in
+the exact dynamics. Numerical integration of the belt speed, pulley speeds
+and shift position can nevertheless introduce a small mismatch.
+The \SI{1}{mm/s} audit tolerance limits
+this numerical drift; it does not enter the friction law. The largest
+mismatch, \SI{\CinderStickSpeedMM}{mm/s}, occurs during sticking in the case
+that begins with $(-,+)$ sliding. The belt is then moving at
+\SI{\CinderDriftPeakBeltSpeed}{m/s}, so even the audit limit is only
+\num{\CinderDriftGuardPercent}\% of its speed. Repeating this case with
+both relative and absolute integration tolerances reduced tenfold lowers
+the maximum sampled mismatch to \SI{\CinderDriftRefinedMM}{mm/s}, with the
+same sequence of contact and support changes. The mismatch is small compared
+with the belt speed, and its reduction with tighter integration supports
+the interpretation as numerical drift.
+
+At rest, no spurious motion developed. The initial-state checks rejected
+positions outside the travel range and a deadzone state whose belt and
+secondary speeds did not match. At the engagement boundary, the model also
+distinguished a primary closing onto the belt from one moving away.
+
+Across these tests, the loads that account for the CVT's accelerations also
+satisfy the limits imposed by the belt, contacts and supports. The agreement
+extends across sticking and sliding, forward and reverse rotation, and free
+or supported sheave motion, including the checked states immediately after
+contact or support changes. Engagement, slip, shifting and travel-stop
+arrival can therefore be followed within one consistent mechanical
+description. Within the tested conditions and numerical accuracy, the
+internal loads explain both the motion and how it changes when different
+contacts or supports carry the load.
 \FloatBarrier
 
 \subsection{Energy Consistency}

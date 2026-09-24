@@ -1,0 +1,9 @@
+{
+  "run_id": "mechanical-invariants-58a8a3a5272cf2c8",
+  "generator_sha256": "fd87a2ec31c396154d0b6a305c9b3cca944cc8f4daf4bf49daec3f9ff2c8cc99",
+  "audit_identity_sha256": "36305912a89fbdbc160b969dd09879b20e6139775d0dfd4b6238083f01d95935",
+  "outputs": {
+    "verification_values.tex": "406a6ac6ec72ea292aa05f91c5701db2ed033623a30298f274403ad124421b6b",
+    "reader_evidence.json": "127f840bead2c51473d37556305f50db7f01787602c3125826891e22870b9d7d"
+  }
+}

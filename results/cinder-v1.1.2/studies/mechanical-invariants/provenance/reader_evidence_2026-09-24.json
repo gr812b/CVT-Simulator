@@ -1,0 +1,384 @@
+{
+  "run_id": "mechanical-invariants-58a8a3a5272cf2c8",
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "cases": [
+    {
+      "group": "Rest",
+      "case_id": "static_rest_lower_stop",
+      "duration_s": 0.05,
+      "saved_evaluations": 51,
+      "events": 0
+    },
+    {
+      "group": "Primary disengaged",
+      "case_id": "deadzone_free_static_snapshot",
+      "duration_s": 0.0,
+      "saved_evaluations": 1,
+      "events": 0
+    },
+    {
+      "group": "Both contacts sticking",
+      "case_id": "stick_stick_forward",
+      "duration_s": 0.03,
+      "saved_evaluations": 61,
+      "events": 0
+    },
+    {
+      "group": "Both contacts sticking",
+      "case_id": "stick_stick_reverse",
+      "duration_s": 0.03,
+      "saved_evaluations": 94,
+      "events": 18
+    },
+    {
+      "group": "One contact sliding",
+      "case_id": "primary_slip_plus",
+      "duration_s": 0.03,
+      "saved_evaluations": 65,
+      "events": 2
+    },
+    {
+      "group": "One contact sliding",
+      "case_id": "primary_slip_minus",
+      "duration_s": 0.03,
+      "saved_evaluations": 66,
+      "events": 3
+    },
+    {
+      "group": "One contact sliding",
+      "case_id": "secondary_slip_plus",
+      "duration_s": 0.03,
+      "saved_evaluations": 63,
+      "events": 1
+    },
+    {
+      "group": "One contact sliding",
+      "case_id": "secondary_slip_minus",
+      "duration_s": 0.03,
+      "saved_evaluations": 61,
+      "events": 0
+    },
+    {
+      "group": "Both contacts sliding",
+      "case_id": "both_slip_pp",
+      "duration_s": 0.03,
+      "saved_evaluations": 67,
+      "events": 3
+    },
+    {
+      "group": "Both contacts sliding",
+      "case_id": "both_slip_pm",
+      "duration_s": 0.03,
+      "saved_evaluations": 61,
+      "events": 0
+    },
+    {
+      "group": "Both contacts sliding",
+      "case_id": "both_slip_mp",
+      "duration_s": 0.03,
+      "saved_evaluations": 81,
+      "events": 11
+    },
+    {
+      "group": "Both contacts sliding",
+      "case_id": "both_slip_mm",
+      "duration_s": 0.03,
+      "saved_evaluations": 66,
+      "events": 3
+    },
+    {
+      "group": "Free shifting",
+      "case_id": "free_shift_closing",
+      "duration_s": 0.02,
+      "saved_evaluations": 41,
+      "events": 0
+    },
+    {
+      "group": "Free shifting",
+      "case_id": "free_shift_opening",
+      "duration_s": 0.02,
+      "saved_evaluations": 41,
+      "events": 0
+    },
+    {
+      "group": "Boundary arrivals",
+      "case_id": "boundary_lower_stop_arrival",
+      "duration_s": 0.03,
+      "saved_evaluations": 123,
+      "events": 1
+    },
+    {
+      "group": "Boundary arrivals",
+      "case_id": "boundary_engagement_arrival",
+      "duration_s": 0.03,
+      "saved_evaluations": 144,
+      "events": 13
+    },
+    {
+      "group": "Boundary arrivals",
+      "case_id": "boundary_low_ratio_arrival",
+      "duration_s": 0.03,
+      "saved_evaluations": 141,
+      "events": 10
+    },
+    {
+      "group": "Vehicle acceleration",
+      "case_id": "nominal_baja_reference",
+      "duration_s": 10.0,
+      "saved_evaluations": 5030,
+      "events": 16
+    }
+  ],
+  "metrics": {
+    "sticking_speed": {
+      "value": -0.00013001555226566097,
+      "field": "secondary_vrel_m_s",
+      "case_id": "both_slip_mp",
+      "time_s": 0.025804164408177906,
+      "sample_location": "uniform",
+      "applicable_values": 11056
+    },
+    "sticking_acceleration": {
+      "value": 9.996186988964981e-09,
+      "field": "secondary_arel_m_s2",
+      "case_id": "nominal_baja_reference",
+      "time_s": 0.42401009262572104,
+      "sample_location": "uniform",
+      "applicable_values": 11056
+    },
+    "static_margin": {
+      "value": -8.881784197001252e-16,
+      "field": "primary_static_margin",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.013114276528797071,
+      "sample_location": "segment_end",
+      "applicable_values": 11056
+    },
+    "sliding_pair_power": {
+      "value": 1.3124666358189037e-08,
+      "field": "primary_slip_pair_power_W",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.013114276606131691,
+      "sample_location": "segment_end",
+      "applicable_values": 878
+    },
+    "belt_tension": {
+      "value": 0.16970597994987124,
+      "field": "belt_min_tension_N",
+      "case_id": "nominal_baja_reference",
+      "time_s": 0.06601009262572105,
+      "sample_location": "segment_start",
+      "applicable_values": 5967
+    },
+    "primary_local_normal": {
+      "value": 0.04819889916451533,
+      "field": "primary_min_dnormal_dtheta_N_per_rad",
+      "case_id": "both_slip_mm",
+      "time_s": 0.0017571271742449688,
+      "sample_location": "segment_start",
+      "applicable_values": 5967
+    },
+    "secondary_local_normal": {
+      "value": 0.8773483771098244,
+      "field": "secondary_min_dnormal_dtheta_N_per_rad",
+      "case_id": "both_slip_pm",
+      "time_s": 0.0,
+      "sample_location": "segment_start",
+      "applicable_values": 5967
+    },
+    "belt_length": {
+      "value": 8.845146837188622e-13,
+      "field": "belt_length_residual_m",
+      "case_id": "nominal_baja_reference",
+      "time_s": 1.1872459801349289,
+      "sample_location": "uniform",
+      "applicable_values": 5967
+    },
+    "raw_equation_component_bound": {
+      "value": 3.501554601825774e-11,
+      "field": "closure_max_abs_residual",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.026214156872530682,
+      "sample_location": "post_transition_exact",
+      "applicable_values": 5967
+    },
+    "scaled_equations": {
+      "value": 1.4271624271944376e-14,
+      "field": "closure_max_scaled_residual",
+      "case_id": "primary_slip_plus",
+      "time_s": 0.026225390560684125,
+      "sample_location": "segment_start",
+      "applicable_values": 5967
+    },
+    "field_integral": {
+      "value": -5.220499588176608e-10,
+      "field": "secondary_field_normal_residual_N",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.013114276606131691,
+      "sample_location": "segment_end",
+      "applicable_values": 11934
+    },
+    "supported_speed": {
+      "value": -3.71380703278897e-21,
+      "field": "shift_speed_m_s",
+      "case_id": "nominal_baja_reference",
+      "time_s": 0.06601009262572105,
+      "sample_location": "segment_start",
+      "applicable_values": 2476
+    },
+    "supported_acceleration": {
+      "value": 0.0,
+      "field": "fixed_shift_acceleration_m_s2",
+      "case_id": "static_rest_lower_stop",
+      "time_s": 0.0,
+      "sample_location": "segment_start",
+      "applicable_values": 2476
+    },
+    "deadzone_lock_speed": {
+      "value": -2.1316282072803006e-14,
+      "field": "deadzone_secondary_lock_speed_residual_m_s",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.0193306353122829,
+      "sample_location": "uniform",
+      "applicable_values": 371
+    },
+    "deadzone_lock_acceleration": {
+      "value": 0.0,
+      "field": "deadzone_secondary_lock_acceleration_residual_m_s2",
+      "case_id": "static_rest_lower_stop",
+      "time_s": 0.0,
+      "sample_location": "segment_start",
+      "applicable_values": 371
+    },
+    "stop_reaction": {
+      "value": -2.2737367544323206e-13,
+      "field": "deadzone_lower_stop_reaction_N",
+      "case_id": "nominal_baja_reference",
+      "time_s": 0.04676543098131979,
+      "sample_location": "segment_end",
+      "applicable_values": 2476
+    }
+  },
+  "sampled_equation_extrema": {
+    "primary_rotation": {
+      "value": 1.1368683772161603e-13,
+      "unit": "N m",
+      "case_id": "both_slip_mp",
+      "time_s": 0.004942567989519406
+    },
+    "secondary_rotation": {
+      "value": -1.5916157281026244e-12,
+      "unit": "N m",
+      "case_id": "both_slip_mp",
+      "time_s": 0.008942567989519406
+    },
+    "belt_transport": {
+      "value": 5.4569682106375694e-12,
+      "unit": "N",
+      "case_id": "both_slip_mp",
+      "time_s": 0.00044256664651131815
+    },
+    "primary_axial": {
+      "value": 2.8194335754960775e-11,
+      "unit": "N",
+      "case_id": "both_slip_mp",
+      "time_s": 0.0
+    },
+    "secondary_axial": {
+      "value": 2.773958840407431e-11,
+      "unit": "N",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.013614276687273172
+    },
+    "primary_traction": {
+      "value": -1.8189894035458565e-12,
+      "unit": "N",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.013114276687273172
+    },
+    "secondary_traction": {
+      "value": 1.8189894035458565e-12,
+      "unit": "N",
+      "case_id": "both_slip_mp",
+      "time_s": 0.0
+    },
+    "tension_loop": {
+      "value": -3.055333763768431e-12,
+      "unit": "N",
+      "case_id": "both_slip_mp",
+      "time_s": 9.823193267893768e-06
+    },
+    "low_ratio_seat_constraint": {
+      "value": 0.0,
+      "unit": "m/s^2",
+      "case_id": "stick_stick_reverse",
+      "time_s": 0.02621438185189394
+    },
+    "upper_shift_stop_constraint": {
+      "value": 0.0,
+      "unit": "m/s^2",
+      "case_id": "nominal_baja_reference",
+      "time_s": 6.781920912090633
+    }
+  },
+  "counts_for_reproduction_only": {
+    "selected_cases": 18,
+    "saved_evaluations": 6257,
+    "exact_outgoing_states": 81,
+    "overlapping_coverage_tags": 25,
+    "geometry_evaluations": 501
+  },
+  "guards": {
+    "belt_length_residual_m": 1e-09,
+    "closure_scaled_equation_residual": 1e-10,
+    "stick_velocity_drift_m_s": 0.001,
+    "stick_acceleration_residual_m_s2": 1e-07,
+    "static_margin_negative_tolerance": 1e-09,
+    "positive_slip_pair_power_W": 0.001,
+    "negative_normal_tolerance_N": 1e-06,
+    "negative_tension_tolerance_N": 1e-06,
+    "negative_distributed_normal_tolerance_N_per_rad": 1e-06,
+    "field_normal_integral_residual_N": 1e-06,
+    "negative_stop_reaction_tolerance_N": 1e-06,
+    "fixed_shift_speed_m_s": 1e-08,
+    "fixed_shift_acceleration_m_s2": 1e-07,
+    "deadzone_secondary_lock_speed_m_s": 1e-07,
+    "deadzone_secondary_lock_acceleration_m_s2": 1e-07,
+    "static_rest_state_drift": 1e-10,
+    "deadzone_radius_derivative_abs": 1e-12,
+    "geometry_first_derivative_fd_residual": 1e-07,
+    "geometry_second_derivative_fd_residual_per_m": 0.005
+  },
+  "scope": "Selected admissible continuations; not a rate over attempted inputs or an all-time proof.",
+  "masks": {
+    "contact_fields": "engaged only",
+    "sticking": {
+      "stick_stick": [
+        "primary",
+        "secondary"
+      ],
+      "primary_slip_secondary_stick": [
+        "secondary"
+      ],
+      "primary_stick_secondary_slip": [
+        "primary"
+      ],
+      "both_slip": []
+    },
+    "sliding": {
+      "stick_stick": [],
+      "primary_slip_secondary_stick": [
+        "primary"
+      ],
+      "primary_stick_secondary_slip": [
+        "secondary"
+      ],
+      "both_slip": [
+        "primary",
+        "secondary"
+      ]
+    },
+    "slip_direction": "old segment_end sign test not applied; exact outgoing state is checked",
+    "extrema": "all applicable saved segment states plus exact outgoing states; signed values retained"
+  }
+}
