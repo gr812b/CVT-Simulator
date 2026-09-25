@@ -6,21 +6,21 @@
   "mechanics_version": "1.1.2",
   "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
   "plotting_sources": {
-    "publication_plots.py": "b7939dc5db6c8b706b747a3d1018b9d06c5c04d68c35cafcadf09b5b3f842c92",
+    "publication_plots.py": "4aaad0a3a8bbbb9edb4d8855e43bab54f5303bf6061c457f90c9f01e791bf8c6",
     "verification.py": "fc5c60eebedf8f066fee9b0a238b1015770b3ad43585f8de42f5082fbf55c3cb",
     "execution_record.py": "f6547d9f361e6b990f5f9523f4e9b486f4a9bf354bfdb85de721c12b40553ed8"
   },
   "size_inches": [
     6.5,
-    4.25
+    4.6
   ],
   "transformations": {
     "selection": "Complete 0-10 s nominal and tight canonical trajectories. No event, regime, negative residual or endpoint excluded.",
-    "work_storage": "J to kJ only. Both attached boundary inertias are included in retained kinetic energy. Net work adds the two signed external-torque works.",
+    "work_storage": "J to kJ only. Separate signed primary and secondary boundary work and kinetic-energy increase, nominal solution only. Both attached boundary inertias are included in kinetic energy. The ledger supplies spring storage and losses; no unresolved totals overlay is used as evidence of closure.",
     "residual": "Signed dimensional W - storage - kinetic slip - discrete capture. No sticking-drift work subtraction. Same 0.625 ms maximum audit spacing for both ODE settings.",
     "events": "Both exact native sides retained at every equal-time event. Separate line per continuous segment; no smoothing or trapezoid across resets. Capture loss added only to outgoing side.",
-    "upper_stop_detail": "Each trajectory uses its own native upper-stop event time as zero, with -20 to +40 ms shown. Open circles show both native sides, which coincide in residual. This is a display alignment, not an event-aligned convergence metric.",
-    "quadrature": "Sum of continuous-segment defects at 5, 2.5, 1.25, 0.625 ms maximum spacing, each segment at least 12 intervals. Nominal trajectory held fixed. Second-order Richardson extrapolate uses only two finest spacings; not an uncertainty or remaining-quadrature-error bar."
+    "upper_stop_detail": "Each trajectory uses its own native upper-stop event time as zero, with -20 to +40 ms shown. Open circles (incoming) and crosses (outgoing) coincide in residual. This is a display alignment, not an event-aligned convergence metric.",
+    "quadrature": "Sum of continuous-segment defects at 5, 2.5, 1.25, 0.625 ms maximum spacing, each segment at least 12 intervals. Nominal trajectory held fixed. Actual h on a descending base-2 logarithmic axis: each step right halves the maximum spacing. Connecting segments guide the eye and are not a fitted error model. The horizontal second-order Richardson extrapolate uses only two finest spacings; not an uncertainty or remaining-quadrature-error bar."
   },
   "checks": {
     "trace_rows": {
@@ -87,9 +87,9 @@
     }
   },
   "outputs": {
-    "energy_balance.pdf": "a2294ed02a30d3fd3fe8c69090277a225abb4da6aab20ef0c3f1d6b33ed458cb",
-    "energy_balance.png": "aeb0fe5bb4dc3dc707870c63dbd542967ca4bba7c0b068ad985f4a077071c483",
-    "energy_balance_values.json": "86d9ba895a505354f6c4308ac92a1d9b3f55ee495214b81c6e1d792cb28a6fa8"
+    "energy_balance.pdf": "20402ae71ba771138b94db77324dbd7e4e960e55c1062e6186411888c041112b",
+    "energy_balance.png": "4818a283553f597c95f213bc199a8c709ead4210f5c437891636052ca8257c4c",
+    "energy_balance_values.json": "0c543cf7adc2431ce2017d89551ba6af2572acd7189348a09786d17a18055996"
   },
   "author_status": "ready_for_author_review_not_author_accepted"
 }

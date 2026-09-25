@@ -10793,16 +10793,24 @@ contacts or supports carry the load.
 \subsection{Energy Consistency}
 \label{sec:results_energy_consistency}
 
-The shaft loading does more than transmit power through the CVT. During a
-launch it also accelerates the retained inertias and changes spring
-deformation. An energy balance must therefore distinguish stored energy
-from dissipation, and continue to hold when an event changes the velocities.
-The audit follows the ten-second, flat-road reference launch using the
-settings in \Cref{app:study_energy_consistency}.
+The preceding checks show that the calculated forces account for the motion.
+The corresponding energy balance asks where the energy supplied over that
+motion goes. The level-ground acceleration introduced in
+\Cref{sec:results_mechanical_invariants} provides a test of this balance:
+it combines increasing speeds and spring deformation with sliding during
+engagement and the arrest of shift motion at the upper travel stop. The same
+\SI{10}{s} case is used here, first with the nominal integration settings and
+then with tighter settings, as specified in
+\Cref{app:study_energy_consistency}.
 
-The stored-energy inventory includes the retained CVT motions, the attached
-engine and referred vehicle inertias, and conservative actuator-spring
-energy. The work supplied to this inventory is the signed net shaft work,
+During this acceleration, the difference between engine work and work done
+against the vehicle load is not all a loss. It also accelerates the moving
+parts and changes the spring deformations. Stored energy therefore includes
+the retained CVT motions, the attached engine and referred vehicle inertias,
+and the axial- and torsional-spring potentials. In particular, the energy
+used to accelerate the vehicle remains in the account; it is not treated as
+energy lost through the secondary shaft. The external shaft torques supply
+the signed net work
 \begin{equation}
   W_{\mathrm B}(t)
   =\int_0^t
@@ -10810,103 +10818,171 @@ energy. The work supplied to this inventory is the signed net shaft work,
           \tau_{\mathrm B,s}\omega_s\right)\dd t,
   \label{eq:verification_boundary_work}
 \end{equation}
-so a resisting vehicle load contributes negative work. The audited balance is
+with the resisting vehicle load contributing negative work.
+
+At a sliding contact, traction acts with equal magnitude and opposite
+directions on the belt and pulley, but their surface speeds differ. Since
+power is force times velocity, these two work rates do not cancel. Friction
+opposes the relative motion, so their sum is negative: mechanical energy is
+removed at a rate equal to the traction magnitude times the relative sliding
+speed. At a sticking contact the speeds match, and traction transfers power
+without this sliding loss.
+
+Engagement and travel-stop arrival can also remove kinetic energy when a
+new constraint arrests motion. In the inelastic event model of
+\Cref{eq:finite_event_energy_loss}, positions remain continuous while the
+velocities change. The corresponding kinetic-energy drop must therefore be
+included separately from the work accumulated between events. The balance is
 \begin{equation}
   W_{\mathrm B}(t)
   =\Delta E_{\mathrm{stored}}(t)
-   +E_{\mathrm{slip}}(t)+E_{\mathrm{capture}}(t)+R_E(t).
+   +E_{\mathrm{slip}}(t)+E_{\mathrm{capture}}(t)+R_E(t),
   \label{eq:verification_energy_balance}
 \end{equation}
-Relative sliding removes mechanical energy through the work of kinetic
-traction. A perfectly inelastic capture instead removes kinetic energy
-instantaneously as the new constraint is established, according to
-\Cref{eq:finite_event_energy_loss}. Work and slip loss are consequently
-integrated within each continuous segment, while capture losses are added
-at the events. Both sides of each velocity reset are retained. The remainder
-\(R_E\) is the unexplained balance residual; it is not assigned to another
-loss mechanism.
+where \(R_E\) is the work left unaccounted for by the calculated storage and
+losses. Work and sliding loss are integrated between events; capture losses
+are added at the events themselves. Retaining the states immediately before
+and after each event counts an instantaneous energy drop once, without
+integrating power across a velocity jump.
 
-\Cref{fig:verification_energy_balance}(a) shows the work increasing mainly
-as stored energy. By ten seconds, stored energy has increased by
-approximately \SI{50.58}{kJ}, while \SI{1.588}{kJ} has been dissipated by
-kinetic slip.
-The cumulative capture loss is only \SI{0.254}{J}, but this is about ten
-times the final residual. Its small share of the launch work therefore does
-not make it negligible for this accounting check. The 13 nominal capture
-projections reproduce their stored-energy drops to within
-\(2.27\times10^{-13}~\mathrm{J}\), checked separately from continuous work.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{figures/results/verification/energy_balance.pdf}
-  \caption{Energy accounting for the reference launch. (a) Nominal net work,
-  stored-energy change, and storage plus modeled losses; work and accounted
-  energy overlap at this scale. (b) Signed residuals for the nominal and
-  tighter ODE trajectories, both audited at 0.625 ms maximum spacing.
-  (c) Detail around each trajectory's upper-stop capture; the incoming and
-  outgoing residuals coincide at the open markers. (d) Continuous-segment
-  defect with the nominal trajectory held fixed.
-  The open point and dashed line mark the two-finest-grid, second-order
-  zero-spacing estimate. Native event sides are retained; lines and work
-  quadrature do not bridge velocity resets.}
-  \label{fig:verification_energy_balance}
-\end{figure}
-
-The kilojoule-scale overlap cannot resolve the accuracy of the balance.
-Panel (b) instead shows its signed residual in joules. At the finest audit
-spacing, the nominal final residual is \(+0.0254~\mathrm{J}\) against
-\SI{52.17}{kJ} of net work, or \(\epsilon_E=4.88\times10^{-7}\) under
-\Cref{eq:energy_final_balance_fraction}. The sampled residual remains
-within \SI{0.040}{J} in both trajectories. Panel (c) resolves the apparent
-jump near the upper stop: the residual is continuous across the native
-capture and changes during the adjoining continuous integration. The visible
-change belongs to the continuous-segment defect rather than a mismatch in
-the capture-energy update. The final ledgers are compared in
-\Cref{tab:verification_energy_ledger}; spring and inertial storage are kept
-separate from the irreversible channels.
+\Cref{fig:verification_energy_balance}(a) separates the two shaft-work
+contributions from the increase in kinetic energy. By \SI{10}{s}, the engine
+has supplied \SI{66.78}{kJ}, while \SI{14.61}{kJ} has been spent against the
+resisting vehicle load. Most of the remaining \SI{52.17}{kJ} appears as
+kinetic energy. The smaller contributions are given in
+\Cref{tab:verification_energy_ledger}: the springs store a further
+\SI{48.78}{J}, sliding dissipates \SI{1.588}{kJ}, and inelastic captures
+remove \SI{0.254}{J}. Thus the difference between supplied work and
+kinetic-energy increase has distinct physical causes, each evaluated from
+the calculated motion and loads.
 
 \begin{table}[H]
-  \centering
-  \small
+  \centering\small
   \begin{tabular}{@{}lrr@{}}
     \toprule
-    Quantity & Nominal [J] & Tighter ODE [J] \\
+    Quantity & Nominal [J] & Tighter integration [J] \\
     \midrule
-    Net boundary work & \(52\,168.893\) & \(52\,168.858\) \\
-    Stored-energy change & \(50\,580.274\) & \(50\,580.287\) \\
-    Kinetic-slip dissipation & \(1\,588.340\) & \(1\,588.339\) \\
-    Inelastic capture dissipation & \(0.253859\) & \(0.253884\) \\
-    Balance residual & \(+0.025445\) & \(-0.022841\) \\
+    Primary boundary work & \(+66\,778.132\) & \(+66\,778.104\) \\
+    Secondary boundary work & \(-14\,609.239\) & \(-14\,609.246\) \\
+    Net shaft work & \(52\,168.893\) & \(52\,168.858\) \\
+    \midrule
+    Kinetic-energy increase & \(50\,531.492\) & \(50\,531.505\) \\
+    Spring-energy increase & \(48.782\) & \(48.782\) \\
+    Sliding loss & \(1\,588.340\) & \(1\,588.339\) \\
+    Inelastic capture loss & \(0.253859\) & \(0.253884\) \\
+    Signed remainder \(R_E\) & \(+0.025445\) & \(-0.022841\) \\
     \bottomrule
   \end{tabular}
-  \caption{Energy ledgers at ten seconds, both evaluated at the finest audit
-  spacing. Residuals use unrounded quantities; displayed entries are rounded.}
+  \caption{Energy balance at \SI{10}{s}, using the finest power-integration
+  spacing. The boundary works sum to the net work; the rows below the dividing
+  line account for that sum. Remainders use unrounded values. Only the
+  numerical settings in \Cref{tab:energy_study_numerics} change between runs.}
   \label{tab:verification_energy_ledger}
 \end{table}
 
-\begin{samepage}
-Two refinements distinguish the numerical trajectory from the integration
-of power along it. In panel (d), reducing the quadrature spacing from 5 to
-0.625 ms leaves a finite continuous-segment defect, with a zero-spacing
-estimate of \(+0.024511~\mathrm{J}\). Across these grids, finer quadrature reduces the defect without removing
-it. Recomputing the trajectory
-with tighter ODE settings changes the final residual to
-\(-0.022841~\mathrm{J}\), while the maximum normalized final-state change
-is only \(1.30\times10^{-7}\)
-(\Cref{eq:energy_final_state_normalization}). Thus the small remainder is
-sensitive to the trajectory integration as well as to work quadrature.
-These two ODE settings do not isolate its source or establish an order of
-convergence.\par
-\end{samepage}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/verification/energy_balance.pdf}
+  \caption{Energy accounting during the reference acceleration.
+  (a) Nominal shaft work and kinetic-energy increase. Negative secondary
+  work removes energy through the vehicle load; smaller terms are in
+  \Cref{tab:verification_energy_ledger}.
+  (b) Signed remainders for the nominal and tighter integrations.
+  (c) Detail using each calculation's upper-stop arrival as time zero.
+  Circles and crosses mark values immediately before and after arrest;
+  each pair coincides. Lines do not bridge events.
+  (d) Fixed nominal motion with successively halved maximum intervals
+  between power evaluations. The dashed line estimates the zero-spacing
+  remainder from the two finest intervals. Panels (b,c) use the finest
+  interval, \SI{0.625}{ms}.}
+  \label{fig:verification_energy_balance}
+\end{figure}
 
-The result supports consistency of the retained energy accounting at the
-observed residual scale. It does not establish a complete physical loss
-budget: an omitted loss contributes to neither side of the computed balance,
-so close agreement cannot establish that the omissions in
-\AssRef{assump:no_parasitic_losses} are small. The residual fraction
-measures accounting accuracy, not transmission efficiency. Convergence of
-the motion and contact history requires the separate comparison that follows.
+Agreement at the kilojoule scale cannot by itself establish the accuracy of
+this balance. Panel (b) shows the signed remainder: it stays below
+\SI{0.040}{J} in magnitude at the sampled states in both integrations. The
+nominal final value is \(+0.0254~\mathrm{J}\), or
+\(4.88\times10^{-7}\) of the net work.
+
+The apparently abrupt change near \SI{6.78}{s} needs closer examination
+because it occurs near the upper-stop arrival. Arresting the shift motion
+reduces stored kinetic energy. The capture loss must increase by the same
+amount, leaving \(R_E\) unchanged at the instant of arrest; omitting that loss
+would instead produce a jump in the remainder. Panel (c) enlarges this part
+of panel (b), with the nominal and tighter calculations identified separately.
+In each, the recorded values immediately before and after arrest coincide. The fast
+change visible in panel (b) takes place over the adjoining continuous motion,
+not across the instantaneous capture. The stop's energy removal is therefore
+included without introducing a discontinuity in the balance.
+
+Two refinements examine the small remainder. First, the calculated motion is
+held fixed, but power is evaluated more frequently to improve the work and
+sliding-loss integrals. Panel (d) shows the result as the maximum interval
+between these evaluations is halved successively from \SI{5}{ms} to
+\SI{0.625}{ms}. The summed continuous remainder falls from \SI{0.0907}{J}
+to \SI{0.0254}{J}, with progressively smaller changes. The two finest
+intervals give a zero-spacing estimate of \(+0.0245~\mathrm{J}\)
+(\Cref{eq:energy_quadrature_extrapolate}). Finer integration of power therefore
+reduces the discrepancy but does not appear to remove it. This estimate
+concerns the work integrated along the calculated motion; it is not an error
+bound on that motion.
+
+Second, the motion itself is recomputed with tighter time-integration
+settings. This changes the final remainder to \(-0.0228~\mathrm{J}\), while
+leaving the final motion nearly unchanged: the shaft speeds change by less
+than \SI{6.1e-5}{rad/s} and the belt speed by less than \SI{3.9e-6}{m/s}.
+The small remainder is therefore sensitive to how the motion is calculated,
+as well as to how power is integrated along it. Its final magnitude decreases
+with each tested refinement, although these comparisons do not identify a
+unique source of the remaining discrepancy. Signed work associated with
+numerical drift during sticking is reported separately in \Cref{app:study_energy_consistency}; it is not
+subtracted to improve this balance.
+
+The energy account therefore holds to a small absolute remainder through
+the acceleration, shifting and checked changes of constraint. Changes in the
+retained kinetic and spring energy, together with the calculated sliding and
+capture losses, account for the net shaft work over the complete transient,
+including the instantaneous changes of velocity. The final energy balance
+closes with remainder magnitudes of \(4.88\times10^{-7}\) and
+\(4.38\times10^{-7}\) of the net shaft work in the nominal and tighter
+integrations, respectively.
 \FloatBarrier
+
+% TODO: Figure out where this goes!
+\subsection{Low-ratio seating at numerical energy resolution}
+\label{app:numerical_low_ratio_seating}
+
+When opening motion reaches the low-ratio boundary, a finite secondary-stop
+impact can leave the primary moving into the deadzone. Repeated small
+captures near this boundary also require a numerical rule for completing
+seating. The tagged implementation first evaluates a hypothetical
+engaged-to-engaged velocity projection using the finite-event momentum
+balance of \Cref{eq:finite_event_kkt_system}. This projection arrests the shared
+shift motion while retaining
+any existing sticking constraints. Its kinetic-energy loss is compared
+with
+\[
+  8192\,\epsilon_{\mathrm{mach}}\max(\SI{1}{J},T^-),
+\]
+where $\epsilon_{\mathrm{mach}}$ is floating-point machine precision and
+$T^-$ is the incoming retained kinetic energy.
+
+When a nonzero deadzone exists and the projected loss exceeds this
+threshold, the ordinary secondary-stop impact is applied: the secondary
+axial and helix-relative motion stop, the belt--secondary lock is retained,
+and the primary is free to separate into the deadzone. At or below the
+threshold, the projected state is tested for seated continuation. The
+tangential contact conditions, primary-separation condition and seat
+reaction are still evaluated. Primary separation returns the system to the
+deadzone; a tensile seat reaction releases the support. Thus the energy
+test permits an attempt at seating, rather than prescribing its acceptance.
+With a zero-width deadzone, the engaged projection is also used for finite
+loss because no separated deadzone topology exists.
+
+This is a completion rule at numerical energy resolution, not a proof of
+convergence of the preceding event sequence. It is implemented in
+\CINDERcode{cvtModel/src/cinder/execution/hybrid/cvt_regime_switching.py}{cvt_regime_switching.py}.
+
 
 \subsection{Solver Convergence}
 \label{sec:results_solver_convergence}
@@ -15494,123 +15570,191 @@ Geometry second-derivative finite-difference residual & $5\times10^{-3}$ m$^{-1}
 \section{Mechanical-Energy Consistency}
 \label{app:study_energy_consistency}
 
-Exact settings supporting \Cref{sec:results_energy_consistency} are defined in
+The study supporting \Cref{sec:results_energy_consistency} follows the
+physical reference configuration of \Cref{app:common_physical_configuration}
+with the engine and vehicle boundaries of
+\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}. The engine
+starts at \SI{1800}{rpm}, the vehicle and belt are at rest, and the primary
+is at its lower stop. Full throttle and zero road grade are maintained for
+\SI{10}{s}. Both calculations use LSODA; only the numerical settings in
+\Cref{tab:energy_study_numerics} change. The exact case and study settings are
+retained with
 \ResultsCode{studies/energy-consistency/study.json}{energy-consistency/study.json}.
-The audited trajectory uses the physical reference configuration of
-\Cref{app:common_physical_configuration} and the reference shaft boundaries of
-\Cref{app:primary_engine_boundary,app:secondary_vehicle_boundary}, with
-\(\gamma=0\) throughout the 10 s interval. Both integrations use LSODA;
-only the tolerances and maximum time step in
-\Cref{tab:energy_study_numerics} change between them. The released kinetic
-metric includes the attached engine and referred vehicle inertias, as well
-as the retained CVT motions. Conservative axial- and torsional-spring
-potentials complete the stored-energy inventory.
 
 \begin{table}[H]
-\centering
-\small
-\begin{tabular}{@{}p{0.27\textwidth}p{0.14\textwidth}p{0.14\textwidth}p{0.15\textwidth}p{0.14\textwidth}@{}}
-\toprule
-Configuration & $\mathrm{rtol}$ & $\mathrm{atol}$ & Max. step & Duration \\ \midrule
-Nominal audit & $3\times10^{-5}$ & $3\times10^{-8}$ & 10 ms & 10 s \\
-Tight integration & $9\times10^{-6}$ & $9\times10^{-9}$ & 5 ms & 10 s \\
-\bottomrule
-\end{tabular}
-\caption{Case and numerical settings used by the mechanical-energy audit.}
-\label{tab:energy_study_numerics}
+  \centering\small
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Integration & Relative tolerance & Absolute tolerance & Maximum step \\
+    \midrule
+    Nominal & \(3\times10^{-5}\) & \(3\times10^{-8}\) & \SI{10}{ms} \\
+    Tighter & \(9\times10^{-6}\) & \(9\times10^{-9}\) & \SI{5}{ms} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Time-integration settings for the same physical energy-audit case.}
+  \label{tab:energy_study_numerics}
 \end{table}
 
-The final balance fraction is
-\begin{equation}
-\epsilon_E
-=
-\frac{|R_E(t_f)|}{\max\!\left(|W_{\mathrm{B}}(t_f)|,1~\mathrm{J}\right)},
-\label{eq:energy_final_balance_fraction}
-\end{equation}
-where \(R_E\) is the raw mechanical-energy residual and \(W_{\mathrm{B}}\) is
-the net work supplied through the shaft boundaries. The 1 J denominator
-floor is inactive in this launch.
+Stored kinetic energy is evaluated with the released motion inventory of
+\Cref{tab:finite_event_motion_inventory,eq:finite_event_kinetic_energies}.
+This includes shaft and sheave rotation, the attached boundary inertias,
+axial sheave motion, the mounted primary actuator's motion, belt transport,
+and radial motion of the wrapped belt. Conservative axial- and
+torsional-spring potentials complete the inventory. Changes are measured
+from the initial energy, which is nonzero because the engine is already
+rotating. In the nominal calculation, the primary boundary supplies
+\SI{66778.132}{J}, while the resisting secondary boundary contributes
+\SI{-14609.239}{J}; their sum is the net work in
+\Cref{tab:verification_energy_ledger}.
 
-\begin{samepage}
-The ODE-refinement final-state metric compares the nominal and tight solutions componentwise. For
-\(x_k\in\{\omega_p,\omega_s,v_b,s,\dot s\}\),
-\begin{equation}
-S_k
-=
-\max\!\left(
-|x_{k,\mathrm{nom}}(t_f)|,
-|x_{k,\mathrm{tight}}(t_f)|,
-S_{k,\min}
-\right),
-\qquad
-\epsilon_{x,f}
-=
-\max_k
-\frac{|x_{k,\mathrm{tight}}(t_f)-x_{k,\mathrm{nom}}(t_f)|}{S_k},
-\label{eq:energy_final_state_normalization}
-\end{equation}
-with floors
-\((1~\mathrm{rad/s},1~\mathrm{rad/s},1~\mathrm{m/s},10^{-3}~\mathrm{m},10^{-3}~\mathrm{m/s})\).
-The impact momentum and active-constraint residuals are the residuals returned
-by the finite-speed boundary projection described in
-\Cref{sec:finite_speed_shift_boundary_arrival}; they are audited independently
-of the energy defect.\par
-\end{samepage}
+Sliding loss is the negative net work of contact traction on the belt and
+pulley, evaluated only while that contact is sliding. The secondary contact
+uses the representative surface speed defined in
+\Cref{eq:representative_contact_angular_speed}. In the manuscript signs, the
+traction on the belt is $\lambda_jN_j$ and its torque on the pulley is
+$-r_{j,\mathrm{eff}}\lambda_jN_j$. Their combined power is therefore
+\[
+  \lambda_jN_jv_b-r_{j,\mathrm{eff}}\lambda_jN_j\bar\omega_j
+  =\lambda_jN_jv_{\mathrm{rel},j}.
+\]
+During kinetic sliding this is nonpositive, and its negative is integrated
+as sliding loss. The representative secondary speed accounts for power on
+both faces under the retained equal torque sharing. The present calculation
+attributes all \SI{1588.340}{J} of sliding loss to the primary; no secondary
+sliding loss accumulates. This is a result for this acceleration, not a
+restriction imposed on which contact can dissipate energy.
 
+Power is integrated by composite trapezoids, separately within each
+continuous interval of motion. For a requested maximum spacing \(h\), an
+interval of duration \(\Delta t_i\) receives
+\(\max(\lceil\Delta t_i/h\rceil,12)\) subintervals. Interior values use
+the retained numerical solution's dense output; the two endpoints use the
+exact states returned at the interval boundaries. Equal-time incoming and
+outgoing states are stored separately. Work and sliding loss do not change
+across the instantaneous event, while capture loss is added only on its
+outgoing side.
 
-Power is integrated separately within each continuous hybrid segment using
-composite trapezoids on retained dense output. For requested maximum spacing
-\(h\), a segment of duration \(\Delta t_i\) receives
-\(\max(\lceil\Delta t_i/h\rceil,12)\) intervals. Its stored-energy change
-uses the exact native endpoint states. Equal-time incoming and outgoing
-states are retained separately in both exported traces. No quadrature
-interval crosses a reset: cumulative work and slip loss remain continuous,
-while the recorded capture loss is added only on the outgoing side. Each
-recorded capture is checked against its exact stored-energy drop; transitions
-without a capture projection are retained in the complete event ledger too.
+\Cref{tab:energy_capture_inventory} identifies the captures in the nominal
+calculation. The early sequence ends with the numerical low-ratio seating
+rule documented in \Cref{app:numerical_low_ratio_seating}; it is not a model
+of compliant rebound. Lower-stop release, the return to sticking and
+release from the low-ratio seat are also retained in the event ledger,
+but have no capture loss. The tighter calculation has the same counts
+in these categories.
 
-Let \(D(h)\) denote the sum of the continuous-segment defects
-\(W_i-\Delta E_i-E_{\mathrm{slip},i}\). The four quadrature grids reuse the
-same nominal trajectory. The reported second-order zero-spacing estimate is
+\begin{table}[H]
+  \centering\small
+  \begin{tabular}{@{}p{0.58\linewidth}rr@{}}
+    \toprule
+    Capture & Number & Total loss [J] \\
+    \midrule
+    Primary engagement & 6 & \(0.214536\) \\
+    Low-ratio stop arrival and primary separation & 5 & \(0.039307\) \\
+    Terminal numerical seating & 1 & \(1.758\times10^{-9}\) \\
+    Upper travel-stop arrival & 1 & \(1.604\times10^{-5}\) \\
+    \bottomrule
+  \end{tabular}
+  \caption{Nominal capture contributions. The first three rows occur between
+  approximately \SI{0.062}{s} and \SI{0.066}{s}; the upper stop is reached at
+  \SI{6.781921}{s}. Totals use the unrounded event records.}
+  \label{tab:energy_capture_inventory}
+\end{table}
+
+Across both calculations, the maximum difference between the stored-energy
+drop and the recorded capture loss is \SI{2.274e-13}{J}. Positions, and hence
+spring potentials, do not change during these projections. The recorded
+loss is itself calculated from the kinetic-energy drop, so this comparison
+checks the inventory and event bookkeeping rather than independently
+verifying the energy-loss law. The projection's momentum and active-constraint
+residuals are checked separately against the limits in
+\Cref{tab:energy_acceptance_criteria}. At the upper stop the cumulative
+remainder has zero recorded jump in both calculations, despite the rapid
+change over the adjoining continuous intervals shown in
+\Cref{fig:verification_energy_balance}(c).
+
+Let \(D(h)\) denote the sum of the continuous-interval remainders
+\(W_i-\Delta E_i-E_{\mathrm{slip},i}\). Four spacings are applied to the
+same nominal trajectory. At \(h=5,2.5,1.25,0.625~\mathrm{ms}\), these
+remainders are respectively \(0.090744,0.040638,0.028244,0.025445~\mathrm{J}\).
+The reported second-order zero-spacing estimate is
 \begin{equation}
   D_0=\frac{4D(h)-D(2h)}{3},
   \qquad h=0.625~\mathrm{ms},
   \label{eq:energy_quadrature_extrapolate}
 \end{equation}
-using only the two finest grids. This extrapolates the defect of the fixed
-numerical trajectory; it is neither an error bar nor the quadrature error
-remaining at \(h\). The tighter ODE trajectory is audited at the same
-finest spacing. Signed work from velocity drift at a contact declared
-sticking remains a numerical diagnostic. It is neither kinetic-slip
-dissipation nor a correction to \(R_E\).
+giving \(+0.024511~\mathrm{J}\). Only the two finest spacings define this
+extrapolate. It estimates the remainder of the fixed numerical trajectory
+as power-integration spacing tends to zero; it is neither a bound on the
+solution error nor the integration error remaining at \(h\). Short intervals
+already governed by the minimum of 12 subintervals do not refine in proportion
+to \(h\). The four results therefore support reduced sensitivity to power
+sampling, rather than an exact determination of the limiting remainder.
+
+The final balance fraction used by the study is
+\begin{equation}
+  \epsilon_E
+  =\frac{|R_E(t_f)|}{\max\!\left(|W_{\mathrm{B}}(t_f)|,1~\mathrm{J}\right)}.
+  \label{eq:energy_final_balance_fraction}
+\end{equation}
+The \SI{1}{J} floor is inactive here. The observed fractions are
+\(4.88\times10^{-7}\) and \(4.38\times10^{-7}\) for the nominal and tighter
+calculations. Their maximum sampled absolute remainders are
+\SI{0.039779}{J} and \SI{0.038513}{J}, respectively. Signed work from
+velocity drift at contacts declared sticking is retained only as a
+diagnostic: the nominal value is \(+0.001016~\mathrm{J}\). It is not counted
+as frictional dissipation or subtracted from \(R_E\).
+
+The final-state comparison uses
+\(x_k\in\{\omega_p,\omega_s,v_b,s,\dot s\}\), with
+\begin{equation}
+  S_k=\max\!\left(|x_{k,\mathrm{nom}}(t_f)|,
+                 |x_{k,\mathrm{tight}}(t_f)|,S_{k,\min}\right),
+  \qquad
+  \epsilon_{x,f}=\max_k
+  \frac{|x_{k,\mathrm{tight}}(t_f)-x_{k,\mathrm{nom}}(t_f)|}{S_k},
+  \label{eq:energy_final_state_normalization}
+\end{equation}
+and floors
+\((1~\mathrm{rad/s},1~\mathrm{rad/s},1~\mathrm{m/s},10^{-3}~\mathrm{m},
+10^{-3}~\mathrm{m/s})\).
+The observed value is \(1.30\times10^{-7}\). The signed tighter-minus-nominal
+differences in primary speed, secondary speed and belt speed are
+\(+5.151\times10^{-5}~\mathrm{rad/s}\),
+\(+6.017\times10^{-5}~\mathrm{rad/s}\) and
+\(+3.830\times10^{-6}~\mathrm{m/s}\); final shift position and shift speed
+are unchanged. This final-state comparison does not test agreement of the
+complete trajectories or all event timings.
 
 \begin{table}[H]
-\centering
-\small
-\begin{tabular}{@{}p{0.66\textwidth}r@{}}
-\toprule
-Quantity & Value \\ \midrule
-Continuous-work quadrature steps & 5, 2.5, 1.25, 0.625 ms \\
-Maximum final balance fraction $\epsilon_E$ & $10^{-4}$ \\
-Maximum absolute event-energy defect & $10^{-8}$ J \\
-Maximum impact momentum residual & $10^{-7}$ \\
-Maximum impact constraint residual & $10^{-8}$ \\
-Maximum normalized final-state difference & $10^{-2}$ \\
-Allowed negative computed capture loss & $10^{-9}$ J \\
-Maximum finest-to-previous continuous-defect ratio & $1.25$ \\
-\bottomrule
-\end{tabular}
-\caption{Quadrature and review settings used by the mechanical-energy audit.}
-\label{tab:energy_acceptance_criteria}
+  \centering\small
+  \begin{tabular}{@{}p{0.70\linewidth}r@{}}
+    \toprule
+    Study review limit & Value \\
+    \midrule
+    Final balance fraction \(\epsilon_E\) & \(10^{-4}\) \\
+    Absolute event-energy defect & \SI{1e-8}{J} \\
+    Impact momentum residual & \(10^{-7}\) \\
+    Impact constraint residual & \(10^{-8}\) \\
+    Normalized final-state difference \(\epsilon_{x,f}\) & \(10^{-2}\) \\
+    Allowed negative computed capture loss & \SI{1e-9}{J} \\
+    Finest-to-previous absolute continuous-remainder ratio & \(1.25\) \\
+    \bottomrule
+  \end{tabular}
+  \caption{Numerical review limits retained from the canonical energy study.
+  All applicable checks pass. These limits are screening criteria, not
+  derived bounds on numerical error; the main text reports the observed
+  dimensional remainders and their response to refinement.}
+  \label{tab:energy_acceptance_criteria}
 \end{table}
 
 The maintained \texttt{energy-consistency/run.py} regenerates the numerical
-ledgers and publication figure. Its \texttt{--plot-only} option checks the
-retained input/output hashes, energy identities, both native event sides,
-and refinement quantities before regenerating the figure. Exact executed
-inputs, package versions and output hashes accompany the study's execution
-record; the reproduction commands and figure provenance are documented
-with the maintained study.
+ledgers and publication figure using \texttt{cinder-cvt==1.1.2}. Its
+\texttt{--plot-only} option reuses the retained outputs after checking the
+executed input and output hashes, energy identities, both event sides and
+refinement quantities. Exact input snapshots, package versions and output
+hashes accompany the execution record. The study README gives the complete
+reproduction commands. No model term is fitted or subtracted to reduce the
+reported remainder.
 
 \section{Solver Convergence}
 \label{app:study_solver_convergence}
