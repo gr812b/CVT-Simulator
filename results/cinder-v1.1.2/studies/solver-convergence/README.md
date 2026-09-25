@@ -1,7 +1,7 @@
 # Solver convergence — Results 4.2.3
 
-This study distinguishes agreement of the motion from agreement of the contact
-and support history. Only LSODA controls change; the physical case remains
+This study checks how motion and event-time differences decrease under
+refinement, while distinguishing state agreement from contact/support history. Only LSODA controls change; the physical case remains
 `../../defaults/baja/simulation_case.json`. The installed mechanics must be
 `cinder-cvt==1.1.2`, never the live simulator source.
 
@@ -25,7 +25,7 @@ It does not call the simulator. An alternative destination is supported:
 .venv/bin/python studies/solver-convergence/run.py --plot-only --publication-dir /absolute/output/path
 ```
 
-The two vector PDFs, 300 dpi PNG companions, values and provenance JSON go by
+The four vector PDFs, 300 dpi PNG companions, values and provenance JSON go by
 default to `docs/CVT_Module_Formulation/figures/results/verification/`.
 `analysis/publication_plots.py` is a module invoked through canonical `run.py`,
 not a separate script command.

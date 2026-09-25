@@ -1,16 +1,31 @@
 # Analysis
 
-The root `run.py` is the canonical entry point. Results 4.2.3 selects
-`publication_plots.py` for two publication figures; its `publish()` function is
-called by `run.py --plot-only` after `verification.py` checks the evidence.
+Canonical entry point: `run.py --plot-only` from the maintained study, using the
+verified release-local CINDER 1.1.2 environment. No simulation is called by this
+path. `verification.py` checks registered evidence before publication.
 
-`evidence.py` registers and imports retained archives, deterministically selects
-one missing history for replay, and records exact inputs/outputs. No full sweep
-is silently rerun. `test_publication_integrity.py` tests the distinctions that
-matter to the claim: exact signature versus count, all guards versus RMS alone,
-microsecond regime duration, the four-state exploratory metric, actual jumps
-versus successor-state flags, and hash failure on modified evidence.
+`publication_plots.py` produces four vector PDFs and 300 dpi PNGs:
 
-The two final panel sets are `solver_refinement` and
-`gross_motion_hybrid_history`. The optional explorer and its old candidate plots
-remain distinct from these selections. See the study README and provenance note.
+- `gross_motion_hybrid_history`: main-text full shift and signed early motion, with
+  exact low-ratio seating markers for reference, research and selected loose
+  calculations. Discontinuous segments are never joined.
+- `solver_refinement`: main-text complete formal-grid heatmap: aligned RMS colour
+  and separate all-check circles. No interpolated acceptance frontier.
+- `solver_acceptance_support`: appendix quantitative RMS, dimensional shift-speed
+  peak and event-time trends, plus seven independent absolute-tolerance settings;
+  defined metrics only. No fitted convergence order.
+- `solver_population_support`: appendix exploratory four-state gross metric,
+  exact history grouping and transparent selection of the loose example.
+
+`supporting_plots.py` preserves the formal acceptance display, shared style and
+complete-buffer PDF/PNG export. Incomplete PDFs are rejected before replacement.
+`reader_values()` recomputes dimensional maxima and native excursion depths and
+durations; it verifies the dominant normalized peak and tighter-grid acceptance.
+All values and code hashes accompany the figures in JSON.
+
+`evidence.py` registers historical archives, imports them and can replay the one
+previously unretained selected history. That replay was done on 23 September;
+25 September finalization reuses it. `test_publication_integrity.py` checks exact
+history versus count, all guards versus RMS alone, microsecond regime duration,
+the four-state exploratory metric, actual jumps versus successor-state flags,
+and rejection of modified evidence. See the study README for commands.
