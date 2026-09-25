@@ -9,8 +9,10 @@ digitization provenance, deterministic reference-data preparation, reconstructio
 assumptions, benchmark-specific CINDER extension objects, numerical-robustness
 checks, and fresh generated artifacts.
 
-**No generated benchmark results are part of the clean study.** `artifacts/` is
-populated only when a runner is executed.
+The `publication_inputs/` directory retains compact, hash-verified outputs of
+the five CINDER 1.1.2 executions used for the final figures and B1 refinement.
+The full fresh exports are generated under `artifacts/`. Their input snapshots,
+output hashes and exact event records accompany the delivery evidence archive.
 
 This is a **model-to-model comparison**, not experimental validation. Figure 41
 and Figure 45 are outputs of Ballew's discretized-belt simulation. No CINDER
@@ -194,3 +196,57 @@ fixed in CINDER itself before v1.0.0 and are **not benchmark-local patches**.
 `provenance/CINDER_FIXES.md` records why those corrections are physically and
 mathematically necessary so the benchmark remains auditable without carrying an
 alternate copy of CINDER mechanics.
+
+## Final manuscript figures and B1 refinement (25 September 2026)
+
+From the repository root, with the frozen environment prepared:
+
+```bash
+# Fast reproduction from committed, verified outputs; no simulation rerun.
+results/cinder-v1.1.2/.venv/bin/python \
+  results/cinder-v1.1.2/studies/ballew-2015/run.py --plot-only \
+  --figure-dir docs/CVT_Module_Formulation/figures/results/ballew
+
+# Full numerical reproduction: both protocols + three additional refinements.
+results/cinder-v1.1.2/.venv/bin/python \
+  results/cinder-v1.1.2/studies/ballew-2015/run.py --with-refinement \
+  --figure-dir docs/CVT_Module_Formulation/figures/results/ballew
+```
+
+For the final first-figure axis revision, add `--figure protocol-comparison`
+to the plot-only command. Both secondary-speed panels use 0–1400 rpm. This
+regenerates only `protocol_comparison.pdf/png`; the internal-response files
+are preserved with their original generator attribution in the manifest.
+
+The final plotter is `analysis/publication_plots.py`. It draws segmented native
+shaft states and unsmoothed report channels, preserving duplicate event times.
+`analysis/publication_evidence.py` checks the executed source/output hashes,
+recomputes native-reference errors, checks both endpoints of every segment,
+reintegrates slip loss, and compares all four closed-loop traces on a common
+dense-output grid. It then selects arrays into `publication_inputs/` without
+resampling them. The selector retains the complete common-grid state and
+controller integral for refinement reanalysis.
+
+The original production used the canonical `run.py --no-plots`, followed by
+`analysis/run_convergence.py --reuse-nominal` and the evidence selector. The
+new `--with-refinement` flag orchestrates those same operations. Executed source
+snapshots identify that earlier invocation exactly; adding publication and CLI
+orchestration did not change the model, reconstruction or integration settings.
+
+All four refinement cases retain the same ordered 1415 event records after
+excluding only kinetic-slip direction updates. The latter counts are
+320/320/307/6; raw event totals are therefore not identical. Maximum matched
+non-direction event-time shift is 1.673 microseconds. Maximum RMS differences
+from the nominal trace are 0.03203 rpm in primary speed and 0.1604 N in clamp.
+A fixed-time shift-speed comparison can cross opposite capture sides; the audit
+retains that 6.41 m/s difference instead of hiding it. See Appendix D.5 and
+`provenance/NUMERICAL_STABILITY.md` for interpretation.
+
+The older recovered benchmark archive identifies CINDER 1.0.0, and the August
+refinement predates 1.1.2. Neither is used as numerical evidence for this unit.
+The fresh canonical errors match the retained 1.1.2 interpretation memo.
+
+`plot_provenance.json` records figure/input hashes and canvas dimensions.
+Matplotlib PDF/PNG metadata are fixed for byte-identical exports in the recorded
+environment. The compact execution manifests refer to the full raw outputs,
+whereas `publication_inputs.json` hashes the selected committed arrays.

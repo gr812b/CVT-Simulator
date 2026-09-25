@@ -22,6 +22,7 @@ _results_sys.path.insert(0, str(_results_study_root))
 # --- end results study-local import bootstrap ---
 
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -29,32 +30,13 @@ import subprocess
 import sys
 
 import cinder
-from cinder.contracts import validate_assembly
-import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from infrastructure.benchmark.metrics import compute_error_metrics  # noqa: E402
-from infrastructure.benchmark.reference import (  # noqa: E402
-    build_reference_ratio,
-    load_series,
-    validate_reference_data,
-)
-from infrastructure.benchmark.simulation import (  # noqa: E402
-    build_closed_loop_setup,
-    controller_force_for_sample,
-    run_setup,
-    sample_dense,
-)
+from run import _run_protocol
+from infrastructure.benchmark.reference import validate_reference_data
 
 STUDY_ROOT = Path(__file__).resolve().parents[1]
 RELEASE_ROOT = STUDY_ROOT.parents[1]
-VERIFY_ENVIRONMENT = RELEASE_ROOT / "verify_environment.py"
-VERIFY_STUDY = STUDY_ROOT / "verify_study.py"
 OUTPUT = STUDY_ROOT / "artifacts" / "convergence"
-EXPECTED_CINDER_VERSION = "1.1.2"
-
 CASES = (
     ("nominal_1p00ms", 1.0e-7, 1.0e-9, 1.0e-3),
     ("nominal_0p50ms", 1.0e-7, 1.0e-9, 0.5e-3),
@@ -63,149 +45,55 @@ CASES = (
 )
 
 
-def _validate_setup(setup) -> None:
-    report = validate_assembly(setup.assembly)
-    if not report.is_valid:
-        messages = [finding.message for finding in report.findings]
-        raise RuntimeError(
-            "Ballew closed-loop assembly failed validation:\n" + "\n".join(messages)
-        )
-
-
-def _plot(rows: list[dict[str, object]]) -> None:
-    completed = [row for row in rows if bool(row["completed"])]
-    if not completed:
-        return
-    labels = [str(row["label"]) for row in completed]
-    x = list(range(len(labels)))
-
-    fig, ax = plt.subplots(figsize=(9.0, 5.2))
-    ax.plot(x, [float(row["primary_rpm_rmse"]) for row in completed], marker="o", label="Primary RPM RMSE")
-    ax.plot(x, [float(row["secondary_rpm_rmse"]) for row in completed], marker="o", label="Secondary RPM RMSE")
-    ax.set_xticks(x, labels, rotation=20, ha="right")
-    ax.set_ylabel("RMSE [rpm]")
-    ax.set_title("Ballew closed loop: numerical refinement of speed errors")
-    ax.grid(True, alpha=0.25)
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(OUTPUT / "convergence_speed_rmse.png", dpi=180)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(9.0, 5.2))
-    ax.plot(x, [float(row["speed_ratio_rmse"]) for row in completed], marker="o", label="Speed-ratio RMSE")
-    ax.set_xticks(x, labels, rotation=20, ha="right")
-    ax.set_ylabel("Ratio RMSE")
-    ax.set_title("Ballew closed loop: numerical refinement of ratio error")
-    ax.grid(True, alpha=0.25)
-    fig.tight_layout()
-    fig.savefig(OUTPUT / "convergence_ratio_rmse.png", dpi=180)
-    plt.close(fig)
-
-
-def main() -> int:
-    subprocess.run([sys.executable, str(VERIFY_ENVIRONMENT)], check=True)
-    subprocess.run([sys.executable, str(VERIFY_STUDY)], check=True)
-    if cinder.__version__ != EXPECTED_CINDER_VERSION:
-        raise SystemExit(
-            f"Expected CINDER {EXPECTED_CINDER_VERSION}, found {cinder.__version__}."
-        )
-
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--reuse-nominal", action="store_true",
+                        help="reuse the verified canonical closed-loop 1 ms result")
+    args = parser.parse_args()
+    subprocess.run([sys.executable, str(RELEASE_ROOT / "verify_environment.py")], check=True)
+    subprocess.run([sys.executable, str(STUDY_ROOT / "verify_study.py")], check=True)
+    if cinder.__version__ != "1.1.2":
+        raise RuntimeError("The refinement requires cinder-cvt==1.1.2")
+    spec = json.loads((STUDY_ROOT / "study.json").read_text())
     reference = validate_reference_data(study_root=STUDY_ROOT)
-    input_ref = load_series(
-        reference / "figure_41_input_rpm.csv",
-        value_column="input_rpm",
-    )
-    output_ref = load_series(
-        reference / "figure_41_output_rpm.csv",
-        value_column="output_rpm",
-    )
-    force_ref = load_series(
-        reference / "figure_45_primary_force.csv",
-        value_column="primary_axial_force_n",
-    )
-    ratio_ref = build_reference_ratio(input_ref, output_ref)
-
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    rows: list[dict[str, object]] = []
-    for label, rtol, atol, max_step in CASES:
-        print(f"Running {label}...")
-        setup = build_closed_loop_setup()
-        _validate_setup(setup)
-        result = run_setup(
-            setup,
-            relative_tolerance=rtol,
-            absolute_tolerance=atol,
-            max_step_s=max_step,
-            maximum_transitions=2000,
-            report_step_s=0.0002,
-            method="LSODA",
-        )
-        row: dict[str, object] = {
-            "label": label,
-            "rtol": rtol,
-            "atol": atol,
-            "max_step_s": max_step,
-            "completed": bool(result.completed),
-            "termination_reason": str(result.termination_reason),
-            "transition_count": len(result.transitions),
-            "segment_count": len(result.trace.segments),
-        }
-        if result.completed:
-            input_pred = sample_dense(setup, result, input_ref.time_s)
-            output_pred = sample_dense(setup, result, output_ref.time_s)
-            ratio_pred = sample_dense(setup, result, ratio_ref.time_s)
-            force_sample = sample_dense(setup, result, force_ref.time_s[1:])
-            force_pred = controller_force_for_sample(setup, force_sample)
-            row.update(
-                {
-                    "primary_rpm_rmse": compute_error_metrics(
-                        reference=input_ref.value,
-                        predicted=input_pred.primary_rpm,
-                    ).root_mean_square_error,
-                    "secondary_rpm_rmse": compute_error_metrics(
-                        reference=output_ref.value,
-                        predicted=output_pred.secondary_rpm,
-                    ).root_mean_square_error,
-                    "speed_ratio_rmse": compute_error_metrics(
-                        reference=ratio_ref.value,
-                        predicted=ratio_pred.speed_ratio,
-                    ).root_mean_square_error,
-                    "primary_force_rmse_n": compute_error_metrics(
-                        reference=force_ref.value[1:],
-                        predicted=force_pred,
-                    ).root_mean_square_error,
-                }
-            )
+    rows = []
+    for label, rtol, atol, cap in CASES:
+        directory = OUTPUT / label
+        if label == "nominal_1p00ms" and args.reuse_nominal:
+            directory = STUDY_ROOT / "artifacts/closed-loop"
+            payload = json.loads((directory / "metrics.json").read_text())
+            solver = payload["solver"]
+            assert (solver["relative_tolerance"], solver["absolute_tolerance"],
+                    solver["max_step_s"]) == (rtol, atol, cap)
+            record = json.loads((directory / "execution_provenance.json").read_text())
+            assert record["cinder_version"] == "1.1.2"
+            import hashlib
+            for name, digest in record["output_sha256"].items():
+                assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest
+        else:
+            print(f"Running {label}...", flush=True)
+            override = argparse.Namespace(rtol=rtol, atol=atol, max_step=cap,
+                                          maximum_transitions=2000)
+            payload = _run_protocol(protocol="closed_loop", spec=spec,
+                                    reference_dir=reference, make_plots=False,
+                                    args=override, output_dir=directory)
+        row = dict(label=label, rtol=rtol, atol=atol, max_step_s=cap,
+                   completed=payload["completed"],
+                   termination_reason=payload["termination_reason"],
+                   transition_count=payload["transition_count"],
+                   segment_count=payload["segment_count"],
+                   artifact_path=str(directory.relative_to(STUDY_ROOT / "artifacts")))
+        for key, metric in payload.get("metrics", {}).items():
+            row[key + "_rmse"] = metric["root_mean_square_error"]
         rows.append(row)
-
-    fieldnames: list[str] = []
-    for row in rows:
-        for key in row:
-            if key not in fieldnames:
-                fieldnames.append(key)
-    with (OUTPUT / "convergence.csv").open(
-        "w", newline="", encoding="utf-8"
-    ) as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
-
-    (OUTPUT / "convergence.json").write_text(
-        json.dumps(
-            {
-                "cinder_version": cinder.__version__,
-                "purpose": "numerical refinement of the unchanged closed-loop Ballew benchmark",
-                "cases": rows,
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    _plot(rows)
-
-    print(f"Artifacts: {OUTPUT}")
-    return 0 if all(bool(row["completed"]) for row in rows) else 1
+        (OUTPUT / "convergence.json").write_text(json.dumps(
+            {"cinder_version": cinder.__version__, "cases": rows}, indent=2) + "\n")
+        with (OUTPUT / "convergence.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0]))
+            w.writeheader();w.writerows(rows)
+        print(f"{label}: completed={row['completed']}; transitions={row['transition_count']}", flush=True)
+    return 0 if all(r["completed"] for r in rows) else 1
 
 
 if __name__ == "__main__":

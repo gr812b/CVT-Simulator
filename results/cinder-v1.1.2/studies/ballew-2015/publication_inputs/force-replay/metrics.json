@@ -1,0 +1,42 @@
+{
+  "protocol": "force_replay",
+  "completed": true,
+  "termination_reason": "final_time_reached",
+  "final_time_s": 5.0,
+  "segment_count": 59,
+  "transition_count": 58,
+  "solver": {
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "absolute_tolerance": 1e-09,
+    "max_step_s": 0.001,
+    "maximum_transitions": 2000,
+    "report_step_s": 0.005
+  },
+  "metrics": {
+    "primary_rpm": {
+      "count": 113,
+      "mean_error": -1933.5814878158756,
+      "mean_absolute_error": 1933.5814878158756,
+      "root_mean_square_error": 1946.1746647249886,
+      "max_absolute_error": 2040.8288778455865,
+      "rmse_percent_of_reference_mean": 77.8857691594884
+    },
+    "secondary_rpm": {
+      "count": 64,
+      "mean_error": 9.139207216431238,
+      "mean_absolute_error": 9.742675327595045,
+      "root_mean_square_error": 13.086265404482722,
+      "max_absolute_error": 27.055506966225494,
+      "rmse_percent_of_reference_mean": 1.0902057852780176
+    },
+    "speed_ratio": {
+      "count": 158,
+      "mean_error": -1.624294772983177,
+      "mean_absolute_error": 1.624294772983177,
+      "root_mean_square_error": 1.6327376089730203,
+      "max_absolute_error": 1.793339497421887,
+      "rmse_percent_of_reference_mean": 78.30544213320007
+    }
+  }
+}

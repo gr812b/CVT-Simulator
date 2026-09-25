@@ -1,0 +1,1431 @@
+{
+  "segments": [
+    {
+      "id": 0,
+      "start_s": 0.0,
+      "end_s": 0.00044876066304524363,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 27
+    },
+    {
+      "id": 1,
+      "start_s": 0.00044876066304524363,
+      "end_s": 0.002169407231583396,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 24
+    },
+    {
+      "id": 2,
+      "start_s": 0.002169407231583396,
+      "end_s": 0.012603038530961494,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 39
+    },
+    {
+      "id": 3,
+      "start_s": 0.012603038530961494,
+      "end_s": 0.022225587715329096,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 34
+    },
+    {
+      "id": 4,
+      "start_s": 0.022225587715329096,
+      "end_s": 0.02845595307432807,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 32
+    },
+    {
+      "id": 5,
+      "start_s": 0.02845595307432807,
+      "end_s": 0.028455953280837724,
+      "mode": "engaged/free/primary_slip_secondary_stick",
+      "native_samples": 2
+    },
+    {
+      "id": 6,
+      "start_s": 0.028455953280837724,
+      "end_s": 0.03178378667569659,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 22
+    },
+    {
+      "id": 7,
+      "start_s": 0.03178378667569659,
+      "end_s": 0.03519092220441766,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 29
+    },
+    {
+      "id": 8,
+      "start_s": 0.03519092220441766,
+      "end_s": 0.037370124101343875,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 16
+    },
+    {
+      "id": 9,
+      "start_s": 0.037370124101343875,
+      "end_s": 0.038078841072890585,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 13
+    },
+    {
+      "id": 10,
+      "start_s": 0.038078841072890585,
+      "end_s": 0.04669684545821694,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 32
+    },
+    {
+      "id": 11,
+      "start_s": 0.04669684545821694,
+      "end_s": 0.05125998550834159,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 27
+    },
+    {
+      "id": 12,
+      "start_s": 0.05125998550834159,
+      "end_s": 0.05742458837600531,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 32
+    },
+    {
+      "id": 13,
+      "start_s": 0.05742458837600531,
+      "end_s": 0.06217338656624052,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 29
+    },
+    {
+      "id": 14,
+      "start_s": 0.06217338656624052,
+      "end_s": 0.06535901075252233,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 29
+    },
+    {
+      "id": 15,
+      "start_s": 0.06535901075252233,
+      "end_s": 0.0689306497667138,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 20
+    },
+    {
+      "id": 16,
+      "start_s": 0.0689306497667138,
+      "end_s": 0.07134019295869325,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 20
+    },
+    {
+      "id": 17,
+      "start_s": 0.07134019295869325,
+      "end_s": 0.07134019306785229,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 2
+    },
+    {
+      "id": 18,
+      "start_s": 0.07134019306785229,
+      "end_s": 0.07777832178192037,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 26
+    },
+    {
+      "id": 19,
+      "start_s": 0.07777832178192037,
+      "end_s": 0.08037314944456525,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 23
+    },
+    {
+      "id": 20,
+      "start_s": 0.08037314944456525,
+      "end_s": 0.08682811472332076,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 33
+    },
+    {
+      "id": 21,
+      "start_s": 0.08682811472332076,
+      "end_s": 0.09163659903468194,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 27
+    },
+    {
+      "id": 22,
+      "start_s": 0.09163659903468194,
+      "end_s": 0.09481123880268442,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 29
+    },
+    {
+      "id": 23,
+      "start_s": 0.09481123880268442,
+      "end_s": 0.09855754761666731,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 28
+    },
+    {
+      "id": 24,
+      "start_s": 0.09855754761666731,
+      "end_s": 0.10144694899366248,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 22
+    },
+    {
+      "id": 25,
+      "start_s": 0.10144694899366248,
+      "end_s": 0.10144694914728487,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 2
+    },
+    {
+      "id": 26,
+      "start_s": 0.10144694914728487,
+      "end_s": 0.10729890099130239,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 32
+    },
+    {
+      "id": 27,
+      "start_s": 0.10729890099130239,
+      "end_s": 0.10960104357668522,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 23
+    },
+    {
+      "id": 28,
+      "start_s": 0.10960104357668522,
+      "end_s": 0.11601445355815178,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 44
+    },
+    {
+      "id": 29,
+      "start_s": 0.11601445355815178,
+      "end_s": 0.11601445391522232,
+      "mode": "engaged/free/primary_slip_secondary_stick",
+      "native_samples": 2
+    },
+    {
+      "id": 30,
+      "start_s": 0.11601445391522232,
+      "end_s": 0.12244872089542197,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 41
+    },
+    {
+      "id": 31,
+      "start_s": 0.12244872089542197,
+      "end_s": 0.1318109855737338,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 38
+    },
+    {
+      "id": 32,
+      "start_s": 0.1318109855737338,
+      "end_s": 0.13400123236656836,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 21
+    },
+    {
+      "id": 33,
+      "start_s": 0.13400123236656836,
+      "end_s": 0.1429923051980981,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 35
+    },
+    {
+      "id": 34,
+      "start_s": 0.1429923051980981,
+      "end_s": 0.14731747286563562,
+      "mode": "engaged/free/both_slip",
+      "native_samples": 36
+    },
+    {
+      "id": 35,
+      "start_s": 0.14731747286563562,
+      "end_s": 0.15328642296653397,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 32
+    },
+    {
+      "id": 36,
+      "start_s": 0.15328642296653397,
+      "end_s": 0.15328642336816745,
+      "mode": "engaged/free/primary_slip_secondary_stick",
+      "native_samples": 2
+    },
+    {
+      "id": 37,
+      "start_s": 0.15328642336816745,
+      "end_s": 0.15893439350659527,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 40
+    },
+    {
+      "id": 38,
+      "start_s": 0.15893439350659527,
+      "end_s": 0.1685042227099213,
+      "mode": "engaged/free/primary_stick_secondary_slip",
+      "native_samples": 48
+    },
+    {
+      "id": 39,
+      "start_s": 0.1685042227099213,
+      "end_s": 0.1969443588757078,
+      "mode": "engaged/free/primary_slip_secondary_stick",
+      "native_samples": 82
+    },
+    {
+      "id": 40,
+      "start_s": 0.1969443588757078,
+      "end_s": 0.7361703557258328,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 1284
+    },
+    {
+      "id": 41,
+      "start_s": 0.7361703557258328,
+      "end_s": 0.8547633230438929,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 122
+    },
+    {
+      "id": 42,
+      "start_s": 0.8547633230438929,
+      "end_s": 0.9920762558164794,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 276
+    },
+    {
+      "id": 43,
+      "start_s": 0.9920762558164794,
+      "end_s": 1.160915722979109,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 172
+    },
+    {
+      "id": 44,
+      "start_s": 1.160915722979109,
+      "end_s": 1.4843237189087783,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 764
+    },
+    {
+      "id": 45,
+      "start_s": 1.4843237189087783,
+      "end_s": 2.047327220622736,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 566
+    },
+    {
+      "id": 46,
+      "start_s": 2.047327220622736,
+      "end_s": 2.21715954222846,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 384
+    },
+    {
+      "id": 47,
+      "start_s": 2.21715954222846,
+      "end_s": 2.4766069467097025,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 262
+    },
+    {
+      "id": 48,
+      "start_s": 2.4766069467097025,
+      "end_s": 2.7268914860529985,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 562
+    },
+    {
+      "id": 49,
+      "start_s": 2.7268914860529985,
+      "end_s": 2.843045804605724,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 118
+    },
+    {
+      "id": 50,
+      "start_s": 2.843045804605724,
+      "end_s": 3.272668589923875,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 806
+    },
+    {
+      "id": 51,
+      "start_s": 3.272668589923875,
+      "end_s": 3.3872027010930403,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 116
+    },
+    {
+      "id": 52,
+      "start_s": 3.3872027010930403,
+      "end_s": 3.41607649411846,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 83
+    },
+    {
+      "id": 53,
+      "start_s": 3.41607649411846,
+      "end_s": 3.7436676546939287,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 331
+    },
+    {
+      "id": 54,
+      "start_s": 3.7436676546939287,
+      "end_s": 4.344479107996601,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 1279
+    },
+    {
+      "id": 55,
+      "start_s": 4.344479107996601,
+      "end_s": 4.465430820520724,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 122
+    },
+    {
+      "id": 56,
+      "start_s": 4.465430820520724,
+      "end_s": 4.61574770652738,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 299
+    },
+    {
+      "id": 57,
+      "start_s": 4.61574770652738,
+      "end_s": 4.89764430108859,
+      "mode": "engaged/upper_stop/stick_stick",
+      "native_samples": 283
+    },
+    {
+      "id": 58,
+      "start_s": 4.89764430108859,
+      "end_s": 5.0,
+      "mode": "engaged/free/stick_stick",
+      "native_samples": 207
+    }
+  ],
+  "events": [
+    {
+      "time_s": 0.00044876066304524363,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:secondary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        261.1264009478161,
+        118.98365805195701,
+        9.660817755068985,
+        0.0017946873350030452,
+        0.16078998406562767,
+        0.053389579245808706
+      ]
+    },
+    {
+      "time_s": 0.002169407231583396,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:primary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        256.9437867631546,
+        119.06489316490904,
+        9.999973543701705,
+        0.0028247947384744073,
+        1.149605115350571,
+        0.258188523453102
+      ]
+    },
+    {
+      "time_s": 0.012603038530961494,
+      "reason": "upper_stop_impact_immediately_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        212.83885228005272,
+        119.42514489456318,
+        10.782911919944498,
+        0.026876494799199374,
+        0.0,
+        1.502616160732604
+      ]
+    },
+    {
+      "time_s": 0.022225587715329096,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        148.9658584975409,
+        119.6138105455253,
+        11.504986796615139,
+        0.02335691427332169,
+        -0.6042573495488134,
+        2.6526566343081615
+      ]
+    },
+    {
+      "time_s": 0.02845595307432807,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_slip_secondary_stick",
+      "post_state": [
+        148.77196085178286,
+        119.79485243705042,
+        7.999329655226426,
+        0.010782968199420588,
+        -3.5879617925468494,
+        3.3984073815549056
+      ]
+    },
+    {
+      "time_s": 0.028455953280837724,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_slip_secondary_stick",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        148.7719601049427,
+        119.79485243791062,
+        7.999329809889669,
+        0.010782967458706834,
+        -3.587961647862735,
+        3.3984074062937
+      ]
+    },
+    {
+      "time_s": 0.03178378667569659,
+      "reason": "low_ratio_secondary_stop_immediately_released_into_engaged_shift",
+      "fired_events": [
+        "cvt:low_ratio_seat_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        171.967395456563,
+        119.62498100100011,
+        7.749609611828559,
+        0.0,
+        0.0,
+        3.796791944705543
+      ]
+    },
+    {
+      "time_s": 0.03519092220441766,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        192.80323939796256,
+        119.4372328625352,
+        7.493938591648362,
+        0.0027976816859877083,
+        1.569978496940448,
+        4.204048126804443
+      ]
+    },
+    {
+      "time_s": 0.037370124101343875,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        199.53156952201866,
+        119.32427856134136,
+        8.92871476485076,
+        0.005948795184245307,
+        1.295012347790807,
+        4.464201682378763
+      ]
+    },
+    {
+      "time_s": 0.038078841072890585,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:primary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        196.4698757430907,
+        119.35479015472443,
+        9.183494837259998,
+        0.007017445211043224,
+        1.729734337433143,
+        4.54877968085352
+      ]
+    },
+    {
+      "time_s": 0.04669684545821694,
+      "reason": "upper_stop_impact_immediately_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        155.08524551883556,
+        119.62491426502697,
+        9.830188798958913,
+        0.026876494799199374,
+        -2.5586839208881715e-16,
+        5.5787000128236786
+      ]
+    },
+    {
+      "time_s": 0.05125998550834159,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        123.91117216920513,
+        119.70793631453111,
+        10.172606252566457,
+        0.025963300866001824,
+        -0.3825416186841184,
+        6.1247522474955725
+      ]
+    },
+    {
+      "time_s": 0.05742458837600531,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        118.4023582940915,
+        119.861139559972,
+        7.193265906785008,
+        0.014525496716759873,
+        -3.4485472600237834,
+        6.863127758830292
+      ]
+    },
+    {
+      "time_s": 0.06217338656624052,
+      "reason": "low_ratio_secondary_stop_immediately_released_into_engaged_shift",
+      "fired_events": [
+        "cvt:low_ratio_seat_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        153.12363702103,
+        119.62707968351724,
+        6.836916689768967,
+        0.0,
+        0.0,
+        7.431796543568803
+      ]
+    },
+    {
+      "time_s": 0.06535901075252233,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        172.52965484561193,
+        119.45119698719327,
+        6.597867852776241,
+        0.0024620013687441196,
+        1.485901336088631,
+        7.812601398041788
+      ]
+    },
+    {
+      "time_s": 0.0689306497667138,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        184.96712892880979,
+        119.26787141160025,
+        8.693059100055848,
+        0.007154286778459532,
+        1.0800681462601105,
+        8.238905656209514
+      ]
+    },
+    {
+      "time_s": 0.07134019295869325,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:primary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        173.60597675063696,
+        119.36548658004443,
+        9.450516681382659,
+        0.011140687679139923,
+        2.264681209135231,
+        8.526406383051693
+      ]
+    },
+    {
+      "time_s": 0.07134019306785229,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        173.60597764478086,
+        119.36548658420497,
+        9.450516493702851,
+        0.011140687926428838,
+        2.264681262165082,
+        8.52640639608152
+      ]
+    },
+    {
+      "time_s": 0.07777832178192037,
+      "reason": "upper_stop_impact_immediately_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        139.526135891269,
+        119.5487479822168,
+        9.933632860076175,
+        0.026876494799199374,
+        2.5586839208881715e-16,
+        9.295557963224303
+      ]
+    },
+    {
+      "time_s": 0.08037314944456525,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        121.6891972769648,
+        119.59514237772817,
+        10.128348400478885,
+        0.02657172196798419,
+        -0.23099602545355946,
+        9.605826292752916
+      ]
+    },
+    {
+      "time_s": 0.08682811472332076,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        114.8906842526267,
+        119.749130150113,
+        7.080654002165851,
+        0.014995352354079106,
+        -3.487275544147162,
+        10.378251133846234
+      ]
+    },
+    {
+      "time_s": 0.09163659903468194,
+      "reason": "low_ratio_secondary_stop_immediately_released_into_engaged_shift",
+      "fired_events": [
+        "cvt:low_ratio_seat_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        150.28600863285175,
+        119.51337895094635,
+        6.71982594615141,
+        0.0,
+        0.0,
+        10.953526107142746
+      ]
+    },
+    {
+      "time_s": 0.09481123880268442,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        169.62154428866725,
+        119.33808916121347,
+        6.481601378520403,
+        0.002446031668803713,
+        1.4818212925587195,
+        11.332657901847902
+      ]
+    },
+    {
+      "time_s": 0.09855754761666731,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        182.8340430868687,
+        119.14613843899158,
+        8.651035325965145,
+        0.007324952977167096,
+        1.0547877522152622,
+        11.779370053988888
+      ]
+    },
+    {
+      "time_s": 0.10144694899366248,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:primary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        168.82665876124545,
+        119.26143601706545,
+        9.550872924631756,
+        0.012285087641155282,
+        2.411188101092501,
+        12.123801325303448
+      ]
+    },
+    {
+      "time_s": 0.10144694914728487,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        168.82666005276403,
+        119.26143602272498,
+        9.55087266089178,
+        0.012285088011685104,
+        2.411188167713249,
+        12.123801343624686
+      ]
+    },
+    {
+      "time_s": 0.10729890099130239,
+      "reason": "upper_stop_impact_immediately_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        137.28304823152544,
+        119.423400727434,
+        9.967975901092185,
+        0.026876494799199374,
+        -2.5586839208881715e-16,
+        12.822242552269167
+      ]
+    },
+    {
+      "time_s": 0.10960104357668522,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        121.58068202979631,
+        119.46451787397056,
+        10.128062981633445,
+        0.026610274191357506,
+        -0.22883747355450715,
+        13.097219397898172
+      ]
+    },
+    {
+      "time_s": 0.11601445355815178,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_slip_secondary_stick",
+      "post_state": [
+        114.98399933148735,
+        119.61728621858147,
+        7.079808426023547,
+        0.01496461202624261,
+        -3.5473445942044965,
+        13.863829959967758
+      ]
+    },
+    {
+      "time_s": 0.11601445391522232,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_slip_secondary_stick",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        114.98399775743965,
+        119.61728621878729,
+        7.079808712201441,
+        0.014964610759992145,
+        -3.547344393723458,
+        13.863830002679567
+      ]
+    },
+    {
+      "time_s": 0.12244872089542197,
+      "reason": "low_ratio_secondary_stop_immediately_released_into_engaged_shift",
+      "fired_events": [
+        "cvt:low_ratio_seat_reached"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        166.39577019542455,
+        119.29390564839578,
+        5.598847925693182,
+        0.0,
+        0.0,
+        14.632492284842638
+      ]
+    },
+    {
+      "time_s": 0.1318109855737338,
+      "reason": "kinetic_slip_direction_updated_at_zero_crossing",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        206.9253594808445,
+        118.78925669094619,
+        9.010118065430797,
+        0.005302748427183373,
+        0.616933284629892,
+        15.746951499785705
+      ]
+    },
+    {
+      "time_s": 0.13400123236656836,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip",
+      "fired_events": [
+        "cvt:primary_static_capacity"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        198.8124212709376,
+        118.88383713650703,
+        9.56308683630836,
+        0.007745486842659449,
+        1.6936264451881147,
+        16.007233842390686
+      ]
+    },
+    {
+      "time_s": 0.1429923051980981,
+      "reason": "upper_stop_impact_immediately_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/both_slip",
+      "post_state": [
+        155.62486740942444,
+        119.15983994576008,
+        10.114606646890502,
+        0.026876494799199374,
+        0.0,
+        17.077533462497442
+      ]
+    },
+    {
+      "time_s": 0.14731747286563562,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/both_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        126.80387627291942,
+        119.23889510932949,
+        10.37186823359449,
+        0.025801786831347796,
+        -0.47941626567156814,
+        17.59308815898387
+      ]
+    },
+    {
+      "time_s": 0.15328642296653397,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_slip_secondary_stick",
+      "post_state": [
+        123.08370801643645,
+        119.39052274792701,
+        7.318739166782006,
+        0.01383352336562614,
+        -3.6818853755385277,
+        18.305224496222607
+      ]
+    },
+    {
+      "time_s": 0.15328642336816745,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_slip_secondary_stick",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        123.08370636780836,
+        119.39052274782313,
+        7.318739492901769,
+        0.013833521887326734,
+        -3.6818851431144815,
+        18.30522454417384
+      ]
+    },
+    {
+      "time_s": 0.15893439350659527,
+      "reason": "low_ratio_secondary_stop_immediately_released_into_engaged_shift",
+      "fired_events": [
+        "cvt:low_ratio_seat_reached"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_stick_secondary_slip",
+      "post_state": [
+        169.50677630828864,
+        119.10475574749533,
+        5.703526368548857,
+        0.0,
+        0.0,
+        18.978768982719465
+      ]
+    },
+    {
+      "time_s": 0.1685042227099213,
+      "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+      "fired_events": [
+        "cvt:secondary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_stick_secondary_slip",
+      "next_mode": "engaged/free/primary_slip_secondary_stick",
+      "post_state": [
+        211.4246038248514,
+        118.58770768843898,
+        9.062477505034014,
+        0.004938891151780784,
+        0.5468174330264409,
+        20.116068616470187
+      ]
+    },
+    {
+      "time_s": 0.1969443588757078,
+      "reason": "contact_restuck_with_static_reserve",
+      "fired_events": [
+        "cvt:primary_restick"
+      ],
+      "previous_mode": "engaged/free/primary_slip_secondary_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        101.18620976831734,
+        119.80134589883895,
+        6.617197637721765,
+        0.017013949428707004,
+        0.06424952637493017,
+        23.50757963964789
+      ]
+    },
+    {
+      "time_s": 0.7361703557258328,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        49.178927675538034,
+        122.48042490575838,
+        4.121194139210088,
+        0.026876494799199374,
+        0.0,
+        88.99994025343379
+      ]
+    },
+    {
+      "time_s": 0.8547633230438929,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        49.28623069685383,
+        122.74766374697808,
+        4.130186132396323,
+        0.026876494799199374,
+        0.0,
+        103.54110601145217
+      ]
+    },
+    {
+      "time_s": 0.9920762558164794,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        49.41774327289525,
+        123.0751966346463,
+        4.141206886268622,
+        0.026876494799199374,
+        0.0,
+        120.41792347207155
+      ]
+    },
+    {
+      "time_s": 1.160915722979109,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        49.570185826608814,
+        123.45485576173736,
+        4.153981572269838,
+        0.026876494799199374,
+        0.0,
+        141.2299316515058
+      ]
+    },
+    {
+      "time_s": 1.4843237189087783,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        49.90947236926137,
+        124.2998510040706,
+        4.182413784544104,
+        0.026876494799199374,
+        0.0,
+        181.28868408499503
+      ]
+    },
+    {
+      "time_s": 2.047327220622736,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        50.41501395151853,
+        125.55890545541943,
+        4.22477816913745,
+        0.026876494799199374,
+        0.0,
+        251.62460968016663
+      ]
+    },
+    {
+      "time_s": 2.21715954222846,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        50.57399213504783,
+        125.95484160916838,
+        4.238100540917009,
+        0.026876494799199374,
+        0.0,
+        272.98141211179893
+      ]
+    },
+    {
+      "time_s": 2.4766069467097025,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        50.80593480020369,
+        126.5324962577103,
+        4.257537336257097,
+        0.026876494799199374,
+        0.0,
+        305.73502962124587
+      ]
+    },
+    {
+      "time_s": 2.7268914860529985,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        51.05167285957139,
+        127.14450842124161,
+        4.278130185632083,
+        0.026876494799199374,
+        0.0,
+        337.4790393413124
+      ]
+    },
+    {
+      "time_s": 2.843045804605724,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        51.155150404721404,
+        127.40221989030432,
+        4.286801603915663,
+        0.026876494799199374,
+        0.0,
+        352.26239364309913
+      ]
+    },
+    {
+      "time_s": 3.272668589923875,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        51.64300401347577,
+        128.61722233375428,
+        4.32768373632927,
+        0.026876494799199374,
+        0.0,
+        407.25030110042314
+      ]
+    },
+    {
+      "time_s": 3.3872027010930403,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        51.74452206712248,
+        128.87005367705373,
+        4.336190949224841,
+        0.026876494799199374,
+        0.0,
+        421.99584294943446
+      ]
+    },
+    {
+      "time_s": 3.41607649411846,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        51.77015553696001,
+        128.9338939929355,
+        4.33833903399725,
+        0.026876494799199374,
+        0.0,
+        425.7177263974822
+      ]
+    },
+    {
+      "time_s": 3.7436676546939287,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        52.05996009743536,
+        129.6556540512421,
+        4.3626246561650825,
+        0.026876494799199374,
+        0.0,
+        468.0736029110549
+      ]
+    },
+    {
+      "time_s": 4.344479107996601,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        52.81344096404627,
+        131.53220283062637,
+        4.425766352787078,
+        0.026876494799199374,
+        0.0,
+        546.5170824625619
+      ]
+    },
+    {
+      "time_s": 4.465430820520724,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        52.91954603461619,
+        131.79645816806934,
+        4.434657957700844,
+        0.026876494799199374,
+        0.0,
+        562.4421134286702
+      ]
+    },
+    {
+      "time_s": 4.61574770652738,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact",
+      "fired_events": [
+        "cvt:upper_stop_reached"
+      ],
+      "previous_mode": "engaged/free/stick_stick",
+      "next_mode": "engaged/upper_stop/stick_stick",
+      "post_state": [
+        53.0583503320321,
+        132.1421511331231,
+        4.446289757824291,
+        0.026876494799199374,
+        4.99742953298471e-19,
+        582.2787558664453
+      ]
+    },
+    {
+      "time_s": 4.89764430108859,
+      "reason": "upper_stop_released_by_tensile_reaction",
+      "fired_events": [
+        "cvt:upper_stop_release"
+      ],
+      "previous_mode": "engaged/upper_stop/stick_stick",
+      "next_mode": "engaged/free/stick_stick",
+      "post_state": [
+        53.30494481326763,
+        132.75629622063414,
+        4.4669543753518255,
+        0.026876494799199374,
+        0.0,
+        619.6157752714631
+      ]
+    }
+  ],
+  "mode_duration_s": {
+    "engaged/free/stick_stick": 2.732493163728755,
+    "engaged/free/primary_stick_secondary_slip": 0.08166232921504304,
+    "engaged/free/both_slip": 0.08639313186661934,
+    "engaged/free/primary_slip_secondary_stick": 0.02844013713100017,
+    "engaged/upper_stop/stick_stick": 2.0710112380585826
+  },
+  "transition_reasons": {
+    "static_capacity_exhausted_entered_kinetic_slip": 6,
+    "upper_stop_impact_immediately_released_by_tensile_reaction": 5,
+    "contact_restuck_with_static_reserve": 9,
+    "zero_crossing_simultaneous_contact_topology_exchange": 9,
+    "low_ratio_secondary_stop_immediately_released_into_engaged_shift": 5,
+    "kinetic_slip_direction_updated_at_zero_crossing": 6,
+    "upper_stop_reached_perfectly_inelastic_impact": 9,
+    "upper_stop_released_by_tensile_reaction": 9
+  },
+  "accepted_steps": 9072,
+  "native_step_quantiles_s": [
+    1.0915904291586287e-10,
+    0.0005738515301541014,
+    0.001000000000000334,
+    0.001000000000000334
+  ],
+  "comparison_grid_step_s": 0.0002,
+  "event_sides_preserved": true
+}

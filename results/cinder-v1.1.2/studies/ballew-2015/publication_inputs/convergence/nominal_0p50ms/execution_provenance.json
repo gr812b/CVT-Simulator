@@ -1,0 +1,53 @@
+{
+  "cinder_version": "1.1.2",
+  "cinder_tag_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "cinder_module_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "solver": {
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "absolute_tolerance": 1e-09,
+    "max_step_s": 0.0005,
+    "maximum_transitions": 2000,
+    "report_step_s": 0.0002
+  },
+  "input_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/run_controller_reconstruction.py": "22e79ca49f1524521e1b6ca97b2a557cbe9a4ee20a94874c9f8627c128d0f14c",
+    "analysis/run_convergence.py": "a7fbbbd56bd88fe56ba3968ba5204df436bea8cc16285d030ab9dc4f40d3e8c3",
+    "exploration/run_stability_sweep.py": "19828c9eabf4c638f5ddf2b00b97c2e58330a7049ad0c83f86bc593ae30c7ea9",
+    "infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "infrastructure/benchmark/__init__.py": "dcac7065bca2f3a8a284877accbd2151ea62c989445850e5ca803dc8dc7239bc",
+    "infrastructure/benchmark/actuation.py": "7fc2dcefd7b7cf232e6c6465fa320396028a369ad8d5457102c50719bc6a95d7",
+    "infrastructure/benchmark/belt.py": "f85e7475f40327aab368c99b7164694ec5d747129efe2b981431dd1b80f68e86",
+    "infrastructure/benchmark/case.py": "d192308845e53bf4ec39025429f1475259b52dc035937cba0bee8650092d95bf",
+    "infrastructure/benchmark/constants.py": "9c9b9fafd2ec8462713d5f8d7a37b6d1abf92ad6d4f8a2826990ad1801432238",
+    "infrastructure/benchmark/controller.py": "1be6adf09489588a8abf36ed0456319ab6aee792ad0ffbf4dc807ca5e36b67be",
+    "infrastructure/benchmark/metrics.py": "6ec2a5a76fba52ee9218173cef33ad4d3fccd1f972378f12b1793484e880007e",
+    "infrastructure/benchmark/reference.py": "034bb52f324bd128ef779569b3ee13d22d1e6619522937cee20af48b86023cf3",
+    "infrastructure/benchmark/retention.py": "707418dbb4d24c0584ab99e45956390031b1fd728380f391ea1cf1e2b0e5b550",
+    "infrastructure/benchmark/simulation.py": "02f2be0b284850d26fab8f4be98a84273e667e1465c8eba92323585d69b5c202",
+    "reference/figure_41_input_rpm.csv": "ad16629a0cefd308e7df0d4c79b00a08f295a7efff2cbf0f4173dca1929e0dd9",
+    "reference/figure_41_output_rpm.csv": "47dc6da83cae77ce0bef49277983120086ed577dcd1c84fdbc4ddb684b154d8a",
+    "reference/figure_45_primary_force.csv": "e61467317a884e0d75a32c52b0688fbaa4bde5fd327b3aaab9625ec16de282e8",
+    "reference/manifest.json": "ed6fae449e6c30985be046a31429b71d684119fd409e6a3735d2cbdc891aa1d2",
+    "reference/prepare_reference_data.py": "7f50cee2fa7de48fc9fc8edc40e326fda0c158bd716c91ba5ae1ee4085c1bbd8",
+    "run.py": "5ddb6d7006b568c2244ab4964c9ad5e269d53f16b57b916504307519fbedbe6e",
+    "study.json": "508785fda80f404dd462ab4a39581c53fcb2a11be459d37acb6de90874cb667c",
+    "verify_study.py": "504f95ea3ec53b5f9c14f3eac79e660113136189211414e3d51b25edb489e5e7"
+  },
+  "output_sha256": {
+    "assembly_validation.json": "bb866b779ee2651c0081f23dfc63eb8caed30952db68d0b440a1dff52dd5d8cc",
+    "comparison_grid.npz": "7ddfa6e18631e72bee7012d27ce15c29646883b6b298f1b9da9305db6d959fd8",
+    "metrics.json": "70d4a94fe05bf8e5e8fa3c532d443ee032cd3cc4eeea863d19ede3b57a372b16",
+    "native_trace.npz": "9e355fbc846044a7bf0bc02846ddd9960c51413b51bcae63307bb1d3e84f4f1c",
+    "primary_force_comparison.csv": "72ba2f89f7fe5cf5482b7eee9008249bed5229466ab33a1a0be36d8d02308849",
+    "primary_rpm_comparison.csv": "6aa84deb8b26a666a8e5750f905010aa388347a0cc8d64ee3f8b33e90a2987a4",
+    "report.csv": "f15ade66deafb6a8289da8d84d3b5ecf972ca92b552232584707a632703b427f",
+    "result.json": "f10d2b6913a0a64dc80d611fabbd927d77d8c2268ba600aad785803ca3f1955c",
+    "secondary_rpm_comparison.csv": "ffbd89478ed1e6410f917e47f5d8eb5595fec6ae0bb283ee1c11d097a5e1027b",
+    "segmented_report.npz": "3439f327c1bd023421fdfe3baa5cd1fe04d164aa8d0ba85f7a33c51c8ccdea1f",
+    "speed_ratio_comparison.csv": "953a267cb0143b0d34ef259d663c0227513c2f05146bd8ae3f4201bd84f4441f",
+    "trace_manifest.json": "617cd09ed63c6c4e8177a33a113d932a08bd382fc9a12249899c772054ac9126"
+  }
+}
