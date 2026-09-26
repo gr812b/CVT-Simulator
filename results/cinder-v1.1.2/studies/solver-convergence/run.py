@@ -64,7 +64,7 @@ def parse_args():
         help="Delete this study's numerical cache before running.",
     )
     parser.add_argument("--plot-only", action="store_true",
-                        help="Verify retained evidence and regenerate the two manuscript figures.")
+                        help="Verify retained evidence and regenerate four manuscript/support figures.")
     parser.add_argument("--import-retained", nargs=2, type=Path,
                         metavar=("FORMAL_ZIP", "DENSE_ZIP"),
                         help="Import the registered archives and recover the selected different-history run.")

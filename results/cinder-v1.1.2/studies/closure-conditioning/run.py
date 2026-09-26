@@ -111,6 +111,7 @@ def parse_args():
         metavar=("FULL_ZIP", "TWO_CONTACT_ZIP", "ONE_CONTACT_ZIP"),
         help="Import registered full evidence, audit the selected frozen roots, and make publication figures.")
     parser.add_argument("--plot-only", action="store_true", help="Verify retained evidence and regenerate publication figures without mechanics evaluation.")
+    parser.add_argument("--audit-contours", action="store_true", help="Check bilateral contour masks using retained maps and selected frozen mechanics; no transient rerun.")
     parser.add_argument("--artifacts-dir", type=Path, default=HERE / "artifacts/reviewed")
     parser.add_argument("--figure-dir", type=Path, default=None)
     return parser.parse_args()
@@ -1065,14 +1066,19 @@ def main():
     global ARTIFACTS
     args = parse_args()
     verify_environment()
-    if args.import_retained or args.plot_only:
-        if args.quick or (args.import_retained and args.plot_only):
-            raise ValueError("Choose one of import-retained, plot-only or quick.")
+    if args.import_retained or args.plot_only or args.audit_contours:
+        if args.quick or sum(bool(v) for v in (args.import_retained, args.plot_only, args.audit_contours)) != 1:
+            raise ValueError("Choose one of import-retained, plot-only, audit-contours or quick.")
         from analysis.evidence import prepare
+        from analysis.contour_evidence import prepare_contours
         from analysis.publication_plots import build
         if args.import_retained:
             prepare(sys.modules[__name__], args.artifacts_dir,
                     dict(zip(("full", "two_contact", "one_contact"), args.import_retained)))
+        if args.import_retained or args.audit_contours:
+            prepare_contours(sys.modules[__name__], args.artifacts_dir)
+        if args.audit_contours:
+            return
         build(args.artifacts_dir, args.figure_dir or args.artifacts_dir / "publication")
         return
     # New core sweeps remain separate from the registered publication evidence.

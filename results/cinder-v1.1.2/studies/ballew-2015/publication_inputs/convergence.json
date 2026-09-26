@@ -1,0 +1,65 @@
+{
+  "cinder_version": "1.1.2",
+  "cases": [
+    {
+      "label": "nominal_1p00ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.001,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1735,
+      "segment_count": 1736,
+      "artifact_path": "closed-loop",
+      "primary_rpm_rmse": 110.32235188393301,
+      "secondary_rpm_rmse": 32.57959041508059,
+      "speed_ratio_rmse": 0.1001994963841922,
+      "primary_force_rmse": 1196.2490759963873
+    },
+    {
+      "label": "nominal_0p50ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.0005,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1735,
+      "segment_count": 1736,
+      "artifact_path": "convergence/nominal_0p50ms",
+      "primary_rpm_rmse": 110.3219787905203,
+      "secondary_rpm_rmse": 32.57959514345117,
+      "speed_ratio_rmse": 0.10019911550827802,
+      "primary_force_rmse": 1196.2490461443379
+    },
+    {
+      "label": "nominal_0p25ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.00025,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1722,
+      "segment_count": 1723,
+      "artifact_path": "convergence/nominal_0p25ms",
+      "primary_rpm_rmse": 110.32183477673173,
+      "secondary_rpm_rmse": 32.5795949787984,
+      "speed_ratio_rmse": 0.10019899821528214,
+      "primary_force_rmse": 1196.2490104700746
+    },
+    {
+      "label": "tight_0p50ms",
+      "rtol": 3e-08,
+      "atol": 3e-10,
+      "max_step_s": 0.0005,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1421,
+      "segment_count": 1422,
+      "artifact_path": "convergence/tight_0p50ms",
+      "primary_rpm_rmse": 110.32111332560436,
+      "secondary_rpm_rmse": 32.57961483976289,
+      "speed_ratio_rmse": 0.10019834926683975,
+      "primary_force_rmse": 1196.2488347630713
+    }
+  ]
+}

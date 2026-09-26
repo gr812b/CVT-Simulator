@@ -2,6 +2,26 @@
 
 This release-scoped CINDER `v1.1.2` study treats the primary fixed-pivot flyweight and secondary torque-reactive helix as one scientific family.
 
+## Results 4.4.1 publication figures
+
+The finalized primary comparison has its own bounded reproduction path.
+From the repository root:
+
+```sh
+results/cinder-v1.1.2/.venv/bin/python results/cinder-v1.1.2/studies/actuator-dynamics/run.py --plot-only
+```
+
+This verifies frozen compact outputs and regenerates `primary_engagement`
+and `primary_torque_ramps` as PDF and PNG. Use `--primary-publication` instead
+to repeat the twelve focused baseline/selected-ramp integrations before
+plotting. Neither option resets the other study artifacts. The original
+72-row primary screen is retained as identified evidence, not rerun by this
+publication command. See [PRIMARY_PUBLICATION.md](provenance/PRIMARY_PUBLICATION.md)
+for exact inputs, archive/source reconciliation, numerical refinement and
+known limits. Secondary and belt publication gaps remain open.
+
+## Broader maintained study
+
 Result sequence:
 1. Baja four-model baseline ablation;
 2. five component-level dimensionless corrections;
@@ -27,6 +47,11 @@ Incremental stages may stop at `baseline`, `components`, `coupling`, `envelopes`
 
 
 ## Commercial-secondary trajectory demonstration
+
+The following describes the earlier study design, not a newly verified
+publication claim. The current recovered recap reports a 7.87% clean case,
+below the intended 10–20% range; the secondary finalization must reconcile
+this before using it. Results 4.4.1 does not rely on this demonstration.
 
 The final actuator result now includes a mechanism-transplant trajectory test.
 It uses the frozen Baja machine as the known host and replaces only the

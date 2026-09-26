@@ -1,0 +1,52 @@
+{
+  "cinder_version": "1.1.2",
+  "cinder_tag_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "cinder_module_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "solver": {
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "absolute_tolerance": 1e-09,
+    "max_step_s": 0.001,
+    "maximum_transitions": 2000,
+    "report_step_s": 0.005
+  },
+  "input_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/run_controller_reconstruction.py": "22e79ca49f1524521e1b6ca97b2a557cbe9a4ee20a94874c9f8627c128d0f14c",
+    "analysis/run_convergence.py": "a7fbbbd56bd88fe56ba3968ba5204df436bea8cc16285d030ab9dc4f40d3e8c3",
+    "exploration/run_stability_sweep.py": "19828c9eabf4c638f5ddf2b00b97c2e58330a7049ad0c83f86bc593ae30c7ea9",
+    "infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "infrastructure/benchmark/__init__.py": "dcac7065bca2f3a8a284877accbd2151ea62c989445850e5ca803dc8dc7239bc",
+    "infrastructure/benchmark/actuation.py": "7fc2dcefd7b7cf232e6c6465fa320396028a369ad8d5457102c50719bc6a95d7",
+    "infrastructure/benchmark/belt.py": "f85e7475f40327aab368c99b7164694ec5d747129efe2b981431dd1b80f68e86",
+    "infrastructure/benchmark/case.py": "d192308845e53bf4ec39025429f1475259b52dc035937cba0bee8650092d95bf",
+    "infrastructure/benchmark/constants.py": "9c9b9fafd2ec8462713d5f8d7a37b6d1abf92ad6d4f8a2826990ad1801432238",
+    "infrastructure/benchmark/controller.py": "1be6adf09489588a8abf36ed0456319ab6aee792ad0ffbf4dc807ca5e36b67be",
+    "infrastructure/benchmark/metrics.py": "6ec2a5a76fba52ee9218173cef33ad4d3fccd1f972378f12b1793484e880007e",
+    "infrastructure/benchmark/reference.py": "034bb52f324bd128ef779569b3ee13d22d1e6619522937cee20af48b86023cf3",
+    "infrastructure/benchmark/retention.py": "707418dbb4d24c0584ab99e45956390031b1fd728380f391ea1cf1e2b0e5b550",
+    "infrastructure/benchmark/simulation.py": "02f2be0b284850d26fab8f4be98a84273e667e1465c8eba92323585d69b5c202",
+    "reference/figure_41_input_rpm.csv": "ad16629a0cefd308e7df0d4c79b00a08f295a7efff2cbf0f4173dca1929e0dd9",
+    "reference/figure_41_output_rpm.csv": "47dc6da83cae77ce0bef49277983120086ed577dcd1c84fdbc4ddb684b154d8a",
+    "reference/figure_45_primary_force.csv": "e61467317a884e0d75a32c52b0688fbaa4bde5fd327b3aaab9625ec16de282e8",
+    "reference/manifest.json": "ed6fae449e6c30985be046a31429b71d684119fd409e6a3735d2cbdc891aa1d2",
+    "reference/prepare_reference_data.py": "7f50cee2fa7de48fc9fc8edc40e326fda0c158bd716c91ba5ae1ee4085c1bbd8",
+    "run.py": "5ddb6d7006b568c2244ab4964c9ad5e269d53f16b57b916504307519fbedbe6e",
+    "study.json": "508785fda80f404dd462ab4a39581c53fcb2a11be459d37acb6de90874cb667c",
+    "verify_study.py": "504f95ea3ec53b5f9c14f3eac79e660113136189211414e3d51b25edb489e5e7"
+  },
+  "output_sha256": {
+    "assembly_validation.json": "bb866b779ee2651c0081f23dfc63eb8caed30952db68d0b440a1dff52dd5d8cc",
+    "comparison_grid.npz": "fbb48a0891d8ee3e608f01449677e3b36fd7ab8de3812f0b8248fea431ca56c7",
+    "metrics.json": "35b9238e1c015a668a35e257fc0eebfe2a91a9549c9f39bd19f708bc0f326e73",
+    "native_trace.npz": "0223826ed8dce342f33f893cefb78b35142a43163758b52007cb98eb37ada8fe",
+    "primary_rpm_comparison.csv": "67fa34b333f623c6b46b0988807b21e393f142d9d224dac6b1a6aec862d6b393",
+    "report.csv": "7a61247315ed70248026c495470d6e2f95c5d685a4e657870e1907faf418a49a",
+    "result.json": "f37b171dd35046eae92b91bf5f0295e0d1c01c2b01abe4ee1c365e7a259808b7",
+    "secondary_rpm_comparison.csv": "3f730fed7f37124603e6b37dc33c1fee7bb0ead61e5faabc732713b256c7682e",
+    "segmented_report.npz": "493a5f51cdd90b1ad376d7e93eca1ae2c35f8d4054086a9a097d4b6938b3dbd7",
+    "speed_ratio_comparison.csv": "abddce8b3f4be3f91fff8c73bcd009f758b737187c1fea9235b4cd1862a8610f",
+    "trace_manifest.json": "cde8c72366489757446c67c0dd474cf7eca15fd9588b30e75b8b0309b5c84475"
+  }
+}

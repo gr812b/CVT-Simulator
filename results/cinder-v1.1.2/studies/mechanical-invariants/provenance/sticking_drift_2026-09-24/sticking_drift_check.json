@@ -1,0 +1,608 @@
+{
+  "case_id": "both_slip_mp",
+  "reference_run_id": "mechanical-invariants-58a8a3a5272cf2c8",
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "packages": {
+    "cinder-cvt": "1.1.2",
+    "matplotlib": "3.11.1",
+    "numpy": "2.5.2",
+    "scipy": "1.18.1"
+  },
+  "generator_sha256": "35282652e03df1e60b52857eb554bffd5f45fb858a1bd0771ad7874d6c550f6d",
+  "input_identity_sha256": "36305912a89fbdbc160b969dd09879b20e6139775d0dfd4b6238083f01d95935",
+  "initial_case": {
+    "id": "both_slip_mp_exploration_full_pass_3951",
+    "role": "canonical_reproduction_anchor",
+    "source": "missing-coverage exploration; attempt 3951; full dynamic pass in the dedicated missing-coverage exploration",
+    "primary_speed_rad_s": 536.870016852889,
+    "secondary_speed_rad_s": 173.98800727701902,
+    "belt_speed_m_s": 17.245402640197394,
+    "shift_position_m": 0.0029223568650515,
+    "shift_speed_m_s": 0.0,
+    "primary_torque_Nm": -105.5809606447166,
+    "secondary_torque_Nm": -282.07358924935374,
+    "primary_inertia_kg_m2": 0.0646801421379349,
+    "secondary_inertia_kg_m2": 0.0025056948574856,
+    "observed_primary_vrel_m_s": -1.401283288833865,
+    "observed_secondary_vrel_m_s": 0.1429057789627229,
+    "historical_requested_branch_dwell_s": 9.82319326605176e-06,
+    "interpretation_flags": [
+      "rare_opposing_slip_quadrant",
+      "very_short_lived",
+      "stress_state",
+      "taut_full_wrap_constraints_material"
+    ]
+  },
+  "audit_speed_limit_m_s": 0.001,
+  "anchor_preparation": {
+    "settings": {
+      "duration_s": 0.03,
+      "audit_time_step_s": 0.00025,
+      "minimum_branch_time_s": 1e-08,
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.0005,
+      "maximum_transitions": 150,
+      "event_time_tolerance": 1e-11
+    },
+    "attempt": {
+      "case_id": "both_slip_mp",
+      "search_stage": "targeted_seed",
+      "targeted_seed_id": "both_slip_mp_exploration_full_pass_3951",
+      "primary_torque_Nm": -105.5809606447166,
+      "secondary_torque_Nm": -282.07358924935374,
+      "primary_inertia_kg_m2": 0.0646801421379349,
+      "secondary_inertia_kg_m2": 0.0025056948574856,
+      "belt_speed_m_s": 17.245402640197394,
+      "shift_speed_m_s": 0.0,
+      "observed_engagement": "engaged",
+      "observed_shift_constraint": "free",
+      "observed_contact_mode": "both_slip",
+      "actual_primary_vrel_m_s": -1.4012832888338274,
+      "actual_secondary_vrel_m_s": 0.14290577896270662,
+      "normal_primary_N": 20996.084732577598,
+      "normal_secondary_N": 21770.929080719976,
+      "belt_min_tension_N": 25.013146371440428,
+      "primary_min_dnormal_dtheta_N_per_rad": 15.506655677356592,
+      "secondary_min_dnormal_dtheta_N_per_rad": 82.3135291096037,
+      "primary_static_margin": NaN,
+      "secondary_static_margin": NaN,
+      "mechanism_min_margin": 9775.562297097596,
+      "closure_max_scaled_residual": 2.182097359243821e-15,
+      "requested_mode_dwell_s": 9.823193267893768e-06,
+      "accepted": true,
+      "reason": "accepted"
+    },
+    "role": "Reproduce the archived selection stage and contact-solver continuation guesses before either comparison run."
+  },
+  "nominal_reproduces_retained_samples": true,
+  "runs": {
+    "nominal": {
+      "settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "method": "LSODA",
+        "max_step": 0.001,
+        "maximum_transitions": 100,
+        "event_time_tolerance": 1e-11,
+        "duration_s": 0.03,
+        "audit_time_step_s": 0.0005
+      },
+      "completed": true,
+      "sampled_peak": {
+        "case_id": "both_slip_mp",
+        "time_s": 0.025804164408177906,
+        "location": "uniform",
+        "contact_mode": "stick_stick",
+        "shift_constraint": "free",
+        "interface": "secondary",
+        "primary_angular_speed_rad_s": 452.3426296739912,
+        "secondary_angular_speed_rad_s": 178.83766557214656,
+        "belt_speed_m_s": 18.336153171143014,
+        "surface_speed_m_s": 18.33628318669528,
+        "shift_m": 0.005283956649458065,
+        "shift_speed_m_s": -0.6906929669777789,
+        "relative_speed_m_s": -0.00013001555226566097,
+        "relative_acceleration_m_s2": 6.59383658785373e-12,
+        "speed_mismatch_fraction": 7.0906165083663e-06
+      },
+      "event_signature": [
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ]
+        },
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:low_ratio_seat_reached"
+          ],
+          "reason": "secondary_closed_stop_impact_primary_separated_into_deadzone",
+          "before": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ],
+          "after": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:engagement_reached"
+          ],
+          "reason": "primary_closed_into_engaged_contact",
+          "before": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ]
+        },
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:low_ratio_seat_reached"
+          ],
+          "reason": "secondary_closed_stop_impact_primary_separated_into_deadzone",
+          "before": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ],
+          "after": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:engagement_reached"
+          ],
+          "reason": "primary_closed_into_engaged_contact",
+          "before": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        }
+      ],
+      "guard_failures": [],
+      "csv_sha256": "9471dedc26368406c8394f08382beddf776bfb32bfc097d682844eae339b2e8e",
+      "csv": "sticking_drift_nominal.csv"
+    },
+    "tighter": {
+      "settings": {
+        "relative_tolerance": 3e-06,
+        "absolute_tolerance": 3e-09,
+        "method": "LSODA",
+        "max_step": 0.001,
+        "maximum_transitions": 100,
+        "event_time_tolerance": 1e-11,
+        "duration_s": 0.03,
+        "audit_time_step_s": 0.0005
+      },
+      "completed": true,
+      "sampled_peak": {
+        "case_id": "both_slip_mp",
+        "time_s": 0.028331377481343244,
+        "location": "segment_end",
+        "contact_mode": "stick_stick",
+        "shift_constraint": "free",
+        "interface": "secondary",
+        "primary_angular_speed_rad_s": 448.15519914643994,
+        "secondary_angular_speed_rad_s": 118.79961030075262,
+        "belt_speed_m_s": 15.088353849809733,
+        "surface_speed_m_s": 15.088370263480577,
+        "shift_m": 0.002489200000000173,
+        "shift_speed_m_s": -1.5204626000783457,
+        "relative_speed_m_s": -1.641367084381784e-05,
+        "relative_acceleration_m_s2": -4.661160346586257e-12,
+        "speed_mismatch_fraction": 1.087835899914584e-06
+      },
+      "event_signature": [
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ]
+        },
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:low_ratio_seat_reached"
+          ],
+          "reason": "secondary_closed_stop_impact_primary_separated_into_deadzone",
+          "before": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ],
+          "after": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:engagement_reached"
+          ],
+          "reason": "primary_closed_into_engaged_contact",
+          "before": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "zero_crossing_simultaneous_contact_topology_exchange",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ]
+        },
+        {
+          "events": [
+            "cvt:secondary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "both_slip",
+            "pulley_leads_belt",
+            "belt_leads_pulley"
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:primary_restick"
+          ],
+          "reason": "contact_restuck_with_static_reserve",
+          "before": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:low_ratio_seat_reached"
+          ],
+          "reason": "secondary_closed_stop_impact_primary_separated_into_deadzone",
+          "before": [
+            "engaged",
+            "free",
+            "stick_stick",
+            null,
+            null
+          ],
+          "after": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ]
+        },
+        {
+          "events": [
+            "cvt:engagement_reached"
+          ],
+          "reason": "primary_closed_into_engaged_contact",
+          "before": [
+            "deadzone",
+            "free",
+            "",
+            null,
+            null
+          ],
+          "after": [
+            "engaged",
+            "free",
+            "primary_slip_secondary_stick",
+            "pulley_leads_belt",
+            null
+          ]
+        }
+      ],
+      "guard_failures": [],
+      "csv_sha256": "7bc556149f572f364ccfdb7a90e7e1842e9383554715f1ca219426ef8650a7ae",
+      "csv": "sticking_drift_tighter.csv"
+    }
+  },
+  "retained_replay_comparison": {
+    "sample_and_outgoing_rows": 92,
+    "maximum_absolute_differences": {
+      "time_s": 0.0,
+      "shift_m": 0.0,
+      "shift_speed_m_s": 0.0,
+      "primary_vrel_m_s": 0.0,
+      "secondary_vrel_m_s": 0.0
+    },
+    "absolute_tolerance": 1e-10,
+    "relative_tolerance": 1e-08
+  },
+  "same_event_signature": true,
+  "peak_drift_ratio_tighter_to_nominal": 0.12624390357762555,
+  "scope": "One selected 30 ms case, sampled within native segments and at exact event sides. This is not a global refinement or an error bound on the ODE solution.",
+  "threshold_meaning": "An audit reporting guard; not a friction-law parameter or a velocity-band definition of sticking."
+}

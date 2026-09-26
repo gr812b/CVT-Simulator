@@ -1,3 +1,12 @@
+# Current publication revision
+
+Use the common-solve/sticking contour figures and commands in
+[the 25 September provenance note](provenance/CONTOUR_REVISION_2026_09_25.md).
+`run.py --plot-only` requires both the recovered `reviewed/` evidence and its
+new `contour_audit/` record, all included in the delivery. `--audit-contours`
+repeats only the new focused contact check; it never reruns a trajectory.
+The earlier study protocol and original import instructions follow.
+
 # Closure conditioning — Results 4.2.4
 
 ## Final publication reproduction

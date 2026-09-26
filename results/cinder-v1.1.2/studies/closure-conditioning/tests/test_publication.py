@@ -12,6 +12,7 @@ STUDY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(STUDY))
 from analysis.evidence import MECHANICS, digest, rows, verify_record, write_json
 from analysis.verification import census, expanded_census, verify_map
+from analysis.contour_evidence import retained_mask, verify_contours
 
 
 class PublicationIntegrity(unittest.TestCase):
@@ -75,6 +76,27 @@ class PublicationIntegrity(unittest.TestCase):
             (p / "data.json").write_text('{"changed":true}\n')
             with self.assertRaises(ValueError):
                 verify_record(p)
+
+    def test_bilateral_mask_equivalence_is_not_assumed_for_other_states(self):
+        for name in ('upper_stop', 'mid_shift'):
+            with np.load(self.full / 'states' / name / 'physical_map.npz') as d:
+                self.assertTrue(np.array_equal(retained_mask(d), d['full_static_admissible']))
+        # This state has actuator-only failures. The simple equality argument
+        # cannot tell which actuator failed and must not drop the primary guard.
+        with np.load(self.full / 'states/free_shift_opening_70/physical_map.npz') as d:
+            self.assertTrue(np.any(d['topology_failure_code'] == 8))
+            with self.assertRaises(ValueError):
+                retained_mask(d)
+
+    def test_focused_contours_retain_primary_contact_and_reject_wrap_loss(self):
+        root = STUDY / 'artifacts/reviewed'
+        verify_contours(root)
+        with np.load(root / 'contour_audit/focused_contact_map.npz') as d:
+            self.assertTrue(np.isfinite(d['primary_contact_margin']).all())
+            self.assertTrue(np.isinf(d['secondary_contact_margin']).all())
+            failed = ~d['admissible']
+            self.assertEqual(int(failed.sum()), 476)
+            self.assertTrue((d['min_local_normal_s'][failed] < 0).all())
 
 
 if __name__ == "__main__":

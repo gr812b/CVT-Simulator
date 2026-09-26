@@ -1,0 +1,52 @@
+{
+  "protocol": "closed_loop",
+  "completed": true,
+  "termination_reason": "final_time_reached",
+  "final_time_s": 5.0,
+  "segment_count": 1723,
+  "transition_count": 1722,
+  "solver": {
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "absolute_tolerance": 1e-09,
+    "max_step_s": 0.00025,
+    "maximum_transitions": 2000,
+    "report_step_s": 0.0002
+  },
+  "mean_cinder_primary_force_n": 1506.2073915578922,
+  "mean_ballew_primary_force_n": 2563.683802752712,
+  "metrics": {
+    "primary_rpm": {
+      "count": 113,
+      "mean_error": -3.829745624164123,
+      "mean_absolute_error": 96.87898171809844,
+      "root_mean_square_error": 110.32183477673173,
+      "max_absolute_error": 212.9098353383979,
+      "rmse_percent_of_reference_mean": 4.415071839343846
+    },
+    "secondary_rpm": {
+      "count": 64,
+      "mean_error": -7.734754624606875,
+      "mean_absolute_error": 27.823310553874517,
+      "root_mean_square_error": 32.5795949787984,
+      "max_absolute_error": 67.93650684816475,
+      "rmse_percent_of_reference_mean": 2.714178707985989
+    },
+    "speed_ratio": {
+      "count": 158,
+      "mean_error": 0.004376561818726175,
+      "mean_absolute_error": 0.08354133023259888,
+      "root_mean_square_error": 0.10019899821528214,
+      "max_absolute_error": 0.25983484034393234,
+      "rmse_percent_of_reference_mean": 4.8055038442377445
+    },
+    "primary_force": {
+      "count": 207,
+      "mean_error": -1057.4764111948198,
+      "mean_absolute_error": 1059.723243526916,
+      "root_mean_square_error": 1196.2490104700746,
+      "max_absolute_error": 1881.5224495671548,
+      "rmse_percent_of_reference_mean": 46.66133199365782
+    }
+  }
+}

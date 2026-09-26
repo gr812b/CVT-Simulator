@@ -1,3 +1,32 @@
+# Completed 1.1.2 refinement — 25 September 2026
+
+The four prescribed cases have now been run in the frozen 1.1.2 environment.
+Current quantitative evidence is `../publication_inputs/evidence_audit.json`;
+executed input and output identities are recorded separately for every case.
+All four complete 5 s. The same contact/support event sequence persists after
+excluding zero-crossing kinetic-slip direction updates. These updates number
+320, 320, 307 and 6; the remaining 1415 events have the same ordered reasons and
+incoming/outgoing labels. Matched times differ by at most 1.673 microseconds.
+The 207 low-ratio arrivals and rapid oscillations persist.
+
+Same-clock RMS changes from the 1 ms nominal run are at most 0.03203 rpm in
+primary speed and 0.1604 N in clamp; the largest shift-position change is
+0.01258 mm. The audit explicitly retains the 6.41 m/s shift-speed difference
+when the common 0.827 s sample lies on opposite sides of seating. At samples
+with matching contact/support labels the maximum shift-speed difference is
+0.00262 m/s. These are numerical refinement results for this case, not evidence
+of physical accuracy or of a unique causal explanation for the mismatch.
+
+Segmented slip-power reintegration reproduces 19.7058 kJ total loss. Decimating
+the nominal report samples by two, retaining endpoints, changes the total by
+7.98 J (0.041%). No efficiency or complete energy budget is inferred from this.
+
+Full reproduction and fast plot-only commands are in the maintained README.
+The older notes below explain the prescribed cases and historical exploration;
+they are not fresh 1.1.2 results.
+
+---
+
 # Numerical robustness methodology
 
 The Ballew case is useful not only as a model-to-model comparison but also as a

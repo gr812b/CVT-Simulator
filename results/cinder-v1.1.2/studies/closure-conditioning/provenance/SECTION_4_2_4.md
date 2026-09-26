@@ -1,3 +1,10 @@
+# Current revision
+
+The final contour figures and new mask checks are documented in
+[CONTOUR_REVISION_2026_09_25.md](CONTOUR_REVISION_2026_09_25.md).
+The record below describes the recovered 23 September execution; its old
+figure design and branch/acceptance status are historical.
+
 # Section 4.2.4 — evidence and figure provenance
 
 23 September 2026. Task branch `results-finalize-4-2-4`; unit baseline

@@ -101,6 +101,8 @@ def input_paths():
 
 def prepare(cc, artifacts, archives):
     from .frozen_audit import run_frozen_audit
+    if (artifacts / "execution_provenance.json").exists():
+        raise FileExistsError(f"Keep registered evidence intact; select a new directory: {artifacts}")
     artifacts.mkdir(parents=True, exist_ok=True)
     sources = {kind: import_archive(path, kind, artifacts) for kind, path in archives.items()}
     write_json(artifacts / "retained_sources.json", sources)

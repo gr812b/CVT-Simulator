@@ -1,5 +1,34 @@
 # Section 4.2.2 — evidence, figure and execution identity
 
+## 24 September revision after author feedback
+
+No simulation was repeated. The exact run below still supplies all evidence.
+The revised plot is 6.5 by 4.6 inches: separate signed primary/secondary work
+and kinetic-energy increase replace the rejected totals overlay in (a);
+(b) retains the signed remainder; (c) directly labels nominal/tighter lines;
+(d) uses the actual maximum power-evaluation interval, halved to the right.
+The values export now includes the complete unrounded final energy ledger.
+
+The manuscript starts from the energy question and explains the chosen test,
+then explains sliding loss from unequal contact speeds under equal-and-opposite
+traction and capture loss from arrested motion. The event detail locates the
+fast remainder change in continuous motion; the exact event sides establish
+zero jump, rather than visual overlap alone. The rejected magnitude-based
+capture rationale and Assumption 15 ending are removed. Both three-page
+readings build without reference or box warnings. All pages were inspected;
+the four publication exports reproduce byte-for-byte, and three integrity
+regressions pass. These are self-review and reproduction results, not author
+acceptance or independent scientific validation.
+
+The active source SHA is
+`51c1ac97f56caa48df18a27f2059e4d0841a80c132a8eb20da9c1bc96d297a76`.
+Integration preserves the supplied 4.2/4.2.1 and all other main text. In addition
+to D.2, its missing B.5 numerical-seating dependency is explicitly included.
+See `results-finalization/rebuild-4-2-2/` for the complete brief, alternatives,
+review and instructions. The delivery and figure register identify the commit.
+
+## Historical execution and first publication record
+
 Ready for author review, not author accepted. One complete canonical execution
 on 23 September 2026; no second simulation was needed for figure revisions.
 Code/assets commit: `83b2c31e690dab9d052c91308f551432ad9e0349`.
@@ -89,10 +118,11 @@ subtracted to improve the residual and is not called static-friction loss.
 
 ## Panel purposes and transformations
 
-(a) Complete nominal net work, stored-energy increase, and storage plus slip and
-capture in kJ. The visible gap between storage and net work gives the scale of
-modeled dissipation; overlap of total accounting and work does not resolve the
-much smaller defect. The 50.58 kJ is an increase, not absolute final storage.
+(a) Separate signed primary boundary work, signed secondary boundary work and
+kinetic-energy increase in kJ, using the complete nominal trajectory. Negative
+secondary work removes energy through the resisting load. Attached boundary
+inertias remain in kinetic energy. Smaller spring and loss terms stay in the
+complete final ledger; the figure does not pretend to resolve them at this scale.
 
 (b) Complete signed residuals, in J, from the nominal and tight trajectories at
 the same finest audit spacing. No absolute-value transform, normalized axis,
@@ -107,16 +137,17 @@ change is in continuous integration. The detail prevents the full-time plot
 from implying an unaccounted instantaneous loss. It does not identify a unique
 source of the continuous defect.
 
-(d) Signed sum of continuous-segment defects versus the square of requested
-maximum quadrature spacing. Only the two finest points define the extrapolating
-line; the open point and horizontal line mark its intercept. No global fit or
-uncertainty band is claimed.
+(d) Signed sum of continuous-segment defects against actual maximum power-
+evaluation interval h, on a descending base-2 axis. Each step right halves h.
+Points are connected only as a visual guide, with no fitted error model.
+The horizontal line is the second-order zero-spacing estimate from the two
+finest intervals. It is not an error bound or an exact limiting remainder.
 
 All plotted lines are per continuous segment. Every event side is retained at
 its true time; no line or trapezoid bridges a velocity reset. The final ledger
 compares both ODE settings, with residuals computed before rounding. Stored
-energy is separate from modeled irreversible losses. Captures are about ten
-times the nominal final residual despite their small share of net work.
+energy is separate from modeled irreversible losses. Capture loss belongs in the balance because the inelastic constraint removes
+kinetic energy, independently of its magnitude relative to the remainder.
 
 ## Scope and integration
 
