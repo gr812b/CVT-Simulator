@@ -1,0 +1,9 @@
+{
+  "input_sha256": "5a31f4e289447ec5a00b75eb81d9ed97bb86e813eaf019274d1da7403eaa78b2",
+  "outputs": {
+    "primary_engagement.pdf": "ba667d0aad3fa8a5dce95d11cf7e9cf06d2a0dcfd1da1d3a4e7acbb7c89dfa6c",
+    "primary_engagement.png": "e22607f8c2cd18b0efbd7e18b7727073c23ab2c2ee3f8985f16fd806dd270d89",
+    "primary_torque_ramps.pdf": "bf6d7099285434b5aec3ce76498ad3b09ea71f0bfdf7e15e628321985e8b6fb8",
+    "primary_torque_ramps.png": "97bcdbfe6b3b2b147b2692a5dc188b0412a5ef7e5f0b95d1c0dc629ffa041811"
+  }
+}

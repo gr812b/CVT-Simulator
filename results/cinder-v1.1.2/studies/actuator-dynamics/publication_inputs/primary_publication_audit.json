@@ -1,0 +1,1112 @@
+{
+  "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "raw_sha256": {
+    "baseline_nominal_full/contributions.csv.gz": "42c498d0dd7e64a3dbed49989a36a85c0659364b13b1854fef9e3308965155c0",
+    "baseline_nominal_full/events.json": "bcdec70b8e26c8dd28d60e1eeb0e5ac63c5b66d13535c87f3d436fdf3f82d447",
+    "baseline_nominal_full/provenance.json": "bc851ed033b84fd52785f88658776a5bd7d9c9a9fcb16da1fb0d635e515bc7ed",
+    "baseline_nominal_full/summary.json": "f0e97d45518c07f33066d2f782093cf3482a5eb08749bc774e07a6e81a2b1320",
+    "baseline_nominal_full/trajectory.csv.gz": "5ff9c176c33b088721c01398f14ed8d27dc71e734808a84ae8257f9616739fe9",
+    "baseline_nominal_qs/contributions.csv.gz": "aeed2e1fee3a059fa1a4911f04250b813ce64ab725a426148d99e4751ffd512d",
+    "baseline_nominal_qs/events.json": "9dd7dbb79961d872d7966b10ae2284b7c457c09fc07a33dbbc413f6dd7857d51",
+    "baseline_nominal_qs/provenance.json": "b1902e384946b227695dc66e4d2410eeafd7c220c98cf7c1917cdd8c119cf771",
+    "baseline_nominal_qs/summary.json": "b34f5a7a0336a8b1f2d02b1c4f970bf64acf9c6973a8c8413723965ce2183543",
+    "baseline_nominal_qs/trajectory.csv.gz": "722d1d89e177f7fd1421080a5f157a8c2c90ea6cc2a20140dc53aa19aba0c803",
+    "baseline_tight_full/contributions.csv.gz": "9e888126a962de0b2b165e0c3e0200cbf4f72066e46ac13ee1111b82c2e387b5",
+    "baseline_tight_full/events.json": "8108e8b2dcdca43b0414a3dc7ce523b1bbd74f624cb6967d30639599b99899e5",
+    "baseline_tight_full/provenance.json": "1984172c26a8fa5f890f7b942d7035c2ce2dd720f3530a8fb1fb5ec3a0754d42",
+    "baseline_tight_full/summary.json": "ef5288347ca5769ecd28d56d5bca02592eb2c119df5104d5291c878881647fbc",
+    "baseline_tight_full/trajectory.csv.gz": "4a20dfc8b4775da962f392fd3cc49e053396af720387f3cdd08a87376cba681e",
+    "baseline_tight_qs/contributions.csv.gz": "98deae321ceb6719060ead19354cb132cf0727e2de80b6407f83d91e2c7a66fb",
+    "baseline_tight_qs/events.json": "fafabd55039d532a415691e53923bbd8af7a75b1527590e06aa338f6f76d15e9",
+    "baseline_tight_qs/provenance.json": "e75a6da45b6e7bf16f9f5fd28165cad2e18d9c66f2075b3be575375f0f5138de",
+    "baseline_tight_qs/summary.json": "e274f01dcc3fe22e94728a2941ffc5d953d65eb53a994fc53c8c1244e83a3986",
+    "baseline_tight_qs/trajectory.csv.gz": "e3a683f062a75015ef8ef7e6a034213cb2c6f5e9d3eb30600bb7ea4c09e663cc",
+    "transient_nominal_full/control/contributions.csv.gz": "25950f8fee7b5adedb110511ac0b77eb1b64b23b35e33b0d4cb9703bdfa1b495",
+    "transient_nominal_full/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_nominal_full/control/summary.json": "3363a39fd3ed66ebd06f4b540ab43f262b9474ab9f6423f0854abbec63679540",
+    "transient_nominal_full/control/trajectory.csv.gz": "c6e812d940c30f28660e858dbc72f828df0f44825c77f4da37ab3633fd244cca",
+    "transient_nominal_full/provenance.json": "202414ac10a04ff71217010a3bb1fe6b1a2cb8cea7f4adab4125cdc61d188db8",
+    "transient_nominal_full/stress/contributions.csv.gz": "1f8e577338b8e075cb8e59c20bde34bbe9d4682ec0332f24b6f484de420fe4cf",
+    "transient_nominal_full/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_nominal_full/stress/summary.json": "3d97f5e6faadbfc6e4bde72eeaef3acfa48a6dc2c7dbe5c8028a0bc151715360",
+    "transient_nominal_full/stress/trajectory.csv.gz": "0d0eeab69ea48d36594149535358ef6fb28999e56d1fbc0c94ca8b58c19948fc",
+    "transient_nominal_qs/control/contributions.csv.gz": "a0a3d1b16a1887ec06106a3fea90eeffe4271174ededf8bcf5c1f260af882e38",
+    "transient_nominal_qs/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_nominal_qs/control/summary.json": "1dcf268dca4c9297db5901b13b1ef7f254ed9c80261f6b8f6eb9dbc4eb4af6dc",
+    "transient_nominal_qs/control/trajectory.csv.gz": "b4fe5dac104b5951a04aa66232671aba1d95e27776cab32361827871ecc86ac9",
+    "transient_nominal_qs/provenance.json": "6b61b6b7da88d60f211002419b519e813a44e1e84a4f5695e8c4a31e4935ccbf",
+    "transient_nominal_qs/stress/contributions.csv.gz": "fdbd41a3c7f454240dc08b51f7f0a6e28bfa88467230d2f4ebad842c4caeabe1",
+    "transient_nominal_qs/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_nominal_qs/stress/summary.json": "006194575a8770ba0d0a1b45bb54073a402312155a163b871f95fda7418bbcbc",
+    "transient_nominal_qs/stress/trajectory.csv.gz": "a75dbdee201ba05ece43271db7c6e14171352a47190174550cdbd17072348bf7",
+    "transient_tight_full/control/contributions.csv.gz": "f3b83b3baf6b9c8ba41ee6edb3b858ba35a2be63bf6207faf70f6fae26e2f332",
+    "transient_tight_full/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_tight_full/control/summary.json": "1c30a988f78a79e782ebdb0de1c5641be0ad38dc54119549591d9b6b888b6aad",
+    "transient_tight_full/control/trajectory.csv.gz": "bdc18daab53d3bb422dc57a2691b8696047a6cb173f099e16f9416343f375243",
+    "transient_tight_full/provenance.json": "3c867aaf975d5e0dc443c1fdf752246e98c656bc3826cbb054b116e2bbd90693",
+    "transient_tight_full/stress/contributions.csv.gz": "08ec48f49793e3fd35816429ae48dc00383187333bcc3eac77d03811261092cb",
+    "transient_tight_full/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_tight_full/stress/summary.json": "d5a01a16a3215a9654428dc73e45facf44a3eba4dce5c575ac77bac4218cdea2",
+    "transient_tight_full/stress/trajectory.csv.gz": "838f6aa33570f5ff89e153bcb7c4b84581a9a1bf9e0a0dc24fc682c57e6ae44e",
+    "transient_tight_qs/control/contributions.csv.gz": "cc81a1bf13ac1ebc228e669cb6784fea23be63f61fbac5140e5adca85b89148c",
+    "transient_tight_qs/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_tight_qs/control/summary.json": "7eb2c2f34706d37af1807c39e97c707e2d9cf29eaed17cb91c8e454b334ac2a4",
+    "transient_tight_qs/control/trajectory.csv.gz": "d69daaacbb034823d48f98b1aeee750612ea9761c09c74e08260db88abff5f41",
+    "transient_tight_qs/provenance.json": "1c29b63f44c9d5f387c8e74dde5f96b073f96e280f42b3f703419aeea915d7f4",
+    "transient_tight_qs/stress/contributions.csv.gz": "d23f0f5dc6ac3cff6b913e8f8454ed28a972ab86ac1d9147d978c56cf3dda250",
+    "transient_tight_qs/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "transient_tight_qs/stress/summary.json": "2a3775f400b53e8692f181e964049cae46199c837831c3342df60ce33908dc10",
+    "transient_tight_qs/stress/trajectory.csv.gz": "39dbedcef721a3161f3fce469e7f57c0626283e44b99470b7361007d987d074a"
+  },
+  "run_provenance": {
+    "baseline_nominal_full": {
+      "kind": "baseline",
+      "level": "nominal",
+      "variant": "full",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 0.0001,
+        "atol": 1e-07,
+        "max_step_s": 0.01
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": "Existing launch: primary 1800 rpm, all other CVT velocities and shift zero; host angle zero.",
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 89.03859964599906
+    },
+    "baseline_nominal_qs": {
+      "kind": "baseline",
+      "level": "nominal",
+      "variant": "qs",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 0.0001,
+        "atol": 1e-07,
+        "max_step_s": 0.01
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": "Existing launch: primary 1800 rpm, all other CVT velocities and shift zero; host angle zero.",
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 86.46648916100094
+    },
+    "baseline_tight_full": {
+      "kind": "baseline",
+      "level": "tight",
+      "variant": "full",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.001
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": "Existing launch: primary 1800 rpm, all other CVT velocities and shift zero; host angle zero.",
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 161.01383372499913
+    },
+    "baseline_tight_qs": {
+      "kind": "baseline",
+      "level": "tight",
+      "variant": "qs",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.001
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": "Existing launch: primary 1800 rpm, all other CVT velocities and shift zero; host angle zero.",
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 157.386896557
+    },
+    "transient_nominal_full": {
+      "kind": "transient",
+      "level": "nominal",
+      "variant": "full",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 0.0001,
+        "atol": 1e-07,
+        "max_step_s": 0.01
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": {
+        "cvt_vector": [
+          327.49543726554924,
+          213.0272019067888,
+          17.689282561655947,
+          0.0107681296850119,
+          0.0044757899555839
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "host_angle_rad": 0.0
+      },
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 64.1693309910006
+    },
+    "transient_nominal_qs": {
+      "kind": "transient",
+      "level": "nominal",
+      "variant": "qs",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 0.0001,
+        "atol": 1e-07,
+        "max_step_s": 0.01
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": {
+        "cvt_vector": [
+          327.6698209686831,
+          213.194138249577,
+          17.70151930231595,
+          0.0107716216005358,
+          0.0044996474657374
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "host_angle_rad": 0.0
+      },
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 64.69759169700046
+    },
+    "transient_tight_full": {
+      "kind": "transient",
+      "level": "tight",
+      "variant": "full",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.001
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": {
+        "cvt_vector": [
+          327.49543726554924,
+          213.0272019067888,
+          17.689282561655947,
+          0.0107681296850119,
+          0.0044757899555839
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "host_angle_rad": 0.0
+      },
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 64.08706123999946
+    },
+    "transient_tight_qs": {
+      "kind": "transient",
+      "level": "tight",
+      "variant": "qs",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/solver_revision_4/CVT-Simulator/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.001
+      },
+      "transient_max_step_note": "Existing runner: min(1 ms, max(0.25 ms, ramp/8)); unchanged between tolerances.",
+      "initial_state": {
+        "cvt_vector": [
+          327.6698209686831,
+          213.194138249577,
+          17.70151930231595,
+          0.0107716216005358,
+          0.0044996474657374
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "host_angle_rad": 0.0
+      },
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/experiments/run_baseline_ablation.py": "c5ae126abfa88b85f9a3139110b949cd5ce0ee0db9bbc523155b915639c36cbc",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_coupling_energy.py": "40dc69ca83befb0d4e80223aff896ae829acd178b35d7476f6462e50a6493875",
+        "studies/actuator-dynamics/experiments/run_dimensionless_components.py": "449335c38fe3430b2d41d752131d01335ba12e576efc25a6d61f23c909c1f648",
+        "studies/actuator-dynamics/experiments/run_primary_publication.py": "6e768a2c8394e928efb7b4621a930aeb1ecd3bc540c4f1eff2b084f401576994",
+        "studies/actuator-dynamics/experiments/run_validity_envelopes.py": "cfbac97e3d496493443ca73903b1ae4ea9470bb0e43772b0ed3fc5dc94262bf8",
+        "studies/actuator-dynamics/infrastructure/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/infrastructure/coupling_energy_core.py": "e307e93f58479ed4ca299d7ab553fe0d971a66c4df1142cb54284240cdee1c99",
+        "studies/actuator-dynamics/infrastructure/study_support.py": "a8b05e5fc467c6df6f3f3e6ff75baf85222dd23bd03fdd808613cc746909dabc",
+        "studies/actuator-dynamics/publication_inputs/primary_publication.json": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+        "studies/actuator-dynamics/study.json": "dc22ebceeb9c473d99de757b9a7ebb16cd77af7b01ba5fd1c33ce17e5491d063"
+      },
+      "elapsed_s": 64.64618810899992
+    }
+  },
+  "screen_sha256": "4499dfb01068c0f21bf528d0d4ef1861c3c6a3b043d165b787395ca8de4b9dbb",
+  "config_sha256": "b88cdfa9f35008f7f0ce5ee3bfb363b71f88fbc3fd721c3c1b74982963131afd",
+  "plot_inputs_sha256": "5a31f4e289447ec5a00b75eb81d9ed97bb86e813eaf019274d1da7403eaa78b2",
+  "publication_trace_level": "tight",
+  "checks": {
+    "baseline_nominal_full": {
+      "rows": 11230,
+      "event_count": 16,
+      "force_reconstruction_max_error_N": 1.734723475976807e-18,
+      "minimum_centrifugal_denominator_N": 1404.3488115301634,
+      "minimum_primary_normal_N": 381.874477783625,
+      "minimum_secondary_normal_N": 657.8670347334028,
+      "minimum_stick_stick_traction_margin": 0.37881812660355746,
+      "free_primary_axial_balance_max_residual_N": 3.764680732952497e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5189347327548595,
+        0.572124487533852
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.LOWER_STOP: 'lower_stop'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.UPPER_STOP: 'upper_stop'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 75.48747972998575,
+        "peak_percent": 5.342888621385974,
+        "peak_time_s": 0.06262499999999752,
+        "signed_force_at_peak_N": 75.24618932041933,
+        "centrifugal_at_peak_N": 1408.3428394751015,
+        "curvature_at_peak_N": -0.001320181718299389,
+        "shaft_correction_min_Nm": -1.3687975490977946,
+        "shaft_correction_max_Nm": 1.320418411356146
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.044999635253004266,
+        "peak_percent": 0.0014712396820558559,
+        "peak_time_s": 0.9672451658722452,
+        "signed_force_at_peak_N": -0.04495565968145657,
+        "centrifugal_at_peak_N": 3055.6312631968435,
+        "curvature_at_peak_N": -9.24430233493725e-06,
+        "shaft_correction_min_Nm": -0.23436572049347537,
+        "shaft_correction_max_Nm": -0.00011343430264052742
+      },
+      "post_onset": {
+        "max_abs_force_N": 75.48747972998575,
+        "peak_percent": 5.342888621385974,
+        "peak_time_s": 0.06262499999999752,
+        "signed_force_at_peak_N": 75.24618932041933,
+        "centrifugal_at_peak_N": 1408.3428394751015,
+        "curvature_at_peak_N": -0.001320181718299389,
+        "shaft_correction_min_Nm": -1.3687975490977946,
+        "shaft_correction_max_Nm": 1.320418411356146
+      },
+      "first_engagement": {
+        "time_s": 0.06196531002740028,
+        "pre_shift_speed_mm_s": 565.1382890447745,
+        "post_shift_speed_mm_s": 103.46258004579998
+      },
+      "first_outgoing_budget_N": {
+        "centrifugal": 1404.3488115301634,
+        "spring": -1234.674760408123,
+        "dynamic": 74.83167971428749,
+        "total": 244.50573083632798,
+        "quasi_static_total": 169.6740511220405
+      }
+    },
+    "baseline_nominal_qs": {
+      "rows": 11227,
+      "event_count": 14,
+      "force_reconstruction_max_error_N": 5.421010862427522e-20,
+      "minimum_centrifugal_denominator_N": 1400.295554044556,
+      "minimum_primary_normal_N": 362.1688065947199,
+      "minimum_secondary_normal_N": 624.7546416347111,
+      "minimum_stick_stick_traction_margin": 0.3784747815834949,
+      "free_primary_axial_balance_max_residual_N": 2.820093117361644e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5189347327548595,
+        0.5721244893956172
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.LOWER_STOP: 'lower_stop'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.UPPER_STOP: 'upper_stop'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 73.25201399809389,
+        "peak_percent": 5.21246589169049,
+        "peak_time_s": 0.06054999999999774,
+        "signed_force_at_peak_N": 73.16957165195858,
+        "centrifugal_at_peak_N": 1403.741974956664,
+        "curvature_at_peak_N": -0.004951426445094754,
+        "shaft_correction_min_Nm": -1.1798105314386715,
+        "shaft_correction_max_Nm": 1.1148792367662472
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.04463646222267351,
+        "peak_percent": 0.0014592817866095425,
+        "peak_time_s": 0.965611410437126,
+        "signed_force_at_peak_N": -0.04460293410325031,
+        "centrifugal_at_peak_N": 3056.499060875666,
+        "curvature_at_peak_N": -9.16402138442227e-06,
+        "shaft_correction_min_Nm": -0.2353789178725023,
+        "shaft_correction_max_Nm": -0.00011241500113669935
+      },
+      "post_onset": {
+        "max_abs_force_N": 73.25201399809389,
+        "peak_percent": 5.21246589169049,
+        "peak_time_s": 0.06054999999999774,
+        "signed_force_at_peak_N": 73.16957165195858,
+        "centrifugal_at_peak_N": 1403.741974956664,
+        "curvature_at_peak_N": -0.004951426445094754,
+        "shaft_correction_min_Nm": -1.1798105314386715,
+        "shaft_correction_max_Nm": 1.1148792367662472
+      },
+      "first_engagement": {
+        "time_s": 0.06003488657533921,
+        "pre_shift_speed_mm_s": 672.7797991615657,
+        "post_shift_speed_mm_s": 88.17300131908223
+      }
+    },
+    "baseline_tight_full": {
+      "rows": 11230,
+      "event_count": 16,
+      "force_reconstruction_max_error_N": 8.673617379884035e-19,
+      "minimum_centrifugal_denominator_N": 1404.3519923310637,
+      "minimum_primary_normal_N": 381.8945167655421,
+      "minimum_secondary_normal_N": 657.90130112129,
+      "minimum_stick_stick_traction_margin": 0.3788175131675517,
+      "free_primary_axial_balance_max_residual_N": 4.078619386671534e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5189347327548595,
+        0.5721244875475148
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.LOWER_STOP: 'lower_stop'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.UPPER_STOP: 'upper_stop'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 75.4877749592434,
+        "peak_percent": 5.342883025114441,
+        "peak_time_s": 0.06262499999999752,
+        "signed_force_at_peak_N": 75.24537430699269,
+        "centrifugal_at_peak_N": 1408.3290604211008,
+        "curvature_at_peak_N": -0.0016228810852668234,
+        "shaft_correction_min_Nm": -1.3688567497124473,
+        "shaft_correction_max_Nm": 1.32061239215378
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.0449996507220125,
+        "peak_percent": 0.0014713179395029043,
+        "peak_time_s": 0.9672455746974771,
+        "signed_force_at_peak_N": -0.04495805168295057,
+        "centrifugal_at_peak_N": 3055.6313136601857,
+        "curvature_at_peak_N": -9.244043138580935e-06,
+        "shaft_correction_min_Nm": -0.23436609281937826,
+        "shaft_correction_max_Nm": -0.00011358144406133098
+      },
+      "post_onset": {
+        "max_abs_force_N": 75.4877749592434,
+        "peak_percent": 5.342883025114441,
+        "peak_time_s": 0.06262499999999752,
+        "signed_force_at_peak_N": 75.24537430699269,
+        "centrifugal_at_peak_N": 1408.3290604211008,
+        "curvature_at_peak_N": -0.0016228810852668234,
+        "shaft_correction_min_Nm": -1.3688567497124473,
+        "shaft_correction_max_Nm": 1.32061239215378
+      },
+      "first_engagement": {
+        "time_s": 0.06197134673891402,
+        "pre_shift_speed_mm_s": 565.1626925275526,
+        "post_shift_speed_mm_s": 103.4670477085637
+      },
+      "first_outgoing_budget_N": {
+        "centrifugal": 1404.3519923310637,
+        "spring": -1234.6747604081231,
+        "dynamic": 74.83176036664625,
+        "total": 244.5089922895868,
+        "quasi_static_total": 169.67723192294056
+      }
+    },
+    "baseline_tight_qs": {
+      "rows": 11231,
+      "event_count": 16,
+      "force_reconstruction_max_error_N": 2.168404344971009e-19,
+      "minimum_centrifugal_denominator_N": 1400.3003406998887,
+      "minimum_primary_normal_N": 362.20821231138035,
+      "minimum_secondary_normal_N": 624.8207398784253,
+      "minimum_stick_stick_traction_margin": 0.37847415257599254,
+      "free_primary_axial_balance_max_residual_N": 3.1355549667128058e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5189347327548595,
+        0.5721244893860855
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.DEADZONE: 'deadzone'>, shift_constraint=<CVTShiftConstraint.LOWER_STOP: 'lower_stop'>, contact_regime=None)",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.LOW_RATIO_SEAT: 'low_ratio_seat'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.UPPER_STOP: 'upper_stop'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 73.25247715709489,
+        "peak_percent": 5.212459433915518,
+        "peak_time_s": 0.06054999999999774,
+        "signed_force_at_peak_N": 73.16848965652267,
+        "centrifugal_at_peak_N": 1403.7229562007287,
+        "curvature_at_peak_N": -0.00558171040857748,
+        "shaft_correction_min_Nm": -1.1807503024687553,
+        "shaft_correction_max_Nm": 1.115953766994956
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.0446362511627778,
+        "peak_percent": 0.0014593508326617819,
+        "peak_time_s": 0.965611870664697,
+        "signed_force_at_peak_N": -0.04460504520446003,
+        "centrifugal_at_peak_N": 3056.499109477513,
+        "curvature_at_peak_N": -9.163801555946268e-06,
+        "shaft_correction_min_Nm": -0.2353618136284693,
+        "shaft_correction_max_Nm": -0.00011256608176685954
+      },
+      "post_onset": {
+        "max_abs_force_N": 73.25247715709489,
+        "peak_percent": 5.212459433915518,
+        "peak_time_s": 0.06054999999999774,
+        "signed_force_at_peak_N": 73.16848965652267,
+        "centrifugal_at_peak_N": 1403.7229562007287,
+        "curvature_at_peak_N": -0.00558171040857748,
+        "shaft_correction_min_Nm": -1.1807503024687553,
+        "shaft_correction_max_Nm": 1.115953766994956
+      },
+      "first_engagement": {
+        "time_s": 0.060041250962934264,
+        "pre_shift_speed_mm_s": 673.3305470033918,
+        "post_shift_speed_mm_s": 88.24518108762513
+      }
+    },
+    "transient_nominal_full_control": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 4.336808689942018e-19,
+      "minimum_centrifugal_denominator_N": 3599.3268032759174,
+      "minimum_primary_normal_N": 4610.182357590218,
+      "minimum_secondary_normal_N": 5182.874815619102,
+      "minimum_stick_stick_traction_margin": 0.5646228785374768,
+      "free_primary_axial_balance_max_residual_N": 3.482178954905546e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5666236722476814,
+        0.5691538569075582
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 0.0019589941849374533,
+        "peak_percent": 5.442668287732251e-05,
+        "peak_time_s": 0.0,
+        "signed_force_at_peak_N": 0.0019589941849374533,
+        "centrifugal_at_peak_N": 3599.3268032759174,
+        "curvature_at_peak_N": 1.4961697745571286e-05,
+        "shaft_correction_min_Nm": -0.09967822782236849,
+        "shaft_correction_max_Nm": -0.0803263479911498
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.0017077079644200654,
+        "peak_percent": 4.736749585674153e-05,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.0017077079644200654,
+        "centrifugal_at_peak_N": 3605.2316752924103,
+        "curvature_at_peak_N": 1.4506992187288312e-05,
+        "shaft_correction_min_Nm": -0.09335398713793445,
+        "shaft_correction_max_Nm": -0.0803263479911498
+      },
+      "post_onset": {
+        "max_abs_force_N": 0.001826626550183359,
+        "peak_percent": 5.0708420332054e-05,
+        "peak_time_s": 0.05,
+        "signed_force_at_peak_N": 0.001826626550183359,
+        "centrifugal_at_peak_N": 3602.2154471033778,
+        "curvature_at_peak_N": 1.4748693077448892e-05,
+        "shaft_correction_min_Nm": -0.09641219597670736,
+        "shaft_correction_max_Nm": -0.0803263479911498
+      }
+    },
+    "transient_nominal_full_stress": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 0.0,
+      "minimum_centrifugal_denominator_N": 2995.57820854183,
+      "minimum_primary_normal_N": 3327.558871644211,
+      "minimum_secondary_normal_N": 3685.1680448291763,
+      "minimum_stick_stick_traction_margin": 0.5646228785374761,
+      "free_primary_axial_balance_max_residual_N": 3.2542163408422198e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5654358987178845,
+        0.5691538569075582
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 1.8308343280557353,
+        "peak_percent": 0.05096153228749101,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8308343280557353,
+        "centrifugal_at_peak_N": 3592.5810035055224,
+        "curvature_at_peak_N": 9.291302857774357e-05,
+        "shaft_correction_min_Nm": -0.16723392105258625,
+        "shaft_correction_max_Nm": -0.008302485301256447
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.07780701649754686,
+        "peak_percent": 0.002341937728053403,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.07780701649754686,
+        "centrifugal_at_peak_N": 3322.334986345659,
+        "curvature_at_peak_N": 0.00013571670775500364,
+        "shaft_correction_min_Nm": -0.09970970392284162,
+        "shaft_correction_max_Nm": -0.008302485301256447
+      },
+      "post_onset": {
+        "max_abs_force_N": 1.8308343280557353,
+        "peak_percent": 0.05096153228749101,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8308343280557353,
+        "centrifugal_at_peak_N": 3592.5810035055224,
+        "curvature_at_peak_N": 9.291302857774357e-05,
+        "shaft_correction_min_Nm": -0.16723392105258625,
+        "shaft_correction_max_Nm": -0.008302485301256447
+      }
+    },
+    "transient_nominal_qs_control": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 4.336808689942018e-19,
+      "minimum_centrifugal_denominator_N": 3603.172392916409,
+      "minimum_primary_normal_N": 4617.743690296782,
+      "minimum_secondary_normal_N": 5188.290710977021,
+      "minimum_stick_stick_traction_margin": 0.564403892938763,
+      "free_primary_axial_balance_max_residual_N": 2.7103783627191458e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.566604094645866,
+        0.5691486383669615
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 0.001992865016936433,
+        "peak_percent": 5.530862250316609e-05,
+        "peak_time_s": 0.0,
+        "signed_force_at_peak_N": 0.001992865016936433,
+        "centrifugal_at_peak_N": 3603.172392916409,
+        "curvature_at_peak_N": 1.5136521220332518e-05,
+        "shaft_correction_min_Nm": -0.10014834329771088,
+        "shaft_correction_max_Nm": -0.08053643114465166
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.001733111765554263,
+        "peak_percent": 4.802501133344778e-05,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.001733111765554263,
+        "centrifugal_at_peak_N": 3608.7690922567463,
+        "curvature_at_peak_N": 1.4659319603509468e-05,
+        "shaft_correction_min_Nm": -0.09372520461671885,
+        "shaft_correction_max_Nm": -0.08053643114465166
+      },
+      "post_onset": {
+        "max_abs_force_N": 0.0018558863765429628,
+        "peak_percent": 5.1468068409145965e-05,
+        "peak_time_s": 0.05,
+        "signed_force_at_peak_N": 0.0018558863765429628,
+        "centrifugal_at_peak_N": 3605.8986356153373,
+        "curvature_at_peak_N": 1.4912055896477206e-05,
+        "shaft_correction_min_Nm": -0.09682940540044824,
+        "shaft_correction_max_Nm": -0.08053643114465166
+      }
+    },
+    "transient_nominal_qs_stress": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 1.1102230246251565e-16,
+      "minimum_centrifugal_denominator_N": 2996.8363411515775,
+      "minimum_primary_normal_N": 3329.81323418549,
+      "minimum_secondary_normal_N": 3686.633904569924,
+      "minimum_stick_stick_traction_margin": 0.5644038929387627,
+      "free_primary_axial_balance_max_residual_N": 2.69840269920274e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5654079337616872,
+        0.5691486383669615
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 1.8387679675570603,
+        "peak_percent": 0.05113141174978999,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8387679675570603,
+        "centrifugal_at_peak_N": 3596.1611554068086,
+        "curvature_at_peak_N": 9.440195358958167e-05,
+        "shaft_correction_min_Nm": -0.1674913909190251,
+        "shaft_correction_max_Nm": -0.008369399539269773
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.07722776130955182,
+        "peak_percent": 0.0023218029926380035,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.07722776130955182,
+        "centrifugal_at_peak_N": 3326.19785375531,
+        "curvature_at_peak_N": 0.00013618448840657118,
+        "shaft_correction_min_Nm": -0.10001889982058249,
+        "shaft_correction_max_Nm": -0.008369399539269773
+      },
+      "post_onset": {
+        "max_abs_force_N": 1.8387679675570603,
+        "peak_percent": 0.05113141174978999,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8387679675570603,
+        "centrifugal_at_peak_N": 3596.1611554068086,
+        "curvature_at_peak_N": 9.440195358958167e-05,
+        "shaft_correction_min_Nm": -0.1674913909190251,
+        "shaft_correction_max_Nm": -0.008369399539269773
+      }
+    },
+    "transient_tight_full_control": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 4.336808689942018e-19,
+      "minimum_centrifugal_denominator_N": 3599.3268032759174,
+      "minimum_primary_normal_N": 4610.1823576842025,
+      "minimum_secondary_normal_N": 5182.8748196189,
+      "minimum_stick_stick_traction_margin": 0.5646228785374764,
+      "free_primary_axial_balance_max_residual_N": 3.5570999271095083e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5666236722924943,
+        0.5691538569075582
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 0.001958994184901191,
+        "peak_percent": 5.4426682876315035e-05,
+        "peak_time_s": 0.0,
+        "signed_force_at_peak_N": 0.001958994184901191,
+        "centrifugal_at_peak_N": 3599.3268032759174,
+        "curvature_at_peak_N": 1.4961697745571286e-05,
+        "shaft_correction_min_Nm": -0.09967822782236686,
+        "shaft_correction_max_Nm": -0.08032634839426737
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.0017077080965876787,
+        "peak_percent": 4.736749951929982e-05,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.0017077080965876787,
+        "centrifugal_at_peak_N": 3605.231675553985,
+        "curvature_at_peak_N": 1.4506992256594821e-05,
+        "shaft_correction_min_Nm": -0.09335398728109803,
+        "shaft_correction_max_Nm": -0.08032634839426737
+      },
+      "post_onset": {
+        "max_abs_force_N": 0.001826626543382284,
+        "peak_percent": 5.070842014112055e-05,
+        "peak_time_s": 0.05,
+        "signed_force_at_peak_N": 0.001826626543382284,
+        "centrifugal_at_peak_N": 3602.215447254751,
+        "curvature_at_peak_N": 1.4748693112324252e-05,
+        "shaft_correction_min_Nm": -0.09641219604796114,
+        "shaft_correction_max_Nm": -0.08032634839426737
+      }
+    },
+    "transient_tight_full_stress": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 6.938893903907228e-18,
+      "minimum_centrifugal_denominator_N": 2995.5782654392465,
+      "minimum_primary_normal_N": 3327.5589742936754,
+      "minimum_secondary_normal_N": 3685.1681130298566,
+      "minimum_stick_stick_traction_margin": 0.5646228785374763,
+      "free_primary_axial_balance_max_residual_N": 3.3661962106634746e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5654358974852792,
+        0.5691538569075582
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 1.8309933100433884,
+        "peak_percent": 0.05096595396808658,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8309933100433884,
+        "centrifugal_at_peak_N": 3592.5812576566386,
+        "curvature_at_peak_N": 9.290331839686222e-05,
+        "shaft_correction_min_Nm": -0.16722055554147475,
+        "shaft_correction_max_Nm": -0.00830248967548241
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.07780717590477158,
+        "peak_percent": 0.0023419420148880882,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.07780717590477158,
+        "centrifugal_at_peak_N": 3322.335711564988,
+        "curvature_at_peak_N": 0.00013571716860342678,
+        "shaft_correction_min_Nm": -0.09970991023652198,
+        "shaft_correction_max_Nm": -0.00830248967548241
+      },
+      "post_onset": {
+        "max_abs_force_N": 1.8309933100433884,
+        "peak_percent": 0.05096595396808658,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8309933100433884,
+        "centrifugal_at_peak_N": 3592.5812576566386,
+        "curvature_at_peak_N": 9.290331839686222e-05,
+        "shaft_correction_min_Nm": -0.16722055554147475,
+        "shaft_correction_max_Nm": -0.00830248967548241
+      }
+    },
+    "transient_tight_qs_control": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 4.336808689942018e-19,
+      "minimum_centrifugal_denominator_N": 3603.172392916409,
+      "minimum_primary_normal_N": 4617.743690654059,
+      "minimum_secondary_normal_N": 5188.290715024251,
+      "minimum_stick_stick_traction_margin": 0.564403892938762,
+      "free_primary_axial_balance_max_residual_N": 2.8733881593523414e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5666040946926605,
+        0.5691486383669615
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 0.001992865017899804,
+        "peak_percent": 5.530862252990283e-05,
+        "peak_time_s": 0.0,
+        "signed_force_at_peak_N": 0.001992865017899804,
+        "centrifugal_at_peak_N": 3603.172392916409,
+        "curvature_at_peak_N": 1.5136521220332518e-05,
+        "shaft_correction_min_Nm": -0.10014834329770779,
+        "shaft_correction_max_Nm": -0.08053643156432749
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.001733112035139507,
+        "peak_percent": 4.802501880139974e-05,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.001733112035139507,
+        "centrifugal_at_peak_N": 3608.7690924318667,
+        "curvature_at_peak_N": 1.4659319654891528e-05,
+        "shaft_correction_min_Nm": -0.09372520472909998,
+        "shaft_correction_max_Nm": -0.08053643156432749
+      },
+      "post_onset": {
+        "max_abs_force_N": 0.0018558862176602867,
+        "peak_percent": 5.1468064000445774e-05,
+        "peak_time_s": 0.05,
+        "signed_force_at_peak_N": 0.0018558862176602867,
+        "centrifugal_at_peak_N": 3605.8986357913377,
+        "curvature_at_peak_N": 1.4912055932648465e-05,
+        "shaft_correction_min_Nm": -0.09682940546978351,
+        "shaft_correction_max_Nm": -0.08053643156432749
+      }
+    },
+    "transient_tight_qs_stress": {
+      "rows": 3551,
+      "event_count": 0,
+      "force_reconstruction_max_error_N": 6.938893903907228e-18,
+      "minimum_centrifugal_denominator_N": 2996.8363806520097,
+      "minimum_primary_normal_N": 3329.813305555102,
+      "minimum_secondary_normal_N": 3686.6339523875545,
+      "minimum_stick_stick_traction_margin": 0.5644038929387623,
+      "free_primary_axial_balance_max_residual_N": 2.3297869709837382e-12,
+      "engaged_reflected_pivot_mass_range_kg": [
+        0.5654079329144843,
+        0.5691486383669615
+      ],
+      "all_modes": [
+        "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))"
+      ],
+      "engaged_all": {
+        "max_abs_force_N": 1.8389288136161352,
+        "peak_percent": 0.05113588091151042,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8389288136161352,
+        "centrifugal_at_peak_N": 3596.1614053317344,
+        "curvature_at_peak_N": 9.439227189146393e-05,
+        "shaft_correction_min_Nm": -0.16747679138706548,
+        "shaft_correction_max_Nm": -0.008369402591683393
+      },
+      "after_0_1_s": {
+        "max_abs_force_N": 0.07722785970767221,
+        "peak_percent": 0.0023218056020762588,
+        "peak_time_s": 0.1,
+        "signed_force_at_peak_N": 0.07722785970767221,
+        "centrifugal_at_peak_N": 3326.1983534974556,
+        "curvature_at_peak_N": 0.00013618480301196036,
+        "shaft_correction_min_Nm": -0.10001904054644864,
+        "shaft_correction_max_Nm": -0.008369402591683393
+      },
+      "post_onset": {
+        "max_abs_force_N": 1.8389288136161352,
+        "peak_percent": 0.05113588091151042,
+        "peak_time_s": 0.05380000000000001,
+        "signed_force_at_peak_N": -1.8389288136161352,
+        "centrifugal_at_peak_N": 3596.1614053317344,
+        "curvature_at_peak_N": 9.439227189146393e-05,
+        "shaft_correction_min_Nm": -0.16747679138706548,
+        "shaft_correction_max_Nm": -0.008369402591683393
+      }
+    },
+    "response_nominal": {
+      "shift_mm": {
+        "max_abs_difference": 0.0025266817481508497,
+        "rms_difference": 0.0015167849647479581,
+        "full_response_max_abs": 0.822646996180115
+      },
+      "primary_rpm": {
+        "max_abs_difference": 0.6704062961161981,
+        "rms_difference": 0.373092018775107,
+        "full_response_max_abs": 282.6867121463806
+      },
+      "primary_actuator_closing_force_N": {
+        "max_abs_difference": 1.7520595894352482,
+        "rms_difference": 1.0348197756679898,
+        "full_response_max_abs": 632.9719854109676
+      }
+    },
+    "response_tight": {
+      "shift_mm": {
+        "max_abs_difference": 0.0025265198129513777,
+        "rms_difference": 0.0015166498309082679,
+        "full_response_max_abs": 0.8226470446846914
+      },
+      "primary_rpm": {
+        "max_abs_difference": 0.6704151129511047,
+        "rms_difference": 0.3730912138747573,
+        "full_response_max_abs": 282.6866833720428
+      },
+      "primary_actuator_closing_force_N": {
+        "max_abs_difference": 1.7520748933695813,
+        "rms_difference": 1.0348366188777622,
+        "full_response_max_abs": 632.9719357071954
+      }
+    },
+    "refinement_response_max_change": {
+      "shift_mm": 4.399436328128559e-06,
+      "primary_rpm": 0.0003011277099176368,
+      "primary_actuator_closing_force_N": 0.0011196761556675483
+    },
+    "selected_force_response_at_peak": {
+      "time_s": 0.05380000000000001,
+      "actuator_force_change_N": -11.790457164348481,
+      "belt_opening_force_change_N": -15.232416632069166,
+      "shift_acceleration_change_m_s2": 3.2225067575337665
+    }
+  }
+}

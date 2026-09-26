@@ -757,6 +757,7 @@ def sample_variant(
     system: ComposedCVTHybridSystem,
     result,
     step_s: float,
+    extra_times: np.ndarray | None = None,
 ) -> tuple[
     list[SampleRecord],
     list[dict[str, Any]],
@@ -767,6 +768,9 @@ def sample_variant(
 
     for segment_index, segment in enumerate(result.segments):
         times = _segment_sample_times(segment, step_s)
+        if extra_times is not None:
+            additional = extra_times[(extra_times > segment.start_time) & (extra_times < segment.end_time)]
+            times = np.unique(np.concatenate((times, additional)))
         states = segment.dense_state_at(times)
 
         for local_index, time_s in enumerate(times):
@@ -1381,6 +1385,7 @@ def run_variant(
     rtol: float,
     atol: float,
     max_step_s: float,
+    extra_sample_times: np.ndarray | None = None,
 ) -> VariantResult:
     assembly = ablate_assembly(full_assembly, variant)
     system = build_system_from_assembly(
@@ -1418,6 +1423,7 @@ def run_variant(
         system=system,
         result=result,
         step_s=sample_step_s,
+        extra_times=extra_sample_times,
     )
     metrics = compute_metrics(
         variant,

@@ -11429,145 +11429,136 @@ validation of either formulation.
 \section{Dynamic Mechanics Retained by CINDER}
 \label{sec:results_dynamic_mechanics}
 
-At a given mechanism position, the same centrifugal or torque loading need
-not produce the same clamp during a transient. Part of that loading may be
-required to accelerate the actuator itself. A quasi-static actuator law omits
-that inertial demand. The resulting approximation may reproduce a
-smooth response while changing the reaction to a rapid load disturbance.
-The relevant question is therefore which retained inertial contributions are
-actually excited, and when their omission changes the solved CVT motion.
-
-The comparisons begin with the primary and secondary mechanisms under this
-common question, then examine the transient terms retained in the reduced
-belt. The actuator variants use the interchangeable interface in
-\Cref{app:num_affine_assembly}; their exact reductions and redistribution of
-rotating inertia are given in \Cref{app:results_quasistatic_actuators}.
-Evaluating an omitted term on the full-model trajectory isolates its local
-contribution. Integrating the corresponding reduced model answers the
-different question of whether that omission changes the trajectory itself.
+The preceding consistency checks, numerical refinements and comparison with
+Ballew provide a basis for examining the additional dynamics retained by
+CINDER. The primary flyweights, secondary helix and belt are considered in
+turn to determine how large these contributions become and how much they
+change the predicted motion. Their force and torque contributions are
+evaluated along the full-model motion; separately integrating a reduced
+model establishes the effect of omitting them.
 
 \subsection{Primary Actuation Dynamics}
 \label{sec:results_primary_actuator_dynamics}
 
-\subsubsection{Centrifugal drive and the motion it must accelerate}
-\label{sec:results_primary_dynamic_terms}
-
-The flyweights both generate the centrifugal closing action and move about
-their pivots as the primary sheave shifts. These roles involve different
-inertias. The shaft-axis map \(J_{f,p}(x_p)\) sets the centrifugal drive,
-whereas the pivot inertia \(I_f\) sets the torque required to accelerate the
-flyweight motion. Writing \Cref{eq:primary_flyweight_axial_force} as its
-quasi-static part plus its omitted contribution gives
+For the primary, the question is how much the flyweights' pivot motion changes
+the closing force and the resulting shift. The quasi-static flyweight force,
+denoted \(F_{\mathrm{fw},x_p}^{\mathrm{QS}}\), is the centrifugal closing
+force at a given shaft speed and sheave position. As the sheave moves, the
+flyweights also swing about their pivots, and accelerating this motion changes
+the force delivered to the sheave. With \(x_p=s\),
+\Cref{eq:primary_flyweight_axial_force} separates into
 \begin{equation}
 \begin{aligned}
  F_{\mathrm{fw},x_p}
- &=F_{\mathrm{fw},x_p}^{\mathrm{QS}}+\Delta F_{\mathrm{fw},x_p},\\
- F_{\mathrm{fw},x_p}^{\mathrm{QS}}
- &=\frac12\omega_p^2\frac{dJ_{f,p}}{dx_p},\\
+ &=F_{\mathrm{fw},x_p}^{\mathrm{QS}}+\Delta F_{\mathrm{fw},x_p},
+ &F_{\mathrm{fw},x_p}^{\mathrm{QS}}
+ &=\frac12\omega_p^2\frac{dJ_{f,p}}{ds},\\
  \Delta F_{\mathrm{fw},x_p}
- &=-I_f\left(\frac{dq_f}{dx_p}\right)^2\ddot x_p
-   -I_f\frac{dq_f}{dx_p}\frac{d^2q_f}{dx_p^2}\dot x_p^2.
+ &=-I_f\left(\frac{dq_f}{ds}\right)^2\ddot s
+   -I_f\frac{dq_f}{ds}\frac{d^2q_f}{ds^2}\dot s^2.
 \end{aligned}
 \label{eq:results_primary_dynamic_decomposition}
 \end{equation}
+The first correction opposes shift acceleration. Its coefficient
+\(I_f(dq_f/ds)^2\) is the flyweight pivot inertia expressed as a mass acting
+on the shift coordinate; it ranges from \SI{0.519}{kg} to \SI{0.572}{kg}
+over the reference mechanism's engaged travel. The second correction arises
+because the flyweight rotation per unit sheave travel changes along the ramp.
 
-The acceleration term has a positive inertial coefficient
-\begin{equation}
- m_{f,\mathrm{ref}}
- =I_f\left(\frac{dq_f}{ds}\right)^2,
- \label{eq:results_flyweight_reflected_inertia}
-\end{equation}
-because \(x_p=s\). Thus even a modest pivot inertia can resist shifting
-strongly if the mechanism requires a large flyweight rotation per unit sheave
-travel. The final term in
-\Cref{eq:results_primary_dynamic_decomposition} instead depends on how that
-motion ratio changes along the ramp. A large centrifugal force alone does not
-determine either correction.
+The comparison retains the same flyweights, ramp and spring. The quasi-static
+primary omits these two force corrections and holds its shaft-axis inertia
+at the initial value, while the secondary remains dynamic. It therefore also
+omits the changing angular-momentum contribution derived in
+\Cref{sec:primary_pulley_rotational_dynamics}. The exact reduction and study settings are given
+in \Cref{app:results_quasistatic_actuators,app:study_primary_dynamics}.
 
-This distinction gives a useful first sensitivity test before selecting a
-transient. For a sheave excursion of fixed shape and amplitude executed over
-a time scale \(T\), both \(\ddot x_p\) and \(\dot x_p^2\) scale as
-\(T^{-2}\). Shortening the same prescribed excursion can therefore magnify
-the dynamic correction without changing the centrifugal force at the same
-position and shaft speed. This is a kinematic scaling argument; in an actual
-CVT the excursion and its duration are themselves outcomes of the coupled
-solve.
+A first measure of these effects comes from the reference level-ground
+acceleration. It starts with the vehicle and
+belt at rest and the primary at \SI{1800}{rpm}, under the full-throttle engine
+and vehicle boundaries of \Cref{app:results_boundary_models}. In
+\Cref{fig:results_primary_dynamics}(a), retaining the primary dynamics lowers
+the closing speed at first belt contact from about \SI{673}{mm/s} to
+\SI{565}{mm/s}, and delays that contact by \SI{1.93}{ms}.
+Immediately afterward, the flyweights decelerate and their inertial
+contribution adds \SI{74.8}{N} to the closing action. Panel (b) shows why this
+is appreciable: the spring opposes most of the \SI{1404}{N} centrifugal
+force. The flyweight and spring contributions then sum to \SI{244.5}{N},
+compared with \SI{169.7}{N} when evaluated without the pivot terms at the
+same state. These are the actuator forces before the belt reaction, not the
+impulse at capture.
 
-% NEW DISPLAY FROM EXISTING FORMULATION / ARCHIVED PRIMARY STUDY.
-% Show q'_f and I_f(q'_f)^2 over admissible travel, then signed axial
-% corrections and the separate shaft-angular-momentum terms on selected
-% reference/rapid-load traces. The primary numerical archive must be recovered.
-\begin{figure}[tbp]
+\begin{figure}[H]
   \centering
-  \CINDERResultsFigure[54mm]
-    {figures/results/dynamics/primary_geometry_and_response.pdf}
-    {New figure: primary geometry, excitation, and response}
-    {Map the motion-ratio-weighted pivot inertia over travel. Below it, show
-     signed centrifugal/inertial force terms and a matched full-versus-QS
-     primary comparison. Keep the shaft-torque correction separate from the
-     axial-force correction. Quantitative primary evidence is pending.}
-  \caption{Primary-actuator comparison to be assembled from the fixed-pivot
-  mechanism map and its matched dynamic and quasi-static runs. The upper
-  display locates geometric sensitivity; the lower displays test whether the
-  realized motion excites that sensitivity and changes shaft or shift
-  response. All variants use the same tested primary mechanism and the
-  inertia treatment in \Cref{app:results_quasistatic_actuators}.}
+  \includegraphics[width=\linewidth]{figures/results/dynamics/primary_engagement.pdf}
+  \caption{Primary dynamics during the approach to first engagement.
+  (a) Independently integrated full and quasi-static primary models. Filled
+  and open markers give the speeds immediately before and after capture;
+  dotted lines mark the discontinuity. (b) Signed force contributions in the
+  full model immediately after its first engagement. The first three bars
+  accumulate the signed contributions; the final bar gives their sum.
+  The dashed level is the quasi-static actuator force at that same state.}
   \label{fig:results_primary_dynamics}
 \end{figure}
 
-\subsubsection{Small force corrections do not make flyweight inertia irrelevant}
-\label{sec:results_primary_scope}
+The later shifting is much gentler. Over the sampled engaged motion from
+\SI{0.1}{s} to \SI{10}{s}, the largest pivot-force correction is only
+\SI{0.045}{N}, and the largest magnitude relative to the simultaneous
+centrifugal force is \num{0.00147}\%. The distinction is the motion of the
+flyweights: the same mechanism that changes the engagement response operates
+very close to its quasi-static axial-force law during the subsequent shift.
 
-The reference actuator study identifies ordinary continuous Baja operation as
-close to quasi-static. A small primary correction means that little of the
-centrifugal action is consumed by accelerating the flyweights about their
-pivots. The comparison in \Cref{fig:results_primary_dynamics} separates this
-force-level statement from its consequence for shaft and shift motion.
-A local measure is
-\begin{equation}
- \Pi_p(t)=
- \frac{|\Delta F_{\mathrm{fw},x_p}(t)|}
-      {|F_{\mathrm{fw},x_p}^{\mathrm{QS}}(t)|},
- \qquad F_{\mathrm{fw},x_p}^{\mathrm{QS}}\ne0.
- \label{eq:results_primary_dynamic_number}
-\end{equation}
-The signed force terms must accompany this ratio so that a small denominator
-or cancellation between corrections is not mistaken for a large change in
-physical loading.
+Changing the applied torque tests whether this remains true away from that
+smooth drive. The primary torque is increased or decreased by
+\SI{5}{N.m}, \SI{10}{N.m} or \SI{20}{N.m}, with rise times of
+\SI{5}{ms}, \SI{20}{ms}, \SI{100}{ms} and \SI{250}{ms}, starting near
+20\%, 50\% and 80\% of engaged travel. All these cases remain in free
+shifting with both contacts sticking. \Cref{fig:results_primary_ramps}(a)
+shows that faster changes increase the force correction, but it remains
+small throughout this tested range. In the selected \SI{-20}{N.m},
+\SI{5}{ms} case at mid travel, the resolved peak is \SI{-1.83}{N}, or
+\num{0.0510}\% of the centrifugal force. The acceleration term accounts
+for almost all of it; the motion-ratio term is below \SI{0.001}{N} at that
+instant. Even this rapid torque change produces far less flyweight
+acceleration than engagement does.
 
-\CINDERResultsDraftNote{P1 --- recover the primary comparison}{
-  The supplied commercial-actuator recap gives the qualitative ordinary-Baja
-  conclusion, but not the primary's force peaks, shaft-torque corrections, or
-  paired trajectory errors. Insert those from the archived fixed-pivot study.
-  Use at least the smooth reference interval and the strongest admissible
-  primary transient already tested; report the interval, denominator, and
-  full/QS comparison. If those outputs do not support the qualitative
-  statement for the primary separately, revise that statement. No numerical
-  primary bound or universal negligible-inertia claim is assumed.}
+Both models are already shifting before the added torque is applied. Each
+is therefore also continued from its own starting state with the original
+engine boundary and no torque increment. Subtracting that motion from the
+ramped case leaves the change caused by the torque ramp.
 
-There is a second distinction to preserve. The same flyweight mass also
-changes the primary's shaft-axis angular momentum. Its contribution to the
-rotational balance is
-\begin{equation}
- \frac{d}{dt}\!\left[J_{f,p}(s)\omega_p\right]
- =J_{f,p}(s)\dot\omega_p
-  +\frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
- \label{eq:results_primary_angular_momentum_terms}
-\end{equation}
-Even when the pivot-acceleration force is small, outward flyweight motion
-changes the rotating inertia. During upshift, angular momentum is required
-to move that mass outward; during backshift, the redistribution reverses.
-The axial-force comparison and the shaft-torque comparison therefore answer
-different questions. In particular, the trajectory ablation changes the
-mechanism's inertial coupling as specified in the appendix; it is not a test
-of deleting a single axial term while everything else remains identical.
+The torque reduction initially lowers the belt's opening reaction more than
+the actuator's closing force, so the primary closes further than it would
+without the added torque.
+Panel (b) shows a shift response of about \SI{0.82}{mm}, with a maximum
+full--quasi-static difference of \SI{2.53}{\micro\metre}. The corresponding
+primary-speed difference is \SI{0.670}{rpm}. These response differences
+remain stable when both integration tolerances are tightened tenfold
+(\Cref{app:study_primary_dynamics}). The small force correction is therefore
+accompanied by a small, numerically resolved change in the motion.
 
-The primary result is consequently specific to the fixed-pivot roller
-mechanism examined here. It can justify the quasi-static force approximation
-for that mechanism over the supported operating intervals, while the maps in
-\Cref{eq:results_primary_dynamic_decomposition} identify what must be checked
-for another design. Neither greater flyweight mass nor a similar static
-clamp curve, by itself, establishes the size of the dynamic error.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/results/dynamics/primary_torque_ramps.pdf}
+  \caption{Primary response to smooth torque changes.
+  (a) Each point is the largest sampled magnitude of
+  \(\Delta F_{\mathrm{fw},x_p}/F_{\mathrm{fw},x_p}^{\mathrm{QS}}\)
+  over the six signed torque increments at the stated starting travel and
+  rise time. (b) Each model's extra shift in the selected mid-travel case,
+  relative to its continuation without the added torque.
+  Shading marks the \SI{5}{ms} ramp;
+  the lower trace resolves the difference between the two responses.
+  The secondary remains dynamic in every comparison.}
+  \label{fig:results_primary_ramps}
+\end{figure}
+
+For this primary mechanism, the centrifugal approximation is consequently
+well supported for the smooth shifting and torque changes examined here.
+Engagement requires a different level of detail: the rapid flyweight motion
+changes both the approach to contact and the force subsequently delivered
+to the sheave. Retaining the primary dynamics allows these parts of the same
+drive to be represented without extending the quasi-static approximation
+beyond the motion for which it is accurate.
+\FloatBarrier
 
 \subsection{Secondary Helix Dynamics and Transient Sensitivity}
 \label{sec:results_secondary_helix}
@@ -15741,8 +15732,6 @@ hashes accompany the execution record. The study README gives the complete
 reproduction commands. No model term is fitted or subtracted to reduce the
 reported remainder.
 
-
-
 \section{Solver Convergence}
 \label{app:study_solver_convergence}
 
@@ -16629,6 +16618,129 @@ publication plotter draws each continuous segment separately, including its
 endpoints, and applies no smoothing. The audit recomputes the comparison
 errors, checks the retained event sides and evaluates the refinement
 quantities reported here.
+
+\section{Primary-Actuator Dynamics}
+\label{app:study_primary_dynamics}
+
+The comparisons in \Cref{sec:results_primary_actuator_dynamics} use the
+reference assembly and boundaries of \Cref{app:common_physical_configuration,app:results_boundary_models},
+with the primary reduction in \Cref{app:results_quasistatic_actuators}.
+The full and quasi-static models have the same initial total primary
+shaft-axis inertia, \SI{0.00491861}{kg.m^2}, excluding the engine boundary.
+The reduction keeps this value constant and retains the translating mass;
+the full model retains the position-dependent flyweight inertia and pivot
+motion. The secondary remains dynamic and uses the reference bilateral
+helix topology. These are comparisons within CINDER~1.1.2.
+
+The baseline starts at \SI{1800}{rpm} with all other CVT velocities and the
+shift coordinate zero, and runs for \SI{10}{s} on level ground. The
+controlled screen starts from naturally reached states near 20\%, 50\% and
+80\% of engaged travel. At each position, the six torque increments
+\(\pm5\), \(\pm10\) and \(\pm20~\mathrm{N.m}\) are combined with the
+four rise times \(5\), \(20\), \(100\) and \(250~\mathrm{ms}\).
+Each increment follows \(A(3u^2-2u^3)\), where
+\(u=(t-0.05~\mathrm{s})/T\) during the ramp, and is then held for
+\SI{0.3}{s}. It is added to the unchanged engine torque boundary.
+The 72 recovered screen runs completed without a post-onset contact or
+support transition. The plotted screen peaks use \SI{2}{ms} reporting;
+they are sampled maxima, not continuous-time error bounds.
+
+The selected \(A=-20~\mathrm{N.m}\), \(T=5~\mathrm{ms}\) case is
+reintegrated from the archived physical states with their original free,
+stick--stick modes. These states were reached separately by the two models.
+Each receives both the torque ramp and an unforced control, giving
+\begin{equation}
+ \delta y_{\mathrm{QS}}-\delta y_{\mathrm{full}},
+ \qquad
+ \delta y=y_{\mathrm{forced}}-y_{\mathrm{control}}.
+ \label{eq:primary_controlled_response_difference}
+\end{equation}
+Both continuations remain free and sticking, so the comparison over
+\SIrange{0.05}{0.355}{s} requires no interpolation across events.
+The secondary-angle host is rebased to zero; under this time-programmed
+level-road boundary it changes distance metadata only.
+
+Exact state vectors, torque inputs and numerical settings are in
+\ResultsCode{studies/actuator-dynamics/publication_inputs/primary_publication.json}{primary_publication.json}.
+The individual screen rows are retained in
+\ResultsCode{studies/actuator-dynamics/publication_inputs/primary_screen.csv}{primary_screen.csv}.
+The full source and output hashes, masks, force checks and unrounded metrics
+are recorded in
+\ResultsCode{studies/actuator-dynamics/publication_inputs/primary_publication_audit.json}{primary_publication_audit.json}.
+
+\begin{table}[H]
+ \centering\small
+ \begin{tabular}{@{}lrr@{}}
+ \toprule
+ Setting or measured quantity & Nominal & Tighter \\
+ \midrule
+ Relative tolerance & \num{1e-4} & \num{1e-5} \\
+ Absolute tolerance & \num{1e-7} & \num{1e-8} \\
+ Baseline maximum step [ms] & 10 & 1 \\
+ Selected-ramp maximum step [ms] & 0.625 & 0.625 \\
+ First engagement, full [ms] & 61.96531 & 61.97135 \\
+ First engagement, quasi-static [ms] & 60.03489 & 60.04125 \\
+ Approach speed, full [mm/s] & 565.138 & 565.163 \\
+ Approach speed, quasi-static [mm/s] & 672.780 & 673.331 \\
+ Maximum paired shift difference [\si{\micro\metre}] & 2.52668 & 2.52652 \\
+ Maximum paired primary-speed difference [rpm] & 0.670406 & 0.670415 \\
+ \bottomrule
+ \end{tabular}
+ \caption{Focused LSODA refinement for the primary comparisons. Baseline
+ values refer to the first engagement; paired differences refer to the
+ selected torque ramp. Published traces use the tighter settings.}
+ \label{tab:primary_dynamics_refinement}
+\end{table}
+
+Baseline output is sampled every \SI{1}{ms}, with additional
+\SI{0.025}{ms} samples between \SI{40}{ms} and \SI{70}{ms}; every
+continuous segment retains its exact endpoints. The selected ramp is sampled
+every \SI{0.1}{ms}. This resolves its peak correction as \SI{-1.83099}{N},
+against \SI{3592.58}{N} centrifugal force. Its minimum centrifugal
+denominator after ramp onset exceeds \SI{2995}{N}. The baseline's largest
+engaged force correction is \SI{75.4878}{N}; its largest force fraction is
+\num{5.34288}\%, at a different instant. Over \SIrange{0.1}{10}{s},
+the largest sampled fraction is \num{0.00147132}\%.
+
+The first-engagement comparison is stable at the scales reported in the
+main text. The tiny subsequent seating sequence is less uniform: the
+quasi-static baseline records 14 transitions at nominal settings and 16 at
+tighter settings; the full model records 16 at both. The figure therefore
+shows the approach and first capture, and no invariant rebound count is
+claimed. The subsequent smooth torque-ramp comparisons contain no events.
+Across the selected response-difference traces, tightening the integration
+tolerances changes shift by at most \SI{0.0044}{\micro\metre} and primary
+speed by \SI{0.00031}{rpm}.
+
+The shaft-inertia difference is kept separate from the axial force. Written
+as an additional torque relative to constant initial inertia, it is
+\begin{equation}
+ \Delta\tau_{p,\mathrm{inertia}}
+ =-[J_{f,p}(s)-J_{f,p}(0)]\dot\omega_p
+   -\frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
+ \label{eq:primary_inertia_torque_diagnostic}
+\end{equation}
+It ranges from \SI{-1.369}{N.m} to \SI{1.321}{N.m} over engaged baseline
+motion, and from \SI{-0.2344}{N.m} to \SI{-0.000114}{N.m} after
+\SI{0.1}{s}. The selected ramp's post-onset range is
+\SIrange{-0.1672}{-0.00830}{N.m}. The integrated response differences include
+this coupling as well as the pivot-force reduction.
+
+The sampled free-primary force balance closes to within \SI{4.1e-12}{N}
+across the new runs. At the selected peak, the torque ramp lowers the actuator
+force by \SI{11.79}{N} and the belt's opening reaction by \SI{15.23}{N}
+relative to the full model's unforced control, accounting for the additional
+closing acceleration. Both integrated normal loads remain positive, and
+the sampled stick--stick tractions remain inside the static limits.
+
+The maintained entry point
+\ResultsCode{studies/actuator-dynamics/run.py}{run.py}
+accepts \texttt{--plot-only} to regenerate the two figures from verified
+compact outputs, and \texttt{--primary-publication} to repeat these
+baseline and selected-ramp refinements before plotting. The latter preserves
+the study's other outputs. Recovered screen provenance and the relationship
+to the earlier actuator archive are documented with the study.
+\FloatBarrier
 
 \section{Common-Course Operation and Tuning}
 \label{app:study_course_tuning}

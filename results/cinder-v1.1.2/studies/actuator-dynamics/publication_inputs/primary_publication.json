@@ -1,0 +1,71 @@
+{
+  "release": "1.1.2",
+  "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "initial_states": {
+    "full": {
+      "cvt_vector": [
+        327.49543726554924,
+        213.0272019067888,
+        17.689282561655947,
+        0.0107681296850119,
+        0.0044757899555839
+      ],
+      "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+      "host_angle_rad": 0.0
+    },
+    "qs": {
+      "cvt_vector": [
+        327.6698209686831,
+        213.194138249577,
+        17.70151930231595,
+        0.0107716216005358,
+        0.0044996474657374
+      ],
+      "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+      "host_angle_rad": 0.0
+    }
+  },
+  "initial_state_source": {
+    "sha256": "1fc4d4f5a5fc3afe74f7d605ddd11e199400dc4127dbdb9145f877fbd26b9c4f",
+    "archive": "artifacts(2).zip",
+    "archive_sha256": "b8fce02a6833f5947b428d3c9df0c6a902a0c59f2cb4745df17004e3b748d6e9",
+    "library_file_id": "libfile_6c23e67c8c988191af6134b00e192917",
+    "columns": [
+      "primary_omega_rad_s",
+      "secondary_omega_rad_s",
+      "belt_speed_m_s",
+      "shift_m",
+      "shift_speed_m_s"
+    ],
+    "note": "Physical state copied exactly from each archived selected trace at t=0. Host angle rebased to zero; only distance metadata changes under this time-programmed flat boundary. No equations depend on it."
+  },
+  "candidate": {
+    "actuator": "primary",
+    "shift_percent": 50.0,
+    "amplitude_Nm": -20.0,
+    "ramp_s": 0.005,
+    "onset_s": 0.05,
+    "hold_s": 0.3
+  },
+  "settings": {
+    "nominal": {
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "max_step_s": 0.01
+    },
+    "tight": {
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "max_step_s": 0.001
+    }
+  },
+  "baseline_duration_s": 10.0,
+  "baseline_report_step_s": 0.001,
+  "baseline_early_report_step_s": 2.5e-05,
+  "baseline_early_window_s": [
+    0.04,
+    0.07
+  ],
+  "transient_report_step_s": 0.0001,
+  "transient_comparison": "(QS stressed - QS control) - (full stressed - full control)"
+}
