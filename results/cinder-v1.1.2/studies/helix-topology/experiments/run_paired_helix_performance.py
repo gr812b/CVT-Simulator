@@ -278,6 +278,7 @@ def _run_variant_case(
     constants,
     variant,
     solver: dict[str, Any],
+    initial_mode_override=None,
 ) -> VariantRun:
     duration_s = case.onset_s + case.ramp_s + case.hold_s
     programme = flat_programme(route, duration_s)
@@ -312,7 +313,9 @@ def _run_variant_case(
         solver.get("deadzone_lock_absolute_tolerance_m_s", 1.0e-6)
     )
 
-    if variant.dynamic_helix:
+    if initial_mode_override is not None:
+        initial_mode = initial_mode_override
+    elif variant.dynamic_helix:
         initial_mode = restart.mode
     else:
         initial_mode = system.classify_initial_mode(restart.full_state)

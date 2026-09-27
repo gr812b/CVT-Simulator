@@ -1,0 +1,795 @@
+{
+  "scope": "reanalysis of archived outputs; no new simulations",
+  "scientific_release": "cinder-cvt==1.1.2",
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "commercial_selection": {
+    "selected": {
+      "status": "completed",
+      "case_id": "S_s50_m120_r25ms",
+      "added_secondary_torque_Nm": -120.0,
+      "ramp_s": 0.025,
+      "restart_shift_percent": 50.00970246479452,
+      "response_class": "clean_continuous",
+      "final_shift_response_vs_control_mm": -7.407458957695012,
+      "peak_pi_total": 0.0786787122765043,
+      "peak_pi_omega": 0.07875914385476206,
+      "peak_pi_axial": 0.01602751251431729,
+      "peak_pi_curvature": 0.0,
+      "minimum_qs_torque_fraction_of_onset": 0.9215905816853109,
+      "peak_abs_dynamic_helix_force_correction_N": 89.28418332883837,
+      "selection_status": "target_band_unreached_fallback_highest_clean",
+      "target_lower": 0.1,
+      "target_upper": 0.2,
+      "minimum_denominator_fraction": 0.25
+    },
+    "screen_rows": 48,
+    "response_classes": {
+      "clean_continuous": 30,
+      "impact_reset": 18
+    },
+    "eligible_count": 30,
+    "eligible_in_target_band": 0,
+    "highest_eligible_case": "S_s50_m120_r25ms"
+  },
+  "reference_component": {
+    "movable_inertia_kg_m2": 0.0025139,
+    "helix_radius_m": 0.04445,
+    "helix_angle_deg": 20.0,
+    "local_motion_ratio_rad_per_m": 61.81051562327609,
+    "local_reflected_inertia_kg": 9.604455107836596
+  },
+  "commercial": {
+    "low": {
+      "registered_inertia_kg_m2": 0.0055559999999228,
+      "generic_diagnostic_inertia_range": [
+        0.002513899999999998,
+        0.0025139000000000016
+      ],
+      "local_reflected_inertia_kg": 4.274765094799475,
+      "scaling_vs_reference": {
+        "rotational_inertia_ratio": 2.210111778480767,
+        "shaft_acceleration_force_coefficient_ratio": 0.9918063427494508,
+        "local_reflected_inertia_ratio": 0.4450814800843346
+      },
+      "term_reconstruction_max_error_Nm": 5.329070518200751e-15,
+      "delivered_force_from_correct_inertia_max_error_N": 9.094947017729282e-13,
+      "force_identity_max_error_N": 1.4210854715202004e-13,
+      "peak_fraction": 0.0314687490658756,
+      "peak_abs_dynamic_force_N": 31.217287655550848,
+      "minimum_denominator_fraction": 0.9653180993220103,
+      "peak_fraction_row": {
+        "time_s": 0.078,
+        "tau_secondary_belt_Nm": 33.82926785227086,
+        "tau_helix_qs_Nm": 35.75049774576213,
+        "helix_motion_ratio_rad_per_m": 27.73799137250864,
+        "helix_motion_ratio_gradient_rad_per_m2": -0.0,
+        "secondary_alpha_rad_s2": -201.32434151804125,
+        "secondary_axial_speed_m_s": 0.0156292617202455,
+        "secondary_axial_acceleration_m_s2": -0.0419525366841366,
+        "dynamic_torque_omega_Nm": -1.1185580414586995,
+        "dynamic_torque_axial_Nm": -0.0064654010828406,
+        "dynamic_torque_curvature_Nm": -0.0,
+        "dynamic_torque_total_Nm": -1.1250234425415404,
+        "pi_s_omega": 0.0312879012038732,
+        "pi_s_axial": 0.0001808478620023,
+        "pi_s_curvature": 0.0,
+        "pi_s_total": 0.0314687490658756,
+        "helix_qs_force_N": 991.6469980348396,
+        "helix_full_force_N": 1022.8528885779268,
+        "helix_dynamic_force_correction_N": 31.20589054308721
+      },
+      "response_metrics": {
+        "shift_mm": {
+          "max_abs_full_minus_qs_response": 0.10880994743357242,
+          "time_s": 0.25300000000000017,
+          "full_response_at_max": -4.02853668457233,
+          "qs_response_at_max": -3.919726737138758,
+          "archive_metric_difference": 1.817990202823694e-15
+        },
+        "primary_rpm": {
+          "max_abs_full_minus_qs_response": 15.432746277737351,
+          "time_s": 0.2690000000000002,
+          "full_response_at_max": 13.223599373616707,
+          "qs_response_at_max": -2.2091469041206437,
+          "archive_metric_difference": -4.547473508864641e-13
+        },
+        "secondary_clamp_N": {
+          "max_abs_full_minus_qs_response": 40.15916554808018,
+          "time_s": 0.2650000000000002,
+          "full_response_at_max": 199.70705956801066,
+          "qs_response_at_max": 159.54789401993048,
+          "archive_metric_difference": 2.2026824808563106e-13
+        }
+      },
+      "roles": {
+        "full_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2514.5090816457696,
+          "min_secondary_normal_N": 2801.8827557449004
+        },
+        "full_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2514.5090816457687,
+          "min_secondary_normal_N": 2904.3709144735026
+        },
+        "qs_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2535.620648361118,
+          "min_secondary_normal_N": 2822.117397071737
+        },
+        "qs_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2535.620648361121,
+          "min_secondary_normal_N": 2920.71427902841
+        }
+      }
+    },
+    "nominal": {
+      "registered_inertia_kg_m2": 0.0128750000004766,
+      "generic_diagnostic_inertia_range": [
+        0.0025138999999999986,
+        0.002513900000000001
+      ],
+      "local_reflected_inertia_kg": 14.264604906698588,
+      "scaling_vs_reference": {
+        "rotational_inertia_ratio": 5.121524324943952,
+        "shaft_acceleration_force_coefficient_ratio": 2.757992799902657,
+        "local_reflected_inertia_ratio": 1.4852070988451547
+      },
+      "term_reconstruction_max_error_Nm": 1.2878587085651816e-14,
+      "delivered_force_from_correct_inertia_max_error_N": 1.1368683772161603e-12,
+      "force_identity_max_error_N": 4.263256414560601e-13,
+      "peak_fraction": 0.0786993739026918,
+      "peak_abs_dynamic_force_N": 89.296313395012,
+      "minimum_denominator_fraction": 0.9215388772404608,
+      "peak_fraction_row": {
+        "time_s": 0.0785,
+        "tau_secondary_belt_Nm": 30.174935430766787,
+        "tau_helix_qs_Nm": 34.04597724840302,
+        "helix_motion_ratio_rad_per_m": 33.28558964701036,
+        "helix_motion_ratio_gradient_rad_per_m2": -0.0,
+        "secondary_alpha_rad_s2": -206.2542351455595,
+        "secondary_axial_speed_m_s": 0.0170932819649529,
+        "secondary_axial_acceleration_m_s2": -0.0557080998598039,
+        "dynamic_torque_omega_Nm": -2.6555232775973923,
+        "dynamic_torque_axial_Nm": -0.0238738157572157,
+        "dynamic_torque_curvature_Nm": -0.0,
+        "dynamic_torque_total_Nm": -2.679397093354608,
+        "pi_s_omega": 0.0779981510949859,
+        "pi_s_axial": 0.0007012228077058,
+        "pi_s_curvature": 0.0,
+        "pi_s_total": 0.0786993739026918,
+        "helix_qs_force_N": 1133.240427821794,
+        "helix_full_force_N": 1222.4257399725875,
+        "helix_dynamic_force_correction_N": 89.18531215079379
+      },
+      "response_metrics": {
+        "shift_mm": {
+          "max_abs_full_minus_qs_response": 0.2742044686207592,
+          "time_s": 0.2695000000000002,
+          "full_response_at_max": -4.352040503799129,
+          "qs_response_at_max": -4.07783603517837,
+          "archive_metric_difference": 0.0
+        },
+        "primary_rpm": {
+          "max_abs_full_minus_qs_response": 40.36487927460212,
+          "time_s": 0.2880000000000002,
+          "full_response_at_max": 40.03683959008822,
+          "qs_response_at_max": -0.32803968451389665,
+          "archive_metric_difference": 0.0
+        },
+        "secondary_clamp_N": {
+          "max_abs_full_minus_qs_response": 109.07531782273986,
+          "time_s": 0.2855000000000002,
+          "full_response_at_max": 303.7654024189685,
+          "qs_response_at_max": 194.69008459622864,
+          "archive_metric_difference": 2.2737367544323206e-13
+        }
+      },
+      "roles": {
+        "full_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2835.7271677955973,
+          "min_secondary_normal_N": 3161.184565189257
+        },
+        "full_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2835.7271677955973,
+          "min_secondary_normal_N": 3274.296212732841
+        },
+        "qs_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2891.609985022592,
+          "min_secondary_normal_N": 3215.839977398927
+        },
+        "qs_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 2891.609985022593,
+          "min_secondary_normal_N": 3332.392846747135
+        }
+      }
+    },
+    "high": {
+      "registered_inertia_kg_m2": 0.0204689999995864,
+      "generic_diagnostic_inertia_range": [
+        0.0025138999999999986,
+        0.002513900000000001
+      ],
+      "local_reflected_inertia_kg": 27.99781352688518,
+      "scaling_vs_reference": {
+        "rotational_inertia_ratio": 8.142328652526514,
+        "shaft_acceleration_force_coefficient_ratio": 4.871918413633401,
+        "local_reflected_inertia_ratio": 2.9150860941648657
+      },
+      "term_reconstruction_max_error_Nm": 3.552713678800501e-15,
+      "delivered_force_from_correct_inertia_max_error_N": 1.3642420526593924e-12,
+      "force_identity_max_error_N": 1.4210854715202004e-13,
+      "peak_fraction": 0.136038106844125,
+      "peak_abs_dynamic_force_N": 162.3621718697716,
+      "minimum_denominator_fraction": 0.8723333410759989,
+      "peak_fraction_row": {
+        "time_s": 0.0795,
+        "tau_secondary_belt_Nm": 26.37788902913317,
+        "tau_helix_qs_Nm": 32.22518239926659,
+        "helix_motion_ratio_rad_per_m": 36.98398849667819,
+        "helix_motion_ratio_gradient_rad_per_m2": -0.0,
+        "secondary_alpha_rad_s2": -211.1272209650529,
+        "secondary_axial_speed_m_s": 0.0188630164378891,
+        "secondary_axial_acceleration_m_s2": -0.0822822218817999,
+        "dynamic_torque_omega_Nm": -4.321563085846348,
+        "dynamic_torque_axial_Nm": -0.0622897204564981,
+        "dynamic_torque_curvature_Nm": -0.0,
+        "dynamic_torque_total_Nm": -4.383852806302846,
+        "pi_s_omega": 0.1341051551641396,
+        "pi_s_axial": 0.0019329516799853,
+        "pi_s_curvature": 0.0,
+        "pi_s_total": 0.136038106844125,
+        "helix_qs_force_N": 1191.815775157832,
+        "helix_full_force_N": 1353.948136917267,
+        "helix_dynamic_force_correction_N": 162.13236175943484
+      },
+      "response_metrics": {
+        "shift_mm": {
+          "max_abs_full_minus_qs_response": 0.45353712437412685,
+          "time_s": 0.2785000000000002,
+          "full_response_at_max": -4.568506655605505,
+          "qs_response_at_max": -4.114969531231378,
+          "archive_metric_difference": 9.43689570931383e-16
+        },
+        "primary_rpm": {
+          "max_abs_full_minus_qs_response": 68.48538996497155,
+          "time_s": 0.2995000000000002,
+          "full_response_at_max": 69.41387480366438,
+          "qs_response_at_max": 0.9284848386928388,
+          "archive_metric_difference": 0.0
+        },
+        "secondary_clamp_N": {
+          "max_abs_full_minus_qs_response": 189.61039392003408,
+          "time_s": 0.2970000000000002,
+          "full_response_at_max": 404.56149380522857,
+          "qs_response_at_max": 214.95109988519448,
+          "archive_metric_difference": 2.5579538487363607e-13
+        }
+      },
+      "roles": {
+        "full_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 3030.669154705776,
+          "min_secondary_normal_N": 3384.501200212314
+        },
+        "full_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 3030.669154705775,
+          "min_secondary_normal_N": 3499.0925068798338
+        },
+        "qs_control": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 3126.0797804199624,
+          "min_secondary_normal_N": 3478.7341397197447
+        },
+        "qs_stress": {
+          "segments": 1,
+          "modes": [
+            "STICK_STICK"
+          ],
+          "min_primary_normal_N": 3126.079780419961,
+          "min_secondary_normal_N": 3603.764490893114
+        }
+      }
+    }
+  },
+  "paired": {
+    "E58_reversal_270_s30_engine_m28_r050": {
+      "full": {
+        "segments": [
+          {
+            "index": 0,
+            "start": 0.0,
+            "end": 0.423609551013516,
+            "mode": "STICK_STICK",
+            "event": "cvt:primary_static_capacity"
+          },
+          {
+            "index": 1,
+            "start": 0.423609551013516,
+            "end": 0.43,
+            "mode": "BOTH_SLIP",
+            "event": null
+          }
+        ],
+        "first_post_onset_nonstick_s": 0.423609551013516,
+        "post_onset_nonstick_duration_s": 0.006390448986483999,
+        "radius_ratio_reconstruction_error": 3.9968028886505635e-15,
+        "end_s": 0.43
+      },
+      "quasi_static_helix": {
+        "segments": [
+          {
+            "index": 0,
+            "start": 0.0,
+            "end": 3.845297615777259e-08,
+            "mode": "BOTH_SLIP",
+            "event": "cvt:secondary_restick"
+          },
+          {
+            "index": 1,
+            "start": 3.845297615777259e-08,
+            "end": 4.234585963025758e-08,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:primary_restick"
+          },
+          {
+            "index": 2,
+            "start": 4.234585963025758e-08,
+            "end": 0.4189487163795227,
+            "mode": "STICK_STICK",
+            "event": "cvt:primary_static_capacity"
+          },
+          {
+            "index": 3,
+            "start": 0.4189487163795227,
+            "end": 0.43,
+            "mode": "BOTH_SLIP",
+            "event": null
+          }
+        ],
+        "first_post_onset_nonstick_s": 0.4189487163795227,
+        "post_onset_nonstick_duration_s": 0.011051283620477304,
+        "radius_ratio_reconstruction_error": 4.440892098500626e-15,
+        "end_s": 0.43
+      },
+      "initial_state_max_absolute_difference": 0.0,
+      "common_clock_differences": {
+        "shift_mm": 2.025707209885031,
+        "ratio_secondary_over_primary": 0.23145307752078947,
+        "actual_speed_ratio": 0.002066037494262374,
+        "primary_rpm": 4.80695576059361,
+        "secondary_rpm": 1.0405976307031324
+      },
+      "qs_minus_full_first_nonstick_ms": -4.660834633993305
+    },
+    "E58_stock_300_s30_output_m120_r002": {
+      "full": {
+        "segments": [
+          {
+            "index": 0,
+            "start": 0.0,
+            "end": 0.3610285625663326,
+            "mode": "STICK_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 1,
+            "start": 0.3610285625663326,
+            "end": 0.3610546213637963,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 2,
+            "start": 0.3610546213637963,
+            "end": 0.361075174145382,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 3,
+            "start": 0.361075174145382,
+            "end": 0.3610799622334265,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 4,
+            "start": 0.3610799622334265,
+            "end": 0.3610837359901082,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 5,
+            "start": 0.3610837359901082,
+            "end": 0.3610846143913714,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 6,
+            "start": 0.3610846143913714,
+            "end": 0.3610853029188057,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 7,
+            "start": 0.3610853029188057,
+            "end": 0.361085461603032,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 8,
+            "start": 0.361085461603032,
+            "end": 0.3610855671070728,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 9,
+            "start": 0.3610855671070728,
+            "end": 0.361660131541068,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:primary_restick"
+          },
+          {
+            "index": 10,
+            "start": 0.361660131541068,
+            "end": 0.382,
+            "mode": "STICK_STICK",
+            "event": null
+          }
+        ],
+        "first_post_onset_nonstick_s": 0.3610285625663326,
+        "post_onset_nonstick_duration_s": 0.0006315689747354303,
+        "radius_ratio_reconstruction_error": 8.881784197001252e-15,
+        "end_s": 0.382
+      },
+      "quasi_static_helix": {
+        "segments": [
+          {
+            "index": 0,
+            "start": 0.0,
+            "end": 4.9156613794775485e-09,
+            "mode": "BOTH_SLIP",
+            "event": "cvt:primary_restick"
+          },
+          {
+            "index": 1,
+            "start": 4.9156613794775485e-09,
+            "end": 5.145269394993429e-09,
+            "mode": "PRIMARY_STICK_SECONDARY_SLIP",
+            "event": "cvt:secondary_restick"
+          },
+          {
+            "index": 2,
+            "start": 5.145269394993429e-09,
+            "end": 0.3638703218449874,
+            "mode": "STICK_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 3,
+            "start": 0.3638703218449874,
+            "end": 0.3638965257967286,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 4,
+            "start": 0.3638965257967286,
+            "end": 0.3639170420230246,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 5,
+            "start": 0.3639170420230246,
+            "end": 0.3639279537781941,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 6,
+            "start": 0.3639279537781941,
+            "end": 0.3639364902620503,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 7,
+            "start": 0.3639364902620503,
+            "end": 0.3639410274845879,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 8,
+            "start": 0.3639410274845879,
+            "end": 0.3639445745966203,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 9,
+            "start": 0.3639445745966203,
+            "end": 0.3639464586868106,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 10,
+            "start": 0.3639464586868106,
+            "end": 0.3639479305643122,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 11,
+            "start": 0.3639479305643122,
+            "end": 0.3639487116894085,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 12,
+            "start": 0.3639487116894085,
+            "end": 0.3639493203704957,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 13,
+            "start": 0.3639493203704957,
+            "end": 0.3639496423112536,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 14,
+            "start": 0.3639496423112536,
+            "end": 0.3639498917127534,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 15,
+            "start": 0.3639498917127534,
+            "end": 0.3639500222416775,
+            "mode": "DEADZONE",
+            "event": "cvt:engagement_reached"
+          },
+          {
+            "index": 16,
+            "start": 0.3639500222416775,
+            "end": 0.3639501192734205,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:low_ratio_seat_reached"
+          },
+          {
+            "index": 17,
+            "start": 0.3639501192734205,
+            "end": 0.3645152706405986,
+            "mode": "PRIMARY_SLIP_SECONDARY_STICK",
+            "event": "cvt:primary_restick"
+          },
+          {
+            "index": 18,
+            "start": 0.3645152706405986,
+            "end": 0.382,
+            "mode": "STICK_STICK",
+            "event": null
+          }
+        ],
+        "first_post_onset_nonstick_s": 0.3638703218449874,
+        "post_onset_nonstick_duration_s": 0.0006449487956111666,
+        "radius_ratio_reconstruction_error": 8.881784197001252e-15,
+        "end_s": 0.382
+      },
+      "initial_state_max_absolute_difference": 0.0,
+      "common_clock_differences": {
+        "shift_mm": 0.051429500009342544,
+        "ratio_secondary_over_primary": 0.013672493829980148,
+        "actual_speed_ratio": 0.0015881654866145012,
+        "primary_rpm": 8.588358614525532,
+        "secondary_rpm": 2.4539678935739175
+      },
+      "qs_minus_full_first_nonstick_ms": 2.8417592786548207
+    }
+  },
+  "severe_native_event_sides": [
+    {
+      "time_s": 0.423609551013516,
+      "segment_index": 0,
+      "sample_location": "segment_end",
+      "shift_mm": 11.73852496682162,
+      "shift_speed_m_s": -0.0018288115269185,
+      "shift_acceleration_closure_m_s2": -0.0016425865680785,
+      "e58_helix_qs_margin_Nm": 1.4250626078276802,
+      "e58_helix_actual_margin_Nm": 1.62757617141107,
+      "e58_helix_physical_shaft_term_Nm": 0.2027280042814589,
+      "e58_helix_physical_shift_term_Nm": -0.0002252733975841,
+      "e58_helix_physical_curvature_term_Nm": 1.0832699515012586e-05,
+      "normal_secondary_N": 1051.2466154763451,
+      "mass_helix_reflected_active_kg": 7.481958345788025,
+      "mass_total_direct_active_kg": 9.666869729662118,
+      "lambda_primary": -0.6499999999997068,
+      "lambda_secondary": 0.3883254097402874,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "full"
+    },
+    {
+      "time_s": 0.423609551013516,
+      "segment_index": 1,
+      "sample_location": "segment_start",
+      "shift_mm": 11.73852496682162,
+      "shift_speed_m_s": -0.0018288115269185,
+      "shift_acceleration_closure_m_s2": -22.026705020334383,
+      "e58_helix_qs_margin_Nm": 2.0019100975630675,
+      "e58_helix_actual_margin_Nm": -0.8054617203258432,
+      "e58_helix_physical_shaft_term_Nm": 0.2134813780991644,
+      "e58_helix_physical_shift_term_Nm": -3.0208640286875905,
+      "e58_helix_physical_curvature_term_Nm": 1.0832699515012586e-05,
+      "normal_secondary_N": 716.3330867333397,
+      "mass_helix_reflected_active_kg": 7.481958345788025,
+      "mass_total_direct_active_kg": 9.666869729662118,
+      "lambda_primary": -0.55,
+      "lambda_secondary": 0.55,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "full"
+    },
+    {
+      "time_s": 0.43,
+      "segment_index": 1,
+      "sample_location": "segment_end",
+      "shift_mm": 11.26960559875709,
+      "shift_speed_m_s": -0.1447905724899454,
+      "shift_acceleration_closure_m_s2": -21.91240227952416,
+      "e58_helix_qs_margin_Nm": 1.852652107334908,
+      "e58_helix_actual_margin_Nm": -0.8390856887988516,
+      "e58_helix_physical_shaft_term_Nm": 0.2134961140479533,
+      "e58_helix_physical_shift_term_Nm": -2.9721502541258324,
+      "e58_helix_physical_curvature_term_Nm": 0.0669163439441194,
+      "normal_secondary_N": 710.195093238969,
+      "mass_helix_reflected_active_kg": 7.318356126177304,
+      "mass_total_direct_active_kg": 9.492107016321254,
+      "lambda_primary": -0.55,
+      "lambda_secondary": 0.55,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "full"
+    },
+    {
+      "time_s": 0.4189487163795227,
+      "segment_index": 2,
+      "sample_location": "segment_end",
+      "shift_mm": 11.788740576830948,
+      "shift_speed_m_s": -0.0016146691882717,
+      "shift_acceleration_closure_m_s2": -0.0020199850345839,
+      "e58_helix_qs_margin_Nm": 1.57283863732102,
+      "e58_helix_actual_margin_Nm": 1.57283863732102,
+      "e58_helix_physical_shaft_term_Nm": 0.2011521326717509,
+      "e58_helix_physical_shift_term_Nm": -0.0002773607058432,
+      "e58_helix_physical_curvature_term_Nm": 8.457680166413243e-06,
+      "normal_secondary_N": 1044.6604614010737,
+      "mass_helix_reflected_active_kg": 0.0,
+      "mass_total_direct_active_kg": 2.1861190458376734,
+      "lambda_primary": -0.6499999999989938,
+      "lambda_secondary": 0.3880282565906288,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "quasi_static_helix"
+    },
+    {
+      "time_s": 0.4189487163795227,
+      "segment_index": 3,
+      "sample_location": "segment_start",
+      "shift_mm": 11.788740576830948,
+      "shift_speed_m_s": -0.0016146691882717,
+      "shift_acceleration_closure_m_s2": -45.473628044240535,
+      "e58_helix_qs_margin_Nm": 0.1128163056111581,
+      "e58_helix_actual_margin_Nm": 0.1128163056111581,
+      "e58_helix_physical_shaft_term_Nm": 0.2179712421901239,
+      "e58_helix_physical_shift_term_Nm": -6.243906442704123,
+      "e58_helix_physical_curvature_term_Nm": 8.457680166413243e-06,
+      "normal_secondary_N": 802.6451435822892,
+      "mass_helix_reflected_active_kg": 0.0,
+      "mass_total_direct_active_kg": 2.1861190458376734,
+      "lambda_primary": -0.55,
+      "lambda_secondary": 0.55,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "quasi_static_helix"
+    },
+    {
+      "time_s": 0.43,
+      "segment_index": 3,
+      "sample_location": "segment_end",
+      "shift_mm": 9.24389838887206,
+      "shift_speed_m_s": -0.4118509222092064,
+      "shift_acceleration_closure_m_s2": -21.605021570264448,
+      "e58_helix_qs_margin_Nm": -0.4255795240648048,
+      "e58_helix_actual_margin_Nm": -0.4255795240648048,
+      "e58_helix_physical_shaft_term_Nm": 0.2187351267094889,
+      "e58_helix_physical_shift_term_Nm": -2.794961639192836,
+      "e58_helix_physical_curvature_term_Nm": 0.5095244991249231,
+      "normal_secondary_N": 755.6516765794125,
+      "mass_helix_reflected_active_kg": 0.0,
+      "mass_total_direct_active_kg": 2.127823446405096,
+      "lambda_primary": -0.55,
+      "lambda_secondary": 0.55,
+      "case": "E58_reversal_270_s30_engine_m28_r050",
+      "model": "quasi_static_helix"
+    }
+  ],
+  "severe_shift_inertia_budget": {
+    "time_s": 0.423609551013516,
+    "sample_location": "segment_end",
+    "helix_reflected_kg": 7.481958345788025,
+    "other_direct_terms_kg": 2.184911383874092,
+    "total_direct_coefficient_kg": 9.666869729662118,
+    "helix_fraction": 0.7739794323316633,
+    "meaning": "Direct shared-shift inertia coefficient: axial translation plus flyweight and helix reflection; not total physical CVT mass or a scalar inertia after eliminating the coupled shaft/contact equations."
+  },
+  "baseline_t_ge_0_1_s": {
+    "peak_abs_helix_force_correction_N": 25.42484651950151,
+    "peak_abs_helix_force_fraction": 0.007506453901224667
+  },
+  "source_hashes": {
+    "commercial_archive5/artifacts/trajectory-demo/low/trajectory_samples.csv": "81754bb63b8212fbc3442da1caf84d80e04290fae401463fb104ba9323efe318",
+    "commercial_archive5/artifacts/trajectory-demo/low/full_dynamic_component_trace.csv": "fa5421d7a6a63b573e5924a4638efa3dea11c46fcd4491a59b68d7584089ac68",
+    "commercial_archive5/artifacts/trajectory-demo/nominal/trajectory_samples.csv": "38e6c3da479a7ac3128d63e2b1adac96507f30b597788c4943ec0889e8b76fcc",
+    "commercial_archive5/artifacts/trajectory-demo/nominal/full_dynamic_component_trace.csv": "3515428a3cc6229cac9606339f8889c8066c45526e089778f552e900021e56f4",
+    "commercial_archive5/artifacts/trajectory-demo/high/trajectory_samples.csv": "170fed1c620534332e12b843bf57158552c3cd419295b3a433928929e7a024b3",
+    "commercial_archive5/artifacts/trajectory-demo/high/full_dynamic_component_trace.csv": "84e3dcb6f921ef39a4615d1f4bd29cd4107361c443ad4eefbb83ce30399dd73f",
+    "helix_archive5/artifacts/paired-helix-performance/paired_trace.csv": "de4ec0f0ba1156b30e8a9c211e1542ddacf7c523c482cb75dc76ce6ef417234c",
+    "actuator_archive2/artifacts/baseline-ablation/trajectory_diagnostics.csv": "592a0c601e777b81696ee256019de7c4f605cedce38f975c81835702ed327a95"
+  },
+  "remaining_limits": [
+    "No new numerical-refinement integrations or fresh local wrap-contact audit.",
+    "Paired field ratio_secondary_over_primary is r_s/r_p, not omega_s/omega_p.",
+    "Generic commercial trajectory helix diagnostic columns use Baja inertia; dedicated component trace and actual actuator total agree with registered commercial inertia.",
+    "Severe helix reaction reverses sign across a native traction event. An interpolated zero and its interpolated force do not represent a resolved intervening state.",
+    "Stock first non-stick event is low-ratio seating followed by deadzone/reengagement, not an isolated static-traction failure.",
+    "Native segment endpoints are retained; separate serialized event ledger is absent from the recovered E5.8 archive."
+  ]
+}

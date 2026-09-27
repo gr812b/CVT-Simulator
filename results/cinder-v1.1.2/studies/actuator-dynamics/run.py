@@ -39,7 +39,9 @@ def run_analysis(script):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--primary-publication', action='store_true', help='Run the primary-only nominal/tight publication comparisons, prepare inputs and plot; preserves other artifacts.')
-    parser.add_argument('--plot-only', action='store_true', help='Reproduce the two primary publication figures from verified compact inputs; no simulation.')
+    parser.add_argument('--secondary-publication', action='store_true', help='Run the secondary nominal/tight publication comparisons and local-contact audits, prepare inputs and plot; preserves other artifacts.')
+    parser.add_argument('--plot-only', action='store_true', help='Reproduce publication figures from verified compact inputs; no simulation.')
+    parser.add_argument('--unit', choices=('primary','secondary'), default='primary', help='Publication unit for --plot-only; default preserves the primary workflow.')
     parser.add_argument('--figure-dir', type=Path, default=STUDY_ROOT.parents[3]/'docs/CVT_Module_Formulation/figures/results/dynamics')
     stage_names=("baseline","components","coupling","envelopes","commercial","transients")
     parser.add_argument(
@@ -58,8 +60,26 @@ def main():
         ),
     )
     args=parser.parse_args()
+    if args.unit == 'secondary' and not (args.plot_only or args.secondary_publication):
+        parser.error('--unit secondary requires --plot-only or --secondary-publication')
 
     verify_environment()
+    if args.secondary_publication or (args.plot_only and args.unit == 'secondary'):
+        if args.primary_publication or (args.secondary_publication and args.plot_only):
+            parser.error('Choose one publication run or --plot-only')
+        if args.secondary_publication:
+            for kind in ('commercial','severe','stock'):
+                for level in ('nominal','tight'):
+                    for variant in ('full','qs'):
+                        cmd=[sys.executable,str(STUDY_ROOT/'experiments/run_secondary_publication.py'),
+                             '--kind',kind,'--level',level,'--variant',variant,
+                             '--output-dir',str(STUDY_ROOT/'artifacts/secondary-publication-final')]
+                        if kind != 'commercial':cmd.append('--sticking-start')
+                        subprocess.run(cmd,check=True)
+            run_analysis('prepare_secondary_publication.py')
+        subprocess.run([sys.executable,str(STUDY_ROOT/'analysis/secondary_publication_plots.py'),
+                        '--figure-dir',str(args.figure_dir)],check=True)
+        return 0
     if args.primary_publication or args.plot_only:
         if args.primary_publication and args.plot_only:
             parser.error('Choose --primary-publication or --plot-only')
