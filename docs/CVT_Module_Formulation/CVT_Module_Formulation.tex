@@ -369,47 +369,35 @@ W.~Spencer Smith\\
 \thispagestyle{empty}
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-This work develops a first-principles dynamic model for a mechanically
-actuated dry rubber V-belt continuously variable transmission (CVT) and its
-coupling to the vehicle drivetrain. The model is motivated by a persistent gap
-in the available literature: while quasi-static Baja-oriented models are common
-and detailed dynamic models exist for hydraulically actuated metal-belt CVTs,
-publicly available formulations for mechanically actuated rubber belt CVTs do
-not generally combine sheave inertia, flyweight actuation, torque-reactive
-secondary clamping, belt geometric closure, traction-limited torque
-transmission, and vehicle longitudinal dynamics within a single unified
-framework.
+Mechanically actuated rubber V-belt continuously variable transmissions couple ratio change, 
+belt clamping, torque transmission, and shaft dynamics through the same passive hardware. 
+This makes their transient behaviour difficult to predict or diagnose when pulley speed, 
+clamping force, shift motion, or operating regime must be prescribed in advance. This work 
+develops CINDER, a first-principles transient formulation that instead treats the mechanically 
+actuated CVT as a complete dynamic component driven by mechanical conditions at its two shafts.
 
-Starting from pulley geometry and belt-length closure, the derivation develops
-the CVT kinematics, the rotational dynamics of the primary and secondary
-pulleys, the axial equation of motion governing shift, and the torque-transfer
-closure required to distinguish sticking from traction-limited slip. The
-primary clutch model includes centrifugal flyweight actuation and spring
-preload, while the secondary model includes helix-generated torque feedback
-together with spring forces. A centrifugal belt correction is also derived to
-account for the reduction in effective normal force at speed. These elements
-are assembled into a closed nonlinear state-space model suitable for direct
-numerical time integration.
+The model couples primary centrifugal actuation, torque-reactive secondary-helix mechanics, 
+pulley rotation, belt transport and geometric closure, and traction-limited belt–pulley contact. 
+Engagement, ratio limits, free shifting, sticking, sliding, and support transitions are 
+represented as admissible states of the same mechanical system, allowing their sequence to 
+emerge from the evolving forces and constraints. The formulation is organized so that predicted 
+behaviour can be traced through these internal mechanisms rather than only reproduced at the 
+shaft level.
 
-The resulting formulation is intended both as a simulation model and as a
-derivation document in which each major modeling step remains physically
-interpretable. Simulation results are used to examine whether the completed
-model behaves in mechanically sensible ways under transient launch conditions.
-Comparisons of launch shift trajectories, pulley axial-force balance, and
-torque admissibility across multiple tuning cases show a consistent mechanism
-chain from tuning changes, to clamping-force evolution, to stick--slip
-behavior, to overall launch outcome. The default tuning produces the most
-balanced launch response, combining strong early admissible coupling torque,
-controlled low-ratio retention, and a smoother main shift. More aggressive
-cases reveal renewed slip and visibly underdamped oscillatory transients during
-shift onset, highlighting both the usefulness of the model and the limitations
-introduced by idealized loss assumptions.
+Internal mechanical, energy, numerical-convergence, and closure checks establish the consistency 
+of the implemented system over the tested operating domain. The retained actuator dynamics are 
+strongly regime dependent: primary flyweight inertia appreciably changes the engagement transient 
+but becomes negligible during smooth shifting, while secondary-helix inertia can alter clamping 
+and traction-transition timing even when the corresponding shift displacement changes only slightly. 
+An independent comparison with a published transient rubber-belt model further shows that similar 
+controlled shaft histories can coexist with substantially different clamp, shift, and slip behaviour, 
+identifying the reduced belt representation as an important remaining fidelity limit.
 
-Overall, the formulation provides a physically transparent dynamic foundation
-for understanding mechanically actuated CVT behavior during launch events. Its
-main value is not only that it closes the governing mechanisms into one
-consistent dynamical system, but also that the resulting behavior remains
-traceable back to clear mechanical causes.
+Finally, coupled engine--CVT--vehicle simulations show how hardware changes propagate through clamping, 
+ratio, traction, engine operating point, and vehicle response under launch, severe grade, repeated 
+loading, and reverse-power conditions. The resulting framework therefore provides not only a 
+transient prediction of CVT behaviour, but a mechanically traceable explanation of why that behaviour 
+occurs.
 
 % =========================
 % Acknowledgements (sample page)
