@@ -377,7 +377,7 @@ develops CINDER, a first-principles transient formulation that instead treats th
 actuated CVT as a complete dynamic component driven by mechanical conditions at its two shafts.
 
 The model couples primary centrifugal actuation, torque-reactive secondary-helix mechanics, 
-pulley rotation, belt transport and geometric closure, and traction-limited belt–pulley contact. 
+pulley rotation, belt transport and geometric closure, and traction-limited belt--pulley contact. 
 Engagement, ratio limits, free shifting, sticking, sliding, and support transitions are 
 represented as admissible states of the same mechanical system, allowing their sequence to 
 emerge from the evolving forces and constraints. The formulation is organized so that predicted 
@@ -437,7 +437,7 @@ grateful for his help with experimental data and the capstone derivation, as wel
 as his involvement in our tuning work. His willingness to discuss ideas and work 
 through difficulties with me has been a continuing source of help. I greatly 
 value the time he has given to this project and his friendship throughout these 
-years.
+years. a
 
 I thank my capstone teammates, Cameron Dunn, Travis Wing, and Grace McKenna, for 
 their contributions to our earlier CVT simulator and the work we shared during 
@@ -864,7 +864,7 @@ drivetrain more freedom to match engine behavior to vehicle load.
 
 \begin{figure}[H]
 \centering
-\fbox{\includegraphics[width=0.72\textwidth]{figures/overview/kohler_ch440_torque_power_curve.png}}
+\fbox{\includegraphics[width=0.72\textwidth]{figures_compressed/overview/kohler_ch440_torque_power_curve.png}}
 \caption{Torque and power of the Kohler CH440 engine as functions of engine speed. 
 Both quantities vary substantially across the operating range, with peak torque 
 occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine2022}}
@@ -880,12 +880,12 @@ occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine202
 
 \begin{minipage}[b]{0.46\textwidth}
 \centering
-\includegraphics[width=\textwidth]{figures/overview/discrete_transmission_shift_curve.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/discrete_transmission_shift_curve.png}
 \end{minipage}
 \hfill
 \begin{minipage}[b]{0.46\textwidth}
 \centering
-\includegraphics[width=\textwidth]{figures/overview/cvt_shift_curve.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/cvt_shift_curve.png}
 \end{minipage}
 
 \vspace{0.4cm}
@@ -917,7 +917,7 @@ transmits motion and torque between these two pulleys.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/cvt_example.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/cvt_example.png}
 \caption{Two sample configurations of the belt-sheave CVT considered in this work. 
 The primary pulley is connected to the engine side, the secondary pulley is
 connected to the downstream drivetrain, and the rubber V-belt transmits motion
@@ -935,7 +935,7 @@ faces. This basic layout is shown in \Cref{fig:single_pulley_anatomy}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/single_pulley_anatomy.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/single_pulley_anatomy.png}
 \caption{Generic anatomy of a belt-sheave CVT pulley. Each pulley consists of
 opposing conical sheaves that form a V-groove. Motion of the movable sheave
 changes the groove width and therefore changes the radius at which the belt
@@ -959,7 +959,7 @@ radius smaller, as shown in \Cref{fig:single_pulley_states}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/single_pulley_states.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/single_pulley_states.png}
 \caption{Single-pulley radius change. As the sheaves close, the V-groove
 narrows and the belt is pushed outward to a larger effective radius. As the
 sheaves open, the belt can fall deeper in the groove and the effective radius
@@ -998,7 +998,7 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/cvt_low_med_high_ratio.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/cvt_low_med_high_ratio.png}
 
 
 \caption{Low-, intermediate-, and high-ratio states of a belt--sheave CVT. 
@@ -1038,7 +1038,7 @@ turn increases the tangential force that friction can support.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/traction.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/traction.png}
 \caption{Clamping and traction in a rubber V-belt CVT. The axial clamping
 force \(F_{\mathrm{clamp}}\) presses the movable sheave toward the fixed
 sheave. At the circled location, the enlarged cross-section shows representative
@@ -1102,7 +1102,7 @@ secondary actuation mechanism is shown conceptually on the right side of
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/cvt_mechanical_actuation_concept.png}
+\includegraphics[width=\textwidth]{figures_compressed/overview/cvt_mechanical_actuation_concept.png}
 \caption{Conceptual illustration of the mechanical actuation mechanisms in the
 present CVT. Left: the primary (drive) pulley, where increasing rotational speed
 moves the flyweights outward and the ramp geometry converts that motion into a
@@ -2027,7 +2027,7 @@ while \(v_b<0\) denotes transport in the opposite direction.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]
-{figures/coordinate/rotational_direction.png}
+{figures_compressed/coordinate/rotational_direction.png}
 \caption{
 Rotational and belt-transport sign convention viewed from the outboard pulley
 faces, looking inward along the parallel shaft axes. Counterclockwise rotation
@@ -2083,7 +2083,7 @@ axis; in both cases, positive axial motion closes the corresponding pulley.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]
-{figures/coordinate/axial_direction.png}
+{figures_compressed/coordinate/axial_direction.png}
 \caption{
 Local axial convention illustrated on the primary movable sheave. \(x_p=0\) 
 denotes the fully open position and increasing
@@ -2119,7 +2119,7 @@ along the shaft.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]
-{figures/coordinate/radial_tangential_direction.png}
+{figures_compressed/coordinate/radial_tangential_direction.png}
 \caption{
 Representative primary-pulley view of the local radial and tangential
 directions. The inset shows the local polar basis:
@@ -2518,7 +2518,7 @@ additional axial distance \(d\) on each side.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{figures/geometry/local_pulley_geometry.png}
+\includegraphics[width=\linewidth]{figures_compressed/geometry/local_pulley_geometry.png}
 \caption{
 Local geometry of a belt moving outward between the sheave faces of pulley
 \(j\). Closing the pulley by \(\Delta x\) reduces the available width at
@@ -2659,7 +2659,7 @@ and their corresponding radii are shown in
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]
-{figures/geometry/belt_cross_section_radial_references.png}
+{figures_compressed/geometry/belt_cross_section_radial_references.png}
 \caption{
 Radial reference lines within the belt cross-section. The cord-line radius
 \(r_{j,\mathrm{eff}}\) is the lever arm through which belt tension transmits
@@ -2855,7 +2855,7 @@ geometry shown in \Fig{fig:belt_loop_geometry}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]
-        {figures/geometry/belt_loop_geometry.png}
+        {figures_compressed/geometry/belt_loop_geometry.png}
     \caption{
     Geometry of the complete belt loop. The belt path consists of two wrapped
     arcs and two equal straight spans of length \(l\). Unequal pulley radii
@@ -3126,7 +3126,7 @@ compatibility curve in \Fig{fig:pulley_coordinate_compatibility}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.94\textwidth]
-        {figures/geometry/pulley_coordinate_compatibility.png}
+        {figures_compressed/geometry/pulley_coordinate_compatibility.png}
     \caption{
     Representative compatibility curve between the local primary and
     secondary axial coordinates for an admissible belt--pulley geometry. Both
@@ -4201,7 +4201,7 @@ shown together in \Cref{fig:primary_clamping_mechanism}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{./figures/actuation/primary_axial.png}
+    \includegraphics[width=\linewidth]{./figures_compressed/actuation/primary_axial.png}
     \caption{Axial free-body diagram of the primary movable assembly (unshaded). The
     symmetric sides of the cross-section are used to show the
     flyweight--ramp and belt--sheave force resolutions separately. Dotted
@@ -4260,7 +4260,7 @@ describes the outward-pivoting direction.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{./figures/actuation/flyweight_fbd.png}
+    \includegraphics[width=\linewidth]{./figures_compressed/actuation/flyweight_fbd.png}
     \caption{Free body of one primary flyweight in the frame rotating with
     the primary. Centrifugal loading acts throughout the flyweight mass; the
     marked element \(A\) identifies one infinitesimal mass \(dm\) at shaft
@@ -4746,7 +4746,7 @@ These three cases and their contact reactions are compared in
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{./figures/actuation/helical_slot.png}
+    \includegraphics[width=\linewidth]{./figures_compressed/actuation/helical_slot.png}
     \caption{How the helix creates torque-reactive axial loading. With no
     connection, the two sheaves may rotate independently. A straight axial slot
     couples their rotation through a purely circumferential reaction; inclining
@@ -4780,7 +4780,7 @@ axial direction.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{./figures/actuation/secondary_axial.png}
+    \includegraphics[width=\linewidth]{./figures_compressed/actuation/secondary_axial.png}
     \caption{Axial free body of the complete movable secondary assembly. The
     axial spring force and belt reaction act directly on the translating
     assembly, while the secondary's torque-reactive behaviour enters through the
@@ -4946,7 +4946,7 @@ the conventional helix orientation considered here,
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{./figures/actuation/helix_unwrap.png}
+    \includegraphics[width=\linewidth]{./figures_compressed/actuation/helix_unwrap.png}
     \caption{Unwrapped secondary-helix geometry. The same track angle relates
     relative rotation to axial travel and reaction torque to axial force.}
     \label{fig:secondary_helix_geometry}
@@ -5715,7 +5715,7 @@ The resulting division is shown in
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]
-    {./figures/rotation/torque_path.png}
+    {./figures_compressed/rotation/torque_path.png}
     \caption{
     Rotating systems and torque path of the engaged CVT. The shaft-side
     boundaries represent the torque and equivalent inertia presented by the
@@ -6518,7 +6518,7 @@ contact force appearing on the left.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]
-    {./figures/belt/infinitesimal_belt_element.png}
+    {./figures_compressed/belt/infinitesimal_belt_element.png}
     \caption{Two views of the same infinitesimal belt element, bounded by
     \(\theta\) and \(\theta+d\theta\) within the wrap of pulley \(j\).
     The in-plane free-body diagram on the left shows the cut-end tensions
@@ -7654,7 +7654,7 @@ belt mass, so their end tensions need not be equal while the belt accelerates.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]
-        {figures/belt/closed_belt_tension_regions.png}
+        {figures_compressed/belt/closed_belt_tension_regions.png}
     \caption{
     Complete belt divided into two wrapped regions and two straight spans. The
     arrows show the positive belt-transport direction. The upper span runs
@@ -13298,7 +13298,7 @@ Writing~--~review \& editing.
 Writing~--~review \& editing.
 
 \bibliographystyle{plainnat}
-\bibliography{../../refs/References,CINDER_Appendix_References}
+\bibliography{../../refs/References}
 
 \appendix
 
