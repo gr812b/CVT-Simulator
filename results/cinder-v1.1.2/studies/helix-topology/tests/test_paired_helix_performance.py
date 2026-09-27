@@ -1,4 +1,15 @@
-from experiments import run_paired_helix_performance as e58
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+EXPERIMENTS = ROOT / "experiments"
+for path in (ROOT, EXPERIMENTS):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+import run_paired_helix_performance as e58
 
 
 def _row(t, margin, stick=True):

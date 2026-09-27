@@ -6,7 +6,7 @@
   "title": "Common-course CVT operation and tuning",
   "description": "Selected Section 4.5 common-course runs, admissible promoted shift-curve shape cases, D02 repair/over-correction diagnostics, and supporting long-flat comparison.",
   "maintenance_status": "maintained",
-  "paper_role": "section_4_5",
+  "paper_role": "main-text",
   "classification": "system",
   "cinder_release": {
     "distribution": "cinder-cvt",
