@@ -1,0 +1,26 @@
+{
+  "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "source_archive_sha256": "e8878e17baf209d70d821c4254a6b043aefdbe2b077f32cea51613d303ad1f9a",
+  "source_member": "artifacts/stress-screen/screen_trace.csv",
+  "source_case": "s50_m480_r10ms",
+  "source_location": "segment_start, t=0",
+  "cvt_vector": [
+    327.49543833810543,
+    213.0271686846315,
+    17.689283324203767,
+    0.010768129064770825,
+    0.004475791453561805
+  ],
+  "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+  "expected_initial_helix_reaction_Nm": 35.72917028206486,
+  "host_angle_policy": "Reset passive reporting angle to zero; boundaries are functions of time and shaft speed.",
+  "added_torques_Nm": [
+    -120.0,
+    -240.0,
+    -480.0
+  ],
+  "onset_s": 0.05,
+  "ramp_s": 0.01,
+  "end_s": 0.15,
+  "reason_for_end": "Common 100 ms load-response window, entirely before first archived event in all three selected cases."
+}

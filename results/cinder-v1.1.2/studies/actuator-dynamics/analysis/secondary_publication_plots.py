@@ -44,6 +44,73 @@ def segments(ax,z,prefix,field,*,color,label,offset=.03,valid_only=False,style='
         ax.plot((t[ix]-offset)*1000,scale*y[ix],style,color=color,label=label if i==0 else None)
 
 
+def story_figures(args):
+    source=args.input_dir/'secondary_story.npz'
+    audit=json.loads((args.input_dir/'secondary_story_audit.json').read_text())
+    assert audit['release_commit']=='7637a38b4fb9ec21dfb953c1c80a27ec5f389654'
+    assert hashlib.sha256(source.read_bytes()).hexdigest()==audit['plot_inputs_sha256']
+    z=np.load(source,allow_pickle=False)
+    fig,axes=plt.subplots(1,2,figsize=(6.35,2.8))
+    fig.subplots_adjust(left=.09,right=.985,bottom=.24,top=.865,wspace=.38)
+    pre='launch_tight__';i=audit['launch']['tight']['first_engaged_index']
+    qs=z[pre+'helix_qs_reaction_force_N'][i]
+    shaft=z[pre+'helix_dynamic_shaft_accel_force_N'][i]
+    relative=z[pre+'helix_dynamic_shift_accel_force_N'][i]+z[pre+'helix_dynamic_curvature_force_N'][i]
+    full=z[pre+'helix_full_reaction_force_N'][i]
+    ax=axes[0]
+    ax.bar([0,3],[qs,full],color=[GRAY,BLUE],width=.62)
+    ax.bar(1,shaft,bottom=qs,color=BLUE,width=.62)
+    ax.bar(2,relative,bottom=qs+shaft,color=ORANGE,width=.62)
+    for x,y in [(0,qs),(1,qs+shaft),(2,full)]:ax.plot([x+.31,x+.69],[y,y],color=GRAY,lw=.65)
+    ax.text(0,qs+90,f'{qs:.0f}',ha='center',fontsize=8.5)
+    ax.annotate(f'{shaft:.2f}',xy=(1,qs+shaft/2),xytext=(1.08,2520),ha='center',fontsize=8.5,
+                arrowprops={'arrowstyle':'-','lw':.6})
+    ax.text(2,qs+shaft+relative/2,f'{relative:.0f}',ha='center',va='center',color='white',fontsize=9)
+    ax.text(3,full+90,f'{full:.0f}',ha='center',fontsize=8.5)
+    ax.set_xticks(range(4),['Quasi-static','Shaft\nacceleration','Relative sheave\nacceleration','Full'])
+    ax.tick_params(axis='x',length=0,pad=8,labelsize=8)
+    ax.set(ylim=(0,2800),ylabel='Helix closing force [N]')
+    ax.set_title('(a) Immediately after engagement',loc='left',pad=10)
+    ax=axes[1];t=z[pre+'time_s'];seg=z[pre+'segment_index'];mask=t>=.1
+    for field,c,label,ls in [('helix_dynamic_shaft_accel_force_N',BLUE,'Shaft acceleration','-'),
+                           ('relative',ORANGE,'Relative sheave acceleration','-'),
+                           ('helix_dynamic_total_correction_N','#222222','Total correction','--')]:
+        y=(z[pre+'helix_dynamic_shift_accel_force_N']+z[pre+'helix_dynamic_curvature_force_N']) if field=='relative' else z[pre+field]
+        first=True
+        for s in np.unique(seg[mask]):
+            ix=np.flatnonzero(mask&(seg==s))
+            ax.plot(t[ix],y[ix],ls,color=c,lw=1.0 if ls=='--' else 1.5,label=label if first else None);first=False
+    ax.axhline(0,color=GRAY,lw=.55)
+    ax.set(xlim=(.1,10),ylim=(-29,4),xlabel='Time from start [s]',ylabel='Helix-force correction [N]')
+    ax.set_title('(b) Subsequent motion',loc='left',pad=10)
+    ax.legend(loc='lower right',frameon=False,fontsize=7.6,handlelength=1.8)
+    for ax in axes:ax.grid(axis='y',alpha=.17);ax.set_axisbelow(True)
+    save(fig,args.figure_dir/'secondary_launch')
+
+    fig,axes=plt.subplots(1,2,figsize=(6.35,2.85))
+    fig.subplots_adjust(left=.095,right=.985,bottom=.20,top=.865,wspace=.37)
+    for torque,c,ls in [(120,GRAY,':'),(240,BLUE,'--'),(480,PURPLE,'-')]:
+        pre=f'm{torque}_tight__';t=(z[pre+'time_s']-.05)*1000;mask=t>=0
+        assert len(np.unique(z[pre+'segment_index']))==1
+        axes[0].plot(t[mask],z[pre+'helix_dynamic_total_correction_N'][mask],ls,color=c,label=f'{torque} N m added resistance')
+        response=f'response_m{torque}_tight__'
+        assert np.array_equal(z[pre+'time_s'],z[response+'time_s'])
+        axes[1].plot(t[mask],z[response+'full_minus_qs_shift_mm'][mask],ls,color=c)
+    axes[0].set(xlim=(0,100),ylim=(-20,185),ylabel='Helix-force correction [N]')
+    axes[0].set_title('(a) Increasing resisting torque',loc='left',pad=10)
+    axes[0].legend(loc='center right',bbox_to_anchor=(1,.63),frameon=False,fontsize=7.6,handlelength=2)
+    axes[1].set(xlim=(0,100),ylim=(-.20,.01),
+        ylabel='Shift-response difference [mm]\n(full − quasi-static)')
+    axes[1].set_yticks([-.20,-.15,-.10,-.05,0])
+    axes[1].set_title('(b) Effect on backshift',loc='left',pad=10)
+    axes[1].text(4,-.187,'Negative: more backshift in full model',fontsize=7.7,color=GRAY)
+    for ax in axes:
+        ax.axvspan(0,10,color=GRAY,alpha=.12)
+        ax.axhline(0,color=GRAY,lw=.55)
+        ax.set_xlabel('Time from added load [ms]');ax.grid(axis='y',alpha=.17)
+    save(fig,args.figure_dir/'secondary_backshift')
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--input-dir',type=Path,default=STUDY/'publication_inputs')
@@ -54,7 +121,7 @@ def main():
     if hashlib.sha256(source.read_bytes()).hexdigest()!=manifest['plot_inputs_sha256']:
         raise ValueError('Secondary plot input hash mismatch')
     z=np.load(source,allow_pickle=False)
-    fig=plt.figure(figsize=(6.35,3.55));gs=fig.add_gridspec(2,2,width_ratios=[1,1.08],hspace=.26,wspace=.39)
+    fig=plt.figure(figsize=(6.35,3.15));gs=fig.add_gridspec(2,2,width_ratios=[1,1.08],hspace=.26,wspace=.39)
     fig.subplots_adjust(left=.085,right=.985,bottom=.15,top=.90)
     ax=fig.add_subplot(gs[:,0]);pre='commercial_tight_full_stress__'
     time=(z[pre+'time_s']-.05)*1000; H=z[pre+'helix_motion_ratio_rad_per_m']
@@ -78,70 +145,9 @@ def main():
         else:ax.set_xlabel('Time from added load [ms]')
     save(fig,args.figure_dir/'secondary_continuous_response')
 
-    # The reference cases precede the hardware extension in the manuscript.
-    # Left: rapid loading can have opposing dynamic terms and a small response.
-    # Right: close positions do not settle arrival at a contact limit.
-    fig,axes=plt.subplots(2,2,figsize=(6.35,4.2))
-    fig.subplots_adjust(left=.10,right=.985,bottom=.115,top=.925,wspace=.38,hspace=.68)
-    ax=axes[0,0];pre='stock_tight_full'
-    t=z[pre+'__time_s'];seg=z[pre+'__segment_index']
-    shaft=z[pre+'__e58_helix_physical_shaft_term_Nm']
-    relative=(z[pre+'__e58_helix_physical_shift_term_Nm']
-              +z[pre+'__e58_helix_physical_curvature_term_Nm'])
-    for values,c,label,ls in [(shaft,BLUE,'Shaft acceleration','-'),
-        (relative,ORANGE,'Relative sheave motion','-'),
-        (shaft+relative,'#252525','Total correction','--')]:
-        for i,s in enumerate(np.unique(seg)):
-            ix=np.flatnonzero(seg==s)
-            ax.plot(1000*(t[ix]-.03),values[ix],ls,color=c,
-                    lw=1. if ls=='--' else 1.5,label=label if i==0 else None)
-    ax.axvspan(0,2,color=GRAY,alpha=.12);ax.axhline(0,color=GRAY,lw=.55)
-    ax.set(xlim=(0,8),ylim=(-1.05,.8),xlabel='Time from added load [ms]',
-           ylabel='Helix-torque correction [N m]')
-    ax.set_title('(a) Rapid load: signed contributions',loc='left',pad=10)
-    ax.legend(frameon=True,facecolor='white',edgecolor='none',framealpha=.95,
-              fontsize=7.8,loc='lower right',handlelength=1.6)
-    ax=axes[1,0]
-    ax.plot(1000*z['stock_tight_response_time_s'],z['stock_tight_shift_difference_mm'],color=BLUE)
-    ax.axhline(0,color=GRAY,lw=.6)
-    ax.set(xlim=(0,352),ylim=(-.06,.015),xlabel='Time from added load [ms]',
-           ylabel='Full − quasi-static shift [mm]')
-    ax.set_title('(b) Rapid load: motion difference',loc='left',pad=10)
-    ax=axes[0,1]
-    for v,c,l,ls in [('full',BLUE,'Full','-'),('qs',ORANGE,'Quasi-static','--')]:
-        pre=f'severe_tight_{v}'
-        stop=int(z[pre+'__first_invalid_index'])
-        assert stop==int(z[pre+'__exit_index'])
-        assert z[pre+'__sample_location'][stop-1]=='segment_end'
-        assert abs(abs(z[pre+'__lambda_primary'][stop-1])-.65)<1e-8
-        assert np.all(z[pre+'__primary_min_local_normal_N_per_rad'][:stop]>0)
-        t=1000*(z[pre+'__time_s'][:stop]-.03)
-        demand=np.abs(z[pre+'__lambda_primary'][:stop])/.65
-        ax.plot(t,demand,ls,color=c,label=l)
-        t=t[-1];y=demand[-1]
-        ax.scatter([t],[y],s=24,color=c,zorder=5)
-        ax.plot([t,t],[1.,1.046],color=c,ls=':',lw=.8)
-    ax.axhline(1,color=GRAY,lw=.7)
-    ax.text(350.8,1.006,'Sticking limit',fontsize=8,color=GRAY,va='bottom')
-    ax.set(xlim=(350,400),ylim=(.83,1.075),xlabel='Time from torque-change onset [ms]',
-           ylabel=r'Primary static demand $|\lambda_p|/\mu_s$')
-    ax.set_title('(c) Reversal: approach to slip',loc='left',pad=10)
-    ax.legend(frameon=False,loc='lower right',handlelength=1.5)
-    times=[1000*(z[f'severe_tight_{v}__time_s'][int(z[f'severe_tight_{v}__exit_index'])]-.03) for v in ('qs','full')]
-    ax.annotate('',xy=(times[0],1.042),xytext=(times[1],1.042),
-                arrowprops={'arrowstyle':'|-|','lw':.8,'color':'#252525'})
-    ax.text(sum(times)/2,1.053,f'{times[1]-times[0]:.2f} ms',ha='center',fontsize=8)
-    ax=axes[1,1];budget=z['severe_inertia_budget_kg']
-    ax.bar([0,1],budget,color=[BLUE,GRAY],width=.58)
-    for x,y in enumerate(budget):ax.text(x,y+.2,f'{y:.2f} kg',ha='center')
-    ax.text(0,4.1,f'{budget[0]/sum(budget):.0%}\nof total',ha='center',va='center',color='white',fontsize=8.5)
-    ax.set_xticks([0,1],['Helix reflection','Other direct\ncontributions'])
-    ax.tick_params(axis='x',length=0,pad=8);ax.set(ylim=(0,9.5),ylabel='Direct shift-inertia coefficient [kg]')
-    ax.set_title('(d) Reversal: direct shift inertia',loc='left',pad=10)
-    for ax in axes.ravel():ax.grid(axis='y',alpha=.17);ax.set_axisbelow(True)
-    save(fig,args.figure_dir/'secondary_sensitive_transient')
+    story_figures(args)
 
-    fig,axes=plt.subplots(2,2,figsize=(6.35,5.05))
+    fig,axes=plt.subplots(2,2,figsize=(6.35,4.4))
     fig.subplots_adjust(left=.10,right=.985,bottom=.105,top=.93,wspace=.38,hspace=.57)
     ax=axes[0,0]
     for v,c,l,ls in [('full',BLUE,'Full','-'),('qs',ORANGE,'Quasi-static','--')]:
@@ -174,7 +180,7 @@ def main():
     ax.legend(frameon=False,loc='upper right')
     for ax in axes.ravel():ax.grid(axis='y',alpha=.17)
     save(fig,args.figure_dir/'secondary_support')
-    print('Exported two main figures and secondary_support (PDF and PNG).')
+    print('Exported three main figures and secondary_support (PDF and PNG).')
 
 
 if __name__=='__main__':main()

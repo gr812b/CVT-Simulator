@@ -11551,251 +11551,259 @@ beyond the motion for which it is accurate.
 \subsection{Secondary Helix Dynamics and Transient Sensitivity}
 \label{sec:results_secondary_helix}
 
-A torque-reactive secondary need not deliver the same closing force during
-acceleration as it does at steady speed. Its movable assembly rotates with
-the shaft and also turns relative to it as the sheave shifts. The torque
-required to accelerate that assembly changes the reaction carried through
-the helix, and therefore the force available to close the pulley.
+The secondary also has a rotational contribution to its shift inertia.
+The primary flyweights swing about their pivots, whereas the helix makes
+the movable secondary sheave turn about the shaft axis as it moves axially.
+This relative rotation adds to the shaft rotation, so the movable assembly's
+torque balance depends on both shaft acceleration and shift motion.
 
-With the symmetric face-torque share used here, the quasi-static reaction is
+The quasi-static relation established in
+\Cref{sec:secondary_classical_limit} converts the belt torque and
+torsional spring loading directly into closing force. With the symmetric
+face-torque share used here, this force is
 \begin{equation}
- \tau_{s,\mathrm{helix}}^{\mathrm{QS}}
- =\frac{\tau_s}{2}
-  +k_{s,\theta}(\theta_{s,\mathrm{pre}}-\theta_s).
+ F_{\mathrm{helix},x_s}^{\mathrm{QS}}
+ =\frac{d\theta_s}{dx_s}
+ \left[\frac{\tau_s}{2}
+       +k_{s,\theta}(\theta_{s,\mathrm{pre}}-\theta_s)\right].
  \label{eq:results_secondary_qs_torque_recalled}
 \end{equation}
-Writing the helix force from \Cref{eq:secondary_helix_closing_force} as
+The full relation from \Cref{eq:secondary_helix_closing_force} is
 \begin{equation}
+\begin{aligned}
  F_{\mathrm{helix},x_s}
- =\frac{d\theta_s}{dx_s}
-  \left[\tau_{s,\mathrm{helix}}^{\mathrm{QS}}
-       -I_{s,M}(\dot\omega_s+\ddot\theta_s)\right]
+ &=F_{\mathrm{helix},x_s}^{\mathrm{QS}}
+   +\Delta F_{\mathrm{helix},x_s},\\
+ \Delta F_{\mathrm{helix},x_s}
+ &=-I_{s,M}\frac{d\theta_s}{dx_s}
+       (\dot\omega_s+\ddot\theta_s).
+\end{aligned}
  \label{eq:results_secondary_dynamic_decomposition}
 \end{equation}
-makes the two sources of acceleration explicit: a change in shaft speed and
-a change in the movable assembly's rotation relative to the shaft. The
-latter accompanies axial motion. The same rotational inertia consequently
-also contributes
-\begin{equation}
- m_{h,\mathrm{ref}}=I_{s,M}\left(\frac{d\theta_s}{ds}\right)^2
- \label{eq:results_helix_reflected_inertia}
-\end{equation}
-to the inertia resisting motion in the shared shift coordinate. This
-inertia therefore enters both the helix force and the resistance to shifting.
-It stores kinetic energy; it does not dissipate energy like a damper.
+The \(\ddot\theta_s\) contribution comes from shifting along the helix.
+For a straight helix, \(\ddot\theta_s=(d\theta_s/dx_s)\ddot x_s\), giving
+a force correction \(-I_{s,M}(d\theta_s/dx_s)^2\ddot x_s\) that opposes
+axial acceleration. Expressed in the shared shift coordinate, it
+adds \(I_{s,M}(d\theta_s/ds)^2\) to the coefficient multiplying
+\(\ddot s\), just as the pivot inertia does for the primary.
 
-To examine the effect on the motion, the full secondary is compared with a
-quasi-static reduction. The reduction retains the geometry, springs and
-total inertia for rigid shaft rotation, but assigns the movable rotational
-inertia to the fixed secondary shaft and uses
-\(\tau_{s,\mathrm{helix}}^{\mathrm{QS}}\) alone in the helix force.
-Both models retain the full primary dynamics and the same bilateral helix
-slot. The reduction is defined in
-\Cref{app:results_quasistatic_actuators}; the exact inputs, component
-estimates and numerical checks are given in
-\Cref{app:study_secondary_dynamics}.
+The \(\dot\omega_s\) contribution comes from accelerating the movable
+assembly with the shaft, even when its axial position is fixed. For the
+positive motion ratio used here, slowing the forward-rotating shaft
+increases the helix closing force, while speeding it up reduces that force.
+The shaft and shift contributions can reinforce or partly cancel,
+depending on the signs of the two accelerations.
 
-\subsubsection{Rapid loading and approach to a traction limit}
+The quasi-static comparison omits the entire correction in
+\Cref{eq:results_secondary_dynamic_decomposition}. In the separately
+integrated reduced model, the movable rotational inertia is assigned to the
+fixed secondary shaft, retaining the same total inertia for rigid shaft
+rotation. Axial sheave motion, translating mass, geometry and springs
+remain. Both models retain the full primary dynamics and the same bilateral
+helix slot. The reduction and exact study inputs are given in
+\Cref{app:results_quasistatic_actuators,app:study_secondary_dynamics}.
+
+\subsubsection{Engagement and subsequent shifting}
 \label{sec:results_secondary_hybrid_response}
 
-The reference level-ground acceleration provides a first measure of the
-secondary correction. Between \SI{0.1}{s} and \SI{10}{s}, its largest
-sampled magnitude is only \num{0.75}\% of the simultaneous quasi-static
-helix force. Thus this part of the reference drive stays close to the
-quasi-static force law, even though the shafts and sheaves are moving.
+The reference level-ground acceleration used for the primary provides the
+same contrast between engagement and the later shift. Immediately after
+first belt contact, the quasi-static helix force evaluated at the full
+model's state is \SI{2206}{N}. Rapid relative sheave acceleration reduces
+this by \SI{989}{N}, while shaft acceleration subtracts a further
+\SI{6.67}{N}. The resulting helix force is \SI{1210}{N}, a reduction of
+\num{45.1}\%, as shown in \Cref{fig:results_secondary_launch}(a).
+Most of the reduction comes from torque needed to accelerate the movable
+sheave's rotation relative to the shaft. That torque is unavailable to the
+helix reaction, leaving less force to close the sheave.
+This is the finite force in the outgoing engaged motion, not the capture
+impulse.
 
-A short load change tests a different acceleration demand. Starting near
-\num{30}\% of active shift travel, the reference secondary with its
-\ang{300} torsional preload is subjected to an additional opposing
-secondary torque of \SI{-120}{N.m}, applied over \SI{2}{ms}.
-The full and quasi-static models start from the same state and receive the
-same torque history. \Cref{fig:results_secondary_sensitive_transient}(a)
-shows how the two acceleration contributions combine during the initial
-response. Slowing the shaft adds to the helix reaction, while accelerating
-the relative sheave motion initially subtracts from it. For example,
-\SI{1.8}{ms} after load onset the contributions are approximately
-\SI{0.444}{N.m} and \SI{-0.891}{N.m}. Their sum,
-\SI{-0.448}{N.m}, is small beside the \SI{40.43}{N.m} quasi-static
-reaction at that instant.
-
-The resulting motion also changes little. The models backshift by about
-\SI{5.2}{mm}, while their largest shift separation is only
-\SI{0.051}{mm}, resolved in panel~(b); negative values mean more backshift
-in the full model. Local wrap loading remains positive
-at the checked engaged states, including the later seating and
-re-engagement transitions. Rapid forcing has therefore activated the
-inertial terms without producing a large difference in this response.
-The two terms must be combined with their signs before their size is judged.
-
-Near a traction limit, agreement in shift position is not the only relevant
-comparison. Changing the helix reaction changes clamping, while changing
-the reflected inertia changes how the sheaves accelerate. Both can affect
-when the required belt traction reaches the available capacity. To examine
-that approach, the reference secondary is given \ang{270} torsional
-preload and the primary applied torque is reduced to
-\SI{-28}{N.m} over \SI{50}{ms}. This pair again starts from one common
-state near \num{30}\% travel, with both contacts sticking.
-It changes the loading direction as well as the preload, rather than
-isolating preload alone.
-
-Panel~(c) follows the primary's traction demand late in this reversal.
-The fraction \(\lvert\lambda_p\rvert/\mu_s\) reaches unity when sticking
-uses all available static traction. Panel~(d) separates the direct
-shift-inertia coefficient into its helix and other contributions at the
-full model's arrival.
+The later motion produces much smaller corrections. Between \SI{0.1}{s}
+and \SI{10}{s}, their largest sampled magnitude is \SI{25.4}{N}, and the
+largest fraction of the simultaneous quasi-static helix force is
+\num{0.751}\%. Panel~(b) shows that shaft acceleration supplies almost all
+of this later correction. The force remains close to its quasi-static
+value over this part of the drive, despite the substantial effect at
+engagement.
 
 \begin{figure}[H]
  \centering
- \includegraphics[width=\linewidth]{figures/results/dynamics/secondary_sensitive_transient.pdf}
- \caption{Reference-secondary transients. (a,b) Added secondary torque
- of \SI{-120}{N.m} over \SI{2}{ms}, with \ang{300} preload: signed
- torque corrections on the full trajectory and independently integrated
- shift difference. Shading marks the ramp. (c,d) Primary torque reduced
- to \SI{-28}{N.m} over \SI{50}{ms}, with \ang{270} preload: traction
- demand and the direct shift-inertia budget. Curves in (c) end at their
- incoming traction-limit states; (d) uses the full model's incoming state.
- The outgoing states fail local belt contact. Time is measured from each
- torque-change onset.}
- \label{fig:results_secondary_sensitive_transient}
+ \includegraphics[width=\linewidth]{figures/results/dynamics/secondary_launch.pdf}
+ \caption{Secondary helix force during the reference acceleration.
+ (a) Signed force budget immediately after first engagement. The middle bars
+ subtract the two acceleration contributions from the quasi-static force;
+ the final bar gives the full helix force. (b) Signed corrections during the
+ subsequent motion, from \SI{0.1}{s}. Both panels evaluate forces along the
+ full model's trajectory. Relative sheave acceleration includes the complete
+ \(-I_{s,M}(d\theta_s/dx_s)\ddot\theta_s\) contribution. Separate continuous
+ segments are drawn without connecting force jumps.}
+ \label{fig:results_secondary_launch}
 \end{figure}
 
-The quasi-static model reaches the traction limit \SI{4.67}{ms} earlier
-than the full model, although their shift positions differ by at most
-\SI{0.0417}{mm} before the earlier event. The change is therefore visible
-in the contact timing even while the positions remain close. At the full
-model's incoming event state, the helix contributes \SI{7.48}{kg} of the
-\SI{9.67}{kg} direct shift-inertia coefficient: approximately \num{77}\%.
-It supplies the majority of the direct inertia in the shift direction,
-with sheave translation and flyweight reflection supplying the remaining
-\SI{2.18}{kg}. The denominator is the direct coefficient multiplying shift
-acceleration, before eliminating the coupled shaft and contact equations;
-it is not physical sheave mass.
+A small force correction during gentle shifting does not imply a small
+inertia contribution. At first engagement, the helix contributes
+\SI{4.89}{kg} of the \SI{6.83}{kg} coefficient multiplying shift
+acceleration in the coupled balance. Its share ranges from
+\num{71.5}\% to \num{81.7}\% over the sampled engaged geometry.
+These are inertias expressed in the shift coordinate, not physical sheave
+masses. The helix supplies the majority of this direct resistance to shift
+acceleration, but the associated force still depends on how rapidly the
+motion accelerates. The launch can therefore have both a large helix
+contribution to shift inertia and a small force correction over most of
+its duration.
 
-Removing the relative helix dynamics therefore removes a substantial
-contribution to shift inertia as well as the acceleration-dependent reaction.
-These effects belong to the same coupled motion: shift acceleration changes
-the helix reaction, and the resulting clamp and traction loads in turn
-affect the accelerations.
+\subsubsection{Clamping during load-induced backshift}
+\label{sec:results_secondary_backshift}
 
-The reversal also reaches a limit of the retained belt description.
-Immediately after each traction transition, the calculated primary loading
-becomes negative at one end of the wrap, despite a positive integrated
-normal force. The contact would have to pull on the belt there, which the
-prescribed wrap cannot support. This violation persists with tighter
-integration. The comparison consequently establishes the approach and
-arrival timing, not an admissible post-slip response.
-\Cref{app:secondary_contact_limit} records the event-side forces and
-the excluded continuation. The small rapid-load shift difference and the
-reversal's timing difference are both stable under the numerical refinements
-reported in \Cref{tab:secondary_refinement}.
+A load increase can decelerate the secondary much more strongly than the
+reference drive does. It also drives backshift, bringing both acceleration
+terms into the response. To examine this motion, additional resisting
+torques of \SI{120}{N.m}, \SI{240}{N.m} and \SI{480}{N.m} are applied at
+the secondary shaft from the same state near the middle of engaged travel.
+Each rises smoothly over \SI{10}{ms} and is then held. These are imposed
+load tests; the largest torque is deliberately severe.
 
-\subsubsection{How the hardware changes the dynamic contribution}
+In \Cref{fig:results_secondary_backshift}(a), the peak force correction
+increases from \SI{32.6}{N} to \SI{75.5}{N} and \SI{160.6}{N}.
+At these respective peaks, the corrections are \num{1.50}\%,
+\num{3.50}\% and \num{7.57}\% of the simultaneous quasi-static helix
+force. The largest peak occurs while the mechanism is backshifting through
+\num{45.3}\%
+of engaged travel, and its correction remains above \SI{113}{N}
+throughout the plotted interval after the ramp. This is a sustained
+mid-shift contribution, rather than another engagement force.
+
+Shaft deceleration accounts for almost all of the largest peak:
+its contribution is \(+\SI{161.2}{N}\), while relative sheave acceleration
+contributes \(\SI{-0.54}{N}\). The full helix force is then
+\SI{2282}{N}, compared with the \SI{2121}{N} quasi-static force at that
+state. The extra closing action follows from the torque needed to decelerate
+the movable assembly; it does not require slip, a stop impact or a reversal
+of helix reaction.
+
+The motion comparison follows the same approach as on the primary: each
+model is also continued without the added torque, and that continuation is
+subtracted from its loaded motion. Panel~(b) shows the difference between
+these load-induced shift responses. The full model backshifts further in
+all three cases. At \SI{100}{ms} after load onset, the largest load has
+produced \SI{8.14}{mm} of backshift relative to the unforced motion in
+the full model and \SI{7.96}{mm} in the quasi-static model. Their
+\SI{0.176}{mm} separation is small beside the total response, but shows
+the effect of retaining the secondary dynamics on the motion. The force
+and motion differences persist under tighter integration
+(\Cref{app:study_secondary_dynamics}).
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\linewidth]{figures/results/dynamics/secondary_backshift.pdf}
+ \caption{Reference-secondary response to increasing resisting torque.
+ (a) Signed helix-force correction on each full-model trajectory.
+ (b) Difference between independently integrated shift responses, each
+ measured from that model's own continuation without the added load.
+ Negative values mean more backshift in the full model. Line colours and
+ styles identify the same loads in both panels, and shading marks the
+ \SI{10}{ms} ramp. Both contacts stick, the sheaves remain free, and local
+ wrap loading remains positive in all loaded and unforced continuations.}
+ \label{fig:results_secondary_backshift}
+\end{figure}
+
+\subsubsection{How the hardware changes the response}
 \label{sec:results_secondary_dynamic_terms}
 \label{sec:results_secondary_continuous}
 
-These tests concern the reference Baja secondary. In a different assembly,
-a larger rotational inertia requires more torque for the same angular
-acceleration, while the helix geometry controls how that torque becomes
-axial force. The small correction seen in the reference drive therefore
-need not carry over to other hardware.
+The reference Baja secondary is relatively small compared with some
+commercial rubber-belt CVT assemblies. A larger movable inertia offers
+another way to increase the dynamic contribution without requiring the
+same severe applied load. The helix geometry matters too: it determines
+both the relative rotation caused by axial travel and the conversion of
+reaction torque into closing force.
 
 \Cref{tab:secondary_hardware_scale} compares the reference with an
-engineering estimate for a secondary using a \ang{31} helix. The nominal
-movable rotational inertia is \num{5.12} times as large. Its smaller
-motion ratio partly offsets that increase: the coefficient converting
-shaft acceleration into axial force grows by \num{2.76}, while the
-local reflected axial inertia grows by \num{1.49}. Rotational inertia
-alone therefore does not determine the axial effect. The mass properties
-are estimated from component dimensions, not measured manufacturer data;
-the source dimensions and estimation method are identified in
+engineering estimate based on a Yamaha Sidewinder secondary and a Dalton
+\ang{31} helix. The estimated rotational inertia is \num{5.12} times
+as large, but the smaller motion ratio partly offsets it. The coefficient
+multiplying shaft acceleration grows by \num{2.76}, while that
+multiplying local axial acceleration grows by \num{1.49}. The mass
+distribution and effective helix radius are estimates, not measured
+manufacturer inertia data; their sources and construction are recorded in
 \Cref{app:study_secondary_dynamics}.
 
 \begin{table}[H]
  \centering\small
  \setlength{\tabcolsep}{4pt}
+ \renewcommand{\arraystretch}{1.2}
  \begin{tabular}{@{}lrrr@{}}
   \toprule
   Quantity & Reference & OTS estimate & Ratio \\
   \midrule
   \(I_{s,M}\) [\si{kg.m^2}] & 0.002514 & 0.012875 & 5.12 \\
-  \(H=d\theta_s/dx_s\) [\si{rad/m}] & 61.8 & 33.3 & 0.539 \\
-  Shaft-acceleration coefficient \(I_{s,M}H\) [\si{kg.m}] & 0.155 & 0.429 & 2.76 \\
-  Local reflected inertia \(I_{s,M}H^2\) [\si{kg}] & 9.60 & 14.3 & 1.49 \\
+  \(d\theta_s/dx_s\) [\si{rad/m}] & 61.8 & 33.3 & 0.539 \\
+  \(I_{s,M}(d\theta_s/dx_s)\) [\si{kg.m}] & 0.155 & 0.429 & 2.76 \\
+  \(I_{s,M}(d\theta_s/dx_s)^2\) [\si{kg}] & 9.60 & 14.3 & 1.49 \\
   \bottomrule
  \end{tabular}
  \caption{Reference and nominal off-the-shelf (OTS) secondary estimate.
- Ratios are estimate/reference. The reference helix is \ang{20};
- the estimate uses \ang{31}. These axial coefficients refer to motion in
- \(x_s\); reflection into the shared shift coordinate also includes
- \((dx_s/ds)^2\).}
+ Ratios are estimate/reference. The last two rows are the coefficients of
+ shaft and axial acceleration in the helix force. Reflection into the
+ shared shift coordinate also includes \((dx_s/ds)^2\).}
  \label{tab:secondary_hardware_scale}
 \end{table}
 
-To see what these coefficients produce under load, the estimated helix
-geometry and movable inertia are inserted into the otherwise reference
-system. An additional opposing secondary torque of \SI{-120}{N.m} is
-applied over \SI{25}{ms}, starting near the middle of the shift range.
-This is a component comparison in the reference vehicle model, not a
-reconstruction of a complete commercial vehicle.
+The estimated helix geometry and movable inertia are inserted into the
+otherwise reference system. An added resisting secondary-shaft torque of
+\SI{120}{N.m} is applied over \SI{25}{ms}, starting near mid travel.
+This tests the component within the reference vehicle model; it does not
+reconstruct a complete commercial vehicle. The motion comparison again
+subtracts each model's continuation without the added torque, leaving its
+response to the load.
 
-Both models are already shifting when the torque changes. Each is also
-continued from its own starting state without the added torque.
-Subtracting that motion from its loaded motion leaves the extra shift and
-speed change caused by the load. This keeps their separately conditioned
-starting motions from being counted as part of the response.
-
-As the added load slows the secondary, the shaft-acceleration term changes
-sign and increases the closing force.
-\Cref{fig:results_secondary_continuous_response}(a) shows the signed
-contributions. Following the ramp, the shaft term supplies almost all of
-the dynamic correction. The total correction reaches \SI{89.3}{N}, and the
-largest fraction of the simultaneous quasi-static helix force is
-\num{7.87}\%. The quasi-static reaction stays well away from zero.
-Panels~(b,c) show the corresponding extra shift and primary-speed change;
-negative shift response means that the load causes more backshift than in
-that model's unforced motion.
+As the load slows the shaft, its acceleration contribution changes sign
+and increases the closing force.
+\Cref{fig:results_secondary_continuous_response}(a) shows that it
+supplies almost all of the correction after the ramp. The correction
+reaches \SI{89.3}{N}, with a largest fraction of \num{7.87}\% of the
+simultaneous quasi-static helix force. The resulting additional closing
+action is accompanied by more backshift in the full model, resolved in
+panels~(b,c).
 
 \begin{figure}[H]
  \centering
  \includegraphics[width=\linewidth]{figures/results/dynamics/secondary_continuous_response.pdf}
- \caption{Response with the nominal estimated secondary to an added
- torque of \SI{-120}{N.m} over \SI{25}{ms}, with the ramp shaded.
- (a) Signed helix-force corrections evaluated on the full model's motion.
- (b,c) Each model's loaded motion minus its own unforced continuation.
- Both contacts stick and the sheaves remain free to shift throughout all
- four continuations. The force correction and the independently integrated
- response are different comparisons.}
+ \caption{Nominal estimated secondary under the \SI{120}{N.m},
+ \SI{25}{ms} resisting-torque ramp (shaded). (a) Signed force corrections
+ along the full-model motion. (b,c) Load-induced motion, subtracting each
+ model's own unforced continuation. All four runs remain freely shifting
+ with both contacts sticking. The force terms use the same full-model
+ state; the motion histories come from independently integrated models.}
  \label{fig:results_secondary_continuous_response}
 \end{figure}
 
-The additional closing action is accompanied by more backshift in the full
-model. At the largest shift-response separation, the extra backshift is
+At the largest shift-response separation, the extra backshift is
 \SI{4.35}{mm} in the full model and \SI{4.08}{mm} in the quasi-static
-model: a difference of \SI{0.274}{mm}. The primary-speed responses differ
-by up to \SI{40.4}{rpm}. The difference remains modest beside the total
-response, but develops during continuous sticking with positive local
-wrap loading, rather than requiring a contact transition.
+model, a difference of \SI{0.274}{mm}. The primary-speed responses differ
+by up to \SI{40.4}{rpm}. These differences are modest beside the total
+response, but are resolved under tighter integration and develop during
+continuous sticking with positive local wrap loading.
 
-The low and high component estimates retain this hardware dependence.
-They span \num{2.21}--\num{8.14} times the reference rotational inertia
-and \num{0.45}--\num{2.92} times its local reflected axial inertia.
-Under the same added load, their recorded peak force corrections are
-\num{3.15}\% and \num{13.6}\%, respectively.
-The helix radius and inertia vary together, so this range reflects the
-component estimate as a whole rather than inertia alone.
-\Cref{tab:secondary_estimate_range} gives the associated motion differences.
+The low and high component estimates give peak force corrections of
+\num{3.15}\% and \num{13.6}\% under the same load. Their inertia and
+helix radius vary together, so this range describes the component estimate
+as a whole, rather than an inertia-only change.
+\Cref{tab:secondary_estimate_range} gives the corresponding inputs and
+motion differences.
 
-The quasi-static relation is recovered when the acceleration terms vanish,
-but its usefulness during a drive depends on more than whether the motion
-looks smooth or the applied load changes quickly. Shaft and sheave
-accelerations can partly cancel in the reaction, while a change in hardware
-alters the coefficients multiplying both. Close shift histories can also
-conceal a change in when a contact reaches its limit. A static
-torque-to-clamp characteristic alone cannot settle these transient
-questions: the inertia, helix geometry and available traction must be
-considered with the motion they produce. Retaining the secondary dynamics
-makes that joint assessment possible within the belt-contact conditions
-the formulation can sustain.
+The secondary can therefore remain close to its quasi-static force law
+through gentle shifting while departing appreciably from it under a load
+change. Shaft and relative sheave accelerations can reinforce or partly
+cancel in the reaction, while movable inertia and helix geometry set the
+size of both contributions. The resulting closing force also changes the
+motion that produces those accelerations. A static torque-to-clamp
+characteristic alone cannot determine the size of this transient effect:
+the hardware must be considered with the motion it produces. Retaining
+the secondary dynamics allows both the force correction and its effect on
+shift to be established, without assuming that a large inertia share or
+force correction implies an equally large change in the trajectory.
 \FloatBarrier
 
 \subsection{Reduced-Belt Transient Mechanics}
@@ -16724,9 +16732,10 @@ The comparisons in \Cref{sec:results_secondary_helix} use CINDER~1.1.2,
 with the reference boundaries and the secondary reduction of
 \Cref{app:results_quasistatic_actuators}. The primary remains dynamic.
 The full and reduced secondary models retain the same total rotational
-inertia for rigid shaft motion; the reduction removes the movable member's
-relative helix dynamics by assigning its rotational inertia to the fixed
-shaft. Both use the zero-clearance bilateral slot.
+inertia for rigid shaft motion. The reduction omits the complete
+\(I_{s,M}(\dot\omega_s+\ddot\theta_s)\) term from the helix reaction and
+assigns the movable rotational inertia to the fixed shaft. Axial motion and
+translating mass remain. Both use the zero-clearance bilateral slot.
 
 The continuous comparison replaces only the secondary helix profile and
 movable rotational inertia with the selected component estimates. The
@@ -16801,6 +16810,115 @@ The accumulated secondary-shaft angle is reset to zero. It is a passive
 reporting coordinate for these time-programmed boundaries and does not
 change the applied loads.
 
+
+\subsection{Reference launch and continuous backshift}
+
+The launch-force comparison reuses the full-model continuations prepared for
+\Cref{sec:results_primary_actuator_dynamics}; no quasi-static primary trace
+is used as a quasi-static secondary comparison. The first outgoing engaged
+state occurs at \SI{0.06197135}{s} in the tighter run. Its correction is
+\SI{-995.6569}{N}, compared with \SI{-995.6556}{N} at the corresponding
+nominal event. The largest sampled magnitude before \SI{0.1}{s} is
+\SI{1003.6324}{N}; the first-engagement budget in the main figure is not
+presented as that temporal maximum. The later \num{0.750645}\% bound
+applies only from \SI{0.1}{s} onward. The small repeated seating events
+near engagement remain part of the numerical qualification recorded for
+the primary comparison, rather than being interpreted as resolved physical
+oscillations.
+
+Local wrap loading was reconstructed from the saved fields using the
+frozen wrap equations. The minimum over all checked engaged launch states
+is \SI{0.85075}{N/rad} at the primary and \SI{2.63938}{N/rad} at the
+secondary. Before engagement there is no primary wrap; absent engaged-force
+diagnostics are not interpreted as zero helix force. The inertia share
+uses the direct coefficient of \(\ddot s\), before eliminating the
+coupled shaft and contact equations. It is not a reduced scalar effective
+mass or a percentage error in force.
+
+The backshift family was recovered from the maintained helix-topology
+stress screen and refined for this subsection. All three continuations
+start from the same archived five-coordinate state,
+\[
+\begin{aligned}
+ (\omega_p,\omega_s,v_b)
+   &=(327.4954383381,\ 213.0271686846,\ 17.6892833242),\\
+ (s,\dot s)&=(0.0107681290648,\ 0.00447579145356),
+\end{aligned}
+\]
+in SI units, with free shifting and both contacts sticking. This is
+\num{49.9911}\% of engaged travel. The resisting torque increments are
+\(A=-120,-240,-480~\mathrm{N\,m}\), added to the secondary vehicle
+boundary. Each follows \(A(3u^2-2u^3)\), where
+\(u=(t-\SI{0.05}{s})/\SI{0.01}{s}\) during the ramp, and is then held.
+The common end time is \SI{0.15}{s}, before the first event in all three
+archived cases. Both the original initial contact mode and the initial
+helix reaction, \SI{35.72917028}{N.m}, are checked on replay. The
+quasi-static model starts from the same coordinates and contact mode;
+its initial reaction is independently solved as \SI{35.73692149}{N.m}
+and checked against its first reported state. The initial sticking-speed
+mismatches are \SI{0.00426}{mm/s} and \SI{0.00709}{mm/s} at the primary
+and secondary, respectively, below the established \SI{1}{mm/s} audit
+tolerance. Both initial traction pairs and local wrap loads are admissible.
+
+Each model is also continued from this state without an added torque.
+The plotted shift response is its loaded shift minus this unforced shift;
+the two responses are then compared on the common clock. All four
+continuations for a given load therefore begin from identical coordinates,
+but their subsequent forces and motion are solved separately.
+
+The nominal replay uses LSODA with relative and absolute tolerances
+\num{3e-4} and \num{3e-7}, and a \SI{2}{ms} maximum step, matching the
+screen's integration settings for this ramp. The tighter runs use
+\num{1e-5}, \num{1e-8} and \SI{0.2}{ms}, respectively. Both are sampled
+every \SI{0.1}{ms}, including exact endpoints. The six full-model loaded
+runs are retained from the preceding refinement. Six reduced loaded runs
+and four unforced controls were added for the motion comparison. All
+sixteen runs complete in a single free, stick--stick segment.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{4pt}
+ \begin{tabular}{@{}rrrr@{}}
+ \toprule
+ \makecell{Added resistance\\{}[N m]} &
+ \makecell{Peak correction\\{}[N]} &
+ \makecell{Maximum full--QS\\response difference [mm]} &
+ \makecell{Change of that\\difference on refinement [mm]}\\
+ \midrule
+ 120 & 32.6270 & 0.04977 & 0.00000967\\
+ 240 & 75.4894 & 0.09626 & 0.00000760\\
+ 480 & 160.6436 & 0.17613 & 0.00006454\\
+ \bottomrule
+ \end{tabular}
+ \caption{Backshift force peaks from the tighter runs, and the largest
+ full--quasi-static differences in load-induced shift. The final column is
+ the largest pointwise change of that response difference when integration
+ is tightened. The full model backshifts further in each case.}
+ \label{tab:secondary_backshift_refinement}
+\end{table}
+
+The force traces change by at most \SI{0.06739}{N} on refinement, and
+the full-model shift traces by at most \SI{0.000122}{mm}. Before the load
+starts, the largest loaded-minus-control shift residual is below
+\SI{4e-7}{mm}; this subtraction does not introduce an appreciable initial
+response. At the common end, the full/quasi-static backshifts relative to
+their unforced motion are \SI{1.7461}{mm}/\SI{1.6963}{mm},
+\SI{3.6748}{mm}/\SI{3.5785}{mm} and
+\SI{8.1407}{mm}/\SI{7.9646}{mm} for the three loads.
+
+The force peaks occur at \SI{21.1}{ms}, \SI{20.9}{ms} and \SI{20.8}{ms}
+after load onset. The main-text percentages use the quasi-static force at
+those same instants. Maximizing the percentage instead gives
+\num{1.498}\%, \num{3.504}\% and \num{7.636}\%, respectively.
+This difference is retained explicitly rather than combining separately
+maximized numerator and denominator values. The full helix force remains positive at
+every sampled point, and the helix never requests a change of flank in the
+displayed windows. Both local wrap minima are positive in every replay.
+The saved force components sum to the full helix force, and fresh
+closure evaluations check force/torque balance and sticking traction.
+Exact residuals, minima, settings and source/output hashes are in
+\ResultsCode{studies/actuator-dynamics/publication_inputs/secondary_story_audit.json}{secondary_story_audit.json}.
+
 \subsection{Extraction and numerical checks}
 
 The signed helix correction is evaluated using the executed assembly's
@@ -16868,12 +16986,12 @@ contact check.
 \subsection{Reversal and the local contact limit}
 \label{app:secondary_contact_limit}
 
-In \Cref{fig:results_secondary_sensitive_transient}(c), the plotted demand is
+The additional reversal comparison monitors the static-traction demand
 \(\lvert\lambda_p\rvert/\mu_s\), with \(\mu_s=0.65\).
 The primary traction is negative throughout this late window; both incoming
 events reach \(\lambda_p=-0.65\). The normalization shows the remaining
-static capacity, not a change in the sign convention. The displayed curves
-stop before the first failed local-contact state.
+static capacity, not a change in the sign convention. Its admissible comparison
+stops before the first failed local-contact state.
 
 The full and quasi-static reversal models reach the primary traction limit
 at \SI{0.42361023}{s} and \SI{0.41894510}{s}, respectively. Before the
@@ -16906,20 +17024,20 @@ number is retained as an audit result and is not used to establish a
 physical post-slip performance difference. A later return to positive
 loading cannot repair the intervening trajectory. Nor does positive
 integrated normal force establish local compressive contact everywhere.
-The main comparison therefore ends at the incoming event states.
+The comparison of admissible motion therefore ends at the incoming event states.
 \Cref{fig:secondary_support}(c,d) retains the discontinuous force solution
 and identifies the local violation.
 
 The maintained entry point
 \ResultsCode{studies/actuator-dynamics/run.py}{run.py}
-accepts \texttt{--plot-only --unit secondary} to reproduce these figures
-from the hashed compact outputs, and \texttt{--secondary-publication} to
-repeat the selected continuations and audits before plotting. The complete
-settings, event identities, masks, local minima and source/output hashes are
-in
-\ResultsCode{studies/actuator-dynamics/publication_inputs/secondary_publication_audit.json}{secondary_publication_audit.json}.
-Archive comparisons and the exploratory checks are preserved separately.
-No live simulator source is imported by these release-pinned runs.
+accepts \texttt{--plot-only --unit secondary} to reproduce all four figures
+from hashed compact outputs. The \texttt{--secondary-backshift-publication}
+option repeats the sixteen loaded/control continuations and requires
+\texttt{--primary-archive} for the verified retained launch extraction.
+The existing \texttt{--secondary-publication} option repeats the larger
+component, stock and reversal pairs. Exact commands and archive identities
+are documented in the study's \texttt{provenance/SECONDARY\_STORY.md}.
+No live simulator source enters these release-pinned runs.
 
 \begin{figure}[H]
  \centering
@@ -16936,24 +17054,20 @@ No live simulator source is imported by these release-pinned runs.
  \label{fig:secondary_support}
 \end{figure}
 
-For the stock contrast, at \SI{1.8}{ms} after load onset the shaft and shift
-contributions are approximately \SI{0.444}{N.m} and
-\SI{-0.891}{N.m}. Their net contribution is approximately
-\SI{-0.448}{N.m}, against \SI{40.43}{N.m} quasi-static reaction.
-The later non-sticking sequence follows low-ratio seating and re-engagement;
-it is not solely a static-traction failure. These observations explain why a
-fast applied load and nonzero individual terms need not produce a large
-shift difference.
-
-The relative-sheave contribution in
-\Cref{fig:results_secondary_sensitive_transient}(a) combines the recorded
-shift-acceleration and geometric-curvature contributions, giving the full
-\(-I_{s,M}\ddot\theta_s\) term. Its signed sum with
-\(-I_{s,M}\dot\omega_s\) is the reaction correction. The first
-\SI{8}{ms} are shown to resolve the imposed \SI{2}{ms} ramp; the shift
-difference in panel~(b) uses the complete \SI{352}{ms} post-onset interval.
-The two panels therefore resolve different timescales of the same response.
-
+In the stock case, \SI{1.8}{ms} after load onset, the shaft and
+relative-sheave terms contribute \SI{0.444}{N.m} and
+\SI{-0.891}{N.m}. Their sum is small beside the \SI{40.43}{N.m}
+quasi-static reaction. Later, at outgoing re-engagement
+(\SI{0.36105477}{s}), the correction reaches \SI{-2264.1364}{N},
+or \num{23.0467}\% of the simultaneous quasi-static force.
+The full helix reaction and local wrap loading remain positive.
+This first outgoing segment lasts only \SI{20.5}{\micro\second};
+the repeated large-force states span roughly \SI{31}{\micro\second}
+before seating. The maximum full--quasi-static shift separation is still
+\SI{0.051423}{mm}. Thus the large instantaneous correction is brief,
+with a small accumulated effect on motion. The peak and timing agree
+closely under refinement; their exact checks are recorded in
+\ResultsCode{studies/actuator-dynamics/publication_inputs/secondary_window_audit.json}{secondary_window_audit.json}.
 \FloatBarrier
 
 \section{Common-Course Operation and Tuning}

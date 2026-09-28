@@ -21,6 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input-dir', type=Path, default=STUDY/'publication_inputs')
     parser.add_argument('--raw-dir', type=Path)
+    parser.add_argument('--backshift-dir', type=Path)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     p = args.input_dir
@@ -30,7 +31,58 @@ def main():
     assert sha(p/'secondary_publication.npz') == audit['plot_inputs_sha256']
     assert sha(p/'secondary_archive_audit.json') == audit['archive_audit_sha256']
     z = np.load(p/'secondary_publication.npz', allow_pickle=False)
-    results = {'simulation_rerun': False, 'plot_inputs_sha256': audit['plot_inputs_sha256']}
+    results = {'this_check_runs_simulations': False, 'plot_inputs_sha256': audit['plot_inputs_sha256']}
+    story=json.loads((p/'secondary_story_audit.json').read_text())
+    assert story['release_commit']==audit['release_commit']
+    assert sha(p/'secondary_story.npz')==story['plot_inputs_sha256']
+    zs=np.load(p/'secondary_story.npz',allow_pickle=False)
+    if args.backshift_dir:
+        for name,digest in story['raw_sha256'].items():
+            assert sha(args.backshift_dir/name)==digest,name
+        results['backshift_raw_files_verified']=len(story['raw_sha256'])
+    for torque in (120,240,480):
+        for level in ('nominal','tight'):
+            pre=f'm{torque}_{level}__'
+            assert len(np.unique(zs[pre+'segment_index']))==1
+            assert np.all(np.diff(zs[pre+'time_s'])>0)
+            assert all('STICK_STICK' in m and 'CVTShiftConstraint.FREE' in m for m in zs[pre+'cvt_mode'])
+            for side in ('primary','secondary'):
+                assert np.min(zs[pre+side+'_min_local_normal_N_per_rad'])>0
+                assert np.max(abs(zs[pre+'lambda_'+side]))<.65
+            delta=zs[pre+'helix_full_reaction_force_N']-zs[pre+'helix_qs_reaction_force_N']
+            parts=sum(zs[pre+'helix_dynamic_'+k+'_force_N'] for k in ('shaft_accel','shift_accel','curvature'))
+            assert np.max(abs(delta-parts))<1e-8
+    pre='launch_tight__';i=story['launch']['tight']['first_engaged_index']
+    assert zs[pre+'sample_location'][i]=='segment_start'
+    assert np.all(np.isnan(zs[pre+'helix_qs_reaction_force_N'][:i]))
+    later=zs[pre+'time_s']>=.1
+    bound=np.max(abs(100*zs[pre+'helix_dynamic_total_correction_N'][later]/zs[pre+'helix_qs_reaction_force_N'][later]))
+    assert np.isclose(bound,story['launch']['tight']['max_later_fraction_percent'],rtol=1e-12)
+    results['launch_later_force_bound_percent']=float(bound)
+    results['backshift_refinement']={k:v for k,v in story['backshift'].items() if k.endswith('_refinement')}
+    response_checks={}
+    for torque in (120,240,480):
+        for level in ('nominal','tight'):
+            names=[f'm{torque}_{level}',f'm{torque}_{level}_qs',f'm0_{level}',f'm0_{level}_qs']
+            for name in names:
+                pre=name+'__'
+                assert len(np.unique(zs[pre+'segment_index']))==1
+                assert np.all(np.diff(zs[pre+'time_s'])>0)
+                assert all('STICK_STICK' in m and 'CVTShiftConstraint.FREE' in m for m in zs[pre+'cvt_mode'])
+                for side in ('primary','secondary'):
+                    assert np.min(zs[pre+side+'_min_local_normal_N_per_rad'])>0
+                    assert np.max(abs(zs[pre+'lambda_'+side]))<.65
+            f,q,fc,qc=[zs[n+'__shift_m'] for n in names]
+            expected=1000*((f-fc)-(q-qc))
+            actual=zs[f'response_m{torque}_{level}__full_minus_qs_shift_mm']
+            assert np.max(abs(expected-actual))<1e-12
+            result=story['backshift_response'][f'm{torque}_{level}_comparison']
+            assert np.isclose(np.max(abs(actual)),result['max_abs_shift_response_difference_mm'],rtol=1e-12)
+            assert result['signed_shift_response_difference_at_peak_mm']<0
+            response_checks[f'm{torque}_{level}']=result
+        delta=zs[f'response_m{torque}_nominal__full_minus_qs_shift_mm']-zs[f'response_m{torque}_tight__full_minus_qs_shift_mm']
+        assert np.max(abs(delta))<1e-4
+    results['backshift_response_checks']=response_checks
     if args.raw_dir:
         for name, expected in audit['raw_sha256'].items():
             assert sha(args.raw_dir/name) == expected, name

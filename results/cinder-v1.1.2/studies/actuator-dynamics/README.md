@@ -1,5 +1,15 @@
 # Actuator dynamics — dynamic coupling and quasi-static validity
 
+## Current secondary publication revision
+
+The 27 September secondary revision uses the reference launch, three refined
+continuous backshift cases with independently integrated quasi-static responses
+and unforced controls, and the estimated larger component. Start with
+[provenance/SECONDARY_STORY.md](provenance/SECONDARY_STORY.md) for exact sources,
+scientific limits and canonical plot/replay commands. It supersedes the older
+secondary figure selection below; the primary publication workflow is unchanged.
+
+
 This release-scoped CINDER `v1.1.2` study treats the primary fixed-pivot flyweight and secondary torque-reactive helix as one scientific family.
 
 ## Results 4.4.1 publication figures
@@ -18,7 +28,8 @@ plotting. Neither option resets the other study artifacts. The original
 72-row primary screen is retained as identified evidence, not rerun by this
 publication command. See [PRIMARY_PUBLICATION.md](provenance/PRIMARY_PUBLICATION.md)
 for exact inputs, archive/source reconciliation, numerical refinement and
-known limits. Secondary and belt publication gaps remain open.
+known limits. See the current secondary checkpoint above; belt publication
+evidence gaps remain open.
 
 ## Broader maintained study
 
