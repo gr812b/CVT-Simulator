@@ -2,7 +2,10 @@
 
 Stage A reproduces broad route/launch coverage. Stage B uses controlled smooth
 secondary-load rises to separate disturbance *magnitude* from disturbance
-*timescale*. No governing CVT equation or contact law is modified.
+*timescale*. These discovery trajectories use the full governing equations.
+The isolated --publication route additionally compares a documented joint
+wrap-offset omission and coherent belt-density scaling; neither changes the
+installed CINDER package or contact/reset laws.
 """
 from __future__ import annotations
 
@@ -497,6 +500,15 @@ def _synthesize(case_summaries: dict[str, dict[str, Any]], families: dict[str, s
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--publication', choices=['run', 'prepare', 'plot', 'check'])
+    parser.add_argument('--publication-case')
+    parser.add_argument('--publication-variant', choices=['full','omission','density03'], default='full')
+    parser.add_argument('--publication-level', choices=['nominal','tight'], default='tight')
+    parser.add_argument('--publication-dir', type=Path, default=STUDY_ROOT/'artifacts/publication')
+    parser.add_argument('--publication-figure-dir', type=Path,
+                        help='Optional output directory for plot-only reproduction')
+    parser.add_argument('--audit-archive', type=Path, help='Audit retained discovery outputs without simulation.')
+    parser.add_argument('--audit-output', type=Path, default=STUDY_ROOT / 'publication_inputs' / 'archive_review.json')
     parser.add_argument("--base-case", type=Path, default=None)
     parser.add_argument("--max-samples", type=int, default=6000)
     parser.add_argument(
@@ -514,11 +526,33 @@ def main() -> int:
     parser.add_argument("--tests-only", action="store_true")
     parser.add_argument("--skip-tests", action="store_true")
     args = parser.parse_args()
+    if args.publication:
+        # Isolated route: never enters the destructive discovery output setup.
+        if args.publication == 'run':
+            subprocess.run([sys.executable, str(VERIFY)], check=True)
+            from experiments.publication import run_one, run_schedule, CASES
+            if args.publication_case == 'all':
+                run_schedule(args.publication_dir)
+                return 0
+            if args.publication_case not in CASES:
+                parser.error('--publication-case must be one of '+', '.join(CASES))
+            run_one(args.publication_case, args.publication_variant,
+                    args.publication_level, args.publication_dir)
+        else:
+            from analysis.publication import main as publication_main
+            publication_main(args.publication, args.publication_dir, args.publication_figure_dir)
+        return 0
+
+    if args.audit_archive is not None:
+        from analysis.archive_review import audit
+        audit(args.audit_archive, args.audit_output)
+        return 0
 
     if not args.skip_tests:
         subprocess.run(
             [sys.executable, "-m", "unittest", "discover", "-s", str(STUDY_ROOT / "tests"), "-v"],
             check=True,
+            cwd=STUDY_ROOT,
         )
     if args.tests_only:
         return 0

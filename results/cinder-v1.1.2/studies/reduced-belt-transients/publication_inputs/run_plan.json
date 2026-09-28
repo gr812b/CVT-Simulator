@@ -1,0 +1,212 @@
+[
+  {
+    "case": "flat",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "flat",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "flat",
+    "level": "nominal",
+    "variant": "density03"
+  },
+  {
+    "case": "loading",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "loading",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "loading",
+    "level": "nominal",
+    "variant": "density03"
+  },
+  {
+    "case": "unloading",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "unloading",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "unloading",
+    "level": "nominal",
+    "variant": "density03"
+  },
+  {
+    "case": "rise50",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "rise200",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "rise800",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "envelope",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "contact",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "contact",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "contact_combined",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "contact_combined",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "overrun_mild",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "overrun_mild",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "overrun_strong",
+    "level": "nominal",
+    "variant": "full"
+  },
+  {
+    "case": "overrun_strong",
+    "level": "nominal",
+    "variant": "omission"
+  },
+  {
+    "case": "flat",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "flat",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "flat",
+    "level": "tight",
+    "variant": "density03"
+  },
+  {
+    "case": "loading",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "loading",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "loading",
+    "level": "tight",
+    "variant": "density03"
+  },
+  {
+    "case": "unloading",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "unloading",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "unloading",
+    "level": "tight",
+    "variant": "density03"
+  },
+  {
+    "case": "rise50",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "rise200",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "rise800",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "envelope",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "contact",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "contact",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "contact_combined",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "contact_combined",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "overrun_mild",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "overrun_mild",
+    "level": "tight",
+    "variant": "omission"
+  },
+  {
+    "case": "overrun_strong",
+    "level": "tight",
+    "variant": "full"
+  },
+  {
+    "case": "overrun_strong",
+    "level": "tight",
+    "variant": "omission"
+  }
+]

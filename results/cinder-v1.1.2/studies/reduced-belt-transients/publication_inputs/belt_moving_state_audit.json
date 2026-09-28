@@ -1,0 +1,542 @@
+{
+  "input_sha256": "21033bab93bcafa5fff79f2047bb09bcb555ed164d7f684d7e0b5612b5db1c37",
+  "cases": {
+    "unloading_rise__nominal": {
+      "sample_count": 118,
+      "window_s": [
+        1.4999999999999967,
+        1.55
+      ],
+      "shift_speed_mm_s": [
+        8.092988097431899,
+        14.539633827973372
+      ],
+      "belt_speed_m_s": [
+        14.85556770082499,
+        15.271497600378883
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.99309985033098,
+        "tangential_belt_acceleration": 45.826962364128335,
+        "radial_shift_acceleration": 4.022486399731793,
+        "radial_geometry_curvature": 0.057839647273379674,
+        "tangential_shifting_radius": 0.09961173853550652
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 344.99004544181844,
+        "tangential_belt_acceleration": 333.97181173737954,
+        "radial_shift_acceleration": 35.26830341703425,
+        "radial_geometry_curvature": 0.5302913711286731,
+        "tangential_shifting_radius": 0.9364036337076955
+      },
+      "peak_curvature": {
+        "time_s": 1.55,
+        "coefficient_kg_m": -2.5084625517725216,
+        "shift_speed_m_s": 0.014539633827973372,
+        "force_mN": -0.5302913711286731
+      },
+      "peak_moving_radius": {
+        "time_s": 1.5499999999999912,
+        "primary_signed_mN": -114.86711697320997,
+        "secondary_signed_mN": 113.93071333950226,
+        "sum_mN": -0.9364036337076955
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.10169909061212631,
+          0.10298853774905681
+        ],
+        "contact.secondary_lambda": [
+          -0.08127461225745244,
+          -0.08096831404937839
+        ]
+      }
+    },
+    "unloading_rise__tight": {
+      "sample_count": 126,
+      "window_s": [
+        1.4999999999999967,
+        1.55
+      ],
+      "shift_speed_mm_s": [
+        8.092927903478369,
+        14.539613913516353
+      ],
+      "belt_speed_m_s": [
+        14.855577329186053,
+        15.27150548997746
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.99310702466849,
+        "tangential_belt_acceleration": 45.82675067271373,
+        "radial_shift_acceleration": 4.0226917983217065,
+        "radial_geometry_curvature": 0.05783929287627599,
+        "tangential_shifting_radius": 0.09961121141979506
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 344.9897021956758,
+        "tangential_belt_acceleration": 333.9713125650963,
+        "radial_shift_acceleration": 35.26858670510105,
+        "radial_geometry_curvature": 0.5302899429445034,
+        "tangential_shifting_radius": 0.9364022061605817
+      },
+      "peak_curvature": {
+        "time_s": 1.55,
+        "coefficient_kg_m": -2.508462667477358,
+        "shift_speed_m_s": 0.014539613913516353,
+        "force_mN": -0.5302899429445034
+      },
+      "peak_moving_radius": {
+        "time_s": 1.55,
+        "primary_signed_mN": -114.86697998519239,
+        "secondary_signed_mN": 113.93057777903181,
+        "sum_mN": -0.9364022061605817
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.10169902495638183,
+          0.1029884534959371
+        ],
+        "contact.secondary_lambda": [
+          -0.08127457116997337,
+          -0.08096828202755506
+        ]
+      }
+    },
+    "combined_tune_rise__nominal": {
+      "sample_count": 194,
+      "window_s": [
+        1.7999999999999967,
+        1.9000000000000001
+      ],
+      "shift_speed_mm_s": [
+        -6.4383024143732905,
+        3.809772495852927
+      ],
+      "belt_speed_m_s": [
+        13.801216298529102,
+        14.002894404639024
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 48.02674064865563,
+        "tangential_belt_acceleration": 46.50545689900313,
+        "radial_shift_acceleration": 5.3798363635739666,
+        "radial_geometry_curvature": 0.011563539081962377,
+        "tangential_shifting_radius": 0.07640254968531368
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 261.00486828602243,
+        "tangential_belt_acceleration": 258.9599696002252,
+        "radial_shift_acceleration": 24.344231957127437,
+        "radial_geometry_curvature": 0.10159619486563978,
+        "tangential_shifting_radius": 0.6530737922259346
+      },
+      "peak_curvature": {
+        "time_s": 1.9000000000000001,
+        "coefficient_kg_m": -2.4509513911646774,
+        "shift_speed_m_s": -0.006438302414373291,
+        "force_mN": -0.10159619486563978
+      },
+      "peak_moving_radius": {
+        "time_s": 1.9000000000000001,
+        "primary_signed_mN": 58.88437159436857,
+        "secondary_signed_mN": -59.537445386594484,
+        "sum_mN": -0.6530737922259346
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.15247839574921596,
+          0.16080322688626503
+        ],
+        "contact.secondary_lambda": [
+          -0.11503103470384293,
+          -0.11090336836148144
+        ]
+      }
+    },
+    "combined_tune_rise__tight": {
+      "sample_count": 221,
+      "window_s": [
+        1.7999999999999967,
+        1.9000000000000001
+      ],
+      "shift_speed_mm_s": [
+        -6.438297889901154,
+        3.8097804311301626
+      ],
+      "belt_speed_m_s": [
+        13.801219034138395,
+        14.002896495468923
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 48.02770598010797,
+        "tangential_belt_acceleration": 46.50439087135023,
+        "radial_shift_acceleration": 5.379936250676347,
+        "radial_geometry_curvature": 0.011563645333848767,
+        "tangential_shifting_radius": 0.07640325253159468
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 261.0034204532212,
+        "tangential_belt_acceleration": 258.95985843964945,
+        "radial_shift_acceleration": 24.34466466614642,
+        "radial_geometry_curvature": 0.10159605361406962,
+        "tangential_shifting_radius": 0.653072977222858
+      },
+      "peak_curvature": {
+        "time_s": 1.9000000000000001,
+        "coefficient_kg_m": -2.450951428326379,
+        "shift_speed_m_s": -0.0064382978899011544,
+        "force_mN": -0.10159605361406962
+      },
+      "peak_moving_radius": {
+        "time_s": 1.8999999999999857,
+        "primary_signed_mN": 58.884351912978396,
+        "secondary_signed_mN": -59.53742489020126,
+        "sum_mN": -0.653072977222858
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.1524784122954432,
+          0.16080326071382708
+        ],
+        "contact.secondary_lambda": [
+          -0.11503106563989439,
+          -0.11090338675334219
+        ]
+      }
+    },
+    "strong_torque_rise__nominal": {
+      "sample_count": 321,
+      "window_s": [
+        1.9999999999999967,
+        2.2
+      ],
+      "shift_speed_mm_s": [
+        4.874964811816975,
+        19.371166512295737
+      ],
+      "belt_speed_m_s": [
+        17.270578534612103,
+        17.526857096035947
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 47.93062807335572,
+        "tangential_belt_acceleration": 36.49046786407903,
+        "radial_shift_acceleration": 14.929977947715376,
+        "radial_geometry_curvature": 0.48711718999333575,
+        "tangential_shifting_radius": 0.16180892485653456
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 111.89714937290773,
+        "tangential_belt_acceleration": 108.60512552607739,
+        "radial_shift_acceleration": 29.039399901138694,
+        "radial_geometry_curvature": 0.9566706713318064,
+        "tangential_shifting_radius": 0.35213019481779756
+      },
+      "peak_curvature": {
+        "time_s": 2.1589999999999794,
+        "coefficient_kg_m": -2.5494759026440916,
+        "shift_speed_m_s": 0.019371166512295736,
+        "force_mN": -0.9566706713318064
+      },
+      "peak_moving_radius": {
+        "time_s": 2.175999999999977,
+        "primary_signed_mN": -42.03895820051515,
+        "secondary_signed_mN": 42.39108839533295,
+        "sum_mN": 0.35213019481779756
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.001271469224655806,
+          0.08764673131218621
+        ],
+        "contact.secondary_lambda": [
+          -0.0744481629492448,
+          -0.001292993947570494
+        ]
+      }
+    },
+    "strong_torque_rise__tight": {
+      "sample_count": 346,
+      "window_s": [
+        1.9999999999999967,
+        2.2
+      ],
+      "shift_speed_mm_s": [
+        4.874950318951282,
+        19.371374458328567
+      ],
+      "belt_speed_m_s": [
+        17.270586348892152,
+        17.52686412165696
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 47.930993541783785,
+        "tangential_belt_acceleration": 36.49073065875182,
+        "radial_shift_acceleration": 14.92934583232516,
+        "radial_geometry_curvature": 0.4871200287161882,
+        "tangential_shifting_radius": 0.16180993842304878
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 111.89702400019996,
+        "tangential_belt_acceleration": 108.60496321059897,
+        "radial_shift_acceleration": 29.041397268296798,
+        "radial_geometry_curvature": 0.9566695947880773,
+        "tangential_shifting_radius": 0.35212911092984855
+      },
+      "peak_curvature": {
+        "time_s": 2.1585582582438803,
+        "coefficient_kg_m": -2.5494182983136695,
+        "shift_speed_m_s": 0.019371374458328566,
+        "force_mN": -0.9566695947880773
+      },
+      "peak_moving_radius": {
+        "time_s": 2.175999999999977,
+        "primary_signed_mN": -42.03832646334296,
+        "secondary_signed_mN": 42.39045557427283,
+        "sum_mN": 0.35212911092984855
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          0.0012712226779868815,
+          0.08764668047650238
+        ],
+        "contact.secondary_lambda": [
+          -0.07444813672887683,
+          -0.0012927688009367051
+        ]
+      }
+    },
+    "mild_reverse_power__nominal": {
+      "sample_count": 1254,
+      "window_s": [
+        2.249999999999969,
+        4.403807860077883
+      ],
+      "shift_speed_mm_s": [
+        1.8350963378763623,
+        9.632049291357758
+      ],
+      "belt_speed_m_s": [
+        17.663856953840153,
+        23.330054610833894
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.77833998851193,
+        "tangential_belt_acceleration": 48.56240205604636,
+        "radial_shift_acceleration": 1.4375979439512319,
+        "radial_geometry_curvature": 0.042862857343595254,
+        "tangential_shifting_radius": 0.17879715414687672
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 31.798631715901138,
+        "tangential_belt_acceleration": 31.49215622932397,
+        "radial_shift_acceleration": 15.133626979271787,
+        "radial_geometry_curvature": 0.2371265831609456,
+        "tangential_shifting_radius": 0.15142584842715553
+      },
+      "peak_curvature": {
+        "time_s": 2.249999999999969,
+        "coefficient_kg_m": -2.5558940717835146,
+        "shift_speed_m_s": 0.009632049291357758,
+        "force_mN": -0.2371265831609456
+      },
+      "peak_moving_radius": {
+        "time_s": 2.296999999999964,
+        "primary_signed_mN": 10.520162747795288,
+        "secondary_signed_mN": -10.671588596222442,
+        "sum_mN": -0.15142584842715553
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          -0.031686523395928576,
+          -0.00011798838002644031
+        ],
+        "contact.secondary_lambda": [
+          0.00022849311595384854,
+          0.030402383382931407
+        ]
+      }
+    },
+    "mild_reverse_power__tight": {
+      "sample_count": 1443,
+      "window_s": [
+        2.249999999999969,
+        4.403807896977369
+      ],
+      "shift_speed_mm_s": [
+        1.8350968198280817,
+        9.63194419773006
+      ],
+      "belt_speed_m_s": [
+        17.663860465557295,
+        23.3300590246908
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.77834062910341,
+        "tangential_belt_acceleration": 48.56244624113823,
+        "radial_shift_acceleration": 1.4375537588605167,
+        "radial_geometry_curvature": 0.042862321915859404,
+        "tangential_shifting_radius": 0.1787970489819741
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 31.798643886190803,
+        "tangential_belt_acceleration": 31.49216962352058,
+        "radial_shift_acceleration": 15.13421322469324,
+        "radial_geometry_curvature": 0.23712141653028604,
+        "tangential_shifting_radius": 0.15142634977734884
+      },
+      "peak_curvature": {
+        "time_s": 2.249999999999969,
+        "coefficient_kg_m": -2.5558941562418953,
+        "shift_speed_m_s": 0.009631944197730061,
+        "force_mN": -0.23712141653028604
+      },
+      "peak_moving_radius": {
+        "time_s": 2.296999999999964,
+        "primary_signed_mN": 10.520434957935022,
+        "secondary_signed_mN": -10.671861307712371,
+        "sum_mN": -0.15142634977734884
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          -0.03168653164727031,
+          -0.00011853531631663512
+        ],
+        "contact.secondary_lambda": [
+          0.0002289968525500079,
+          0.030402396407767002
+        ]
+      }
+    },
+    "strong_reverse_power__nominal": {
+      "sample_count": 1369,
+      "window_s": [
+        2.249999999999969,
+        4.89411357542985
+      ],
+      "shift_speed_mm_s": [
+        1.4684410947218423,
+        10.11340944018974
+      ],
+      "belt_speed_m_s": [
+        17.357401980078578,
+        22.610850008782773
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.919143857527104,
+        "tangential_belt_acceleration": 49.306868184306325,
+        "radial_shift_acceleration": 0.6948004827301621,
+        "radial_geometry_curvature": 0.014556701052049743,
+        "tangential_shifting_radius": 0.06463077438436965
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 57.82583312463885,
+        "tangential_belt_acceleration": 57.672215503428774,
+        "radial_shift_acceleration": 18.90223138753141,
+        "radial_geometry_curvature": 0.2615877027776723,
+        "tangential_shifting_radius": 0.09175122459736225
+      },
+      "peak_curvature": {
+        "time_s": 2.249999999999969,
+        "coefficient_kg_m": -2.557538287750495,
+        "shift_speed_m_s": 0.010113409440189739,
+        "force_mN": -0.2615877027776723
+      },
+      "peak_moving_radius": {
+        "time_s": 2.359999999999957,
+        "primary_signed_mN": 31.598650411105503,
+        "secondary_signed_mN": -31.690401635702866,
+        "sum_mN": -0.09175122459736225
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          -0.08186324176529004,
+          -0.033960784127968914
+        ],
+        "contact.secondary_lambda": [
+          0.03133395904800881,
+          0.07821628702515118
+        ]
+      }
+    },
+    "strong_reverse_power__tight": {
+      "sample_count": 1629,
+      "window_s": [
+        2.249999999999969,
+        4.8941080232583065
+      ],
+      "shift_speed_mm_s": [
+        1.468438249665291,
+        10.113392184409362
+      ],
+      "belt_speed_m_s": [
+        17.357404091957363,
+        22.610839671460617
+      ],
+      "integrated_share_percent": {
+        "normal_contact": 49.91914386958758,
+        "tangential_belt_acceleration": 49.30688028333584,
+        "radial_shift_acceleration": 0.694788388024402,
+        "radial_geometry_curvature": 0.014556758907695224,
+        "tangential_shifting_radius": 0.06463070014445865
+      },
+      "peak_absolute_mN": {
+        "normal_contact": 57.82576290818042,
+        "tangential_belt_acceleration": 57.67215694376852,
+        "radial_shift_acceleration": 18.901850402701772,
+        "radial_geometry_curvature": 0.26158681451006577,
+        "tangential_shifting_radius": 0.09175105056916312
+      },
+      "peak_curvature": {
+        "time_s": 2.249999999999969,
+        "coefficient_kg_m": -2.557538330652578,
+        "shift_speed_m_s": 0.010113392184409362,
+        "force_mN": -0.26158681451006577
+      },
+      "peak_moving_radius": {
+        "time_s": 2.36,
+        "primary_signed_mN": 31.598759256156317,
+        "secondary_signed_mN": -31.690510306725482,
+        "sum_mN": -0.09175105056916312
+      },
+      "traction_range": {
+        "contact.primary_lambda": [
+          -0.08186315266848652,
+          -0.03396083341520358
+        ],
+        "contact.secondary_lambda": [
+          0.031334011325780266,
+          0.07821621647783528
+        ]
+      }
+    }
+  },
+  "provenance": {
+    "modes": {
+      "combined_tune_rise__nominal": "FREE:STICK_STICK",
+      "combined_tune_rise__tight": "FREE:STICK_STICK",
+      "mild_reverse_power__nominal": "FREE:STICK_STICK",
+      "mild_reverse_power__tight": "FREE:STICK_STICK",
+      "strong_reverse_power__nominal": "FREE:STICK_STICK",
+      "strong_reverse_power__tight": "FREE:STICK_STICK",
+      "strong_torque_rise__nominal": "FREE:STICK_STICK",
+      "strong_torque_rise__tight": "FREE:STICK_STICK",
+      "unloading_rise__nominal": "FREE:STICK_STICK",
+      "unloading_rise__tight": "FREE:STICK_STICK"
+    },
+    "raw_sha256": {
+      "contact_combined_nominal_full/terms.csv.gz": "5075ea61025ba3edcb6bc0fee8888ab1808a176f2c44f0b3aa3d8dd7b5d3a6c0",
+      "contact_combined_tight_full/terms.csv.gz": "32ab56d90b90cec83127f8626b68e2ce2a94a5514dd09a4d231890811a62818a",
+      "overrun_mild_nominal_full/terms.csv.gz": "8f76b563dfb817229fb24579307dc3af88f872e18df271a9d102d4ae2a0e169d",
+      "overrun_mild_tight_full/terms.csv.gz": "0aed7fa624856e59c7facce9bc85edbbc7407844c0bec95287b838b35bf456bf",
+      "overrun_strong_nominal_full/terms.csv.gz": "c3a2e3068c3d3acca415c527e8103a1764cfde2da0ccbaca1dc62bfe61983bb8",
+      "overrun_strong_tight_full/terms.csv.gz": "a22e3dd7dc18627190c8ff2bb837750f61752c9388af213d5a3ceece13f220de",
+      "unloading_nominal_full/terms.csv.gz": "99bd1e47a66420fc44576cb046d88547d1fb8e47862868b4789f4b9d4a39bc7c",
+      "unloading_tight_full/terms.csv.gz": "1e4fc8734de5429f03692ae2404b229ce1e4bdcfb8f076c2f0ddba7e40b7cb54"
+    },
+    "reverse_power_window": "2.25 s to the incoming side of the first upper-stop capture.",
+    "selection": "Stated interval, free shift only; event sides kept by segment."
+  },
+  "max_share_refinement_change_percentage_points": 2.838722852449571e-06
+}

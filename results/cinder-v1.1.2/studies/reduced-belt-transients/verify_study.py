@@ -23,6 +23,11 @@ def main() -> int:
         STUDY_ROOT / "analysis" / "closure_synthesis.py",
         STUDY_ROOT / "analysis" / "equation_sensitivity.py",
         STUDY_ROOT / "analysis" / "sensitivity_synthesis.py",
+        STUDY_ROOT / "experiments" / "publication.py",
+        STUDY_ROOT / "analysis" / "publication.py",
+        STUDY_ROOT / "analysis" / "publication_plots.py",
+        STUDY_ROOT / "publication_inputs" / "belt_publication.npz",
+        STUDY_ROOT / "publication_inputs" / "belt_publication_audit.json",
         RELEASE_ROOT / "defaults" / "baja" / "simulation_case.json",
         RELEASE_ROOT / "defaults" / "reference_model" / "reference_case.py",
     )
@@ -37,8 +42,13 @@ def main() -> int:
         if forbidden in run_text:
             raise RuntimeError(f"run.py still contains forbidden fallback {forbidden!r}")
 
-    for test in sorted((STUDY_ROOT / "tests").glob("test_*.py")):
-        subprocess.run([sys.executable, str(test)], check=True)
+    subprocess.run(
+        [sys.executable, str(STUDY_ROOT / "run.py"), "--tests-only"], check=True
+    )
+    subprocess.run(
+        [sys.executable, str(STUDY_ROOT / "run.py"), "--publication", "check"],
+        check=True,
+    )
 
     print("PASS reduced-belt-transients maintained-study verification")
     return 0

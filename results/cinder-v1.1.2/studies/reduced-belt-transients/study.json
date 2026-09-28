@@ -1,11 +1,11 @@
 {
   "study_id": "cinder-v1.1.2-reduced-belt-transients",
-  "title": "Reduced-belt transient mechanics: final closure",
+  "title": "Reduced-belt transient mechanics: publication comparisons",
   "release": "1.1.2",
-  "status": "final-closure-experiments",
-  "scientific_question": "Which surviving reduced-belt transient terms are important across Baja operation, high/asymmetric contact, mixed slip, overrun, and the vanishing-belt-inertia limit, and which coherent simplifications are justified?",
-  "governing_equations_modified": false,
-  "ablation_switches_present": false,
+  "status": "publication-draft-with-reproducible-evidence",
+  "scientific_question": "When do retained belt acceleration terms participate in the coupled balance, and how do specified joint term omission and finite-density reduction change integrated motion and events?",
+  "governing_equations_modified": true,
+  "ablation_switches_present": true,
   "analysis_lenses": [
     "direct final-equation sensitivity",
     "hybrid-regime phase",
@@ -19,7 +19,9 @@
     "controlled true-overrun verification by boundary power sign",
     "final-equation activity thresholds distinct from gross-force thresholds",
     "global transport-row inertia continuation",
-    "coherent belt-density inertia continuation"
+    "coherent belt-density inertia continuation",
+    "independent full/joint-omission trajectories with refinement",
+    "common-time dimensional differences preserving both event sides"
   ],
   "equation_growth_laws": {
     "shift_acceleration": "K(s) * s_ddot",
@@ -58,7 +60,7 @@
       "torsional_pretension_deg": 320.0
     }
   },
-  "decision_gate": "Call discovery complete when mixed/high-contact behavior has been exercised or its absence documented, true overrun has been verified, and the inertia continuations show whether the force-small whole-belt term is trajectory-small without materially changing hybrid events.",
+  "decision_gate": "Assess signed dimensional forces, simultaneous drivers, independently integrated reductions, exact event sides and numerical refinement before drawing a scoped motion-sensitivity conclusion.",
   "experimental_equation_continuation_present": true,
   "final_closure": {
     "contact_stress_cases": 13,
@@ -78,9 +80,9 @@
   },
   "results_manifest_schema": 1,
   "study_slug": "reduced-belt-transients",
-  "description": null,
+  "description": "Results 4.4.3; selected refinement, explicit reduction comparisons, four final figure families and event-aware evidence.",
   "maintenance_status": "maintained",
-  "paper_role": "undecided",
+  "paper_role": "main-text",
   "classification": "mechanism",
   "cinder_release": {
     "distribution": "cinder-cvt",
@@ -118,5 +120,24 @@
     "shared_cross_study": "../../defaults",
     "study_specific": "infrastructure/, experiments/, analysis/",
     "exploration_excluded_from_run": true
+  },
+  "equation_modification_scope": "Only explicit study-local variants: isolated global transport-row scaling and joint curvature/moving-radius wrap-offset omission. Full cases use frozen 1.1.2 equations. Installed package and contact/reset laws unchanged.",
+  "publication": {
+    "date": "2026-09-28",
+    "provenance": "provenance/BELT_PUBLICATION.md",
+    "plan": "publication_inputs/run_plan.json",
+    "run_count": 42,
+    "plot_command": "python run.py --publication plot",
+    "raw_directory": "artifacts/publication",
+    "compact_inputs": "publication_inputs/belt_publication.npz",
+    "audit": "publication_inputs/belt_publication_audit.json",
+    "manuscript_section": "4.4.3",
+    "manuscript_support": "D.8",
+    "limitations": [
+      "Omission shift differences below individual refinement changes",
+      "Three-percent density adds early contact-seat return",
+      "Exact zero-density limit not run",
+      "Sampled-state checks; no continuous-domain or experimental validation claim"
+    ]
   }
 }

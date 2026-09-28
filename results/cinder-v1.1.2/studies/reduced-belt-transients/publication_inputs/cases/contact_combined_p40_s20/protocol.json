@@ -1,0 +1,19 @@
+{
+  "name": "contact_combined_p40_s20",
+  "title": "Combined clamp stress: primary 0.40x / secondary 0.20x",
+  "family": "contact_closure",
+  "purpose": "Focused contact-demand stress case. Static and kinetic friction are unchanged; one or both clamp mechanisms are weakened so CINDER's normal hybrid logic determines whether the trajectory remains stick, enters mixed slip, or both-slip.",
+  "contact_stress": {
+    "primary_flyweight_scale": 0.4,
+    "secondary_reaction_scale": 0.2
+  },
+  "controlled_load": {
+    "kind": "smooth_time_programmed_grade",
+    "start_time_s": 1.8,
+    "rise_time_s": 0.1,
+    "target_grade_deg": 30.0
+  },
+  "max_shift_m": 0.019049999999999997,
+  "static_friction_coefficient": 0.65,
+  "source": "F:\\Code\\Projects\\CVT-Simulator\\results\\cinder-v1.1.2\\studies\\reduced-belt-transients\\artifacts\\resolved_protocols\\contact_combined_p40_s20.json"
+}

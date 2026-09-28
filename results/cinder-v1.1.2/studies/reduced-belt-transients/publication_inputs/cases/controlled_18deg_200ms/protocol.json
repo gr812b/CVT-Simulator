@@ -1,0 +1,17 @@
+{
+  "name": "controlled_18deg_200ms",
+  "title": "18 degree rise over 200 ms",
+  "target_grade_deg": 18.0,
+  "rise_time_s": 0.2,
+  "family": "controlled",
+  "purpose": "Controlled secondary road-load application. All cases are identical until t=1.50 s; only target grade or application time changes.",
+  "controlled_load": {
+    "kind": "smooth_time_programmed_grade",
+    "start_time_s": 1.5,
+    "rise_time_s": 0.2,
+    "target_grade_deg": 18.0
+  },
+  "max_shift_m": 0.019049999999999997,
+  "static_friction_coefficient": 0.65,
+  "source": "F:\\Code\\Projects\\CVT-Simulator\\results\\cinder-v1.1.2\\studies\\reduced-belt-transients\\artifacts\\resolved_protocols\\controlled_18deg_200ms.json"
+}

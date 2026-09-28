@@ -1,0 +1,44 @@
+Environment verification passed.
+cinder-cvt: 1.1.2
+numpy: 2.5.2
+scipy: 1.18.1
+matplotlib: 3.11.1
+cinder path: /workspace/scratch/cdacb963221e/actuator_bridge/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py
+test_endpoint_loading_integrates_to_saved_resultant (test_archive_review.ArchiveReviewTests.test_endpoint_loading_integrates_to_saved_resultant) ... ok
+test_fraction_and_percent_are_distinct (test_archive_review.ArchiveReviewTests.test_fraction_and_percent_are_distinct) ... ok
+test_activity_shares_sum_to_one_when_balance_is_active (test_belt_terms.FinalEquationTests.test_activity_shares_sum_to_one_when_balance_is_active) ... ok
+test_activity_threshold_channels_mean_exact_equation_share (test_belt_terms.FinalEquationTests.test_activity_threshold_channels_mean_exact_equation_share) ... ok
+test_common_centripetal_term_is_absent_from_final_loop_channels (test_belt_terms.FinalEquationTests.test_common_centripetal_term_is_absent_from_final_loop_channels) ... ok
+test_contact_coefficients_match_endpoint_sum_algebra (test_belt_terms.FinalEquationTests.test_contact_coefficients_match_endpoint_sum_algebra) ... ok
+test_each_transient_term_is_response_coefficient_times_driver (test_belt_terms.FinalEquationTests.test_each_transient_term_is_response_coefficient_times_driver) ... ok
+test_equation_threshold_channels_are_self_consistent (test_belt_terms.FinalEquationTests.test_equation_threshold_channels_are_self_consistent) ... ok
+test_loop_decomposition_matches_collapsed_equation (test_belt_terms.FinalEquationTests.test_loop_decomposition_matches_collapsed_equation) ... ok
+test_transport_uses_effective_not_centroid_radii (test_belt_terms.FinalEquationTests.test_transport_uses_effective_not_centroid_radii) ... ok
+test_contact_stress_scales_only_requested_actuation_quantities (test_closure_design.ClosureDesignTests.test_contact_stress_scales_only_requested_actuation_quantities) ... ok
+test_density_scale_is_coherent_single_parameter (test_closure_design.ClosureDesignTests.test_density_scale_is_coherent_single_parameter) ... ok
+test_designs_are_sparse_and_include_both_asymmetries (test_closure_design.ClosureDesignTests.test_designs_are_sparse_and_include_both_asymmetries) ... ok
+test_baja_envelope_respects_physical_bounds_and_contains_both_load_signs (test_envelope_design.EnvelopeDesignTests.test_baja_envelope_respects_physical_bounds_and_contains_both_load_signs) ... ok
+test_halton_design_is_deterministic_and_inside_unit_cube (test_envelope_design.EnvelopeDesignTests.test_halton_design_is_deterministic_and_inside_unit_cube) ... ok
+test_tune_robustness_uses_documented_preload_bounds (test_envelope_design.EnvelopeDesignTests.test_tune_robustness_uses_documented_preload_bounds) ... ok
+test_H_is_odd_and_G_is_even_under_traction_reversal (test_equation_sensitivity.EquationSensitivityTests.test_H_is_odd_and_G_is_even_under_traction_reversal) ... ok
+test_driver_growth_laws_are_distinct (test_equation_sensitivity.EquationSensitivityTests.test_driver_growth_laws_are_distinct) ... ok
+test_tangential_coupling_vanishes_at_zero_traction (test_equation_sensitivity.EquationSensitivityTests.test_tangential_coupling_vanishes_at_zero_traction) ... ok
+test_thresholds_reconstruct_requested_force_fraction (test_equation_sensitivity.EquationSensitivityTests.test_thresholds_reconstruct_requested_force_fraction) ... ok
+test_overrun_program_blends_grade_and_primary_torque_phase (test_protocol_support.ControlledGradeTests.test_overrun_program_blends_grade_and_primary_torque_phase) ... ok
+test_smooth_grade_program_has_common_preload_and_exact_hold (test_protocol_support.ControlledGradeTests.test_smooth_grade_program_has_common_preload_and_exact_hold) ... ok
+test_smoothstep_endpoints_and_midpoint (test_protocol_support.ControlledGradeTests.test_smoothstep_endpoints_and_midpoint) ... ok
+test_zero_rise_is_an_instantaneous_road_load_application (test_protocol_support.ControlledGradeTests.test_zero_rise_is_an_instantaneous_road_load_application) ... ok
+test_event_limits_are_not_interpolated_across (test_publication.PublicationChecks.test_event_limits_are_not_interpolated_across) ... ok
+test_joint_omission_changes_bias_only_and_restores (test_publication.PublicationChecks.test_joint_omission_changes_bias_only_and_restores) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.499s
+
+OK
+{
+  "run_count": 42,
+  "local_loading_findings": [],
+  "raw_files_verified": 378,
+  "frozen_source_files_verified": 132
+}
+PASS reduced-belt-transients maintained-study verification

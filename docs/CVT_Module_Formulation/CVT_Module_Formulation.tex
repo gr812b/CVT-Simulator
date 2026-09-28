@@ -11809,341 +11809,346 @@ force correction implies an equally large change in the trajectory.
 \subsection{Reduced-Belt Transient Mechanics}
 \label{sec:results_reduced_belt_mechanics}
 
-\subsubsection{Judge each term in the equation it must close}
-\label{sec:results_belt_term_inventory}
+The preceding comparisons examined how actuator inertia changes the forces
+available to clamp and shift the belt. The belt itself must also accelerate,
+both as its circulation speed changes and as shifting moves it between pulley
+radii.
 
-The belt retains two different balances. The global transport equation
-\Cref{eq:complete_belt_transport_newton} relates the net pulley traction to
-\(m_b\dot v_b\). The closed tension compatibility
-\Cref{eq:closed_loop_tension_compatibility} instead requires the two wraps and
-straight spans to form one consistent tension field. A small global inertia
-force need not imply that acceleration is unimportant to that second balance.
+The centrifugal-corrected capstan limit of the wrap solution,
+\Cref{eq:gerbert_inertia_corrected_relation}, accounts for the tension needed
+to turn a belt moving steadily at a fixed radius. The full derivation also
+retained the accelerations associated with changing belt speed and radius,
+then carried them through the wrap and straight-span balances into the
+closed-loop tension relation, \Cref{eq:closed_loop_tension_compatibility}.
+These dynamics therefore remain coupled to the pulley loads and motion
+within the reduced belt description.
 
-For the term comparison, the final tension compatibility is collected as
+The closed-loop relation requires the sum of the tensions at the entrance
+and exit of the primary wrap to equal the corresponding sum on the secondary.
+Subtracting the secondary sum from the primary separates the relation into
+a contact-loading contribution and four acceleration contributions.
+
+Two of these arise from radial belt acceleration. Writing the radius
+derivatives with respect to the shared shift coordinate as
 \begin{equation}
- F_{\ddot s}+F_{\dot s^2}+F_{\dot v_b}+F_{\dot s v_b}+F_N=0.
- \label{eq:results_belt_term_balance}
+ r'_j=\frac{dr_{j,\mathrm{cm}}}{ds},
+ \qquad
+ r''_j=\frac{d^2r_{j,\mathrm{cm}}}{ds^2},
+ \label{eq:results_belt_radius_derivatives}
 \end{equation}
-Here the terms are the surviving contributions in
-\Cref{tab:results_belt_terms}; the common \(2\rho_bA_bv_b^2\) contribution
-has already cancelled between the two wrap-boundary sums. That cancellation
-is specific to this compatibility equation and does not remove centrifugal
-loading from the local contact conditions.
+gives
+\begin{equation}
+ \ddot r_{j,\mathrm{cm}}=r'_j\ddot s+r''_j\dot s^2.
+ \label{eq:results_belt_radial_acceleration_split}
+\end{equation}
+The first term follows changes in shift speed. The second arises because
+the change in radius per unit shift can vary with position, so radial
+acceleration can remain even when the shift speed is constant.
 
-To state the coefficients compactly, let \(r'_j=dr_{j,\mathrm{cm}}/ds\)
-and \(r''_j=d^2r_{j,\mathrm{cm}}/ds^2\). For nonzero \(\lambda_j\), define
+The analytical wrap solution supplies two dimensionless factors,
+\(\mathcal G_j\) and \(\mathcal H_j\), which weight the normal-load and
+tangential-acceleration contributions, respectively. For nonzero traction
+utilization,
 \begin{equation}
 \begin{aligned}
- G_j&=\lambda_j
-       \frac{1+e^{-\lambda_j\phi_j/\sin\beta}}
-            {1-e^{-\lambda_j\phi_j/\sin\beta}},\\
- H_j&=\frac{2\sin\beta}{\lambda_j}
-       -\phi_j\frac{1+e^{-\lambda_j\phi_j/\sin\beta}}
-                    {1-e^{-\lambda_j\phi_j/\sin\beta}}.
+ \mathcal G_j
+ &=\lambda_j
+   \frac{1+e^{-\lambda_j\phi_j/\sin\beta}}
+        {1-e^{-\lambda_j\phi_j/\sin\beta}},\\[4pt]
+ \mathcal H_j
+ &=\frac{2\sin\beta-\phi_j\mathcal G_j}{\lambda_j}.
 \end{aligned}
 \label{eq:results_belt_contact_factors}
 \end{equation}
-The continuous limits are \(G_j=2\sin\beta/\phi_j\) and \(H_j=0\) at
-\(\lambda_j=0\). These factors collect the existing wrap solution; they do
-not add a contact law.
+They depend on the traction utilization \(\lambda_j\), wrap angle
+\(\phi_j\) and groove half-angle \(\beta\). At \(\lambda_j=0\), their
+continuous limits are \(\mathcal G_j=2\sin\beta/\phi_j\) and
+\(\mathcal H_j=0\).
+
+The five contributions are listed in \Cref{tab:results_belt_terms}. Each has
+units of force, with \(\rho_bA_b\) giving the belt mass per unit length.
 
 \begin{table}[H]
-  \centering\small
-  \caption{Surviving contributions to the reduced tension compatibility.
-  Radius derivatives are with respect to the shared shift coordinate.
-  The contact term is the difference of the two mapped normal-load
-  contributions, not either gross pulley load.}
-  \label{tab:results_belt_terms}
-  \setlength{\tabcolsep}{5pt}
-  \renewcommand{\arraystretch}{1.35}
-  \begin{tabular}{@{}p{0.24\linewidth}p{\dimexpr0.76\linewidth-2\tabcolsep\relax}@{}}
-    \toprule
-    Contribution & Final-equation term \\
-    \midrule
-    Shift acceleration &
-      \(F_{\ddot s}=-2\rho_bA_b(r_{p,\mathrm{cm}}r'_p-r_{s,\mathrm{cm}}r'_s)\ddot s\) \\
-    Path curvature &
-      \(F_{\dot s^2}=-2\rho_bA_b(r_{p,\mathrm{cm}}r''_p-r_{s,\mathrm{cm}}r''_s)\dot s^2\) \\
-    Belt acceleration &
-      \(F_{\dot v_b}=\rho_bA_b(H_pr_{p,\mathrm{cm}}-H_sr_{s,\mathrm{cm}})\dot v_b\) \\
-    Moving radius &
-      \(F_{\dot s v_b}=\rho_bA_b(H_pr'_p-H_sr'_s)\dot s v_b\) \\
-    Net contact & \(F_N=G_pN_p-G_sN_s\) \\
-    \bottomrule
-  \end{tabular}
+ \centering\small
+ \setlength{\tabcolsep}{4pt}
+ \renewcommand{\arraystretch}{1.18}
+ \begin{tabular}{@{}
+   >{\raggedright\arraybackslash}p{0.18\linewidth}
+   >{\raggedright\arraybackslash}p{0.46\linewidth}
+   >{\raggedright\arraybackslash}p{\dimexpr0.36\linewidth-4\tabcolsep\relax}@{}}
+  \toprule
+  Contribution & Expression & Physical origin \\
+  \midrule
+  Contact loading
+  & \(F_N=\mathcal G_pN_p-\mathcal G_sN_s\)
+  & Difference between the normal-load contributions to the primary and
+    secondary wrap-boundary tension sums. \\
+  \addlinespace[5pt]
+  Changing belt speed
+  & \(\begin{aligned}
+       F_{\dot v_b}={}&\rho_bA_b(\mathcal H_pr_{p,\mathrm{cm}}\\
+                    &-\mathcal H_sr_{s,\mathrm{cm}})\dot v_b
+      \end{aligned}\)
+  & Acceleration of belt circulation, including at fixed pulley radii. \\
+  \addlinespace[5pt]
+  Changing shift speed
+  & \(\begin{aligned}
+       F_{\ddot s}={}&-2\rho_bA_b(r_{p,\mathrm{cm}}r'_p\\
+                    &-r_{s,\mathrm{cm}}r'_s)\ddot s
+      \end{aligned}\)
+  & Radial acceleration caused by changes in shift speed. \\
+  \addlinespace[5pt]
+  Changing radius--shift relationship
+  & \(\begin{aligned}
+       F_{\dot s^2}={}&-2\rho_bA_b(r_{p,\mathrm{cm}}r''_p\\
+                      &-r_{s,\mathrm{cm}}r''_s)\dot s^2
+      \end{aligned}\)
+  & Radial acceleration caused by variation in the radius change per unit
+    shift. \\
+  \addlinespace[5pt]
+  Circulation during shifting
+  & \(\begin{aligned}
+       F_{\dot s v_b}={}&\rho_bA_b(\mathcal H_pr'_p\\
+                       &-\mathcal H_sr'_s)\dot s\,v_b
+      \end{aligned}\)
+  & Additional tangential acceleration as the circulating belt moves on a
+    changing-radius path. \\
+  \bottomrule
+ \end{tabular}
+ \caption{Signed contributions to the closed-loop tension relation.
+ Each contribution is expressed in newtons. Radius derivatives are taken
+ with respect to the shared shift coordinate \(s\).}
+ \label{tab:results_belt_terms}
 \end{table}
 
-The distinction between gross and net loading is central to the result.
-\(G_pN_p\) and \(G_sN_s\) can each be hundreds or thousands of newtons
-while nearly cancelling. A sub-newton transient term can then be important to
-the remaining compatibility. Its scale should not be dismissed by comparing
-it only with gross clamp.
-
-The reported activity share uses the absolute contributions to this final
-balance. For a time window \(\mathcal W\),
+The closed-loop tension relation then becomes
 \begin{equation}
- a_i(t)=\frac{|F_i(t)|}{\sum_k|F_k(t)|},
- \qquad
- A_i(\mathcal W)=
- \frac{\int_{\mathcal W}|F_i(t)|\,dt}
-      {\int_{\mathcal W}\sum_k|F_k(t)|\,dt},
- \label{eq:results_belt_activity}
+ F_N+F_{\dot v_b}+F_{\ddot s}+F_{\dot s^2}+F_{\dot s v_b}=0.
+ \label{eq:results_belt_term_balance}
 \end{equation}
-where the sum contains the five terms in
-\Cref{eq:results_belt_term_balance}. Windows with vanishing total activity
-carry no such percentage interpretation. Signed terms and dimensional
-magnitudes remain necessary: activity describes participation in the equation,
-not an energy fraction or the trajectory error caused by deleting a term.
+The signs show how the contact-loading difference and the acceleration
+contributions balance. In particular, \(F_N\) is a weighted difference
+involving both pulley loads; its magnitude does not represent either
+pulley's total clamping force.
 
-% SOURCE: reduced-belt recap pp. 2--3, 8--9, 11.
-% NEW DISPLAY: show global transport and tension compatibility separately;
-% plot signed dimensional terms and their proper activity shares over matched
-% reference free-shift intervals. Do not place every global/local term into
-% one common denominator. Keep cancellation of precursor terms exact.
-\begin{figure}[tbp]
-  \centering
-  \CINDERResultsFigure[51mm]
-    {figures/results/dynamics/belt_balance_hierarchy.pdf}
-    {Existing term data: two distinct belt balances}
-    {Compare the global transport row with the closed tension balance on the
-     same reference interval. Show gross contact cancellation, signed surviving
-     terms, and equation-activity shares using separate denominators.}
-  \caption{Term hierarchy in the global transport and closed tension
-  compatibility equations. The global inertia term is compared with the two
-  opposing pulley reactions; the local acceleration terms are compared within
-  the surviving tension compatibility. These are distinct force balances, so
-  their relative contributions need not have the same hierarchy.}
-  \label{fig:results_belt_hierarchy}
-\end{figure}
+The common centrifugal contribution \(2\rho_bA_bv_b^2\) cancels between
+the two wrap-boundary tension sums, although centrifugal loading remains
+in the local tension and contact equations. In the steady, fixed-radius
+limit, the four acceleration contributions vanish and the relation reduces
+to \(F_N=0\).
 
-\subsubsection{Rapid changes in shift motion activate radial belt inertia}
-\label{sec:results_belt_rapid_shift}
+The question is how much those additional contributions matter during the
+simulated motion: which terms govern the balance, what changes in motion
+bring the others into prominence, and whether the smaller terms can be
+omitted with little change in the predicted response.
 
-During smooth free shifting, belt acceleration and net contact provide the
-main opposing contributions to the tension compatibility. The
-shift-acceleration contribution grows when sheave motion is strongly
-accelerated, arrested, or reversed. This is the distinction tested by applying
-the same \(+18^\circ\) road-load change over different rise times.
-The finite-rise cases produce peak \(|F_{\ddot s}|\) values of approximately
-\(0.0360\), \(0.00941\), and \(0.00269~\mathrm{N}\) for
-\(50\), \(200\), and \(800~\mathrm{ms}\), respectively.
+\subsubsection{The balance during engagement and free shifting}
+\label{sec:results_belt_hierarchy}
 
-\Cref{fig:results_belt_rate_dependence} separates this rate effect from load
-magnitude. Across the three smooth rises, the fitted peak varies approximately
-as \(T_{\mathrm{rise}}^{-0.94}\), close to inverse rise time over that
-range. This is a response of the coupled system to those forcing programmes,
-not a universal power law or a prescribed scaling of sheave motion. The
-instantaneous-load case is shown separately; only the boundary load is stepped,
-not a CVT state.
-
-The wider twenty-eight-case envelope connects the controlled experiment to
-other operating states. A rapid uphill case near \(64\%\) active shift,
-with about \(+20.7^\circ\) loading applied over \(56~\mathrm{ms}\), reaches
-approximately \(24\%\) shift-acceleration activity over the load-rise
-window. Increased road load does not always produce backshift: the tested
-responses include continued upshift, arrest, and reversal. The better
-predictor of this term's importance is the realized shift acceleration, not
-the name assigned to the maneuver.
-
-% SOURCE: reduced-belt recap pp. 3--5, 13.
-% CASES: +18 deg / 50,200,800 ms; instantaneous case outside the fit;
-% 28-case envelope; fast +20.7 deg / about56ms exemplar (exact ID pending).
-\begin{figure}[tbp]
-  \centering
-  \CINDERResultsFigure[53mm]
-    {figures/results/dynamics/belt_rate_dependence.pdf}
-    {Existing results: loading rate and realized shift acceleration}
-    {Pair the controlled rise-time curve with the envelope's activity versus
-     actual shift acceleration. Add a short trace of the rapid-shift exemplar
-     to connect the percentage to arrest/reversal of sheave motion.}
-  \caption{Activation of the shift-acceleration term by rapid loading.
-  The controlled \(+18^\circ\) family isolates boundary rise time, while the
-  wider envelope links the contribution to the solved sheave acceleration.
-  Activity is evaluated over the stated load-rise window using
-  \Cref{eq:results_belt_activity}; it is not a percentage change in vehicle
-  acceleration or shift position.}
-  \label{fig:results_belt_rate_dependence}
-\end{figure}
-
-The same mechanism remains active when power flow is reversed. A separate
-overrun case combines downhill loading with a resisting primary torque and
-verifies secondary-to-primary power flow. Its shift-acceleration contribution
-accounts for approximately \(17\%\) of integrated tension-equation activity
-in the reported transition window. The result is therefore not limited to
-uphill backshift: rapid changes in the shift motion also matter during
-controlled overrun. The ordinary downhill cases, by contrast, retain
-full-throttle drive and represent unloading rather than this reverse-power
-condition.
-
-\subsubsection{A sensitive coefficient need not produce an important term}
-\label{sec:results_belt_coefficient_driver}
-
-The ordinary load envelope reaches only about \(19\%\) of the static
-traction limit, so it does not alone test whether contact asymmetry could
-amplify the moving-radius contribution. Independent evaluation of the
-coefficients toward \(95\%\) utilization shows that it can. This motivates
-the high-contact comparisons rather than treating small terms in the nominal
-launch as sufficient evidence for omission.
-
-The subsequent clamp-stress cases reach sticking states near \(40\), \(60\),
-\(80\), and \(95\%\) utilization without altering the friction
-coefficients. More severe cases enter primary-slip/secondary-stick, and one
-also enters both-slip. The largest realized moving-radius coefficient is
-approximately \(0.928~\mathrm{N}/(\mathrm{m^2\,s^{-2}})\), yet the
-largest realized moving-radius force is only \(0.0182~\mathrm{N}\).
-Its greatest instantaneous activity in these stress cases is approximately
-\(0.13\%\).
-
-\Cref{fig:results_belt_coefficient_driver} should be read as a product, not
-as three independent rankings. The large coefficient tends to appear near
-engagement, when belt speed is still low, or in heavily utilized seated
-states, when shift speed is near zero. Either condition suppresses
-\(\dot s v_b\). Multiplying the largest coefficient from one instant by the
-largest driver from another would describe a state the trajectory did not
-visit. The mixed-slip example retains the same distinction: high contact
-asymmetry does not by itself supply the missing kinematic driver.
-
-% SOURCE: reduced-belt recap pp. 6--9.
-% CASES: contact_primary_45, contact_combined_p40_s20, selected active
-% primary-slip interval; overrun_strong as reverse-power comparison.
-% NEW DISPLAY: synchronized coefficient/driver/product, not just a scatter
-% of separate peak values. Use same-instant data; retain native contact timing.
-\begin{figure}[tbp]
-  \centering
-  \CINDERResultsFigure[54mm]
-    {figures/results/dynamics/belt_coefficient_driver.pdf}
-    {New composition from existing high-contact and overrun data}
-    {Show the moving-radius coefficient, its simultaneous driver, and their
-     product through high utilization and mixed slip. Contrast with the
-     significant shift-acceleration contribution in true overrun.}
-  \caption{Why coefficient sensitivity alone overstates the realized
-  moving-radius effect. The complete term uses coefficient and driver at the
-  same state. High utilization can enlarge the coefficient while small belt
-  speed or nearly stationary shift suppresses its contribution. Overrun
-  supplies an additional test with verified reverse power flow.}
-  \label{fig:results_belt_coefficient_driver}
-\end{figure}
-
-The path-curvature term remains very small for a related but distinct reason:
-the realized \(\dot s^2\) is too small to activate its finite coefficient
-strongly. Belt acceleration does not share that suppression and remains a
-substantial partner to net contact, including at high traction demand and in
-overrun. These observations support a hierarchy of complete terms, not a
-claim that the small coefficients vanish or that every contact branch has
-been sampled. In particular, the opposite mixed branch,
-primary-stick/secondary-slip, did not arise naturally in this belt-study set.
-
-\subsubsection{What can be reduced without breaking the coupled description}
-\label{sec:results_belt_reduction}
-
-The global transport inertia presents a different reduction question.
-Across the investigated envelope, \(m_b\dot v_b\) is small relative to the
-two opposing pulley reactions. Scaling only that coefficient to \(10\%\)
-or \(3\%\), however, prevents admissible engagement in the flat,
-fast-backshift, and fast-unloading tests. This isolated modification leaves
-the local wrap inertia unchanged and therefore does not represent a
-consistent change in belt mass.
-
-Scaling belt density instead changes the global mass and local wrap inertia
-together. Both the \(10\%\) and \(3\%\) density continuations complete
-all three cases and preserve their respective hybrid transition counts.
-\Cref{fig:results_belt_reduction} compares the trajectory differences from
-this coherent modification with the isolated-row outcomes. This is evidence
-for investigating a coupled low-inertia reduction, rather than deleting a
-small coefficient from one equation on its own. It does not solve the exact
-zero-density limit.
-
-\CINDERResultsDraftNote{R1 --- reconcile the continuation error scale}{
-  The source recap's graph and narrative report approximately 0.81--0.86\%
-  worst five-state normalized RMSE at 3\% density; its page-10 table prints
-  approximately 81--86\%. Match the archived
-  \texttt{inertia\_continuation\_comparison.csv} to the normalization and plot
-  before inserting the quantitative error bound. The completion and unchanged
-  transition-count statements above do not resolve this discrepancy.}
-
-% SOURCE: reduced-belt recap p.10 and pp.11--13, with scale discrepancy R1.
-% NEW REDUCED-MODEL TEST R2: omit the curvature and moving-radius terms
-% together, preserve the other equations, and re-integrate selected cases.
-% Plot this only once actually run; no invented outcome or trace is permitted.
-\begin{figure}[tbp]
-  \centering
-  \CINDERResultsFigure[56mm]
-    {figures/results/dynamics/belt_reduction_comparisons.pdf}
-    {Reduction evidence: existing continuation + proposed omission test}
-    {Existing: flat/backshift/unloading density continuation, with transition
-     counts and correctly normalized state errors. Planned: a consistently
-     re-integrated curvature/moving-radius omission comparison on the same
-     challenge cases. Keep the two tests distinctly labelled.}
-  \caption{Tests of further belt-model reduction. The completed continuation
-  changes density in all retained belt-inertia contributions; isolated
-  transport-row changes are shown separately. A second, explicitly planned
-  comparison tests omission of the two small kinematic terms. Its results
-  remain to be generated, and the density-continuation error scale requires
-  the source check identified in the draft.}
-  \label{fig:results_belt_reduction}
-\end{figure}
-
-\CINDERResultsDraftNote{R2 --- test the proposed small-term omission}{
-  Re-integrate a consistently assembled model omitting \(F_{\dot s^2}\) and
-  \(F_{\dot s v_b}\), first jointly and separately only if attribution is
-  needed. Use the flat reference, rapid backshift, rapid unloading, high-contact
-  mixed-slip, and true-overrun cases. Compare state errors, event histories,
-  and admissibility at resolved numerical settings. This is the evidence
-  needed to turn small observed equation activity into a quantitative bound
-  on the reduced model's response; no passing outcome is presumed.}
-
-The resulting approximation guidance is summarized in
-\Cref{tab:results_belt_reduction_guidance}. Belt acceleration belongs in the
-present finite-inertia tension compatibility. Shift-acceleration inertia must
-also be retained when rapid changes in sheave motion are part of the intended
-use. Curvature and moving-radius terms are the strongest candidates for
-omission over the investigated Baja envelope, because their complete realized
-contributions remain small even in the targeted high-contact and overrun
-cases. Their actual omission error must still be established by the reduced
-comparison. Global low-belt-inertia modeling is a separate, coupled limit.
+The reference level-ground acceleration provides both a gentle shift and a
+rapid engagement in the same drive. It uses the reference tune and the
+full-throttle engine and vehicle boundaries of the preceding actuator
+comparisons, starting with the vehicle and belt at rest and the primary at
+\SI{1800}{rpm}. To compare the five contributions over a period of this
+motion, each term's magnitude is integrated over that period and divided by
+the sum of the five magnitude integrals. The resulting shares sum to
+100\%; a pair near 50\% each therefore carries almost the entire balance.
+\Cref{tab:results_belt_hierarchy} gives these shares alongside the largest
+force magnitude reached by each term during the same period.
 
 \begin{table}[H]
-  \centering\small
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.17}
-  \caption{Reduction guidance for the investigated belt model and operating
-  envelope. Equation-level smallness, a completed continuation, and a
-  quantitatively verified reduced trajectory are different levels of evidence.}
-  \label{tab:results_belt_reduction_guidance}
-  \begin{tabular}{@{}
-    >{\raggedright\arraybackslash}p{0.22\linewidth}
-    >{\raggedright\arraybackslash}p{0.26\linewidth}
-    >{\raggedright\arraybackslash}p{\dimexpr0.52\linewidth-4\tabcolsep\relax}@{}}
-    \toprule
-    Contribution & Disposition & Condition / evidence \\
-    \midrule
-    Belt acceleration in tension closure & Retain & Substantial contribution
-    throughout the tested finite-inertia balance. \\[3pt]
-    Shift acceleration & Retain for rapid transients & Appreciable during
-    arrest/reversal and overrun; smaller in smooth shifting. \\[3pt]
-    Path curvature & Candidate omission & Small realized squared-speed
-    contribution; re-integrated omission error pending. \\[3pt]
-    Moving radius & Candidate omission & Small simultaneous
-    coefficient--driver product, including tested high utilization and slip;
-    re-integrated omission error pending. \\[3pt]
-    Global transport inertia & Reduce coherently & Density continuation
-    completes; local and global belt inertia must change together. Exact
-    massless limit not evaluated. \\
-    \bottomrule
-  \end{tabular}
+ \centering\small
+ \setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}
+ \begin{tabular}{@{}lrrrr@{}}
+ \toprule
+ & \multicolumn{2}{c}{Free shifting} & \multicolumn{2}{c}{Engagement} \\
+ \cmidrule(lr){2-3}\cmidrule(l){4-5}
+ Contribution & Share (\%) & Peak magnitude (\si{N})
+              & Share (\%) & Peak magnitude (\si{N}) \\
+ \midrule
+ \(F_N\) & 49.8 & 0.311 & 10.7 & 4.85 \\
+ \(F_{\dot v_b}\) & 49.7 & 0.306 & 39.3 & 17.8 \\
+ \(F_{\ddot s}\) & 0.474 & 0.0133 & 50 & 22.4 \\
+ \(F_{\dot s^2}\) & 0.0283 & 0.000296 & 0.0163 & 0.0262 \\
+ \(F_{\dot s v_b}\) & 0.0571 & 0.000429 & 0.0123 & 0.0205 \\
+ \bottomrule
+ \end{tabular}
+ \caption{The five contributions during two periods of the same reference
+ drive. Shares use the integrated absolute magnitudes and sum to 100\%
+ before rounding. Peaks are the largest absolute forces, which need not
+ occur at the same time. Free shifting runs
+ from low-ratio seat release at \SI{0.957}{s} to \SI{5}{s}. Engagement runs
+ from first contact at \SI{61.97}{ms} through the last early seat return at
+ \SI{66.01}{ms}. Only continuous engaged intervals enter the comparison.}
+ \label{tab:results_belt_hierarchy}
 \end{table}
 
-The distinction across these results is not simply between a dynamic model
-and a static one. Some retained mechanisms participate throughout ordinary
-motion, some become important only when the corresponding acceleration is
-excited, and others remain small because their coefficient and driver do not
-become large together. That separation explains both why a relatively simple
-approximation can succeed in smooth operation and why it can miss the
-response to a rapid disturbance. It also identifies which simplifications
-should be tested first, with the remaining coupled balances preserved.
+During free shifting, \(F_N\) and \(F_{\dot v_b}\) supply 49.8\%
+and 49.7\%, respectively. The three contributions associated with the
+changing belt path together supply only 0.56\%. The leading balance is
+consequently \(F_N+F_{\dot v_b}\simeq0\): the difference between
+the weighted contact loads chiefly balances the contribution from
+accelerating belt circulation. The belt is moving between radii, but that
+motion requires comparatively little additional tension adjustment during
+this part of the drive.
 
+Engagement gives a different balance. As the sheaves and belt radii change
+speed sharply, the contribution proportional to \(\ddot s\) supplies
+almost 50\%, compared with 39.3\% from changing belt speed and 10.7\%
+from contact loading. The two remaining terms together supply less than
+0.03\%. The shift-acceleration contribution reaches \SI{22.4}{N} in
+the continuous engaged motion adjoining the captures. Radial acceleration
+is therefore a leading part of the belt's tension balance during
+engagement, even though its contribution is small in the later shift.
+The instantaneous capture impulses are described by the separate momentum
+equations; they are not included in these force comparisons.
+
+\subsubsection{Radial inertia during changes in road load}
+\label{sec:results_belt_load_rate}
+
+A rapid change in road load can also change shift speed sharply, without
+requiring a new engagement. To separate the effect of the loading rate from
+its final magnitude, the road-grade input to the vehicle boundary rises
+from level ground to \(18^\circ\) at \SI{1.5}{s}, over \SI{800}{ms},
+\SI{200}{ms} or \SI{50}{ms}. The tune, starting state and final grade are
+the same in all three runs. Both belt contacts remain sticking and the
+sheaves remain free throughout the interval in
+\Cref{fig:results_belt_load_rate}.
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\linewidth]{figures/results/dynamics/belt_load_rate.pdf}
+ \caption{The same final road grade applied over three rise times.
+ (a) Prescribed grade. (b) Resulting shift speed, positive for upshift.
+ (c) Shift-acceleration force, with the same line styles as (a).
+ (d) Signed instantaneous contributions, \(100F_i/\sum_k|F_k|\), for
+ the same \SI{50}{ms} case; shading marks the load rise.
+ The whole-rise shares of \(F_{\ddot s}\), using the integrated definition
+ in \Cref{tab:results_belt_hierarchy}, are 1.25\%, 3.28\% and 10.5\%
+ for the \SI{800}{ms}, \SI{200}{ms} and \SI{50}{ms} inputs, respectively.}
+ \label{fig:results_belt_load_rate}
+\end{figure}
+
+The increased road resistance slows the upshift. Applying it faster makes
+shift speed fall more abruptly, as panel~(b) shows. The contribution
+proportional to \(\ddot s\) consequently becomes larger in panel~(c),
+with a peak force about 14 times larger for the fastest rise than for the
+slowest. Its share over the load rise also grows, from 1.25\% to 10.5\%.
+The larger share therefore accompanies a larger radial-acceleration force,
+although these forces remain much smaller than those during engagement.
+
+Panel~(d) shows how this force enters the balance during the
+\SI{50}{ms} rise. Each signed term is divided by the sum of all five
+magnitudes at that instant. The shift-acceleration contribution rises to
+about 25\% as the contact-loading contribution falls to about 25\%;
+together they oppose the belt-speed acceleration contribution near
+\(-50\%\). Thus \(F_{\ddot s}\) temporarily supplies an appreciable
+part of the balance previously carried by \(F_N\), while the terms
+proportional to \(\dot s^2\) and \(\dot s v_b\) remain small.
+
+Radial inertia is also appreciable when a load rise reverses the shift.
+A further rise beginning near 59\% of engaged travel reverses the upshift and gives
+\(F_{\ddot s}\) a 21.2\% share during the rise
+(\Cref{fig:results_belt_shift_transient}).
+
+\subsubsection{The two contributions that depend on shift speed}
+\label{sec:results_belt_velocity_terms}
+
+A sharp change in shift speed need not produce a large shift speed itself.
+This distinction matters because \(F_{\dot s^2}\) follows the square of
+shift speed, whereas \(F_{\dot s v_b}\) follows its product with belt
+speed. The latter also depends on traction through \(\mathcal H_p\) and
+\(\mathcal H_s\). Faster upshift, backshift under reduced clamping and
+reversed power transfer therefore provide further comparisons of these
+terms while the belt radii are moving.
+
+Rapid unloading lowers the grade to \(-20^\circ\) over \SI{50}{ms},
+allowing the upshift to accelerate. The altered-tune comparison reduces
+the primary flyweight mass and all its moments to 40\% of their reference
+values, and both secondary spring stiffnesses to 20\%. A rise to
+\(30^\circ\) over \SI{100}{ms} then reverses its shift under the reduced
+clamping. Mild and strong downhill cases lower the grade to \(-20^\circ\)
+while blending the primary boundary torque to \SI{-5}{N.m} and
+\SI{-12}{N.m}, respectively, over \SI{200}{ms}. The friction coefficients
+are unchanged.
+\Cref{tab:results_belt_moving_terms} compares the load changes and the
+subsequent moving intervals in which power transfer has reversed.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{6pt}\renewcommand{\arraystretch}{1.2}
+ \begin{tabular}{@{}lrrr@{}}
+ \toprule
+ & Shift-speed range & \multicolumn{2}{c}{Share (\%)} \\
+ \cmidrule(l){3-4}
+ Interval & (\si{mm/s}) & \(F_{\dot s^2}\) & \(F_{\dot s v_b}\) \\
+ \midrule
+ Rapid unloading & $8.09$ to $14.54$ & 0.0578 & 0.0996 \\
+ Combined altered tune & $-6.44$ to $3.81$ & 0.0116 & 0.0764 \\
+ Strong resisting-torque ramp & $4.87$ to $19.37$ & 0.487 & 0.162 \\
+ Mild reversed power & $1.84$ to $9.63$ & 0.0429 & 0.179 \\
+ Strong reversed power & $1.47$ to $10.11$ & 0.0146 & 0.0646 \\
+ \bottomrule
+ \end{tabular}
+ \caption{The two shift-speed contributions during free motion with both
+ belt contacts sticking. Positive shift speed denotes upshift. Shares use
+ the integrated absolute magnitudes of all five terms, as in
+ \Cref{tab:results_belt_hierarchy}. The first three rows cover the complete
+ input rises at 1.50--1.55, 1.80--1.90 and 2.00--2.20 s. The last two run
+ from \SI{2.25}{s}, when both belt tractions have reversed, to upper-stop
+ arrival at \SI{4.404}{s} and \SI{4.894}{s}, respectively.}
+ \label{tab:results_belt_moving_terms}
+\end{table}
+
+The two interval shares remain below 0.49\% and 0.18\%, respectively,
+despite the nonzero shift speeds and the changes in traction.
+Their small contributions have different causes. For \(F_{\dot s^2}\),
+the radius--shift geometry multiplies the square of the actual shift speed.
+At the largest speed in the table, \SI{19.37}{mm/s} during the strong
+torque ramp, the coefficient multiplying \(\dot s^2\) is
+\SI{-2.55}{kg/m}.
+The resulting force is only \SI{-0.957}{mN}. Thus the attained shift
+speeds produce little curvature-related radial force, even though rapid
+changes in those speeds can make \(F_{\ddot s}\) appreciable.
+
+The moving-radius term has a further cancellation between the two wraps.
+The primary radius increases with \(s\), while the secondary radius
+decreases. When the two traction utilizations have opposite signs,
+\(\mathcal H_p\) and \(\mathcal H_s\) also have opposite signs, so
+\(\mathcal H_pr'_p\) and \(\mathcal H_sr'_s\) have the same sign.
+Their difference in \(F_{\dot s v_b}\) can therefore be much smaller
+than either part. This occurs in the moving comparisons: at the largest
+moving-radius force during rapid unloading, the signed primary and
+secondary contributions are \SI{-114.867}{mN} and \SI{113.931}{mN}
+at the same instant, leaving only \SI{-0.936}{mN} in the loop relation.
+The small net force reflects the close cancellation of the two wrap
+contributions while the belt circulates and shifts.
+
+Both mechanisms depend on the state of the drive: higher shift speeds
+enlarge the curvature force, and changes in traction or geometry can weaken
+the wrap cancellation. The interval shares also allow brief larger
+instantaneous percentages when the rest of the balance becomes small.
+
+Because the small net moving-radius force combines larger local
+contributions, omitting the two terms from the wrap equations requires a
+separate check of the resulting motion. Seven full-model cases were paired
+with independent integrations omitting both terms. At the tighter numerical
+settings, the largest shift-position difference is less than
+\SI{0.017}{\micro\metre}; in every pair it is smaller than the change
+caused by tightening the numerical settings. All seven pairs preserve the
+same ordered contact and support changes. The complete comparisons are
+reported in \Cref{tab:belt_omission_results}.
+
+These results identify a useful simplification within the belt dynamics.
+During gentle shifting, changing circulation speed supplies the main
+inertial adjustment between the two wrap tension sums. Abrupt changes in
+shift speed bring radial acceleration into that balance, even when the
+attained shift speeds leave the other path-dependent terms small. For the
+tested drive, those smaller corrections can be omitted while retaining
+both acceleration mechanisms. The resulting approximation retains the
+changing tension balance that couples pulley loading, belt circulation
+and ratio motion.
 \FloatBarrier
-\endgroup
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
 \label{sec:results_coupled_regimes}
@@ -17187,6 +17192,441 @@ before seating. The maximum full--quasi-static shift separation is still
 with a small accumulated effect on motion. The peak and timing agree
 closely under refinement; their exact checks are recorded in
 \ResultsCode{studies/actuator-dynamics/publication_inputs/secondary_window_audit.json}{secondary_window_audit.json}.
+\FloatBarrier
+
+\section{Reduced-Belt Transient Mechanics}
+\label{app:study_belt_dynamics}
+
+\subsection{Inputs and retained evidence}
+
+The maintained study is
+\path{results/cinder-v1.1.2/studies/reduced-belt-transients}.
+The discovery archive contains 62 completed cases spanning the reference
+acceleration, controlled loading, a wider road-load envelope, tune
+changes, overrun and belt-density changes. Its six isolated transport-row
+failures are recorded separately. The publication comparisons retain the
+exact archived assembly, initial state and boundary programmes in
+\path{publication_inputs/cases}; only the numerical settings are tightened.
+They use \texttt{cinder-cvt==1.1.2} and the release-scoped bilateral secondary
+helix policy, rather than the newer development source.
+
+All cases start with the vehicle and belt at rest and the primary at
+\SI{1800}{rpm}. Except for the stated tune or density changes, they use
+the reference assembly and engine/vehicle boundaries of
+\Cref{app:results_boundary_models}. Grade is prescribed in time for these
+controlled comparisons. A rise uses \(3u^2-2u^3\), with
+\(u=(t-t_0)/T\) clipped to \([0,1]\), then holds the final grade.
+The case names and complete input documents are preserved with the outputs.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+ \begin{tabular}{@{}p{.25\linewidth}p{.15\linewidth}p{.16\linewidth}p{\dimexpr.44\linewidth-6\tabcolsep\relax}@{}}
+ \toprule
+ Comparison & Start & Rise & Change from reference \\
+ \midrule
+ Level ground & --- & --- & No load change \\
+ Matched-rate loading & \SI{1.5}{s} & 50, 200, 800 ms & Grade to \(18^\circ\) \\
+ Later-travel loading & \SI{2.4875}{s} & \SI{55.8644}{ms} & Grade to \(20.7407^\circ\) \\
+ Rapid loading & \SI{1.5}{s} & \SI{50}{ms} & Grade to \(30^\circ\) \\
+ Rapid unloading & \SI{1.5}{s} & \SI{50}{ms} & Grade to \(-20^\circ\) \\
+ Primary tune & \SI{1.8}{s} & \SI{100}{ms} & Grade to \(30^\circ\); primary factor 0.45 \\
+ Combined tune & \SI{1.8}{s} & \SI{100}{ms} & Grade to \(30^\circ\); primary 0.40, secondary 0.20 \\
+ Mild overrun & \SI{2}{s} & \SI{200}{ms} & Grade to \(-20^\circ\); primary torque to \SI{-5}{N.m} \\
+ Strong overrun & \SI{2}{s} & \SI{200}{ms} & Grade to \(-20^\circ\); primary torque to \SI{-12}{N.m} \\
+ \bottomrule
+ \end{tabular}
+ \caption{Selected belt comparisons. Unlisted parameters retain the reference
+ tune. All run for \SI{5}{s}, except the three \(18^\circ\) cases,
+ which run for \SI{4.5}{s}. The actuator factors scale the primary flyweight
+ mass and all its moments, or both secondary spring stiffnesses, respectively.}
+ \label{tab:belt_publication_inputs}
+\end{table}
+
+In overrun, the primary torque is blended from the engine boundary to the
+stated resisting torque over the same rise as the downhill grade. This is a
+controlled reversal of shaft power, not a calibrated closed-throttle engine
+map. Reverse power flow is identified by simultaneous negative primary and
+positive secondary boundary power. The source archive's fractions of native
+samples are not interpreted as fractions of elapsed time. Likewise, its
+stored \(s/s_{\max}\) includes deadzone travel; the engaged-travel fraction
+used in the text is \((s-s_{\mathrm{dz}})/(s_{\max}-s_{\mathrm{dz}})\).
+The later-travel case begins near 58.96\% on the refined trajectory.
+
+\subsection{Force decomposition and comparison quantities}
+
+Let \(r_j=r_{j,\mathrm{cm}}\) within this appendix and
+\(q=\rho_bA_b\). The analytical wrap solution gives
+\begin{equation}
+ T_{j,\mathrm{in}}+T_{j,\mathrm{out}}=2C_j+\mathcal H_jA_j+\mathcal G_jN_j,
+ \qquad
+ C_j=q(v_b^2-r_j\ddot r_j),\quad
+ A_j=q(r_j\dot v_b+r'_j\dot s v_b).
+ \label{eq:belt_publication_wrap_sum}
+\end{equation}
+The dimensionless factors \(\mathcal G_j\) and \(\mathcal H_j\) are
+those defined in \Cref{eq:results_belt_contact_factors}, including their
+continuous limits at zero traction. Subtracting the secondary wrap sum
+from the primary gives the five signed terms in
+\Cref{tab:results_belt_terms,eq:results_belt_term_balance}. These factors
+reorganize the analytical wrap solution; they do not introduce another
+contact law. The implementation uses the regular wrap functions in
+\Cref{eq:appendix_regular_wrap_functions} to evaluate the same expressions.
+
+The common \(2qv_b^2\) cancels when the two wrap sums are subtracted.
+It remains in each \(C_j\) when local tension is recovered. The global
+transport balance is evaluated separately as
+\(m_b\dot v_b+\tau_p/r_{p,\mathrm{eff}}+\tau_s/r_{s,\mathrm{eff}}=0\).
+No percentage combines terms from these two different equations.
+
+For a window \(\mathcal W\), the reported activity of a tension-balance
+term is
+\begin{equation}
+ a_i(t)=\frac{|F_i(t)|}{\sum_k|F_k(t)|},\qquad
+ A_i(\mathcal W)=\frac{\int_{\mathcal W}|F_i(t)|\,dt}
+ {\int_{\mathcal W}\sum_k|F_k(t)|\,dt}.
+ \label{eq:results_belt_activity}
+\end{equation}
+The sum contains only the five terms in \Cref{tab:results_belt_terms}.
+Because their signed sum is zero, each instantaneous magnitude is at most
+half the sum of all five magnitudes. The same upper limit of 50\% applies
+to the integrated shares. A contribution near that limit balances almost
+all the other terms combined; 50\% is not a fraction of either pulley load.
+Integrals are evaluated within continuous segments and added, without
+interpolating across a reset. The load-rise windows are given in
+\Cref{tab:belt_publication_inputs}. The reference free-shift window runs
+from low-ratio seat release at \SI{0.957246}{s} to \SI{5}{s}; the
+engagement window runs from first contact at \SI{0.0619719}{s} through the
+last early seat return at \SI{0.0660125}{s}. Only engaged segments enter
+these wrap integrals; no force is invented for the intervening disengaged
+intervals. The free-shift, engagement and mid-shift load shares change by
+less than 0.002 percentage points on tightening the settings. Percentages are undefined when the whole
+denominator vanishes. In mild overrun, the curvature term has a sampled
+instantaneous share of 19.2\% at \SI{2.163}{s}, but its force is only
+\SI{-0.739}{mN}; its integrated share over the transition is 0.363\%.
+This is why both dimensional force and the duration of its participation
+are needed.
+
+The matched-rise cases in \Cref{fig:results_belt_load_rate} keep the
+final grade fixed while changing its application rate. Panel~(c) shows
+the dimensional shift-acceleration force at all three rates, while
+panel~(d) shows \(100F_i/\sum_k|F_k|\) for the \SI{50}{ms} case.
+The signs are retained, so these five percentages sum to zero and their
+absolute values sum to 100\%. Throughout that panel, the sum of all
+five force magnitudes remains above \SI{52.9}{mN}.
+No comparison here omits \(F_{\ddot s}\). These histories establish
+its contribution to the balance, rather than the trajectory change that
+would follow from removing it.
+
+Instantaneous and integrated percentages can give different impressions
+of these histories. In the \SI{800}{ms} case, the sampled instantaneous
+share of \(F_{\ddot s}\) approaches 50\% at \SI{2.248}{s}, but its
+force is only \SI{0.396}{mN} and the sum of all five absolute forces is
+\SI{0.792}{mN}. Its share over the complete rise is 1.25\%.
+The main comparison therefore uses dimensional force histories and
+whole-rise shares to compare loading rates; the instantaneous percentages
+show how the signed balance changes within one case. The complete five-term shares for every
+load change are given in \Cref{tab:belt_load_rise_shares}.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+ \begin{tabular}{@{}lrrrrr@{}}
+ \toprule
+ Comparison & \(F_N\) & \(F_{\dot v_b}\) & \(F_{\ddot s}\)
+ & \(F_{\dot s^2}\) & \(F_{\dot s v_b}\) \\
+ \midrule
+18$^\circ$, 800 ms & 48.762 & 49.907 & 1.247 & 0.029 & 0.055 \\
+18$^\circ$, 200 ms & 46.720 & 49.914 & 3.280 & 0.032 & 0.055 \\
+18$^\circ$, 50 ms & 39.450 & 49.910 & 10.550 & 0.033 & 0.056 \\
+Rapid loading & 38.580 & 43.429 & 17.916 & 0.028 & 0.047 \\
+Rapid unloading & 49.993 & 45.827 & 4.023 & 0.058 & 0.100 \\
+Later-travel loading & 37.253 & 41.468 & 21.235 & 0.012 & 0.032 \\
+Primary tune & 50.000 & 50.000 & 0.000 & 0.000 & 0.000 \\
+Combined tune & 48.028 & 46.504 & 5.380 & 0.012 & 0.076 \\
+Mild overrun ramp & 49.711 & 38.137 & 11.693 & 0.363 & 0.096 \\
+Strong overrun ramp & 47.931 & 36.491 & 14.929 & 0.487 & 0.162 \\
+ \bottomrule
+ \end{tabular}
+ \caption{Shares of integrated absolute force during the load rises, in
+ percent. Each row contains the five contributions to the same closed-loop
+ relation and sums to 100\% before rounding. Inputs and integration
+ intervals are given in \Cref{tab:belt_publication_inputs}. Zero values
+ for the primary tune occur while the low-ratio seat holds the shift.}
+ \label{tab:belt_load_rise_shares}
+\end{table}
+
+The later-travel case starts near 59\% of engaged travel. The road grade
+rises to \(20.7407^\circ\) over \SI{55.8644}{ms}, starting at
+\SI{2.4875}{s}. This reverses the upshift while both belt contacts remain
+sticking and the sheaves remain free. Its shift-acceleration term reaches
+\SI{0.0292}{N}, and accounts for 21.2\% of the integrated absolute
+balance during the rise. \Cref{fig:results_belt_shift_transient} relates
+the changing shift speed to the signed force terms. The belt-acceleration
+term changes sign over the displayed response; no single opposing pair
+describes the whole interval. This case changes both the starting travel
+and the load programme. The matched-rate comparison in the main text
+isolates rise time from those additional differences.
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\linewidth]{figures/results/dynamics/belt_shift_transient.pdf}
+ \caption{Later-travel load increase. (a) Shift speed changes from positive
+ upshift to negative backshift. (b) The five signed force contributions.
+ Each curve combines its primary and secondary parts; their signed sum
+ is zero to numerical accuracy. Shading marks the \SI{55.9}{ms} grade
+ rise. The complete displayed interval is freely shifting with both
+ contacts sticking. The two small terms remain individually plotted.}
+ \label{fig:results_belt_shift_transient}
+\end{figure}
+
+\subsection{Moving intervals and wrap cancellation}
+
+The main comparison in \Cref{tab:results_belt_moving_terms} uses free
+shift with both belt contacts sticking. Its first three rows reuse the
+load-rise windows in \Cref{tab:belt_publication_inputs}. The reverse-power
+rows start at \SI{2.25}{s}, after the \SI{2.2}{s} forcing endpoint, and
+end on the incoming side of the first upper-stop capture. Throughout the
+saved states in both intervals, primary traction utilization is negative,
+secondary utilization is positive, primary boundary power is negative and
+secondary boundary power is positive. They therefore cover continued
+shifting after both belt tractions have reversed, rather than equating the
+prescribed torque ramp with immediate reversal at the contacts. The two
+small-term shares change by less than \num{3e-6} percentage points between
+the first and tighter settings for all five intervals in the main table.
+
+The two parts of the moving-radius contribution are
+\begin{equation}
+ F_{\dot s v_b}^{(p)}=q\mathcal H_pr'_p\dot s v_b,
+ \qquad
+ F_{\dot s v_b}^{(s)}=-q\mathcal H_sr'_s\dot s v_b,
+ \label{eq:belt_moving_radius_wrap_parts}
+\end{equation}
+so that their sum is the term in the loop relation. At its largest
+magnitude within each load rise, the simultaneous primary and secondary
+parts are \SI{-114.867}{mN} and \SI{113.931}{mN} during rapid unloading,
+\SI{58.884}{mN} and \SI{-59.537}{mN} for the combined tune, and
+\SI{-42.038}{mN} and \SI{42.390}{mN} during the strong torque ramp.
+The corresponding net forces are \SI{-0.936}{mN}, \SI{-0.653}{mN} and
+\SI{0.352}{mN}. These comparisons subtract the wrap parts at the same
+state; they do not combine separate maxima. They establish the observed
+cancellation in these motions, without assuming that either local part
+vanishes or that the cancellation must persist under different geometry
+or contact conditions.
+
+\subsection{Contact dependence of the moving-radius contribution}
+\label{sec:results_belt_coefficient_driver}
+
+The moving-radius contribution can be read from \Cref{tab:results_belt_terms}
+as a coefficient \(q(\mathcal H_pr'_p-\mathcal H_sr'_s)\) multiplying \(\dot s v_b\).
+The coefficient depends on traction as well as geometry. The altered-tune
+cases therefore test whether increased traction demand from reduced clamping
+coincides with enough shift and belt speed to enlarge the complete term.
+\Cref{fig:results_belt_coefficient_driver}(a) pairs the two factors at the
+same states, instead of multiplying their separate maxima.
+Large coefficients during early engagement coincide with low belt speed;
+while a stop holds the shift, \(\dot s=0\) makes the term vanish.
+
+In the combined altered-tune case, the continuous backshift before seat
+arrival contributes less than \SI{1}{mN}. Panel~(b) retains the larger,
+brief contributions during arrival and subsequent returns to contact,
+which reach about \SI{7.1}{mN}. Across the three histories in panel~(a),
+the largest moving-radius contribution is \SI{20.5}{mN}, in the reference
+engagement. Increased traction demand does not by itself produce a large
+sustained moving-radius term. Its coefficient and the motion that multiplies
+it must be considered together.
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\linewidth]{figures/results/dynamics/belt_coefficient_driver.pdf}
+ \caption{The two factors in the moving-radius contribution.
+ (a) Simultaneous coefficient and \(\dot s v_b\); their product is
+ \(F_{\dot s v_b}\). Contours give signed force in millinewtons.
+ The primary and secondary percentages are the tune scalings in
+ \Cref{tab:belt_publication_inputs}. (b) The complete term during road-load
+ application, backshift and seat arrival in the combined 40\%/20\% case.
+ Shading marks the load rise. All engaged samples and exact event sides are
+ retained; lines do not bridge the intervening disengaged intervals.
+ The brief losses of primary contact and seat returns near \SI{1.947}{s}
+ are too short to resolve on this time axis.}
+ \label{fig:results_belt_coefficient_driver}
+\end{figure}
+
+\subsection{Joint omission and density comparisons}
+
+The joint omission changes the wrap offsets to
+\begin{equation}
+ C_j^{\mathrm{red}}=q(v_b^2-r_jr'_j\ddot s),\qquad
+ A_j^{\mathrm{red}}=qr_j\dot v_b.
+ \label{eq:belt_joint_omission}
+\end{equation}
+These offsets replace \(C_j,A_j\) in both wrap maps before the
+compatibility equation is assembled. The postprocessed tension and normal
+loading use the same reduced offsets. The whole-belt mass, transport row,
+radius kinematics, sticking constraints, pulley mechanics and reset laws
+are unchanged. This is a specified approximation of the continuous belt
+equations, rather than a change in belt density or a rederived impact law.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+ \begin{tabular}{@{}lrrr@{}}
+ \toprule
+ Comparison & Shift difference & Refinement change & Event-time difference \\
+ & (\si{\micro\metre}) & (\si{\micro\metre}) & (\si{\micro\second}) \\
+ \midrule
+ Level ground & 0.00664 & 0.175 & 0.0177 \\
+ Rapid loading & 0.00664 & 0.175 & 0.0177 \\
+ Rapid unloading & 0.0109 & 0.175 & 0.479 \\
+ Primary tune & 0.000542 & 0.214 & 0.00849 \\
+ Combined tune & 0.0163 & 0.153 & 0.829 \\
+ Mild overrun & 0.00664 & 0.175 & 0.293 \\
+ Strong overrun & 0.00664 & 0.175 & 0.0267 \\
+ \bottomrule
+ \end{tabular}
+ \caption{Independent full and joint-omission integrations at the tighter
+ settings. Shift differences are maxima at common physical times over the
+ complete run. The refinement column is the larger change in either model
+ when both tolerances are tightened tenfold and the maximum step halved.
+ It gives numerical context, not a rigorous error bound. All seven pairs
+ retain the same ordered events and contact/support modes.}
+ \label{tab:belt_omission_results}
+\end{table}
+
+Small shifts in capture time can produce a large pointwise velocity
+difference while one model has undergone the reset and the other has not.
+The comparison therefore preserves both time limits and separately records
+event times and the incoming/outgoing states. It does not smooth away these
+differences or use a velocity jump as the measure of a sustained change in
+motion. Shift position is continuous through these captures and provides
+the dimensional comparison in \Cref{tab:belt_omission_results}.
+
+For scale, at \SI{1.5}{s} in the reference free shift, the normal-load
+parts of the two wrap sums are \SI{785.721}{N} and \SI{785.536}{N}.
+Their difference \(F_N=\SI{0.185}{N}\) almost balances
+\(F_{\dot v_b}=\SI{-0.186}{N}\). Thus the large shares in
+\Cref{tab:results_belt_hierarchy} concern the small adjustment between
+wrap tension sums, not fractions of the gross loading.
+
+The complete-belt transport equation provides a separate force comparison.
+At \SI{1.5}{s} in the reference run, primary traction contributes
+\SI{483.606}{N} along belt travel and secondary traction contributes
+\SI{-481.827}{N}. The \SI{1.779}{N} excess accelerates the complete belt.
+These are tangential contact resultants, not span tensions and not the terms
+of \Cref{eq:results_belt_term_balance}. Smallness relative to either
+transmitted force therefore answers a different question from participation
+in tension matching.
+
+The six archived isolated-row attempts scale only \(m_b\dot v_b\) to
+10\% or 3\%, leaving the local wrap inertia unchanged. All fail the
+implemented contact search at the common early engagement, before their
+three later forcing programmes diverge. This is a failure of that particular
+inconsistent scaling, not six independent transient failures or a proof that
+a low-inertia belt description must fail. The coherent density comparison
+below changes both uses of the same material property.
+
+The density comparison instead multiplies both \(m_b\) and
+\(q=\rho_bA_b\) by 0.03 through the assembly's belt density. The reduced
+finite-density model is integrated from the original launch, including
+engagement. Its additional contact--seat return occurs in the early launch
+at both numerical settings; later event order agrees with the reference.
+
+\begin{table}[H]
+ \centering\small
+ \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+ \begin{tabular}{@{}lrrrr@{}}
+ \toprule
+ Comparison & Max. shift & Later shift & Primary speed & Events \\
+ & (\si{mm}) & (\si{mm}) & (\si{rpm}) & full / 3\% \\
+ \midrule
+ Level ground & 0.0699 & 0.0353 & 8.33 & 15 / 17 \\
+ Rapid loading & 0.0699 & 0.0454 & 8.33 & 15 / 17 \\
+ Rapid unloading & 0.0699 & 0.0353 & 8.33 & 16 / 18 \\
+ \bottomrule
+ \end{tabular}
+ \caption{Effects of reducing density to 3\%. Maxima cover the complete
+ run; the later shift column begins at \SI{0.1}{s}. Event counts include
+ the brief engagement returns. The full and lighter-belt event counts are
+ reported separately.}
+ \label{tab:belt_density_results}
+\end{table}
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\linewidth]{figures/results/dynamics/belt_density_response.pdf}
+ \caption{Effect of reducing belt density to 3\%. (a) Actual shift motion
+ during early engagement. Zero is the engagement position; negative values
+ place the primary in its disengaged range. (b) Later shift difference,
+ lighter belt minus reference, for the three load programmes. Both event
+ sides are retained and no interpolation crosses a capture. The complete
+ engaged travel is \SI{16.56}{mm}. Each lighter-belt run has one additional
+ early contact--seat return, while the later event order agrees.}
+ \label{fig:results_belt_density}
+\end{figure}
+
+The archived 10\% density continuations also complete. The quantitative
+comparisons here use the refined 3\% trajectories and preserve their event
+sides, rather than interpolating across captures. They establish a result
+at small finite density, not at the exact massless limit.
+
+\begin{samepage}
+\subsection{Numerical checks and reproduction}
+
+The selected integrations use LSODA with the following settings:
+\begin{center}
+ \small
+ \begin{tabular}{@{}lccc@{}}
+ \toprule
+ & Relative tolerance & Absolute tolerance & Maximum step \\
+ \midrule
+ First settings & \(10^{-6}\) & \(10^{-9}\) & \SI{10}{ms} \\
+ Tighter settings & \(10^{-7}\) & \(10^{-10}\) & \SI{5}{ms} \\
+ \bottomrule
+ \end{tabular}
+\end{center}
+\end{samepage}
+The original discovery settings were
+\((10^{-2},10^{-5},\SI{50}{ms})\); their coarse peaks and transition
+counts are superseded for the selected cases. Native integration states,
+exact incoming/outgoing event states and dense output within each segment
+are retained. The state-comparison grid uses \SI{1}{ms} spacing, refined to
+\SI{50}{\micro\second} during the early reference engagement and
+\SI{250}{\micro\second} around load changes. Mechanical diagnostics also
+include every native accepted state and both segment endpoints, with dense
+samples at \SI{5}{ms}, \SI{250}{\micro\second} during the first
+\SI{0.15}{s}, and \SI{1}{ms} around the load changes. Delayed engagement
+in the altered-tune cases is resolved by the native adaptive steps and exact
+event states.
+
+All 42 selected integrations complete, with no failed state inspections.
+Across their saved engaged states, the smallest local normal loading is
+\SI{0.526}{N/rad}; reconstructed tension also remains positive. The largest
+sticking-speed mismatch is \SI{0.0113}{mm/s}. The largest absolute residual
+among the eight mechanical rows is below \num{4.3e-10} in the corresponding
+force or torque unit. The independently reconstructed difference of wrap
+endpoint sums agrees with the assembled tension residual within
+\SI{1e-8}{N}. These are numerical and sampled-domain checks, not a proof
+about unsampled motion. The wider archive includes both-slip and
+primary-slip/secondary-stick states, but did not realize the opposite mixed
+branch in this study.
+
+The accompanying analysis
+\path{analysis/moving_state_evidence.py} reconstructs the five moving
+intervals, the curvature-force example and these simultaneous wrap parts
+from compact retained samples. The samples preserve the original segment
+identifiers and numerical settings and are traced to the checked hashes
+of the full force exports. This is postprocessing of the retained
+integrations; it adds no simulation or change to the model.
+
+The canonical entry point is \path{run.py}. Its
+\texttt{--publication run} option, with \texttt{--publication-case all},
+runs the frozen selected plan into an isolated publication directory.
+The \texttt{prepare}, \texttt{check} and \texttt{plot} publication actions
+then assemble the comparison data, verify the raw hashes and export the
+figures. Exact commands from the repository root, dependency versions,
+source hashes, native states and event ledgers are documented in
+\path{provenance/BELT_PUBLICATION.md}. Plotting the supplied compact inputs
+does not rerun any simulation.
 \FloatBarrier
 
 \section{Common-Course Operation and Tuning}

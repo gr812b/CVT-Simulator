@@ -1,0 +1,32 @@
+{
+  "name": "envelope_05",
+  "title": "Envelope 05: +20.7 deg over 56 ms",
+  "family": "baja_envelope",
+  "purpose": "Mechanistic Baja-envelope sample over disturbance timing, signed road grade, and load-rise timescale. No CVT governing equation is modified.",
+  "design_source": "halton_space_filling",
+  "tune_variant": "reference",
+  "controlled_load": {
+    "kind": "smooth_time_programmed_grade",
+    "start_time_s": 2.4875,
+    "rise_time_s": 0.055864356903610995,
+    "target_grade_deg": 20.740740740740733
+  },
+  "design_bounds": {
+    "grade_deg": [
+      -20.0,
+      30.0
+    ],
+    "load_start_time_s": [
+      1.05,
+      3.35
+    ],
+    "smooth_rise_time_s": [
+      0.05,
+      0.8
+    ],
+    "interpretation": "signed road-grade/load envelope during natural full-throttle Baja acceleration; negative grade probes unloading/downhill but is not asserted to be closed-throttle overrun"
+  },
+  "max_shift_m": 0.019049999999999997,
+  "static_friction_coefficient": 0.65,
+  "source": "F:\\Code\\Projects\\CVT-Simulator\\results\\cinder-v1.1.2\\studies\\reduced-belt-transients\\artifacts\\resolved_protocols\\envelope_05.json"
+}
