@@ -147,6 +147,16 @@ class QuasiStaticFixedPivotFlyweightForce(FixedPivotFlyweightForce):
 class QuasiStaticHelicalTorqueReactionForce(HelicalTorqueReactionForce):
     """Classical torque-reactive helix with no dynamic movable-member term."""
 
+    def __init__(self, spec, *, physical_movable_inertia=None):
+        from math import isfinite
+        super().__init__(spec=spec)
+        if physical_movable_inertia is not None and (
+            not isfinite(physical_movable_inertia) or physical_movable_inertia < 0.0
+        ):
+            raise ValueError("Physical helix inertia must be finite and nonnegative")
+        # Diagnostic metadata only; it does not enter the reduced force law.
+        object.__setattr__(self, "physical_movable_inertia", physical_movable_inertia)
+
     contact_topology = "bilateral_zero_clearance_slot"
 
     compressive_contact_margin = None
@@ -375,6 +385,7 @@ def _replace_helix_law(
     actuator: PulleyActuator,
     *,
     dynamic: bool,
+    physical_movable_inertia: float | None = None,
 ) -> PulleyActuator:
     laws = []
     found = 0
@@ -382,7 +393,8 @@ def _replace_helix_law(
         if isinstance(law, HelicalTorqueReactionForce):
             found += 1
             laws.append(
-                law if dynamic else QuasiStaticHelicalTorqueReactionForce(spec=law.spec)
+                law if dynamic else QuasiStaticHelicalTorqueReactionForce(
+                    spec=law.spec, physical_movable_inertia=physical_movable_inertia)
             )
         else:
             laws.append(law)
@@ -402,6 +414,7 @@ def ablate_assembly(
     secondary_actuator = _replace_helix_law(
         full.pulleys.secondary.actuator,
         dynamic=variant.dynamic_helix,
+        physical_movable_inertia=full.inertias.secondary.movable_sheave_rotational_inertia,
     )
 
     primary_inertia = full.inertias.primary
@@ -634,7 +647,14 @@ def _mechanism_terms(
         d_axial_position_ds=scoord.d_value_ds,
         d2_axial_position_ds2=scoord.d2_value_ds2,
     )
-    helix_mass = SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds**2
+    helix_law = _find_helix(model.secondary_actuator)
+    if isinstance(helix_law, QuasiStaticHelicalTorqueReactionForce):
+        movable_inertia = helix_law.physical_movable_inertia
+        if movable_inertia is None:
+            raise ValueError("Full-law diagnostics on a reduced helix require its original physical inertia")
+    else:
+        movable_inertia = model.inertias.secondary.movable_sheave_rotational_inertia
+    helix_mass = movable_inertia * hk.dtheta_ds**2
 
     result = {
         "mass_primary_translation_kg": (axial.primary.reflected_mass),
@@ -708,19 +728,19 @@ def _mechanism_terms(
     helix_qs_force = dtheta_dx * qs_helix_torque
     helix_shaft_accel_force = (
         -dtheta_dx
-        * SCVT_MOVABLE_SHEAVE_MOI_KG_M2
+        * movable_inertia
         * closure.secondary_angular_acceleration
     )
     helix_shift_accel_force = (
-        -dtheta_dx * SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds * sddot
+        -dtheta_dx * movable_inertia * hk.dtheta_ds * sddot
     )
     helix_curvature_force = (
-        -dtheta_dx * SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.d2theta_ds2 * sdot**2
+        -dtheta_dx * movable_inertia * hk.d2theta_ds2 * sdot**2
     )
     helix_delta = (
         helix_shaft_accel_force + helix_shift_accel_force + helix_curvature_force
     )
-    helix_shaft_delta = -SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * theta_ddot
+    helix_shaft_delta = -movable_inertia * theta_ddot
 
     result.update(
         {
@@ -1179,7 +1199,7 @@ def effective_mass_map(
             d_axial_position_ds=scoord.d_value_ds,
             d2_axial_position_ds2=scoord.d2_value_ds2,
         )
-        helix = SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds**2
+        helix = full_model.inertias.secondary.movable_sheave_rotational_inertia * hk.dtheta_ds**2
 
         full_total = base + fly + helix
         pct = (

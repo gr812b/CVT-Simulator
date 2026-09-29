@@ -154,7 +154,9 @@ def make_qs_helix_assembly(ab, full):
     for law in full.pulleys.secondary.actuator.force_laws:
         if isinstance(law, HelicalTorqueReactionForce):
             count += 1
-            laws.append(ab.QuasiStaticHelicalTorqueReactionForce(spec=law.spec))
+            laws.append(ab.QuasiStaticHelicalTorqueReactionForce(
+                spec=law.spec,
+                physical_movable_inertia=full.inertias.secondary.movable_sheave_rotational_inertia))
         else:
             laws.append(law)
     if count != 1:

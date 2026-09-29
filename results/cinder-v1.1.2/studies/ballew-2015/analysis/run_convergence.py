@@ -32,6 +32,7 @@ import sys
 import cinder
 
 from run import _run_protocol
+from results_health.common import verify_current_ballew_execution, require_complete
 from infrastructure.benchmark.reference import validate_reference_data
 
 STUDY_ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +63,7 @@ def main():
         directory = OUTPUT / label
         if label == "nominal_1p00ms" and args.reuse_nominal:
             directory = STUDY_ROOT / "artifacts/closed-loop"
+            verify_current_ballew_execution(STUDY_ROOT, directory)
             payload = json.loads((directory / "metrics.json").read_text())
             solver = payload["solver"]
             assert (solver["relative_tolerance"], solver["absolute_tolerance"],

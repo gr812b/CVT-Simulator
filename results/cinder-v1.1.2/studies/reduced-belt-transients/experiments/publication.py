@@ -18,6 +18,7 @@ from pathlib import Path
 import sys
 import time
 import numpy as np
+from results_health.common import simulation_fingerprint
 
 STUDY = Path(__file__).resolve().parents[1]
 RELEASE = STUDY.parents[1]
@@ -51,6 +52,15 @@ def run_schedule(output):
         summary=output/name/'summary.json'
         if summary.exists():
             s=json.loads(summary.read_text())
+            if s.get('simulation_fingerprint') != simulation_fingerprint(STUDY):
+                raise ValueError('Generator/input changed; use a new raw directory: '+name)
+            if not s.get('completed'):
+                raise ValueError('Incomplete run cannot be reused: '+name)
+            if (s.get('case'),s.get('level'),s.get('variant')) != (job['case'],job['level'],job['variant']):
+                raise ValueError('Cached run identity mismatch: '+name)
+            for f,d in s['source_sha256'].items():
+                if sha(RELEASE/f)!=d:
+                    raise ValueError('Generator/input changed; use a new raw output directory: '+f)
             for f,d in s['output_sha256'].items():
                 if sha(summary.parent/f)!=d:raise ValueError('Changed output '+name+'/'+f)
             return name+' REUSED'
@@ -252,7 +262,7 @@ def run_one(case, variant, level, output):
                 metrics[side+'.max_sticking_acceleration_mps2']=max((abs(r[side+'.relative_acceleration']) for r in stick),default=None)
             sources=[Path(__file__),*STUDY.glob('infrastructure/*.py'),*RELEASE.glob('defaults/**/*.py'),
                 *RELEASE.glob('defaults/**/*.json'),*source.glob('*.json')]
-            summary={'case':case,'variant':variant,'level':level,'completed':trace.completed,
+            summary={'simulation_fingerprint':simulation_fingerprint(STUDY),'case':case,'variant':variant,'level':level,'completed':trace.completed,
                 'termination_reason':trace.termination_reason,'final_time_s':trace.final_time,
                 'segments':len(segments),'transitions':len(events),'audit':metrics,
                 'settings':{'rtol':rtol,'atol':atol,'max_step_s':step},'boundary_programme':cfg,

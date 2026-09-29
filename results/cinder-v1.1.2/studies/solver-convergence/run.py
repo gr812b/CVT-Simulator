@@ -36,6 +36,7 @@ if str(RELEASE_ROOT) not in sys.path:
     sys.path.insert(0, str(RELEASE_ROOT))
 
 from defaults.reference_model import decode_reference_case
+from results_health.common import require_complete, simulation_fingerprint
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
 ARTIFACTS = HERE / "artifacts"
@@ -159,6 +160,7 @@ def config(spec, *, rtol, atol, max_step, comparison_step):
         # solver dense interpolant on one common normalized phase grid. This
         # intentionally invalidates revision-3 sampled segment caches.
         "analysis_revision": 4,
+        "generator_fingerprint": simulation_fingerprint(HERE),
         "event_aligned_phase_points": 2049,
         "base_document": spec["base_document"],
         "time_span_s": list(spec["reference"]["time_span_s"]),
@@ -330,6 +332,12 @@ def cache_status(path, cfg):
 
     meta = load_json(metadata_path)
     status = meta.get("run_status", "completed")
+    if status != "integration_failed":
+        try:
+            require_complete(meta.get("completed"), meta.get("final_time_s"),
+                             cfg["time_span_s"][-1], label=str(path))
+        except (ValueError, TypeError):
+            return None
     if status == "integration_failed":
         return status
 
@@ -394,6 +402,8 @@ def run_cached(spec, cfg, *, allow_failure=False):
             initial_mode=decoded.initial_mode,
             settings=decoded.integrator_settings,
         )
+        require_complete(result.completed, result.final_time, decoded.time_span[-1],
+                         label="solver-convergence")
     except Exception as exc:
         elapsed = time.perf_counter() - started
         write_json(path / "config.json", cfg)
@@ -650,6 +660,14 @@ def exact_regime_mismatch_fraction(candidate_segments, reference_segments):
 def compare_cache(path, reference_path, scales, guards):
     meta = load_json(path / "metadata.json")
     run_status = meta.get("run_status", "completed")
+    if run_status != "integration_failed":
+        try:
+            cfg = load_json(path / "config.json")
+            require_complete(meta.get("completed"), meta.get("final_time_s"),
+                             cfg["time_span_s"][-1], label=str(path))
+        except (ValueError, TypeError) as exc:
+            meta = dict(meta, exception_type="IncompleteRun", exception_message=str(exc))
+            run_status = "integration_failed"
 
     if run_status == "integration_failed":
         nan = float("nan")

@@ -11,6 +11,8 @@ import cinder
 import numpy as np
 
 from .simulation import compact_mode
+from results_health.common import simulation_fingerprint
+from results_health.slip import publication_slip_channels
 
 
 def retain_result(setup, result, output: Path) -> None:
@@ -34,6 +36,18 @@ def retain_result(setup, result, output: Path) -> None:
     reported["time_s"] = np.concatenate([s.time for s in result.segments])
     reported["segment_id"] = np.concatenate([
         np.full(s.time.size, i, dtype=int) for i, s in enumerate(result.segments)])
+    modes = {i: compact_mode(s.mode) for i, s in enumerate(raw.segments)}
+    corrected, accounting = publication_slip_channels(reported, modes)
+    reported.update(corrected)
+    (output / "slip_accounting.json").write_text(
+        json.dumps(accounting, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    belt = setup.assembly.inertias.belt
+    (output / "resolved_belt_mass.json").write_text(json.dumps({
+        "mass_kg": belt.mass, "linear_density_kg_per_m": belt.linear_density,
+        "density_kg_per_m3": belt.density,
+        "center_of_mass_path_length_m": belt.center_of_mass_path_length,
+        "outer_path_length_m": belt.outer_length,
+    }, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     np.savez_compressed(output / "segmented_report.npz", **reported)
 
     grid = np.arange(0.0, raw.final_time + 1e-12, 0.0002)
@@ -90,7 +104,8 @@ def record_execution(study: Path, output: Path, solver: dict) -> None:
         inputs[str(name)] = sha(path)
     outputs = {p.name: sha(p) for p in sorted(output.iterdir())
                if p.is_file() and p.name != "execution_provenance.json"}
-    record = {"cinder_version": cinder.__version__,
+    record = {"simulation_fingerprint": simulation_fingerprint(study),
+              "cinder_version": cinder.__version__,
               "cinder_tag_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
               "cinder_module_path": str(Path(cinder.__file__).resolve()),
               "python_version": sys.version, "solver": solver,

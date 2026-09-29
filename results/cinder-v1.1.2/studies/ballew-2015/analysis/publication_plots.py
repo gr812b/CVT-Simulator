@@ -25,6 +25,7 @@ import argparse
 import hashlib
 from io import BytesIO
 import subprocess
+import shutil
 import json
 from pathlib import Path
 import numpy as np
@@ -38,8 +39,8 @@ ROOT = Path(__file__).resolve().parents[1]
 BLUE, ORANGE, GREEN, GREY = '#176493', '#b04a28', '#267257', '#666666'
 CHANNELS = ('state.primary_angular_speed', 'state.secondary_angular_speed',
     'geometry.effective_ratio_secondary_over_primary',
-    'actuation.primary.total_clamp_force', 'observer.primary_slip_dissipation',
-    'observer.secondary_slip_dissipation')
+    'actuation.primary.total_clamp_force', 'publication.primary_slip_dissipation_J',
+    'publication.secondary_slip_dissipation_J')
 
 
 def digest(p):
@@ -105,7 +106,10 @@ def save(fig, out, name):
     if not data.rstrip().endswith(b'%%EOF'):
         raise RuntimeError(f'Incomplete PDF export: {name}')
     tmp=out/f'{name}.pdf.tmp';tmp.write_bytes(data)
-    subprocess.run(['pdfinfo',str(tmp)],check=True,stdout=subprocess.DEVNULL)
+    if shutil.which('pdfinfo'):
+        subprocess.run(['pdfinfo',str(tmp)],check=True,stdout=subprocess.DEVNULL)
+    else:
+        print('NOTE: pdfinfo is unavailable; export checked for a finalized PDF trailer only.')
     tmp.replace(out/f'{name}.pdf')
     png=BytesIO()
     fig.savefig(png,format='png',metadata={'Software':'CINDER Ballew publication'})
@@ -192,9 +196,10 @@ def internal(base,out):
     c.fill_between(d['time_s'],0,p,color=BLUE,alpha=.25,lw=0,label='Primary')
     c.fill_between(d['time_s'],p,p+s,color=GREEN,alpha=.25,lw=0,label='Secondary')
     segmented(c,d,p,BLUE,lw=.85);segmented(c,d,p+s,GREEN,lw=.85)
-    c.set_xlim(0,5);c.set_ylim(0,21.5);c.set_yticks([0,5,10,15,20])
+    c.set_xlim(0,5);c.set_ylim(0, max(21.5, 1.12 * float(np.max(p+s))))
     c.set_xlabel('Time (s)');c.set_ylabel('Cumulative slip loss (kJ)')
-    c.text(4.95,20.6,f'Total {p[-1]+s[-1]:.1f} kJ',ha='right',fontsize=8.5)
+    c.text(.98,.96,f'Total {p[-1]+s[-1]:.1f} kJ',transform=c.transAxes,
+           ha='right',va='top',fontsize=8.5)
     c.legend(loc='upper left',frameon=False,bbox_to_anchor=(.09,.97),handlelength=1)
     for ax,letter in zip((a,b,c),'abc'):tidy(ax,letter)
     save(fig,out,'internal_response')

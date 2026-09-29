@@ -44,11 +44,16 @@ class BallewEquivalentBeltMapping:
     maximum_shift_m: float
 
     @property
+    def center_of_mass_path_length_m(self) -> float:
+        return (self.cinder_outer_length_m
+                - 2.0 * pi * self.section.center_of_mass_depth_from_outer)
+
+    @property
     def resolved_mass_kg(self) -> float:
         return (
             self.effective_density_kg_per_m3
             * self.equivalent_cross_sectional_area_m2
-            * self.cinder_outer_length_m
+            * self.center_of_mass_path_length_m
         )
 
 
@@ -65,7 +70,10 @@ def build_equivalent_belt_mapping() -> BallewEquivalentBeltMapping:
 
     reference_length = PUBLISHED.belt_length_m
     outer_length = reference_length + 2.0 * pi * section.cord_depth_from_outer
-    effective_density = PUBLISHED.belt_mass_kg / (area * outer_length)
+    centroid_length = outer_length - 2.0 * pi * section.center_of_mass_depth_from_outer
+    if centroid_length <= 0.0:
+        raise ValueError("Ballew reconstruction has a nonpositive centroid-path length")
+    effective_density = PUBLISHED.belt_mass_kg / (area * centroid_length)
 
     # Ballew's listed minimum radii are hard search limits, not simultaneous
     # endpoints of the fixed-length loop. At the low-ratio end the secondary

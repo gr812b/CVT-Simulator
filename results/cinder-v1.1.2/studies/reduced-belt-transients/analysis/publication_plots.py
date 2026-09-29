@@ -7,6 +7,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+_release_root = Path(__file__).resolve().parents[3]
+if str(_release_root) not in sys.path:
+    sys.path.insert(0, str(_release_root))
+from results_health.belt import verify_bundle
 
 BLUE='#126a98'; ORANGE='#c65d17'; PURPLE='#79558c'; GRAY='#66717a'; GREEN='#327459'
 # One order, symbol and colour for each part of the five-term balance.
@@ -52,6 +57,7 @@ def style(axes):
         ax.grid(axis='y',alpha=.17);ax.set_axisbelow(True)
 
 def plot_all(input_dir,output):
+    verify_bundle(input_dir)
     a=json.loads((input_dir/'belt_publication_audit.json').read_text())
     source=input_dir/'belt_publication.npz'
     assert hashlib.sha256(source.read_bytes()).hexdigest()==a['plot_inputs_sha256']

@@ -43,19 +43,20 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(path):
+def prepare(path, raw=None):
+    raw_root = Path(raw) if raw is not None else STUDY / "artifacts/publication"
     frozen = json.loads((INPUTS / "belt_publication_audit.json").read_text())
     arrays, sources, modes = {}, {}, {}
     for name, (case, start, end) in WINDOWS.items():
         for setting in ("nominal", "tight"):
             key = f"{name}__{setting}"
             source = f"{case}_{setting}_full/terms.csv.gz"
-            raw = STUDY / "artifacts/publication" / source
-            actual = digest(raw)
+            raw_file = raw_root / source
+            actual = digest(raw_file)
             if actual != frozen["raw_sha256"][source]:
                 raise ValueError(f"Frozen raw hash mismatch: {source}")
             sources[source] = actual
-            with gzip.open(raw, "rt") as stream:
+            with gzip.open(raw_file, "rt") as stream:
                 interval = [r for r in csv.DictReader(stream)
                             if start - 1e-10 <= float(r["time_s"]) <= end + 1e-10]
             rows = [r for r in interval if "CVTShiftConstraint.FREE" in r["mode"]]

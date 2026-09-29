@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import numpy as np
+from results_health.belt import seal_bundle, check_publication
 
 STUDY=Path(__file__).resolve().parents[1]
 RELEASE=STUDY.parents[1]
@@ -200,32 +201,29 @@ def prepare(raw):
         'difference_definition':'Full minus variant on common physical time; both limits at event times. No interpolation across resets.',
         'script_sha256':sha(Path(__file__))}
     (INPUT/'belt_publication_audit.json').write_text(json.dumps(record,indent=2,allow_nan=False)+'\n')
+    # All evidence is rebuilt from this raw directory, never from a hidden default.
+    from analysis import moving_state_evidence as moving
+    moving.INPUTS = INPUT
+    moving.prepare(INPUT/'belt_moving_state_samples.npz', raw=raw)
+    moving_result = moving.analyse(INPUT/'belt_moving_state_samples.npz')
+    (INPUT/'belt_moving_state_audit.json').write_text(
+        json.dumps(moving_result, indent=2, allow_nan=False)+'\n')
+    seal_bundle(INPUT)
     print('Prepared',len(runs),'runs,',len(comparisons),'comparisons')
 
 def check(raw):
-    a=json.loads((INPUT/'belt_publication_audit.json').read_text())
-    assert sha(INPUT/'belt_publication.npz')==a['plot_inputs_sha256']
-    raw_verified=0
-    if raw.exists():
-        for f,h in a['raw_sha256'].items():assert sha(raw/f)==h,f
-        raw_verified=len(a['raw_sha256'])
-    import cinder
-    runtime=json.loads((INPUT/'runtime_source_check.json').read_text())
-    pkg=Path(cinder.__file__).resolve().parent
-    for f,h in runtime['source_sha256'].items():
-        assert sha(pkg/f.removeprefix('cvtModel/src/cinder/'))==h,f
-    findings=[]
-    for name,s in a['runs'].items():
-        assert s['completed'],name
-        assert s['audit']['inspection_errors']==0,name
-        for k,v in s['audit'].items():
-            if ('min_local_normal' in k or 'min_tension' in k) and v<0:findings.append((name,k,v))
-        assert s['audit']['max_endpoint_vs_equation_residual_N']<1e-8,name
-        assert s['audit']['closure.max_abs_residual']<1e-7,name
-    print(json.dumps({'run_count':len(a['runs']),'local_loading_findings':findings,
-        'raw_files_verified':raw_verified,'frozen_source_files_verified':len(runtime['source_sha256'])},indent=2))
+    result = check_publication(INPUT, raw, STUDY/'publication_inputs/runtime_source_check.json')
+    print(json.dumps(result, indent=2))
+    return result
 
-def main(action,raw,figures=None):
+def main(action,raw,figures=None,inputs=None):
+    global INPUT
+    if inputs is not None:
+        INPUT = Path(inputs).resolve()
+        INPUT.mkdir(parents=True, exist_ok=True)
+        plan = STUDY/'publication_inputs/run_plan.json'
+        if action == 'prepare' and INPUT != plan.parent:
+            (INPUT/'run_plan.json').write_bytes(plan.read_bytes())
     if action=='prepare':prepare(raw)
     elif action=='check':check(raw)
     elif action=='plot':

@@ -73,13 +73,27 @@ def trace_check(d):
         assert np.array_equal(n['full_state'][i,[0,-1]],r[k][[0,-1]])
     losses={}
     for side in ('primary','secondary'):
-        power=np.abs(r[f'contact.{side}_transmitted_torque']/r[f'geometry.{side}_effective_radius']*r[f'contact.{side}_relative_speed'])
+        pair = (r[f'contact.{side}_lambda'] * r[f'contact.{side}_normal_resultant']
+                * r[f'contact.{side}_relative_speed'])
+        sliding_modes = {'primary': {'primary_slip_secondary_stick', 'both_slip'},
+                         'secondary': {'primary_stick_secondary_slip', 'both_slip'}}
+        sliding = np.zeros(len(pair), dtype=bool)
+        for segment in manifest['segments']:
+            sliding[r['segment_id'] == segment['id']] = (
+                segment['mode'].split('/')[-1] in sliding_modes[side])
+        if not np.isfinite(pair).all():
+            raise ValueError('Nonfinite Ballew pair power')
+        if sliding.any() and np.max(pair[sliding]) > 1e-5:
+            raise ValueError('Energy-adding Ballew sliding pair power')
+        power = np.where(sliding, np.maximum(0., -pair), 0.)
+        if not np.array_equal(sliding, r[f'publication.{side}_sliding']):
+            raise ValueError('Stored publication contact mask disagrees with event modes')
         ids=r['segment_id'];value=0.;coarse=0.
         for i in np.unique(ids):
             ix=np.flatnonzero(ids==i);jx=np.unique(np.r_[ix[::2],ix[-1]])
             value+=np.trapezoid(power[ix],r['time_s'][ix])
             coarse+=np.trapezoid(power[jx],r['time_s'][jx])
-        recorded=r[f'observer.{side}_slip_dissipation']
+        recorded=r[f'publication.{side}_slip_dissipation_J']
         assert np.isclose(value,recorded[-1],rtol=1e-12)
         assert np.min(np.diff(recorded))>=-1e-9
         losses[side]={'reported_J':float(value),'decimated_quadrature_difference_J':float(coarse-value)}
@@ -142,12 +156,14 @@ def freeze(base,out,cases,audit):
     derivations={}
     for name in dirs:
         src=base/name;dst=out/name;dst.mkdir(parents=True,exist_ok=True)
-        for f in ['metrics.json','trace_manifest.json','execution_provenance.json']+[p.name for p in src.glob('*_comparison.csv')]:
+        for f in ['metrics.json','trace_manifest.json','execution_provenance.json',
+                  'slip_accounting.json','resolved_belt_mass.json']+[p.name for p in src.glob('*_comparison.csv')]:
             shutil.copy2(src/f,dst/f)
         r=np.load(src/'segmented_report.npz')
         keys=['time_s','segment_id','state.primary_angular_speed','state.secondary_angular_speed',
               'geometry.effective_ratio_secondary_over_primary','actuation.primary.total_clamp_force',
-              'observer.primary_slip_dissipation','observer.secondary_slip_dissipation']
+              'publication.primary_slip_dissipation_J','publication.secondary_slip_dissipation_J',
+              'publication.primary_sticking_drift_work_J','publication.secondary_sticking_drift_work_J']
         np.savez_compressed(dst/'segmented_report.npz',**{k:r[k] for k in keys})
         n=np.load(src/'native_trace.npz')
         np.savez_compressed(dst/'native_trace.npz',time_s=n['time_s'],segment_id=n['segment_id'],

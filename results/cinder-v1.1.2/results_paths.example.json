@@ -1,0 +1,15 @@
+{
+  "ballew_raw": null,
+  "mechanical_artifacts": null,
+  "energy_artifacts": null,
+  "solver_artifacts": null,
+  "solver_cache": null,
+  "closure_artifacts": null,
+  "primary_inputs": null,
+  "primary_raw": null,
+  "secondary_inputs": null,
+  "belt_inputs": null,
+  "belt_raw": null,
+  "course_suite": null,
+  "course_output_root": null
+}

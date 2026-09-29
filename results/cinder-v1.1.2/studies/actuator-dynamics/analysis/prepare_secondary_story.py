@@ -10,6 +10,11 @@ import json
 from pathlib import Path
 import zipfile
 import numpy as np
+import sys
+_release_root = Path(__file__).resolve().parents[3]
+if str(_release_root) not in sys.path:
+    sys.path.insert(0, str(_release_root))
+from results_health.primary_source import primary_source
 
 from audit_secondary_windows import csv_arrays, wrap_loading, PRIMARY, PREFIX
 
@@ -23,19 +28,24 @@ def sha(p):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--primary-archive',type=Path,required=True)
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument('--primary-archive',type=Path)
+    source.add_argument('--primary-dir',type=Path,
+                        help='Fresh primary-publication raw directory; verifies full baseline provenance.')
     p.add_argument('--backshift-dir',type=Path,default=STUDY/'artifacts/secondary-backshift')
     p.add_argument('--output-dir',type=Path,default=STUDY/'publication_inputs')
     args=p.parse_args();out=args.output_dir;out.mkdir(parents=True,exist_ok=True)
-    assert sha(args.primary_archive)=='692742ece9ddff7b6f8b532ddb42121a8027b6a3689db63ad45da38f11b0e505'
-    audit={'release_commit':COMMIT,'primary_archive_sha256':sha(args.primary_archive),'launch':{},'backshift':{},'raw_sha256':{}}
+    source, source_identity = primary_source(args.primary_archive, args.primary_dir, STUDY, PRIMARY, PREFIX)
+    audit={'release_commit':COMMIT,'primary_source':source_identity,
+           'primary_archive_sha256':source_identity.get('archive_sha256'),
+           'launch':{},'backshift':{},'raw_sha256':{}}
     fields=['time_s','segment_index','sample_location','cvt_mode','shift_m','shift_speed_m_s',
         'helix_qs_reaction_force_N','helix_full_reaction_force_N','helix_dynamic_total_correction_N',
         'helix_dynamic_shaft_accel_force_N','helix_dynamic_shift_accel_force_N','helix_dynamic_curvature_force_N',
         'mass_helix_reflected_active_kg','mass_total_direct_active_kg','lambda_primary','lambda_secondary',
         'primary_min_local_normal_N_per_rad','secondary_min_local_normal_N_per_rad']
     arrays={};data={}
-    with zipfile.ZipFile(args.primary_archive) as z:
+    with source as z:
         assembly=json.loads(z.read(PREFIX+'defaults/baja/simulation_case.json'))['assembly']
         old=json.loads(z.read(PRIMARY+'publication_inputs/primary_publication_audit.json'))
         for level in ('nominal','tight'):

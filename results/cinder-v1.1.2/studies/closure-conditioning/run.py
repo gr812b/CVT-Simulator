@@ -114,6 +114,8 @@ def parse_args():
     parser.add_argument("--audit-contours", action="store_true", help="Check bilateral contour masks using retained maps and selected frozen mechanics; no transient rerun.")
     parser.add_argument("--artifacts-dir", type=Path, default=HERE / "artifacts/reviewed")
     parser.add_argument("--figure-dir", type=Path, default=None)
+    parser.add_argument("--core-output-dir", type=Path,
+                        help="Dedicated directory for a new core sweep; never replace retained evidence.")
     return parser.parse_args()
 
 
@@ -1082,7 +1084,7 @@ def main():
         build(args.artifacts_dir, args.figure_dir or args.artifacts_dir / "publication")
         return
     # New core sweeps remain separate from the registered publication evidence.
-    ARTIFACTS = HERE / "artifacts" / ("quick" if args.quick else "full_recomputed")
+    ARTIFACTS = (args.core_output_dir or HERE / "artifacts" / ("quick" if args.quick else "full_recomputed")).resolve()
     spec = load_json(SPEC_FILE)
     case_library = load_case_library(CASE_LIBRARY_FILE)
     base_path = (HERE / spec["base_document"]).resolve()

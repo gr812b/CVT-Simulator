@@ -502,6 +502,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--publication', choices=['run', 'prepare', 'plot', 'check'])
     parser.add_argument('--publication-case')
+    parser.add_argument('--publication-inputs',type=Path,
+                        help='Separate prepared-bundle directory; leaves committed inputs unchanged')
     parser.add_argument('--publication-variant', choices=['full','omission','density03'], default='full')
     parser.add_argument('--publication-level', choices=['nominal','tight'], default='tight')
     parser.add_argument('--publication-dir', type=Path, default=STUDY_ROOT/'artifacts/publication')
@@ -540,7 +542,8 @@ def main() -> int:
                     args.publication_level, args.publication_dir)
         else:
             from analysis.publication import main as publication_main
-            publication_main(args.publication, args.publication_dir, args.publication_figure_dir)
+            publication_main(args.publication, args.publication_dir, args.publication_figure_dir,
+                             args.publication_inputs)
         return 0
 
     if args.audit_archive is not None:
