@@ -386,9 +386,7 @@ shaft level.
 
 Internal mechanical, energy, numerical-convergence, and closure checks establish the consistency 
 of the implemented system over the tested operating domain. The retained actuator dynamics are 
-strongly regime dependent: primary flyweight inertia appreciably changes the engagement transient 
-but becomes negligible during smooth shifting, while secondary-helix inertia can alter clamping 
-and traction-transition timing even when the corresponding shift displacement changes only slightly. 
+strongly regime dependent: primary flyweight dynamics appreciably change the engagement transient, but their pivot-force correction becomes very small during the tested smooth shifting, while secondary-helix inertia can alter clamping during load-induced backshift even when the corresponding shift displacement changes only slightly. 
 An independent comparison with a published transient rubber-belt model further shows that similar 
 controlled shaft histories can coexist with substantially different clamp, shift, and slip behaviour, 
 identifying the reduced belt representation as an important remaining fidelity limit.
@@ -500,7 +498,7 @@ $\mathrm{B}$ & Shaft boundary; quantities carrying this subscript belong to the 
 $\dot{(\,)}$, $\ddot{(\,)}$ & First and second derivatives with respect to time. \\
 $(\,)'$, $(\,)''$ & First and second derivatives with respect to a quantity's established independent variable. The independent variable is stated when it is not already clear from the defining map or local context. \\
 $({\cdot})^-$, $({\cdot})^+$ & Values immediately before and immediately after a finite boundary event. \\
-$\Delta({\cdot})$ & Finite change across an event, defined as outgoing minus incoming. \\
+$\Delta({\cdot})$ & Finite change or difference, with the reference stated locally. Across an event, it is defined as outgoing minus incoming. \\
 \addlinespace
 $\vect{x},\ \mathbf z,\ \boldsymbol{\nu},\ \boldsymbol{\Gamma}$ & Vector quantities are bold. Greek vectors retain the case of their scalar components. \\
 $\mathbf A,\ \mathbf J,\ \mathbf W,\ \mathbf C$ & Matrix quantities are bold uppercase. \\
@@ -10604,7 +10602,7 @@ the numerical reliability of that response.
 
 The formulation is intended to follow motion both with and without primary 
 belt contact, with either pulley sticking or sliding, and with the sheaves 
-shifting freely or held at a travel boundary.The cases in 
+shifting freely or held at a travel boundary. The cases in 
 \Cref{tab:verification_operating_conditions} examine this range of contact 
 and shift conditions. Reversing rotation and sliding direction also tests 
 the force signs.
@@ -10656,8 +10654,7 @@ level ground for \SI{10}{s}.
       & \SI{10}{s} \\
     \bottomrule
   \end{tabular}
-  \caption{Cases examined with the reference CVT. Each alternative is a
-  separate case, followed for the stated time. Sliding signs refer to belt
+  \caption{Cases examined with the reference CVT. Each alternative is a separate case, evaluated at one state or continued for the stated time. Contact labels describe the initial regime; the listed continuation time is not necessarily its dwell time. Sliding signs refer to belt
   velocity relative to the pulley surface along the positive belt direction.
   Exact inputs and numerical settings are given in
   \Cref{app:study_mechanical_invariants}.}
@@ -10671,8 +10668,7 @@ the coupled equations. Contact consistency is tested separately. For a
 sticking contact, matching surface speeds must be preserved by the
 accelerations, and the required traction must lie within the static-friction
 limit. For a sliding contact, friction must oppose relative motion and remove
-energy from it. A supported sheave must remain stationary with a reaction in
-the direction its stop can exert. Finally, the belt must carry tension rather
+energy from it. A supported sheave must remain axially stationary with a reaction in the direction its stop can exert. Finally, the belt must carry tension rather
 than compression, and the normal load must remain nonnegative everywhere
 along each engaged wrap. A positive total clamping force alone does not
 establish that last condition.
@@ -11141,10 +11137,7 @@ the four mapped states also recovers only their existing solutions.
 The same sticking response is therefore recovered repeatedly at each
 state, although the numerical search remains sensitive to its starting guess.
 
-The applied shaft torques also affect the acceleration mismatches. To
-examine how the sticking solution changes with loading, a constructed
-opening state is held at \(95\%\) engaged travel, \(-40~\mathrm{mm/s}\)
-shift speed and \(3000~\mathrm{rpm}\) primary speed. The primary boundary
+The applied shaft torques also affect the acceleration mismatches. To examine how the sticking solution changes with loading, the closure is evaluated at a constructed opening state with \(95\%\) engaged travel, \(-40~\mathrm{mm/s}\) shift speed and \(3000~\mathrm{rpm}\) primary speed. The primary boundary
 torque is fixed at \(-81.15~\mathrm{N\,m}\) while the secondary torque
 varies. Both shafts rotate positively, so at the selected positive secondary
 torque the secondary supplies power and the primary absorbs it. These are
@@ -11192,14 +11185,7 @@ primary sliding. Reducing the search to one unknown therefore does not by
 itself ensure a unique sticking solution.
 
 \begin{samepage}
-Within the sampled static and expanded ranges, the mechanical solve remains
-robust, while the operating-state searches repeatedly recover a single
-sticking root. The selected alternatives are locally unique away from the
-fold. Using the preceding accepted traction pair helps CINDER follow the
-nearby branch and avoid root jumps, while rechecking compatibility and
-contact limits. This guides the numerical choice without establishing a
-physical selection law. No root jump or effect of an alternative root was
-detected in the other reported calculations.
+Within the sampled static and expanded ranges, the fixed-traction mechanical systems have full rank. At each of the 15 operating states, every accepted search recovers the same sticking root. The targeted loading examples nevertheless admit more than one admissible root; these roots are locally isolated away from the turn. Using the preceding accepted traction pair helps CINDER follow the nearby branch while rechecking compatibility and contact limits. This guides the numerical choice without establishing a physical selection law. No root jump was detected in the other reported calculations.
 \par\end{samepage}
 \FloatBarrier
 
@@ -11233,8 +11219,7 @@ detected in the other reported calculations.
 \label{sec:results_ballew_benchmark}
 
 The preceding checks establish the consistency of CINDER's calculated motion.
-A comparison with an independent formulation can now examine how that motion
-changes when the belt is described in more detail. Ballew's discretized
+A comparison with an independent formulation now examines the response under reconstructed common external conditions, using a model with a more detailed belt description. Ballew's discretized
 rubber-belt model provides a five-second ATV acceleration case with published
 shaft-speed histories, primary clamping force and controller gains
 \citep{Ballew2015}. Its speeds are produced under feedback, however, so the
@@ -11346,13 +11331,12 @@ conceal a very different relation between the two shaft motions.
 The controlled case also illustrates why similar shaft speeds need not imply
 similar belt motion. This benchmark has no relative sheave-rotation mechanism,
 so \(\omega_p/\omega_s\) would equal
-\(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\) if both contacts rolled without slip.
+\(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\) if both contacts were sticking.
 \Cref{fig:results_ballew_internal_response}(a,b) compares these ratios within
 CINDER. The shaft-speed ratio stays near two, while the radius ratio repeatedly
 moves between approximately \(0.46\) and \(2.49\), reaching the low-ratio seat.
 The difference between them shows that the shaft speeds do not track the
-large excursions of the belt along the pulleys. Slip accommodates that
-relative motion and dissipates energy. Panel~(c) shows \SI{19.7}{kJ} of
+large excursions of the belt along the pulleys. Tangential slip allows the belt transport speed to differ from the pulley surface speeds and dissipates energy at those contacts. Panel~(c) shows \SI{19.7}{kJ} of
 cumulative modeled slip loss over the five seconds, contributed by both
 contacts. These internal quantities describe CINDER's response; corresponding
 histories are not available from the published benchmark for comparison.
@@ -11381,7 +11365,7 @@ the number of recorded slip-direction updates differs.
 The benchmark discrepancy therefore persists under these changes in numerical
 resolution.
 
-\subsection{Interpretation of the Model-Form Difference}
+\subsection{Interpretation of the Benchmark Differences}
 \label{sec:results_ballew_interpretation}
 
 Force replay shows that the discrepancy does not arise solely from the
@@ -11744,9 +11728,7 @@ manufacturer inertia data; their sources and construction are recorded in
   \bottomrule
  \end{tabular}
  \caption{Reference and nominal off-the-shelf (OTS) secondary estimate.
- Ratios are estimate/reference. The last two rows are the coefficients of
- shaft and axial acceleration in the helix force. Reflection into the
- shared shift coordinate also includes \((dx_s/ds)^2\).}
+ Ratios are estimate/reference. The last two rows give the magnitudes of the coefficients of shaft and local axial acceleration in the helix force. For the last row, reflection into the shared shift coordinate gives \(I_{s,M}(d\theta_s/dx_s)^2(dx_s/ds)^2=I_{s,M}(d\theta_s/ds)^2\).}
  \label{tab:secondary_hardware_scale}
 \end{table}
 
@@ -11763,17 +11745,14 @@ and increases the closing force.
 \Cref{fig:results_secondary_continuous_response}(a) shows that it
 supplies almost all of the correction after the ramp. The correction
 reaches \SI{89.3}{N}, with a largest fraction of \num{7.87}\% of the
-simultaneous quasi-static helix force. The resulting additional closing
-action is accompanied by more backshift in the full model, resolved in
-panels~(b,c).
+simultaneous quasi-static helix force. The resulting additional closing action is accompanied by more backshift in the full model, shown in panel~(b). Panel~(c) shows the corresponding change in the primary-speed response.
 
 \begin{figure}[H]
  \centering
  \includegraphics[width=\linewidth]{figures/results/dynamics/secondary_continuous_response.pdf}
  \caption{Nominal estimated secondary under the \SI{120}{N.m},
  \SI{25}{ms} resisting-torque ramp (shaded). (a) Signed force corrections
- along the full-model motion. (b,c) Load-induced motion, subtracting each
- model's own unforced continuation. All four runs remain freely shifting
+ along the full-model motion. (b,c) Load-induced motion, subtracting each model's own continuation without the added torque. All four runs remain freely shifting
  with both contacts sticking. The force terms use the same full-model
  state; the motion histories come from independently integrated models.}
  \label{fig:results_secondary_continuous_response}
@@ -11782,9 +11761,7 @@ panels~(b,c).
 At the largest shift-response separation, the extra backshift is
 \SI{4.35}{mm} in the full model and \SI{4.08}{mm} in the quasi-static
 model, a difference of \SI{0.274}{mm}. The primary-speed responses differ
-by up to \SI{40.4}{rpm}. These differences are modest beside the total
-response, but are resolved under tighter integration and develop during
-continuous sticking with positive local wrap loading.
+by up to \SI{40.4}{rpm}. Both differences are resolved under tighter integration and develop during continuous sticking with positive local wrap loading.
 
 The low and high component estimates give peak force corrections of
 \num{3.15}\% and \num{13.6}\% under the same load. Their inertia and
@@ -12047,7 +12024,7 @@ part of the balance previously carried by \(F_N\), while the terms
 proportional to \(\dot s^2\) and \(\dot s v_b\) remain small.
 
 Radial inertia is also appreciable when a load rise reverses the shift.
-A further rise beginning near 59\% of engaged travel reverses the upshift and gives
+A separate load-rise case beginning near 59\% of engaged travel reverses the upshift and gives
 \(F_{\ddot s}\) a 21.2\% share during the rise
 (\Cref{fig:results_belt_shift_transient}).
 
@@ -12139,15 +12116,7 @@ caused by tightening the numerical settings. All seven pairs preserve the
 same ordered contact and support changes. The complete comparisons are
 reported in \Cref{tab:belt_omission_results}.
 
-These results identify a useful simplification within the belt dynamics.
-During gentle shifting, changing circulation speed supplies the main
-inertial adjustment between the two wrap tension sums. Abrupt changes in
-shift speed bring radial acceleration into that balance, even when the
-attained shift speeds leave the other path-dependent terms small. For the
-tested drive, those smaller corrections can be omitted while retaining
-both acceleration mechanisms. The resulting approximation retains the
-changing tension balance that couples pulley loading, belt circulation
-and ratio motion.
+During gentle shifting, changing circulation speed supplies the main inertial adjustment between the two wrap tension sums. Abrupt changes in shift speed bring radial acceleration into that balance, even when the attained shift speeds leave the other path-dependent terms small. The two shift-speed contributions remain small in the examined cases, and omitting them together produces little change in the calculated shift histories: the differences are smaller than those produced by numerical refinement, and the ordered contact and support changes are preserved. Both acceleration mechanisms remain in this reduced description.
 \FloatBarrier
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
@@ -12167,10 +12136,7 @@ To answer that question, each configuration is placed in the same vehicle,
 started from the same state, and driven at full throttle over the same
 continuous road. The drive is not divided into independent launch, hill, and
 backshift tests. The shaft speeds, ratio, contact state, and hardware motion
-left by one part of the road are carried into the next. Several different CVTs
-can therefore meet the same sequence of external loads while the model is left
-to determine how each one engages, shifts, transmits torque, and uses its
-available supports and traction.
+left by one part of the road are carried into the next. Several different CVTs can therefore encounter the same sequence of road features under the same boundary laws, while the model determines how each one engages, shifts, transmits torque, and uses its available supports and traction.
 
 Every configuration therefore operates between the same engine and the same vehicle.
 At the primary shaft, every run uses the same full-throttle Kohler CH440
@@ -12287,9 +12253,7 @@ that contact geometry can be examined without replacing the flyweight
 mechanism itself. H28 makes the corresponding comparison on the secondary by
 changing the helix geometry that couples reacted torque to axial motion.
 
-U55, D01, and D02 extend the comparison farther from the nominal hardware. U55
-continues the flyweight-mass change to a more severe value, while D01 and D02
-combine larger changes in the primary and secondary actuation. They are
+U55, D01, and D02 extend the comparison farther from the nominal hardware. U55 continues the flyweight-mass change to a more severe value. D01 combines changes in both primary and secondary actuation, whereas D02 combines changes in primary flyweight tip mass and installed spring compression. They are
 included to expose whether the more demanding parts of the road bring out
 limitations that are not apparent near the reference configuration. D02\_M and
 D02\_P then separate two of the primary-side changes contained in D02 by
@@ -12394,8 +12358,7 @@ That difference in how the hardware varies through travel is visible in the
 three ramp trajectories. RC10 and R26B7 preserve the same early ramp as R00,
 so their initial free-shift response remains close to the reference. Once the
 roller reaches the modified region, the closing contribution no longer has to
-change monotonically or even in the same direction as the reference. RC10 first
-drops slightly and then turns sharply upward, reaching approximately
+change monotonically or even in the same direction as the reference. RC10's primary-speed curve first drops slightly and then turns sharply upward, reaching approximately
 \(3655~\mathrm{rpm}\) at \(80\%\) travel. R26B7 develops the opposite tendency
 and falls to approximately \(3013~\mathrm{rpm}\). RC40L leaves a longer portion
 of the reference profile untouched; its trajectory remains essentially
@@ -12766,9 +12729,7 @@ The remaining cases show what happens when the hardware change continues to
 affect that interior balance. \Cref{tab:results_moderate_operating_conditions}
 pairs the late shift positions and engine speeds with vehicle speed and
 engine input power. These quantities must be read together: once
-acceleration becomes small, the engine must supply approximately the power
-consumed by gravity, rolling resistance and aerodynamic drag at the
-resulting climbing speed.
+acceleration becomes small, the engine must supply approximately the power required to climb against gravity and overcome rolling resistance and aerodynamic drag at the resulting climbing speed.
 
 \begin{table}[H]
   \centering\small
@@ -12797,8 +12758,7 @@ resulting climbing speed.
 W85 and H28 move to opposite sides of R00 in ratio and engine speed, yet
 climb at almost the same vehicle speed. W85's lighter tips weaken primary
 centrifugal closing at a given speed and geometry, allowing more backshift.
-Its lower ratio keeps the engine turning faster for nearly the same output
-speed. H28 changes the opposing side of this balance: its larger helix angle
+Its greater speed reduction keeps the engine turning faster for nearly the same output speed. H28 changes the opposing side of this balance: its larger helix angle
 reduces secondary axial closing for a given reacted torque, permitting
 greater primary closure and a higher ratio. Its engine consequently turns
 more slowly. Despite spanning approximately \(2877\)--\(3360~\mathrm{rpm}\),
@@ -12947,9 +12907,7 @@ instead produce sustained additional closing force during freely shifting backsh
 The most severe imposed reference load produces a correction of about
 \SI{161}{\newton}, or 7.6\% of the simultaneous quasi-static force, with both belt
 contacts still sticking. Shaft deceleration supplies almost all of this correction;
-appreciable relative sheave acceleration is not required. Separate integrations with
-the estimated larger secondary also show modest, resolved changes in backshift and
-primary-speed response. The secondary dynamics therefore affect the torque-to-clamp
+appreciable relative sheave acceleration is not required. Separate integrations with the estimated larger secondary also show resolved changes in backshift and primary-speed response. The secondary dynamics therefore affect the torque-to-clamp
 relation during continuous loaded operation, not only during engagement or changes of
 contact, and their importance depends on the hardware and loading together.
 
@@ -12962,15 +12920,10 @@ inertia becomes appreciable when shift motion is rapidly accelerated, arrested o
 reversed, including in the tested reverse-power transition. The path-curvature and
 moving-radius terms remain small over the investigated envelope, even in targeted
 high-traction cases. Their smallness follows from the complete terms along the
-realized motion, rather than from the coefficients alone. These observations identify
-candidates for further reduction, but do not establish the trajectory error caused by
-omitting them.
+realized motion, rather than from the coefficients alone. The paired integrations also show little change in the calculated shift histories when these terms are omitted together: the differences are smaller than those produced by numerical refinement, and the ordered contact and support changes are preserved.
 
 The transport-inertia comparisons also show why a reduction must preserve the
-coupling between the belt balances. Reducing only the global transport coefficient
-prevents admissible engagement in the three tested cases, whereas reducing belt
-density consistently across the global and local inertia terms permits those
-continuations to complete. The exact massless limit was not evaluated, but the
+coupling between the belt balances. In the isolated-row attempts, reducing only the global transport coefficient causes the implemented contact search to fail during the common early engagement, before the later forcing programmes diverge. Reducing belt density consistently across the global and local inertia terms instead permits those continuations to complete. The exact massless limit was not evaluated, but the
 contrasting outcomes show that the apparent smallness of one inertia force is not
 sufficient grounds for changing that equation independently of the rest of the belt
 description.
@@ -13130,9 +13083,7 @@ carry the helix reaction (\Cref{app:reference_helix_topology}). When the
 reaction changes direction, the load transfers immediately to the opposite
 flank. A one-sided helix could instead separate, while finite clearance in a
 slot would allow relative motion before the opposite flank is reached.
-Comparing these arrangements under the reaction reversals in
-\Cref{sec:results_secondary_hybrid_response} would show how clearance or
-separation changes the response.
+The formal reaction reversal in \Cref{app:secondary_contact_limit} illustrates the demand for the opposite flank, although its outgoing belt state is locally inadmissible. Comparing these arrangements would show how clearance or separation changes the response.
 
 While flank contact is absent, the movable assembly's rotation and axial
 motion would no longer be linked by the helix geometry. Allowing those motions
@@ -15246,7 +15197,7 @@ Quasi-static fixed-pivot flyweight
 & Retains the centrifugal term of \Cref{eq:primary_flyweight_axial_force} and removes the two pivot-acceleration terms. The associated rotating inertia is reassigned to the fixed primary inertia rather than deleted.
 & \ResultsCode{studies/actuator-dynamics/infrastructure/ablation_core.py}{Results} \\[5pt]
 Quasi-static helix
-& \Cref{sec:results_primary_actuator_dynamics,sec:results_secondary_helix}
+& \Cref{sec:results_secondary_helix}
 & Retains spring torque and reacted movable-face belt torque, but removes the movable-member inertial term from \Cref{eq:secondary_reacted_helix_torque}. The removed movable rotational inertia is reassigned to the fixed secondary inertia.
 & \ResultsCode{studies/helix-topology/infrastructure/helix_mechanics.py}{Results} \\[5pt]
 Constant axial force
@@ -17113,8 +17064,7 @@ contact check.
 The additional reversal comparison monitors the static-traction demand
 \(\lvert\lambda_p\rvert/\mu_s\), with \(\mu_s=0.65\).
 The primary traction is negative throughout this late window; both incoming
-events reach \(\lambda_p=-0.65\). The normalization shows the remaining
-static capacity, not a change in the sign convention. Its admissible comparison
+events reach \(\lambda_p=-0.65\). The normalization shows the fraction of static capacity being used, not a change in the sign convention. Its admissible comparison
 stops before the first failed local-contact state.
 
 The full and quasi-static reversal models reach the primary traction limit
