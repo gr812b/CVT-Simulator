@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import sys
 
-RELEASE=Path(__file__).resolve().parent
+RELEASE=Path(__file__).resolve().parents[2]
 REPO=RELEASE.parents[1]
 if str(RELEASE) not in sys.path:sys.path.insert(0,str(RELEASE))
 from results_health.common import digest,read_json,write_json
@@ -78,7 +78,7 @@ def main(argv=None):
     parser.add_argument('--output',type=Path,help='New output directory; defaults to health_runs/<UTC timestamp>')
     parser.add_argument('--resume',action='store_true',help='With --output: reuse matching successful generation only; recheck/reprocess evidence')
     parser.add_argument('--python',dest='python_path',help='Frozen interpreter override; still subject to verify_environment.py')
-    parser.add_argument('--paths',type=Path,help='JSON paths to retained archives (example: results_paths.example.json)')
+    parser.add_argument('--paths',type=Path,help='Optional JSON map of retained-evidence path overrides; see README.md')
     parser.add_argument('--only',nargs='+',choices=GROUPS,help='Explicit subset; report records partial scope')
     parser.add_argument('--dry-run',action='store_true',help='Print the execution plan without integrating or writing outputs')
     parser.add_argument('--step-timeout-hours',type=float,default=0.,help='Optional per-step wall limit; 0 means no imposed limit')

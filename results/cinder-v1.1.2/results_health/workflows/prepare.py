@@ -15,12 +15,12 @@ import subprocess
 import sys
 import zipfile
 
-RELEASE = Path(__file__).resolve().parent
+RELEASE = Path(__file__).resolve().parents[2]
 REPO = RELEASE.parents[1]
 sys.path.insert(0, str(RELEASE))
 from results_health.common import digest, read_json, write_json
 from results_health.engine import Step, run_plan, report
-from run_results import source_inventory, interpreter, package_summary
+from results_health.workflows.run import source_inventory, interpreter, package_summary
 
 GROUPS = ('primary', 'secondary', 'belt', 'course', 'retained', 'ballew')
 

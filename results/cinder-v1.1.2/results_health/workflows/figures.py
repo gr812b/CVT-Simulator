@@ -25,9 +25,9 @@ import time
 import traceback
 import zipfile
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parents[2]
 REPO = HERE.parents[1]
-EXPECTED_HEAD = "953d1b0423d0655002271de2af43a72c47cff87e"
+BASELINE_HEAD = "953d1b0423d0655002271de2af43a72c47cff87e"
 MECHANICS_COMMIT = "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
 ALL_RUN_ID = "20260929T124106516965Z"
 BALLEW_RUN_ID = "20260929T165922834300Z"
@@ -200,8 +200,13 @@ def no_write_preflight(args):
     try:
         head = git_output("rev-parse", "HEAD")
         result["checks"]["git_head"] = head
-        if head != EXPECTED_HEAD:
-            raise ValueError(f"HEAD is {head}, expected {EXPECTED_HEAD}")
+        result["checks"]["baseline_head"] = BASELINE_HEAD
+        try:
+            git_output("merge-base", "--is-ancestor", BASELINE_HEAD, head)
+            result["checks"]["baseline_is_ancestor"] = True
+        except Exception:
+            result["checks"]["baseline_is_ancestor"] = False
+            raise ValueError(f"Reviewed figure baseline {BASELINE_HEAD} is not an ancestor of HEAD {head}")
         result["checks"]["git_status_porcelain"] = git_output("status", "--porcelain")
     except Exception as e:
         result["status"] = "FAIL"; result["checks"]["git"] = repr(e)
@@ -513,7 +518,7 @@ def main():
     write_json(support/"table_value_handoff.json",{"schema":1,"files":handoff})
 
     source_files=[
-        HERE/"figure_only_results.py", HERE/"results_health/figure_only_worker.py", HERE/"results_health/belt.py",
+        Path(__file__).resolve(), HERE/"results_health/figure_only_worker.py", HERE/"results_health/belt.py",
         HERE/"studies/course-tuning/analysis/course_publication_export.py",
         HERE/"studies/actuator-dynamics/analysis/primary_publication_plots.py",
         HERE/"studies/actuator-dynamics/analysis/secondary_publication_plots.py",
@@ -539,7 +544,7 @@ def main():
         "course_plot_inputs_sha256": COURSE_NPZ_SHA256,
         "solver_retained_root":str(solver),"closure_retained_root":str(closure),
     }
-    manifest={"schema":1,"numerical_execution_identity":numerical_identity,"export_identity":{"git_head":EXPECTED_HEAD,"dirty_status":preflight["checks"].get("git_status_porcelain",""),"files":export_identity},"manuscript_inventory":{"count":len(EXPECTED_ASSETS),"imports":list(EXPECTED_ASSETS),"tex_sha256":sha(REPO/"docs/CVT_Module_Formulation/CVT_Module_Formulation.tex")},"family_provenance":family_provenance,"optimization":{"performed":False,"policy":"No blanket compression/restyling; exporters keep their native PDF/PNG settings."},"assets":assets,"visual_comparisons":visual}
+    manifest={"schema":1,"numerical_execution_identity":numerical_identity,"export_identity":{"git_head":preflight["checks"].get("git_head"),"baseline_head":BASELINE_HEAD,"dirty_status":preflight["checks"].get("git_status_porcelain",""),"files":export_identity},"manuscript_inventory":{"count":len(EXPECTED_ASSETS),"imports":list(EXPECTED_ASSETS),"tex_sha256":sha(REPO/"docs/CVT_Module_Formulation/CVT_Module_Formulation.tex")},"family_provenance":family_provenance,"optimization":{"performed":False,"policy":"No blanket compression/restyling; exporters keep their native PDF/PNG settings."},"assets":assets,"visual_comparisons":visual}
     write_json(out/"final_asset_manifest.json",manifest)
     write_json(out/"input_output_provenance.json",manifest)
     write_json(out/"visual_comparisons.json",visual)
