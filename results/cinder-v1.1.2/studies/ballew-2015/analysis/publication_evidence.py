@@ -28,6 +28,7 @@ import json
 from pathlib import Path
 import shutil
 import numpy as np
+from results_health.slip import verify_publication_slip_channels, require_slip_health, DEFINITION
 
 ROOT=Path(__file__).resolve().parents[1]
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
@@ -71,6 +72,12 @@ def trace_check(d):
             assert np.all(np.diff(data['time_s'][ix])>=0)
     for k,i in [('state.primary_angular_speed',0),('state.secondary_angular_speed',1)]:
         assert np.array_equal(n['full_state'][i,[0,-1]],r[k][[0,-1]])
+    modes={segment['id']:segment['mode'] for segment in manifest['segments']}
+    accounting=verify_publication_slip_channels(r,modes)
+    saved_accounting=json.loads((d/'slip_accounting.json').read_text())
+    require_slip_health(saved_accounting)
+    if saved_accounting != accounting:
+        raise ValueError('Saved slip-accounting audit disagrees with reconstruction')
     losses={}
     for side in ('primary','secondary'):
         pair = (r[f'contact.{side}_lambda'] * r[f'contact.{side}_normal_resultant']
@@ -83,8 +90,9 @@ def trace_check(d):
                 segment['mode'].split('/')[-1] in sliding_modes[side])
         if not np.isfinite(pair).all():
             raise ValueError('Nonfinite Ballew pair power')
-        if sliding.any() and np.max(pair[sliding]) > 1e-5:
-            raise ValueError('Energy-adding Ballew sliding pair power')
+        # Near-zero-speed sign consistency AND accumulated positive-work
+        # acceptance were reconstructed above; do not reintroduce a fixed
+        # force-dependent instantaneous watt cutoff here.
         power = np.where(sliding, np.maximum(0., -pair), 0.)
         if not np.array_equal(sliding, r[f'publication.{side}_sliding']):
             raise ValueError('Stored publication contact mask disagrees with event modes')
@@ -100,7 +108,8 @@ def trace_check(d):
     ratio=r['geometry.effective_ratio_secondary_over_primary']
     return {'events':len(manifest['events']), 'all_segment_sides_retained':True,
             'radius_ratio_min':float(min(ratio)), 'radius_ratio_max':float(max(ratio)),
-            'slip_loss':losses,'mode_duration_s':manifest['mode_duration_s'],
+            'slip_loss':losses,'slip_accounting':accounting,
+            'mode_duration_s':manifest['mode_duration_s'],
             'transition_reasons':manifest['transition_reasons']}
 
 
@@ -164,6 +173,12 @@ def freeze(base,out,cases,audit):
               'geometry.effective_ratio_secondary_over_primary','actuation.primary.total_clamp_force',
               'publication.primary_slip_dissipation_J','publication.secondary_slip_dissipation_J',
               'publication.primary_sticking_drift_work_J','publication.secondary_sticking_drift_work_J']
+        # Preserve enough exact fields to recheck the corrected accounting
+        # without another integration; this adds no resampling or smoothing.
+        keys=list(dict.fromkeys(keys+[k for k in r.files if k.startswith('publication.')]+
+            [f'contact.{side}_{field}' for side in ('primary','secondary')
+             for field in ('lambda','normal_resultant','relative_speed')]+
+            [k for k in r.files if k.startswith('observer.') and k.endswith('_slip_dissipation')]))
         np.savez_compressed(dst/'segmented_report.npz',**{k:r[k] for k in keys})
         n=np.load(src/'native_trace.npz')
         np.savez_compressed(dst/'native_trace.npz',time_s=n['time_s'],segment_id=n['segment_id'],
@@ -179,7 +194,7 @@ def freeze(base,out,cases,audit):
     (out/'evidence_audit.json').write_text(json.dumps(audit,indent=2)+'\n')
     files={str(p.relative_to(out)):sha(p) for p in sorted(out.rglob('*')) if p.is_file() and p.name!='publication_inputs.json'}
     record={'cinder_version':'1.1.2','cinder_tag_commit':'7637a38b4fb9ec21dfb953c1c80a27ec5f389654',
-            'derivations':derivations,'files':files,
+            'derivations':derivations,'files':files,'slip_definition':DEFINITION,
             'note':'Compact plot and refinement inputs selected from hash-verified full executions. Full output hashes and executed source snapshots are retained in the delivery evidence archive.'}
     (out/'publication_inputs.json').write_text(json.dumps(record,indent=2)+'\n')
 

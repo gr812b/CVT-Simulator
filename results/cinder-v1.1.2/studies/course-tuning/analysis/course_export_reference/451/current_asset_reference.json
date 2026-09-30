@@ -1,0 +1,30 @@
+{
+  "reference_kind": "current committed manuscript assets used only for appearance reconstruction",
+  "pr_head": "953d1b0423d0655002271de2af43a72c47cff87e",
+  "original_numerical_exporter_source": "Section_4_5_1_Revision_v4/figure_source/build_figures.py",
+  "later_original_source_status": "not recovered; Section_4_5_1_Rebuilt_v5.zip and Section_4_5_Opening_Revision_v7.zip were visible in Project storage but raw-byte materialization was unavailable",
+  "assets": {
+    "common_course_profile.png": {
+      "sha256": "bb1a9be7e1d29265a4a805874ab6f86e9b53ebd6acbb18b4c3cfe48f54a5a75d",
+      "git_blob_sha": "13c2dd9848e9a8154bebbfb01feedaa568b7a3ea",
+      "dimensions_px": [2393, 1030],
+      "dpi": 220,
+      "matplotlib": "3.10.8"
+    },
+    "opening_free_shift_characteristics.png": {
+      "sha256": "32ab3e91a6e77a548a12a288a36be88453083a7ea254e730549d38d0b8e1693b",
+      "git_blob_sha": "a62de02c181a3b2f680b971158467dbc786b39bb",
+      "dimensions_px": [2464, 1430],
+      "dpi": 220,
+      "matplotlib": "3.10.8"
+    },
+    "shift_curve_mechanical_causes.png": {
+      "sha256": "4a41d11ee946931619d3e3293369bd9ceab4a3a11937ab6583b41b294e6f502b",
+      "git_blob_sha": "dec8989949ca9769e7934f3a8e14ddadb8b4bdf0",
+      "dimensions_px": [4230, 1408],
+      "dpi": 300,
+      "matplotlib": "3.10.8"
+    }
+  },
+  "reconstruction_policy": "Preserve recovered v4 numerical selection and maps exactly; reconstruct only the later paper-facing presentation. Never claim byte-identical original source recovery."
+}

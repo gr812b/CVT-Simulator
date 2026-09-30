@@ -1,0 +1,319 @@
+{
+  "source": "final_v3__36b4acf99e52_return.zip",
+  "archive_sha256": "b7b8f3396fcdcc8fca6778fa0618c70f921e1f68f43ceb5319a7e5fde4c50027",
+  "case": "R00",
+  "verified_file_count": 10,
+  "verified_files": [
+    {
+      "file": "status.json",
+      "sha256": "5b9e927d914e407638f37089ce7adc9830fa7ab41822959979f583a402127528"
+    },
+    {
+      "file": "summary.json",
+      "sha256": "d1aaa22ffabbdbfc69e6a3acd8c1feb77d47afe2b9eae355f6068fa0e0745dba"
+    },
+    {
+      "file": "resolved_case.json",
+      "sha256": "644454a8886515dc28020c8cd035733c59c22ffad0af95ed6723e02f3d7d8d3a"
+    },
+    {
+      "file": "diagnostics.csv",
+      "sha256": "700d34b26d6a6fd0775681fcee00b151d465faf214dff71dda80bef5ac4a4879"
+    },
+    {
+      "file": "events.json",
+      "sha256": "dd6d263d201a5c4cb8e4df67efb7c4ff3c30273dba0470e3f7b08878c01c3b65"
+    },
+    {
+      "file": "events.csv",
+      "sha256": "ee312634a57aca19f03ea841b7e6353bc0d5fdbeefe041eb2ab9a889d8aa5106"
+    },
+    {
+      "file": "segments.csv",
+      "sha256": "556f3271ccc7b7e6c70edebd25241bf9fd56031feb343741db4d9b8338b620c6"
+    },
+    {
+      "file": "sector_metrics.csv",
+      "sha256": "f88254eb9ce497284b574cc81d91433a248e356d52af70eb6b9b524d6d4337e2"
+    },
+    {
+      "file": "interesting_windows.csv",
+      "sha256": "41658f3ba88039c290600f2d42f1486fac3b87f13d32d17464b4efb0769865fd"
+    },
+    {
+      "file": "event_windows.csv",
+      "sha256": "94ad8e7317bcf9d959e8be5dc72eddb138f5e540da7d31ec91b674a919a5ba5b"
+    }
+  ],
+  "numerical_settings": {
+    "relative_tolerance": 3e-05,
+    "absolute_tolerance": 3e-08,
+    "max_step_s": 0.005,
+    "maximum_time_s": 180.0,
+    "diagnostic_step_s": 0.005
+  },
+  "engine_boundary": {
+    "kind": "full_throttle_engine",
+    "points": [
+      {
+        "angular_speed_rad_per_s": 104.71975511965977,
+        "torque_Nm": 0.0
+      },
+      {
+        "angular_speed_rad_per_s": 188.49555921538757,
+        "torque_Nm": 24.4047230694
+      },
+      {
+        "angular_speed_rad_per_s": 251.32741228718345,
+        "torque_Nm": 25.08263204355
+      },
+      {
+        "angular_speed_rad_per_s": 272.2713633111154,
+        "torque_Nm": 24.54030486423
+      },
+      {
+        "angular_speed_rad_per_s": 293.21531433504737,
+        "torque_Nm": 23.591232300419996
+      },
+      {
+        "angular_speed_rad_per_s": 314.1592653589793,
+        "torque_Nm": 22.50657794178
+      },
+      {
+        "angular_speed_rad_per_s": 335.1032163829112,
+        "torque_Nm": 20.87959640382
+      },
+      {
+        "angular_speed_rad_per_s": 356.0471674068432,
+        "torque_Nm": 19.659360250349998
+      },
+      {
+        "angular_speed_rad_per_s": 376.99111843077515,
+        "torque_Nm": 18.303542302049998
+      },
+      {
+        "angular_speed_rad_per_s": 418.87902047863906,
+        "torque_Nm": 0.0
+      }
+    ],
+    "low_speed_braking_torque_Nm": -5.0,
+    "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
+    "high_speed_braking_torque_Nm": -28.0,
+    "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
+    "equivalent_rotational_inertia_kg_m2": 0.05
+  },
+  "road_windows_m": {
+    "display": [
+      604,
+      732
+    ],
+    "entry": [
+      624,
+      636
+    ],
+    "hold": [
+      636,
+      696
+    ],
+    "exit": [
+      696,
+      708
+    ],
+    "final_level": [
+      708,
+      732
+    ]
+  },
+  "contact_modes_display": [
+    "stick_stick"
+  ],
+  "support_modes_display": [
+    "free",
+    "upper_stop"
+  ],
+  "descent_max_static_utilization": {
+    "primary": 0.18838841487456906,
+    "secondary": 0.19940954120823468
+  },
+  "display_max_static_utilization": {
+    "primary": 0.18838841487456906,
+    "secondary": 0.19940954120823468
+  },
+  "display_min_normal_N": {
+    "primary": 2484.7285097552476,
+    "secondary": 2351.1960975839515
+  },
+  "display_min_tension_N": 268.6084129296147,
+  "display_min_local_normal_N_per_rad": {
+    "primary": 243.7220717477883,
+    "secondary": 243.03048076335227
+  },
+  "boundary_power_zero_crossings": {
+    "primary": [
+      {
+        "time_s": 72.0452431695248,
+        "distance_m": 651.507608359492,
+        "primary_rpm": 4000.0000304876057,
+        "speed_m_s": 18.095255068498552
+      }
+    ],
+    "secondary": [
+      {
+        "time_s": 70.42619114580233,
+        "distance_m": 626.8952977739053,
+        "primary_rpm": 3233.3257935693136,
+        "speed_m_s": 12.368380032861372
+      },
+      {
+        "time_s": 74.605323855268,
+        "distance_m": 703.97210283867,
+        "primary_rpm": 4844.170538700359,
+        "speed_m_s": 21.9141252062427
+      }
+    ]
+  },
+  "belt_power_zero_crossings": {
+    "primary_to_belt_power_W": [
+      {
+        "time_s": 71.89694338816473,
+        "distance_m": 648.8539604897063,
+        "primary_rpm": 3909.2845287102073,
+        "speed_m_s": 17.68487503578166
+      }
+    ],
+    "belt_to_secondary_power_W": [
+      {
+        "time_s": 71.89332748266632,
+        "distance_m": 648.7900344128805,
+        "primary_rpm": 3906.950849647184,
+        "speed_m_s": 17.674317906388776
+      }
+    ]
+  },
+  "events_after_596m": [
+    {
+      "event_id": "E0031",
+      "time_s": 71.16555044094838,
+      "distance_m": 636.8593601507573,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact"
+    },
+    {
+      "event_id": "E0032",
+      "time_s": 75.95724928210053,
+      "distance_m": 732.0,
+      "reason": "course_finish"
+    }
+  ],
+  "reverse_duration_s": 4.056698841152823,
+  "engine_absorbed_work_J": 27543.362358684906,
+  "metric_scope": "Whole run, including final level; recomputed segmentwise with production conventions. These totals are supporting evidence, not manuscript claims.",
+  "power_sign_convention": "Each boundary power is boundary torque times its shaft speed; positive adds mechanical energy to the represented shaft-side system, including its equivalent boundary inertia.",
+  "checks": {
+    "primary_boundary_power_identity_max_abs_W": 0.0,
+    "secondary_boundary_power_identity_max_abs_W": 0.0,
+    "road_force_times_speed_max_abs_residual_W": 7.275957614183426e-12,
+    "upper_stop_primary_axial_balance_max_abs_residual_N": 0.0
+  },
+  "snapshots": {
+    "624": {
+      "distance_m": 624.0178988363331,
+      "time_s": 70.18999999999983,
+      "primary_rpm": 3222.4981604330064,
+      "speed_m_s": 12.006490589276948,
+      "vehicle_acceleration_m_s2": 1.4723377376647928,
+      "primary_boundary_power_W": 6994.721916960967,
+      "secondary_boundary_power_W": -1238.9622938053838,
+      "primary_to_belt_power_W": 6891.203334615512,
+      "belt_to_secondary_power_W": 6881.713605966372
+    },
+    "636": {
+      "distance_m": 636.0346645626378,
+      "time_s": 71.10999999999899,
+      "primary_rpm": 3299.476113704388,
+      "speed_m_s": 14.722271204740798,
+      "vehicle_acceleration_m_s2": 4.458672072922053,
+      "primary_boundary_power_W": 6999.812334562198,
+      "secondary_boundary_power_W": 14315.536683670902,
+      "primary_to_belt_power_W": 6666.678969465999,
+      "belt_to_secondary_power_W": 6637.571207502016
+    },
+    "650": {
+      "distance_m": 649.9846375070666,
+      "time_s": 71.96055044094766,
+      "primary_rpm": 3949.291127399635,
+      "speed_m_s": 17.865857436329165,
+      "vehicle_acceleration_m_s2": 2.780139100387133,
+      "primary_boundary_power_W": 770.2787021784003,
+      "secondary_boundary_power_W": 16622.417332923975,
+      "primary_to_belt_power_W": -724.2085761471045,
+      "belt_to_secondary_power_W": -767.7921803327448
+    },
+    "660": {
+      "distance_m": 659.992100155377,
+      "time_s": 72.49999999999955,
+      "primary_rpm": 4240.109211067617,
+      "speed_m_s": 19.181464276939675,
+      "vehicle_acceleration_m_s2": 2.149730980153824,
+      "primary_boundary_power_W": -3024.2527553278246,
+      "secondary_boundary_power_W": 17463.428076120632,
+      "primary_to_belt_power_W": -4264.955391817726,
+      "belt_to_secondary_power_W": -4301.137896285559
+    },
+    "680": {
+      "distance_m": 680.0033705275416,
+      "time_s": 73.49499999999864,
+      "primary_rpm": 4624.700986762337,
+      "speed_m_s": 20.921285833288362,
+      "vehicle_acceleration_m_s2": 1.4168173282244747,
+      "primary_boundary_power_W": -8069.813255069877,
+      "secondary_boundary_power_W": 18449.368622964816,
+      "primary_to_belt_power_W": -8961.688408908609,
+      "belt_to_secondary_power_W": -8987.69808745183
+    },
+    "696": {
+      "distance_m": 695.9489787199997,
+      "time_s": 74.23999999999978,
+      "primary_rpm": 4828.787807899275,
+      "speed_m_s": 21.84453659739922,
+      "vehicle_acceleration_m_s2": 1.0847681492231902,
+      "primary_boundary_power_W": -10612.492415252553,
+      "secondary_boundary_power_W": 18910.164697670625,
+      "primary_to_belt_power_W": -11325.479386377854,
+      "belt_to_secondary_power_W": -11346.27216420881
+    },
+    "708": {
+      "distance_m": 707.9892150496357,
+      "time_s": 74.78999999999928,
+      "primary_rpm": 4768.854351412254,
+      "speed_m_s": 21.573408803898566,
+      "vehicle_acceleration_m_s2": -1.9794439147579834,
+      "primary_boundary_power_W": -9887.677843412584,
+      "secondary_boundary_power_W": -5065.671907201947,
+      "primary_to_belt_power_W": -8602.794181584753,
+      "belt_to_secondary_power_W": -8565.323229676405
+    },
+    "720": {
+      "distance_m": 719.9856402318954,
+      "time_s": 75.35999999999876,
+      "primary_rpm": 4543.920131662147,
+      "speed_m_s": 20.555848291652094,
+      "vehicle_acceleration_m_s2": -1.595613241085458,
+      "primary_boundary_power_W": -7019.523464506388,
+      "secondary_boundary_power_W": -4465.7027235745045,
+      "primary_to_belt_power_W": -6032.642282191024,
+      "belt_to_secondary_power_W": -6003.861951005706
+    },
+    "732": {
+      "distance_m": 732.0,
+      "time_s": 75.95724928210053,
+      "primary_rpm": 4357.331331148848,
+      "speed_m_s": 19.71175531353296,
+      "vehicle_acceleration_m_s2": -1.2413129224565767,
+      "primary_boundary_power_W": -4560.245244770581,
+      "secondary_boundary_power_W": -4007.8264761866244,
+      "primary_to_belt_power_W": -3824.0238929511747,
+      "belt_to_secondary_power_W": -3802.5535328803758
+    }
+  },
+  "scope": "Selected-case source and mechanics audit; no rerun, convergence study, exact global energy audit or experimental validation."
+}

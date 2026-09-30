@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from .common import digest, read_json, verify_hashes, write_json
 from .guards import belt_run_findings
+from .prep_support import portable_hashes
 
 BUNDLE_FILES = ('belt_publication.npz', 'belt_events.json', 'belt_publication_audit.json',
                 'belt_moving_state_samples.npz', 'belt_moving_state_audit.json', 'run_plan.json')
@@ -35,9 +36,22 @@ def check_publication(inputs: Path, raw: Path, runtime_source_check: Path):
     events = read_json(inputs / 'belt_events.json')
     if set(events) != expected:
         raise ValueError('Event ledgers do not enumerate the same publication runs')
+    moving = read_json(inputs / 'belt_moving_state_audit.json')
+    if digest(inputs / 'belt_moving_state_samples.npz') != moving['input_sha256']:
+        raise ValueError('Moving-state bundle/audit mismatch')
+    import json
+    import numpy as np
+    with np.load(inputs / 'belt_moving_state_samples.npz', allow_pickle=False) as z:
+        provenance = json.loads(str(z['metadata']))
+    if provenance != moving['provenance']:
+        raise ValueError('Moving-state samples and audit have different provenance')
+    normalized_raw = portable_hashes(a['raw_sha256'])
+    for name, expected_hash in portable_hashes(provenance['raw_sha256']).items():
+        if normalized_raw.get(name) != expected_hash:
+            raise ValueError('Moving-state evidence belongs to another raw execution: ' + name)
     raw_verified = 0
     if raw.is_dir():
-        raw_verified = verify_hashes(raw, a['raw_sha256'])
+        raw_verified = verify_hashes(raw, normalized_raw)
     import cinder
     runtime = read_json(runtime_source_check)
     package = Path(cinder.__file__).resolve().parent
@@ -74,8 +88,9 @@ def bind_existing_bundle(inputs: Path):
         provenance=json.loads(str(z['metadata']))
     if provenance!=moving['provenance']:
         raise ValueError('Moving-state archive and audit provenance disagree')
-    for name,h in provenance['raw_sha256'].items():
-        if audit['raw_sha256'].get(name)!=h:
+    raw_hashes = portable_hashes(audit['raw_sha256'])
+    for name,h in portable_hashes(provenance['raw_sha256']).items():
+        if raw_hashes.get(name)!=h:
             raise ValueError('Moving-state evidence belongs to another raw campaign: '+name)
     events=read_json(inputs/'belt_events.json')
     if set(events)!=set(audit['runs']):

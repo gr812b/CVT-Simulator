@@ -16,6 +16,10 @@ import numpy as np
 
 STUDY = Path(__file__).resolve().parents[1]
 INPUTS = STUDY / "publication_inputs"
+import sys
+if str(STUDY.parents[1]) not in sys.path:
+    sys.path.insert(0, str(STUDY.parents[1]))
+from results_health.prep_support import moving_source_hashes
 TERMS = ("normal_contact", "tangential_belt_acceleration",
          "radial_shift_acceleration", "radial_geometry_curvature",
          "tangential_shifting_radius")
@@ -43,9 +47,12 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(path, raw=None):
+def prepare(path, raw=None, audit_path=None):
+    path = Path(path)
     raw_root = Path(raw) if raw is not None else STUDY / "artifacts/publication"
-    frozen = json.loads((INPUTS / "belt_publication_audit.json").read_text())
+    audit_path = Path(audit_path) if audit_path is not None else path.parent / "belt_publication_audit.json"
+    frozen = json.loads(audit_path.read_text())
+    expected_sources = moving_source_hashes(frozen)
     arrays, sources, modes = {}, {}, {}
     for name, (case, start, end) in WINDOWS.items():
         for setting in ("nominal", "tight"):
@@ -53,7 +60,9 @@ def prepare(path, raw=None):
             source = f"{case}_{setting}_full/terms.csv.gz"
             raw_file = raw_root / source
             actual = digest(raw_file)
-            if actual != frozen["raw_sha256"][source]:
+            if source not in expected_sources:
+                raise ValueError(f"Main audit omits required moving-state source: {source}; audit={audit_path}")
+            if actual != expected_sources[source]:
                 raise ValueError(f"Frozen raw hash mismatch: {source}")
             sources[source] = actual
             with gzip.open(raw_file, "rt") as stream:
@@ -139,13 +148,15 @@ def analyse(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare-from-raw", action="store_true")
-    parser.add_argument("--output", type=Path, default=INPUTS / "belt_moving_state_audit.json")
+    parser.add_argument("--input-dir", type=Path, default=INPUTS)
+    parser.add_argument("--raw-dir", type=Path, default=STUDY / "artifacts/publication")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    path = INPUTS / "belt_moving_state_samples.npz"
+    path = args.input_dir / "belt_moving_state_samples.npz"
     if args.prepare_from_raw:
-        prepare(path)
+        prepare(path, raw=args.raw_dir, audit_path=args.input_dir / "belt_publication_audit.json")
     result = analyse(path)
-    args.output.write_text(json.dumps(result, indent=2) + "\n")
+    (args.output or args.input_dir / "belt_moving_state_audit.json").write_text(json.dumps(result, indent=2) + "\n")
     for key, row in result["cases"].items():
         if key.endswith("__tight"):
             print(key, row["window_s"], row["shift_speed_mm_s"],

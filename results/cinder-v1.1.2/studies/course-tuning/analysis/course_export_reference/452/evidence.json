@@ -1,0 +1,325 @@
+{
+  "R00": {
+    "hardware": {
+      "id": "R00",
+      "label": "Baja reference",
+      "family": "reference",
+      "intent": "Unchanged reference hardware; the common point of comparison.",
+      "knobs": {}
+    },
+    "summary": {
+      "status": "finished",
+      "reason": "course_finish",
+      "max_distance_m": 732.0,
+      "final_distance_m": 732.0,
+      "last_completed_time_s": 75.95724928210053,
+      "hill_min_speed_m_s": 3.7697490882042204,
+      "hill_min_primary_rpm": 2864.4038533648795,
+      "primary_slip_work_J": 1588.2357183236604
+    },
+    "hill_primary_rpm_minimum": {
+      "time_s": 26.90499999999982,
+      "distance_m": 212.36819201580516,
+      "grade_deg": 37.9895225045945,
+      "primary_rpm": 2864.4038533648795,
+      "shift_mm": 2.4891999999999994
+    },
+    "hill_min_shift_mm": 2.4891949048767383,
+    "primary_max_sticking_utilization": 0.3520331517692572,
+    "secondary_max_sticking_utilization": 0.5046373581889131,
+    "near_200m": {
+      "time_s": 23.62499999999968,
+      "distance_m": 199.99731230912192,
+      "speed_m_s": 3.7746913044443087,
+      "primary_rpm": 2868.159143945485,
+      "shift_mm": 2.4891999999999994,
+      "normal_primary_N": 3035.091668020565,
+      "primary_static_utilization": 0.3502223899638557,
+      "secondary_static_utilization": 0.2497986506216823,
+      "primary_boundary_power_W": 6982.87623165574
+    },
+    "moderate_hill_final_window": {
+      "tail_start_time_s": 62.2000000000001,
+      "tail_end_time_s": 67.2049999999989,
+      "tail_start_distance_m": 559.8135421780898,
+      "tail_end_distance_m": 595.9790139020635,
+      "tail_mean_shift_mm": 9.547093484059303,
+      "tail_mean_primary_rpm": 3132.413464807815,
+      "tail_mean_speed_m_s": 7.225868959720247,
+      "tail_mean_primary_boundary_power_W": 7026.17006414689,
+      "tail_window_passed": true,
+      "passing_window_seen": true,
+      "tail_window_failed_checks": "[]"
+    }
+  },
+  "D01": {
+    "hardware": {
+      "id": "D01",
+      "label": "Premature-shift stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: early primary closing and weak secondary opposition may pull the engine down under load.",
+      "knobs": {
+        "tip_mass_scale": 1.3,
+        "primary_preload_scale": 0.8,
+        "helix_angle_deg": 28,
+        "secondary_preload_scale": 0.8,
+        "secondary_twist_deg": 240
+      }
+    },
+    "summary": {
+      "status": "finished",
+      "reason": "course_finish",
+      "max_distance_m": 732.0,
+      "final_distance_m": 732.0,
+      "last_completed_time_s": 80.5020441620052,
+      "hill_min_speed_m_s": 3.495556881522805,
+      "hill_min_primary_rpm": 2357.0580404585257,
+      "primary_slip_work_J": 1071.1523864392802
+    },
+    "hill_primary_rpm_minimum": {
+      "time_s": 30.489999999999903,
+      "distance_m": 221.75515404133924,
+      "grade_deg": 1.8418781874838983,
+      "primary_rpm": 2357.0580404585257,
+      "shift_mm": 10.78867669847499
+    },
+    "hill_min_shift_mm": 3.269318593559163,
+    "primary_max_sticking_utilization": 0.3057632114839435,
+    "secondary_max_sticking_utilization": 0.2221777347799184,
+    "near_200m": {
+      "time_s": 24.684999999999864,
+      "distance_m": 199.9926869363844,
+      "speed_m_s": 3.498949775613424,
+      "primary_rpm": 2477.349231867333,
+      "shift_mm": 3.283141348762119,
+      "normal_primary_N": 3528.379552822531,
+      "primary_static_utilization": 0.3056108399406175,
+      "secondary_static_utilization": 0.2219430823563857,
+      "primary_boundary_power_W": 6476.692390131323
+    }
+  },
+  "D02": {
+    "hardware": {
+      "id": "D02",
+      "label": "Late-engagement stress control",
+      "family": "stress_control",
+      "intent": "Intentionally adverse hypothesis: weak centrifugal closing against high preload may delay engagement or maintain primary slip.",
+      "knobs": {
+        "tip_mass_scale": 0.65,
+        "primary_preload_scale": 1.15
+      }
+    },
+    "summary": {
+      "status": "progress_limited",
+      "reason": "Less than 0.25 m forward progress over 16 s; study censoring rule, not proof of a stalled equilibrium.",
+      "max_distance_m": 192.49629887079857,
+      "final_distance_m": 190.55259009012508,
+      "last_completed_time_s": 50.0,
+      "hill_min_speed_m_s": -0.22371064950223596,
+      "hill_min_primary_rpm": 2975.071194823918,
+      "primary_slip_work_J": 178521.90659014197
+    },
+    "hill_primary_rpm_minimum": {
+      "time_s": 17.832313825133895,
+      "distance_m": 161.44985749510968,
+      "grade_deg": 38.0,
+      "primary_rpm": 2975.071194823918,
+      "shift_mm": 2.4891999999999994
+    },
+    "hill_min_shift_mm": 2.4891726135868657,
+    "primary_max_sticking_utilization": 0.9999999999999984,
+    "secondary_max_sticking_utilization": 0.7257674556106235,
+    "zero_vehicle_speed_interpolated": {
+      "time_s": 34.221349619603515,
+      "distance_m": 192.49629868226273,
+      "primary_rpm": 3032.240779942209,
+      "primary_boundary_power_W": 7073.466217093552,
+      "primary_slip_loss_W": 7073.466216799417,
+      "secondary_boundary_power_W": -0.00024284782060507437
+    },
+    "primary_capacity_event": {
+      "time_s": 17.832313825133895,
+      "distance_m": 161.44985749510968,
+      "primary_rpm": 2975.071194823918,
+      "speed_m_s": 3.91539479003292,
+      "normal_primary_N": 1050.1798355314838,
+      "normal_secondary_N": 1447.115860377529,
+      "primary_static_utilization": 0.9999999999999984,
+      "secondary_static_utilization": 0.7257674556106235,
+      "primary.fixed_pivot_flyweight_centrifugal_N": 1929.651267115312,
+      "primary.axial_spring_N": -1415.1026845493411
+    },
+    "tail_at_50s": {
+      "time_s": 50.0,
+      "distance_m": 190.55259009012508,
+      "speed_m_s": -0.2237106495022359,
+      "primary_rpm": 3032.240779942209,
+      "secondary_rpm": -57.77282284853628,
+      "shift_mm": 2.4891999999999994,
+      "contact_mode": "primary_slip_secondary_stick",
+      "primary_boundary_power_W": 7073.466217093552,
+      "primary_slip_loss_W": 7469.997142023126,
+      "secondary_boundary_power_W": 397.4247233954479
+    },
+    "hill_first_seat_event": {
+      "time_s": 14.351521325982612,
+      "distance_m": 146.67722255148428
+    },
+    "hill_entry_recorded": {
+      "distance_m": 120.03529149746244,
+      "speed_m_s": 14.314656066292038,
+      "primary_rpm": 3846.494527864247,
+      "shift_mm": 16.340051176572338
+    },
+    "hill_primary_static_capacity_event_count": 1
+  },
+  "provenance": {
+    "archive": "final_v3__36b4acf99e52_return.zip",
+    "sha256": "b7b8f3396fcdcc8fca6778fa0618c70f921e1f68f43ceb5319a7e5fde4c50027",
+    "note": "D02/M/P matched-state and diagnostic anchors verified against this returned package; source-member hashes and selected-row masks are in figure_data_provenance.json."
+  },
+  "D02_M": {
+    "near_200m_hill": {
+      "time_s": 23.64999999999967,
+      "distance_m": 200.00634683190603,
+      "speed_m_s": 3.7750740984603,
+      "primary_rpm": 2868.450005948454,
+      "shift_mm": 2.4891999999999994,
+      "contact_mode": "stick_stick",
+      "normal_primary_N": 2667.969857327648,
+      "primary_static_utilization": 0.3984022166793958,
+      "secondary_static_utilization": 0.2841642021418236,
+      "primary.fixed_pivot_flyweight_centrifugal_N": 2722.3074717388777,
+      "primary.axial_spring_N": -1415.1026845493411
+    },
+    "qualification": "Local retained comparison, not an all-condition minimum traction reserve.",
+    "moderate_hill_final_window": {
+      "tail_start_time_s": 62.33000000000017,
+      "tail_end_time_s": 67.33499999999879,
+      "tail_start_distance_m": 559.9470445208674,
+      "tail_end_distance_m": 595.9701044511038,
+      "tail_mean_shift_mm": 9.19653315946371,
+      "tail_mean_primary_rpm": 3200.103513308315,
+      "tail_mean_speed_m_s": 7.197415014554929,
+      "tail_mean_primary_boundary_power_W": 6996.804404185716,
+      "tail_window_passed": false,
+      "passing_window_seen": true,
+      "tail_window_failed_checks": "[\"max_abs_shift_acceleration_m_s2\"]"
+    },
+    "hill_first_seat_event": {
+      "time_s": 14.577068333559325,
+      "distance_m": 164.72583696119662
+    },
+    "hill_entry_recorded": {
+      "distance_m": 120.07432349081556,
+      "speed_m_s": 17.18933574071702,
+      "primary_rpm": 3799.744365398522,
+      "shift_mm": 19.05
+    },
+    "hill_primary_static_capacity_event_count": 0
+  },
+  "D02_P": {
+    "near_200m_hill": {
+      "time_s": 26.724999999999856,
+      "distance_m": 200.00795233748397,
+      "speed_m_s": 3.770390980728911,
+      "primary_rpm": 2864.8915885924907,
+      "shift_mm": 2.4891999999999994,
+      "contact_mode": "stick_stick",
+      "normal_primary_N": 1132.1209069069032,
+      "primary_static_utilization": 0.939223467256474,
+      "secondary_static_utilization": 0.6699918528129521,
+      "primary.fixed_pivot_flyweight_centrifugal_N": 1789.3713830560296,
+      "primary.axial_spring_N": -1234.6747604081231
+    },
+    "qualification": "Local retained comparison, not an all-condition minimum traction reserve.",
+    "moderate_hill_final_window": {
+      "tail_start_time_s": 74.30499999999972,
+      "tail_end_time_s": 79.30999999999881,
+      "tail_start_distance_m": 566.718284494745,
+      "tail_end_distance_m": 595.9966162068148,
+      "tail_mean_shift_mm": 4.550632907649851,
+      "tail_mean_primary_rpm": 3718.774339851524,
+      "tail_mean_speed_m_s": 5.849816556503889,
+      "tail_mean_primary_boundary_power_W": 5644.975318946807,
+      "tail_window_passed": true,
+      "passing_window_seen": true,
+      "tail_window_failed_checks": "[]"
+    },
+    "hill_first_seat_event": {
+      "time_s": 14.179952602901892,
+      "distance_m": 150.8124961546689
+    },
+    "hill_entry_recorded": {
+      "distance_m": 120.01986322366992,
+      "speed_m_s": 15.181326087031152,
+      "primary_rpm": 3820.9761507995895,
+      "shift_mm": 17.260752916328048
+    },
+    "hill_primary_static_capacity_event_count": 0
+  },
+  "figure_plan": {
+    "A": "Preserved three-panel baseline response",
+    "B": "Preserved two-panel D02 traction and power",
+    "C": "Original three-panel composition: actual shift D02/M/P/M170; seated Np and static use D02/M/P only."
+  },
+  "repair_same_speed_hill": {
+    "target_primary_rpm": 2975.071194823918,
+    "selection": "Nearest retained sticking sample to the original D02 capacity-event RPM, at the same low-ratio seat and constant 38 degree grade. These are different times and road positions; no restarted runs or counterfactual simulation.",
+    "maximum_absolute_rpm_difference": 0.11128017438431925,
+    "primary_static_coefficient": 0.65,
+    "sheave_half_angle_rad": 0.2007128639793479,
+    "states": {
+      "D02": {
+        "time_s": 17.832313825133895,
+        "distance_m": 161.44985749510968,
+        "primary_rpm": 2975.071194823918,
+        "speed_m_s": 3.91539479003292,
+        "shift_mm": 2.4891999999999994,
+        "normal_primary_N": 1050.1798355314838,
+        "primary_static_utilization": 0.9999999999999984,
+        "primary.fixed_pivot_flyweight_centrifugal_N": 1929.651267115312,
+        "primary.axial_spring_N": -1415.1026845493411,
+        "net_primary_closing_N": 514.548582565971,
+        "primary_static_capacity_N": 682.6168930954645,
+        "primary_tangential_force_N": 682.6168930954635,
+        "seated_primary_balance_residual_N": 1.1368683772161603e-12,
+        "rpm_difference_from_target": 0.0
+      },
+      "D02_M": {
+        "time_s": 17.074999999999786,
+        "distance_m": 174.93501806257407,
+        "primary_rpm": 2974.959914649534,
+        "speed_m_s": 3.915248337806095,
+        "shift_mm": 2.4891999999999994,
+        "normal_primary_N": 3088.247473333073,
+        "primary_static_utilization": 0.340087191332464,
+        "primary.fixed_pivot_flyweight_centrifugal_N": 2928.227681100309,
+        "primary.axial_spring_N": -1415.1026845493411,
+        "net_primary_closing_N": 1513.1249965509678,
+        "primary_static_capacity_N": 2007.3608576664974,
+        "primary_tangential_force_N": 682.6777160745252,
+        "seated_primary_balance_residual_N": 9.094947017729282e-13,
+        "rpm_difference_from_target": -0.11128017438431925
+      },
+      "D02_P": {
+        "time_s": 17.629999999999676,
+        "distance_m": 165.43185155115515,
+        "primary_rpm": 2975.0328980435734,
+        "speed_m_s": 3.915344388883982,
+        "shift_mm": 2.4891999999999994,
+        "normal_primary_N": 1418.3269891029925,
+        "primary_static_utilization": 0.7404392200355612,
+        "primary.fixed_pivot_flyweight_centrifugal_N": 1929.6015883343728,
+        "primary.axial_spring_N": -1234.6747604081231,
+        "net_primary_closing_N": 694.9268279262496,
+        "primary_static_capacity_N": 921.9125429169451,
+        "primary_tangential_force_N": 682.6202042184236,
+        "seated_primary_balance_residual_N": -1.1368683772161603e-12,
+        "rpm_difference_from_target": -0.03829678034480821
+      }
+    },
+    "interpretation": "Both repairs increase net primary closing, primary normal load and available static traction at essentially the same seated speed. They do not add backshift travel. Higher mass increases the centrifugal contribution; reduced preload decreases opening opposition.",
+    "scope": "The seated axial-inertia terms vanish. During free shift, mass also changes mass properties and the full coupled dynamics remain active. Actual hill-entry speeds and ratios differ."
+  }
+}

@@ -133,7 +133,7 @@ def prepare(raw):
         assert s['runtime']['cinder']=='1.1.2'
         for f,h in s['output_sha256'].items():assert sha(p/f)==h,(name,f)
         for f in p.iterdir():
-            if f.is_file():source_hashes[str(f.relative_to(raw))]=sha(f)
+            if f.is_file():source_hashes[f.relative_to(raw).as_posix()]=sha(f)
         states[name]=read_rows(p/'states.csv.gz');terms[name]=read_rows(p/'terms.csv.gz')
         # Early density comparison uses actual positions on each continuous
         # segment, not a difference interpolated through mismatched captures.
@@ -204,7 +204,8 @@ def prepare(raw):
     # All evidence is rebuilt from this raw directory, never from a hidden default.
     from analysis import moving_state_evidence as moving
     moving.INPUTS = INPUT
-    moving.prepare(INPUT/'belt_moving_state_samples.npz', raw=raw)
+    moving.prepare(INPUT/'belt_moving_state_samples.npz', raw=raw,
+                   audit_path=INPUT/'belt_publication_audit.json')
     moving_result = moving.analyse(INPUT/'belt_moving_state_samples.npz')
     (INPUT/'belt_moving_state_audit.json').write_text(
         json.dumps(moving_result, indent=2, allow_nan=False)+'\n')

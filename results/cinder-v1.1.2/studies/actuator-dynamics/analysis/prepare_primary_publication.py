@@ -9,6 +9,10 @@ from pathlib import Path
 import numpy as np
 
 STUDY = Path(__file__).resolve().parents[1]
+import sys
+if str(STUDY.parents[1]) not in sys.path:
+    sys.path.insert(0, str(STUDY.parents[1]))
+from results_health.prep_support import validate_primary_screen
 
 
 def rows(path):
@@ -29,7 +33,12 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--raw-dir", type=Path, default=STUDY/"artifacts/primary-publication")
     p.add_argument("--output-dir", type=Path, default=STUDY/"publication_inputs")
+    p.add_argument("--screen-csv", type=Path, default=STUDY/"publication_inputs/primary_screen.csv",
+                   help="The original hash-verified 72-row screening table, not a Git LFS pointer")
     args = p.parse_args()
+    # Check before processing trajectories. This input is plotted in panel 4.9(a)
+    # and must not be silently dropped merely because its LFS object is missing.
+    sweep = validate_primary_screen(args.screen_csv)
     out = args.output_dir; out.mkdir(parents=True, exist_ok=True)
     arrays, checks, data = {}, {}, {}
     reference=json.loads((STUDY.parents[1]/'defaults/baja/simulation_case.json').read_text())['assembly']
@@ -118,16 +127,16 @@ def main():
         'time_s':peak,'actuator_force_change_N':delta('primary_actuator_closing_force_N'),
         'belt_opening_force_change_N':.5*np.cos(beta)*delta('normal_primary_N'),
         'shift_acceleration_change_m_s2':delta('shift_acceleration_closure_m_s2')}
-    sweep=rows(STUDY/"publication_inputs/primary_screen.csv")
-    assert len(sweep)==72 and all(x["status"]=="completed" and x["response_class"]=="clean_continuous" for x in sweep)
+    # The exact retained screen was checked at entry; no discovery rerun is required.
     travel=[20.,50.,80.]; ramps=[.005,.02,.1,.25]
     arrays["sweep_travel_percent"]=np.array(travel);arrays["sweep_ramp_ms"]=1000*np.array(ramps)
     arrays["sweep_maximum_percent"]=np.array([[100*max(float(x["peak_dynamic_number"]) for x in sweep if float(x["restart_target_shift_percent"])==s and float(x["ramp_s"])==t) for t in ramps] for s in travel])
     np.savez_compressed(out/"primary_publication.npz",**arrays)
     manifest={"release_commit":"7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
-              "raw_sha256":{str(p.relative_to(args.raw_dir)):sha(p) for p in sorted(args.raw_dir.rglob('*')) if p.is_file()},
-              "run_provenance":{str(p.parent.relative_to(args.raw_dir)):json.loads(p.read_text()) for p in sorted(args.raw_dir.rglob('provenance.json'))},
-              "screen_sha256":sha(STUDY/"publication_inputs/primary_screen.csv"),
+              "raw_sha256":{p.relative_to(args.raw_dir).as_posix():sha(p) for p in sorted(args.raw_dir.rglob('*')) if p.is_file()},
+              "run_provenance":{p.parent.relative_to(args.raw_dir).as_posix():json.loads(p.read_text()) for p in sorted(args.raw_dir.rglob('provenance.json'))},
+              "screen_sha256":sha(args.screen_csv),
+              "screen_source":str(args.screen_csv.resolve()),
               "config_sha256":sha(STUDY/"publication_inputs/primary_publication.json"),
               "plot_inputs_sha256":sha(out/"primary_publication.npz"),
               "publication_trace_level":"tight", "checks":checks}

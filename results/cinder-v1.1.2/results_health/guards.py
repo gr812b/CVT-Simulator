@@ -5,6 +5,7 @@ from collections import Counter
 from math import isfinite
 
 from .common import finite, strict_bool
+from .prep_support import recover_course_mechanism_margins, recovery_summary
 
 COURSE_LOAD_FIELDS = ('normal_primary_N', 'normal_secondary_N', 'min_tension_N',
                       'primary_min_dN_dtheta_N_per_rad', 'secondary_min_dN_dtheta_N_per_rad')
@@ -24,6 +25,7 @@ def course_row_failures(row, load_tolerance=1e-5):
         raise ValueError('Invalid course load tolerance')
     if row.get('inspection_error'):
         return ['inspection_error']
+    row, _ = recover_course_mechanism_margins(row)
     failures = []
     engagement = row.get('engagement')
     if engagement not in ('engaged', 'deadzone'):
@@ -82,7 +84,8 @@ def course_endpoint_audit(rows, tolerance=1e-5):
     return {'checked_rows': len(rows), 'failed_rows': len(issues),
             'failures_by_location': dict(Counter(x['sample_location'] for x in issues)),
             'first_findings': issues[:50],
-            'load_tolerance': tolerance, 'event_endpoints_excluded': False}
+            'load_tolerance': tolerance, 'event_endpoints_excluded': False,
+            'mechanism_margin_recovery': recovery_summary(rows)}
 
 
 def belt_run_findings(name, summary):

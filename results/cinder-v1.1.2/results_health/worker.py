@@ -83,6 +83,7 @@ def action(spec):
         value={'cinder_version':'1.1.2','cases':rows};write_json(root/'convergence/convergence.json',value)
         return value
     if kind=='ballew-health':
+        from results_health.slip import require_slip_health
         root=Path(p['directory']);a=read_json(root/'evidence_audit.json')
         if not a.get('all_five_runs_completed'):raise ValueError('Benchmark publication audit did not pass all five runs')
         paths=['closed-loop','force-replay','convergence/nominal_0p50ms','convergence/nominal_0p25ms','convergence/tight_0p50ms']
@@ -92,6 +93,9 @@ def action(spec):
             mass=read_json(root/name/'resolved_belt_mass.json')
             if abs(mass['mass_kg']-1.)>2e-12:raise ValueError('Wrong mass: '+name)
             checks[name]={'mass':mass,'slip':read_json(root/name/'slip_accounting.json')}
+            require_slip_health(checks[name]['slip'])
+            if a['runs'][name]['trace'].get('slip_accounting') != checks[name]['slip']:
+                raise ValueError('Publication audit and executed slip accounting disagree: '+name)
         return {'five_corrected_runs_verified':True,'runs':checks,
                 'conclusions_unchanged':'not automatically asserted; compare corrected values with the manuscript'}
     if kind=='mechanical-health':

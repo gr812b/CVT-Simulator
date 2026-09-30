@@ -1,0 +1,91 @@
+{
+  "source_archive": "final_v3__4c59153a71b4_return.zip",
+  "selection": "all diagnostic samples with distance_m < 120, preserving recorded order",
+  "cases": {
+    "R00": {
+      "diagnostics_sha256": "700d34b26d6a6fd0775681fcee00b151d465faf214dff71dda80bef5ac4a4879",
+      "sample_count": 2087,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.93614748229778,
+      "last_time_s": 10.150000000000023,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat",
+        "upper_stop"
+      ]
+    },
+    "W85": {
+      "diagnostics_sha256": "ec20e8f48ba29f6dbf333e4903a9a673ee8a920b7bb14de3b2dd30e0182dae94",
+      "sample_count": 2098,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.91917977556392,
+      "last_time_s": 10.205000000000032,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat",
+        "upper_stop"
+      ]
+    },
+    "P300": {
+      "diagnostics_sha256": "342a316d0a4e204f1285f6417c19f1145af4f85ffae1fe72a5f433b7084a1dee",
+      "sample_count": 2091,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.94229025930544,
+      "last_time_s": 10.170000000000028,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat",
+        "upper_stop"
+      ]
+    },
+    "RC10": {
+      "diagnostics_sha256": "eca4c21e1ed3ac26fa865fdc96025c7eecfccce1129969fd0255cfcd33acccdd",
+      "sample_count": 2145,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.93281693411969,
+      "last_time_s": 10.455000000000071,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat"
+      ]
+    },
+    "R26B7": {
+      "diagnostics_sha256": "09d130f4673891a820ab25f0559aeb95134388e3384f26457ae1f16284bd07a9",
+      "sample_count": 2082,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.97035243206004,
+      "last_time_s": 10.12500000000002,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat",
+        "upper_stop"
+      ]
+    },
+    "RC40L": {
+      "diagnostics_sha256": "b730bc743c387948d41656b28cb38bf3869baab8f63f90c84ff035b7b9db47d8",
+      "sample_count": 2085,
+      "first_time_s": 0.0,
+      "last_distance_m": 119.9624211430732,
+      "last_time_s": 10.140000000000022,
+      "includes_slip": true,
+      "supports": [
+        "lower_stop",
+        "free",
+        "low_ratio_seat",
+        "upper_stop"
+      ]
+    }
+  },
+  "low_ratio_rp_over_rs": 0.3398717948717948,
+  "high_ratio_rp_over_rs": 1.168265748444185
+}
