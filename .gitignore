@@ -317,4 +317,4 @@ outputs/
 # Generated API/CINDER contract artifacts
 backend/generated/
 frontend/src/api/generated/
-\n\n# Local CINDER installer/promotion backups\n.cinder_*_backups/\n
+.cinder_*_backups/

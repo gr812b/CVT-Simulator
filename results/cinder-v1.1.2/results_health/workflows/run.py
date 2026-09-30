@@ -37,7 +37,19 @@ PATH_KEYS={'ballew_raw','mechanical_artifacts','energy_artifacts','solver_artifa
 def source_inventory():
     """Record checked-out Results source/inputs; never traverse generated output or venvs."""
     files={}
-    ignore={'artifacts','work','health_runs','.venv','__pycache__','.pytest_cache','.git','exploration','previous_attempts'}
+    ignore={
+        'artifacts',
+        'work',
+        'health_runs',
+        'figure_runs',
+        '.venv',
+        '__pycache__',
+        '.pytest_cache',
+        '.git',
+        'exploration',
+        'previous_attempts',
+        'retained_evidence',
+    }
     for parent,dirs,names in os.walk(RELEASE,followlinks=False):
         dirs[:]=sorted(d for d in dirs if d not in ignore and not (Path(parent)/d).is_symlink())
         for name in sorted(names):
