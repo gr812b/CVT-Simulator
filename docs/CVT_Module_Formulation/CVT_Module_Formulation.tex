@@ -94,11 +94,11 @@
        {\texttt{\detokenize{#2}}}%
 }
 
-% Working Results references point to develop until the paper-facing archive is frozen.
-\newcommand{\ResultsGitRef}{develop}
-\newcommand{\ResultsTag}{\texttt{develop (working)}}
-\newcommand{\ResultsCommit}{\texttt{TBD-at-results-freeze}}
-\newcommand{\ResultsDOI}{\texttt{TBD-at-results-freeze}}
+% Frozen study record from the merged Results freeze (PR #505).
+% RESULTS_FREEZE.json records the tested source revision and evidence hashes.
+\newcommand{\ResultsGitRef}{e31f9054fb9d5d111a182c45b897f6100356fbc6}
+\newcommand{\ResultsTag}{\texttt{Frozen Results (2026-09-30)}}
+\newcommand{\ResultsCommit}{\texttt{\ResultsGitRef}}
 \NewDocumentCommand{\ResultsCode}{m m}{%
   \href{https://github.com/gr812b/CVT-Simulator/blob/\ResultsGitRef/results/cinder-v1.1.2/#1}%
        {\texttt{\detokenize{#2}}}%
@@ -10544,8 +10544,8 @@ models, are defined separately in \Cref{app:results_boundary_models}.
 The results reported here use a frozen CINDER release and a separate frozen
 study record containing the case definitions, analysis scripts, and outputs.
 Both records are identified in \Cref{tab:results_reproducibility_record}.
-The correspondence between the archived outputs and the manuscript figures
-and tables is given in \Cref{app:artifact_index}.
+The linked freeze record specifies the retained numerical evidence,
+checksums of the manuscript figures, and limits of figure reproduction.
 
 \begin{table}[H]
 \centering
@@ -10568,7 +10568,8 @@ CINDER implementation
 \addlinespace[4pt]
 Study record
     & \ResultsTag\newline\ResultsCommit
-    & \ResultsTree{}{Working Results source}\newline\ResultsDOI \\
+    & \ResultsTree{}{Frozen Results source}\newline
+      \ResultsCode{RESULTS_FREEZE.json}{RESULTS_FREEZE.json} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -15343,10 +15344,9 @@ implemented in
 
 This appendix records exact case inputs, numerical settings, normalization
 definitions, and other reproduction details that are referenced by the Results
-chapter but are not needed in its main discussion. The working paper
-references the Results tree on \ResultsTag; the single ref used by
-\verb|\ResultsCode| and \verb|\ResultsTree| will be replaced by the frozen
-Results revision before publication.
+chapter but are not needed in its main discussion. All Results source links
+use the frozen study revision identified in
+\Cref{tab:results_reproducibility_record}.
 
 \section{Mechanical Invariants and Operating-Domain Audit}
 \label{app:study_mechanical_invariants}
