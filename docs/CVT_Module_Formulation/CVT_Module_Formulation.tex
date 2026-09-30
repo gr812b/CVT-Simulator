@@ -12884,119 +12884,136 @@ followed forward through the operating conditions it creates.
 \section{Conclusion}
 \label{sec:conclusion}
 
-This work has developed a first-principles transient formulation of the mechanically
-actuated rubber V-belt CVT as a complete dynamic component. The systems attached to
-its shafts supply torque and inertia, while the transmission determines its own shaft
-motion, ratio, clamping, belt transport and traction state. Engagement, free
-shifting, operation at the ratio limits, and changes between sticking and sliding
-follow from the evolving mechanical conditions rather than a prescribed operating
-sequence. Implemented in CINDER, the formulation connects these conditions through
-common force and momentum balances, including the changes of velocity required when a
-new rigid constraint is reached at finite speed.
+This work has developed a first-principles transient formulation in which the mechanically
+actuated rubber V-belt CVT is solved as one dynamic system between its two shaft interfaces.
+The systems attached to those shafts supply torque and equivalent inertia, while the
+transmission determines its own shaft motion, ratio, clamping, belt transport and traction
+state. The same physical formulation remains applicable through primary disengagement and
+engagement, free shifting, operation at the ratio limits, and changes between sticking and
+sliding. It therefore provides both forms of closure identified at the outset of this work:
+the internal CVT response is solved as one coupled system under shaft loading, and the same
+mechanics remain applicable as the active contacts and supports change.
 
-A central development is the treatment of the clamping mechanisms as moving inertial
-subsystems. Flyweight pivot motion changes the force delivered to the primary sheave,
-while the changing flyweight mass distribution also enters the primary shaft's
-angular momentum. On the secondary, acceleration of the movable assembly changes the
-torque reacted through the helix and therefore the closing force. Its rotation with
-the shaft and relative to it couples the shaft and shift balances in both directions.
-These contributions remain tied to the mechanism geometry and the nonlinear
-belt-length constraint. No equivalent combination was identified in the mechanically
-actuated rubber-belt formulations reviewed here.
+That closure depends on carrying the mechanisms that generate and transmit load into the
+same dynamic description. The primary flyweights are treated as a moving inertial subsystem:
+their pivot motion changes the force delivered to the movable sheave, while their changing
+mass distribution also changes the angular momentum carried about the primary shaft. On the
+secondary, the helix-constrained movable assembly contributes to both the axial balance that
+determines clamping and the rotational balance of the secondary shaft. Among the mechanically
+actuated rubber-belt formulations reviewed here, no equivalent treatment was identified for
+the flyweights' pivot inertia entering both the primary axial force and shaft angular momentum,
+or for the helix-constrained secondary assembly's rotational inertia entering both its axial
+and shaft balances. The belt then closes the two pulley assemblies through fixed-length
+geometry, independent transport motion, wrap loading and traction-limited contact, while
+contact and support conditions determine which mechanical regime can persist. When a new
+rigid constraint is reached at finite speed, the outgoing motion follows from the retained
+inertia and impulse--momentum balance rather than an imposed velocity reset.
 
-The primary results show that retaining these dynamics does not mean they must
-strongly affect every part of a drive. In the reference launch, the dynamic primary
-reaches first belt contact at about \SI{565}{\milli\metre\per\second} rather than
-\SI{673}{\milli\metre\per\second}, and the flyweight deceleration immediately
-afterward adds appreciably to the closing action remaining after spring opposition.
-During the later smooth shift, however, the pivot-force correction becomes very
-small. It also remains small over the tested rapid changes in primary torque, with
-correspondingly small differences between the independently integrated full and
-quasi-static responses. For this hardware, the results support the centrifugal
-approximation during those engaged conditions, while showing why it should not be
-extended unchanged to engagement.
+The actuator studies show why retaining these dynamics does not mean that they are equally
+important throughout a drive. On the primary, flyweight dynamics change the approach to
+engagement: the full model reaches first contact at about
+\SI{565}{\milli\metre\per\second}, compared with
+\SI{673}{\milli\metre\per\second} in the quasi-static reduction, and flyweight
+deceleration appreciably changes the initial closing action after contact. During the later
+smooth shift and the tested rapid changes in primary torque, however, the dynamic correction
+becomes very small and the independently integrated full and quasi-static responses remain
+close. The secondary shows the same dependence on the motion, but over a broader range of
+operating conditions. Immediately after engagement, acceleration of the helix-constrained
+movable assembly reduces the helix closing force by about 45\% relative to its quasi-static
+value at the same state; during the later gentle shift the correction is small. Under
+increased resisting shaft load, secondary deceleration instead produces sustained additional
+closing force during continuous freely shifting backshift, reaching 7.6\% of the simultaneous
+quasi-static force in the most severe reference case while both contacts remain sticking.
+A static centrifugal or torque-to-clamp relation can therefore be a good approximation for
+some motions without being interchangeable with the dynamic mechanism. The importance of the
+retained actuator inertia depends on both the hardware and the motion that the coupled system
+actually produces.
 
-The secondary reveals a broader influence on transient clamping. Its
-helix-constrained rotation supplies approximately 72--82\% of the direct
-shift-acceleration coefficient over the sampled reference geometry. That large
-inertia contribution can coexist with a small force correction during gentle shifting
-because the force depends on the motion being accelerated. Immediately after
-engagement, the acceleration terms reduce the helix force by about 45\% relative to
-its quasi-static value at the same state. Under increased resisting shaft load, they
-instead produce sustained additional closing force during freely shifting backshift.
-The most severe imposed reference load produces a correction of about
-\SI{161}{\newton}, or 7.6\% of the simultaneous quasi-static force, with both belt
-contacts still sticking. Shaft deceleration supplies almost all of this correction;
-appreciable relative sheave acceleration is not required. Separate integrations with the estimated larger secondary also show resolved changes in backshift and primary-speed response. The secondary dynamics therefore affect the torque-to-clamp
-relation during continuous loaded operation, not only during engagement or changes of
-contact, and their importance depends on the hardware and loading together.
+The reduced-belt studies lead to a related, more general conclusion: the absolute size of a
+belt-inertia contribution does not by itself determine its importance to the coupled response.
+During gentle shifting, the global transport force is small beside the opposing pulley
+reactions, yet acceleration of belt circulation supplies the principal inertial adjustment
+in the closed-loop tension compatibility because the large weighted contact contributions
+nearly cancel. Rapid changes in shift speed instead make radial belt inertia appreciable,
+including during engagement and abrupt load changes. By contrast, the path-curvature and
+moving-radius contributions remain small over the investigated envelope; omitting them
+together in seven independently integrated comparisons changes the calculated shift histories
+by less than numerical refinement and preserves the ordered contact and support changes.
+The transport comparisons also show why the belt balances cannot necessarily be simplified
+one equation at a time. Reducing only the global transport contribution causes the implemented
+contact search to fail during the common early engagement, whereas reducing belt density
+consistently across the corresponding global and local inertia terms allows those continuations
+to complete. For the present reduced belt, the important distinction is therefore not simply
+which individual forces are small, but which transient contributions materially affect the
+closed-loop response and which can be neglected without changing the tested motion.
 
-The belt studies establish a related distinction between a force's absolute size and
-its role in the coupled equations. The global transport inertia can be small beside
-the opposing pulley reactions while belt acceleration remains important to the closed
-tension compatibility. In that compatibility, the large contact contributions nearly
-cancel, leaving much smaller terms to determine the remaining balance. Radial belt
-inertia becomes appreciable when shift motion is rapidly accelerated, arrested or
-reversed, including in the tested reverse-power transition. The path-curvature and
-moving-radius terms remain small over the investigated envelope, even in targeted
-high-traction cases. Their smallness follows from the complete terms along the
-realized motion, rather than from the coefficients alone. The paired integrations also show little change in the calculated shift histories when these terms are omitted together: the differences are smaller than those produced by numerical refinement, and the ordered contact and support changes are preserved.
+The numerical investigation supports the internal consistency of the implemented response over
+the tested operating domain. Calculated loads satisfy the applicable force and torque balances
+together with belt tension, local contact loading, traction and unilateral-support conditions
+across disengaged and engaged motion, sticking and sliding, and free and supported shift. In
+the nominal \SI{10}{\second} reference acceleration, changes in retained kinetic and spring
+energy together with modelled sliding and capture losses account for the net shaft work with a
+final remainder of \(4.88\times10^{-7}\) of that work. Refinement of the time integration
+reduces both state and event-time discrepancies while preserving the ordered contact and support
+changes. These checks do not imply that every instantaneous contact solve is unique: targeted
+states admit more than one mechanically admissible sticking root even though the reported
+trajectories did not exhibit a root jump. Mechanical admissibility, energy consistency and
+numerical convergence therefore support the implemented response without supplying a physical
+branch-selection law or experimental validation.
 
-The transport-inertia comparisons also show why a reduction must preserve the
-coupling between the belt balances. In the isolated-row attempts, reducing only the global transport coefficient causes the implemented contact search to fail during the common early engagement, before the later forcing programmes diverge. Reducing belt density consistently across the global and local inertia terms instead permits those continuations to complete. The exact massless limit was not evaluated, but the
-contrasting outcomes show that the apparent smallness of one inertia force is not
-sufficient grounds for changing that equation independently of the rest of the belt
-description.
+The independent transient-model comparison places a further boundary on what that internal
+consistency establishes. Under reconstructed feedback, primary-speed RMSE is 4.42\% of the
+mean absolute reference speed, whereas the clamp-force RMSE is 46.66\% of the mean absolute
+reference force. Imposing the published clamp instead raises the primary-speed discrepancy to
+about 78\%. Matching controlled shaft-speed histories is therefore an incomplete test of the
+underlying force--motion relation. The comparison identifies the reduced belt description as
+an important subject for further physical assessment, while differences in initialization and
+other required reconstruction choices prevent the discrepancy from being assigned to any one
+omitted mechanism. Corresponding published internal shift and slip histories are not available
+for direct comparison, and the benchmark remains an independent model comparison rather than
+experimental validation of either formulation.
 
-The numerical investigation supports the internal consistency of this response over
-the tested conditions. The computed loads account for the motion while satisfying the
-applicable belt, contact and support conditions. The work--energy balance follows
-changes in stored energy and the losses represented by the model through continuous
-motion and instantaneous captures. Refinement examines both the state histories and
-the timing of constraint changes, rather than relying on agreement of the overall
-shift curve. Targeted contact-closure tests also find states with more than one
-admissible sticking solution: solvable mechanical balances do not, by themselves,
-guarantee a unique contact response.
+The full engine--CVT--vehicle simulations return to the system-level problem that motivated the
+formulation. Each hardware configuration is subjected to the same engine, vehicle and continuous
+road while carrying the state produced by one part of the drive into the next. The same internal
+mechanics therefore carry the transmission through successive changes in loading and reversed
+power flow without replacing the CVT model between them. More importantly, the resolved
+mechanics distinguish responses that can appear similar in selected speed or shift histories.
+Poor climbing can result from an unfavourable ratio and engine operating condition while traction
+remains available, or from loss of belt traction after the available backshift has been exhausted.
+Nearly stationary sheave motion can be maintained by an internal force balance or by a
+travel-stop reaction. Different hardware configurations can also reach similar vehicle speeds
+while operating at different internal ratios and shaft speeds. The full transient therefore
+supplies mechanical information that a shift curve, shaft-speed trace or vehicle-speed history
+alone cannot provide.
 
-The independent transient-model benchmark places a further boundary on what those
-checks establish. Reconstructed feedback brings the shaft histories closer to the
-published reference while requiring substantially different clamping. Imposing the
-published force instead produces a much larger primary-speed discrepancy. Similar
-controlled shaft speeds therefore do not establish agreement in the relation between
-clamp, shift and slip. The comparison identifies the reduced belt description as an
-important subject for further physical assessment, while differences in
-initialization and other reconstruction choices prevent attribution to one omitted
-mechanism. Neither this benchmark nor the internal checks replace experimental
-validation of the complete model.
+Taken together, the benchmark and common-course results place a broader limit on what
+trajectory-level validation can establish. The benchmark shows that relatively close controlled
+shaft histories can coexist with a substantially different clamping demand, while the course
+shows that similar speed or shift histories can accompany different internal ratios, traction
+conditions and support states. Agreement in selected external trajectories therefore supports
+the histories that are actually compared, but does not by itself establish that a model has
+reproduced the internal mechanics used to explain them. For a formulation intended to predict
+clamping, traction, support reactions and the effects of hardware changes, experimental assessment
+should therefore include internal mechanical quantities where practicable and test the same model
+across changed loading or hardware conditions rather than relying on one matched trajectory
+alone. Trajectory agreement remains useful evidence for the compared motion; its scope should
+not be extended to internal quantities that were not independently tested.
 
-The common course demonstrates what the coupled formulation makes possible at the
-system level. Each hardware configuration responds to the same engine, vehicle and
-road, carrying the state produced by one part of the drive into the next. The model
-distinguishes poor climbing caused by an unfavourable ratio and engine operating
-condition from loss of belt traction after full backshift. It also distinguishes a
-nearly stationary sheave held by internal force balance from one supported by a
-travel stop. The disappearance of shift oscillation can consequently be explained by
-sustained support rather than inferred to be damping. Reverse power is carried
-through the same shaft, belt and support mechanics used for forward drive.
-
-These distinctions turn the internal calculations into an explanation of the
-hardware's effect. Strengthening primary closing can restore traction, but the same
-change can oppose the opening needed for backshift and move the engine to a less
-useful operating speed. Once sufficient grip is available, additional clamping
-capacity does not itself supply more wheel power. Further backshift likewise helps
-only insofar as the resulting engine condition supports the required drive. The
-relevant outcome is therefore not maximum clamp, maximum backshift or a preferred
-shift curve considered separately. It is the loaded response produced when the same
-mechanisms must provide both a useful ratio and sufficient traction.
-
-Physical interpretability is therefore an outcome of the model, as well as a
-principle of its derivation. The same calculation supplies the predicted motion and
-the internal loading needed to explain it. Explicit assumptions and force paths allow
-that explanation to be examined, reproduced and tested against more detailed
-mechanics or measurement. Within the adopted belt and contact description, the
-resulting contribution is a common mechanical basis for predicting a complete
-transient, identifying what drives or limits the response, and assessing a hardware
-change through the operating conditions it creates.
+These distinctions also change how a hardware modification should be judged. Strengthening
+primary closing can restore traction, but the same change can oppose backshift and move the
+engine to a less useful operating speed. Once sufficient traction is available, additional clamping
+capacity does not by itself provide more wheel power; further backshift is beneficial only while
+the resulting engine condition supports the required drive. The relevant design outcome is
+therefore not maximum clamp, maximum backshift or one preferred trajectory considered
+separately, but the loaded response produced when the same hardware must establish ratio,
+clamping and traction together. Because surrounding systems act through the shaft interfaces,
+different engine, vehicle, dynamometer or other shaft-side models can be coupled without changing
+the internal CVT formulation, so long as their interaction is represented through the shaft torque
+and equivalent inertia used here. Within the adopted assumptions, the same calculation can thus
+provide both a full transient response and the internal loading needed to interpret it: a vehicle
+response can be followed back to the forces and constraints that produced it, and a proposed
+hardware change can be followed forward through the operating conditions it creates.
 
 \section{Future Work}
 \label{sec:future_work}
