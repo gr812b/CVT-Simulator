@@ -1,0 +1,1065 @@
+{
+  "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "primary_archive_sha256": "692742ece9ddff7b6f8b532ddb42121a8027b6a3689db63ad45da38f11b0e505",
+  "launch": {
+    "nominal": {
+      "raw_sha256": "5ff9c176c33b088721c01398f14ed8d27dc71e734808a84ae8257f9616739fe9",
+      "first_engaged_index": 943,
+      "first_engaged": {
+        "time_s": 0.06196531002740028,
+        "segment_index": 2.0,
+        "sample_location": "segment_start",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "shift_m": 0.0024891999999999996,
+        "shift_speed_m_s": 0.10346258004579999,
+        "helix_qs_reaction_force_N": 2206.079396700444,
+        "helix_full_reaction_force_N": 1210.4237701162924,
+        "helix_dynamic_total_correction_N": -995.6556265841513,
+        "helix_dynamic_shaft_accel_force_N": -6.6702329969518335,
+        "helix_dynamic_shift_accel_force_N": -990.6499748578515,
+        "helix_dynamic_curvature_force_N": 1.6645812706521026,
+        "mass_helix_reflected_active_kg": 4.886041844019761,
+        "mass_total_direct_active_kg": 6.83180056405452,
+        "lambda_primary": 0.55,
+        "lambda_secondary": -0.11335800119403985,
+        "primary_min_local_normal_N_per_rad": 7.048593764141395,
+        "secondary_min_local_normal_N_per_rad": 190.18640370989345
+      },
+      "max_later_force_N": 25.424846519501543,
+      "max_later_fraction_percent": 0.750645390122467,
+      "helix_inertia_share_percent_range": [
+        71.51909365925643,
+        81.73324393613129
+      ]
+    },
+    "tight": {
+      "raw_sha256": "4a20dfc8b4775da962f392fd3cc49e053396af720387f3cdd08a87376cba681e",
+      "first_engaged_index": 943,
+      "first_engaged": {
+        "time_s": 0.06197134673891402,
+        "segment_index": 2.0,
+        "sample_location": "segment_start",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK: 'primary_slip_secondary_stick'>, primary_slip_direction=<SlipDirection.PULLEY_LEADS_BELT: 'pulley_leads_belt'>, secondary_slip_direction=None))",
+        "shift_m": 0.0024891999999999996,
+        "shift_speed_m_s": 0.1034670477085637,
+        "helix_qs_reaction_force_N": 2206.0908671620914,
+        "helix_full_reaction_force_N": 1210.4339554474427,
+        "helix_dynamic_total_correction_N": -995.6569117146486,
+        "helix_dynamic_shaft_accel_force_N": -6.670354742039844,
+        "helix_dynamic_shift_accel_force_N": -990.6512820043833,
+        "helix_dynamic_curvature_force_N": 1.6647250317746718,
+        "mass_helix_reflected_active_kg": 4.886041844019761,
+        "mass_total_direct_active_kg": 6.83180056405452,
+        "lambda_primary": 0.55,
+        "lambda_secondary": -0.1133584538054457,
+        "primary_min_local_normal_N_per_rad": 7.048613436981428,
+        "secondary_min_local_normal_N_per_rad": 190.18668389761203
+      },
+      "max_later_force_N": 25.424787555942945,
+      "max_later_fraction_percent": 0.7506447576031436,
+      "helix_inertia_share_percent_range": [
+        71.51909365925643,
+        81.73324393613129
+      ]
+    }
+  },
+  "backshift": {
+    "m120_nominal": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "peak": {
+        "time_s": 0.07110000000000001,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.010805753777612562,
+        "shift_speed_m_s": -0.0149698027815564,
+        "helix_qs_reaction_force_N": 2179.6365726682284,
+        "helix_full_reaction_force_N": 2212.2621356587574,
+        "helix_dynamic_total_correction_N": 32.6255629905292,
+        "helix_dynamic_shaft_accel_force_N": 32.488499072486995,
+        "helix_dynamic_shift_accel_force_N": 0.09347663188740077,
+        "helix_dynamic_curvature_force_N": 0.04358728615480075,
+        "mass_helix_reflected_active_kg": 7.160581649876776,
+        "mass_total_direct_active_kg": 9.32349542282235,
+        "lambda_primary": 0.08078855227659457,
+        "lambda_secondary": -0.07045641329736708,
+        "primary_min_local_normal_N_per_rad": 830.5369070077207,
+        "secondary_min_local_normal_N_per_rad": 826.1884267458798
+      },
+      "peak_travel_percent": 50.21830936677313,
+      "peak_percent_of_qs": 1.4968349953217301,
+      "max_fraction_percent": 1.4977327312482973,
+      "min_correction_after_ramp_N": 20.765043045545287,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.1596057447604835e-11,
+        "minima": {
+          "primary_min_tension_N": 255.41160648239563,
+          "secondary_min_tension_N": 254.5022343463962,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.0896350266025365e-06,
+        "minimum_static_margin": 0.5622324489888104
+      }
+    },
+    "m120_tight": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "peak": {
+        "time_s": 0.07110000000000001,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.01080575553493902,
+        "shift_speed_m_s": -0.014970159814911276,
+        "helix_qs_reaction_force_N": 2179.6342114962176,
+        "helix_full_reaction_force_N": 2212.2612282784876,
+        "helix_dynamic_total_correction_N": 32.627016782270125,
+        "helix_dynamic_shaft_accel_force_N": 32.48851829593007,
+        "helix_dynamic_shift_accel_force_N": 0.09490911869102896,
+        "helix_dynamic_curvature_force_N": 0.04358936764902312,
+        "mass_helix_reflected_active_kg": 7.160582240142983,
+        "mass_total_direct_active_kg": 9.323496053771887,
+        "lambda_primary": 0.08078835486861699,
+        "lambda_secondary": -0.07045626451301794,
+        "primary_min_local_normal_N_per_rad": 830.5381088308662,
+        "secondary_min_local_normal_N_per_rad": 826.1894533680487
+      },
+      "peak_travel_percent": 50.21831997813524,
+      "peak_percent_of_qs": 1.4969033157115474,
+      "max_fraction_percent": 1.4979120533011787,
+      "min_correction_after_ramp_N": 20.756842449834682,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.1596057447604835e-11,
+        "minima": {
+          "primary_min_tension_N": 255.41161257827056,
+          "secondary_min_tension_N": 254.50224043925033,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.093490577148032e-06,
+        "minimum_static_margin": 0.5622324464622067
+      }
+    },
+    "m120_refinement": {
+      "max_force_trace_change_N": 0.009518957436956299,
+      "max_shift_trace_change_mm": 4.285442813112272e-06
+    },
+    "m240_nominal": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "peak": {
+        "time_s": 0.0709,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.010537163164185083,
+        "shift_speed_m_s": -0.0346853111518797,
+        "helix_qs_reaction_force_N": 2159.827715956156,
+        "helix_full_reaction_force_N": 2235.323822754892,
+        "helix_dynamic_total_correction_N": 75.49610679873575,
+        "helix_dynamic_shaft_accel_force_N": 75.3904741429607,
+        "helix_dynamic_shift_accel_force_N": -0.12646881333165125,
+        "helix_dynamic_curvature_force_N": 0.23210146910671417,
+        "mass_helix_reflected_active_kg": 7.071014241288841,
+        "mass_total_direct_active_kg": 9.227742462654604,
+        "lambda_primary": 0.07757435239613863,
+        "lambda_secondary": -0.0681892091795395,
+        "primary_min_local_normal_N_per_rad": 859.5573923706456,
+        "secondary_min_local_normal_N_per_rad": 849.2328053190467
+      },
+      "peak_travel_percent": 48.59646372267695,
+      "peak_percent_of_qs": 3.495468932127932,
+      "max_fraction_percent": 3.5045962612997017,
+      "min_correction_after_ramp_N": 51.88851921241745,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.4779288903810084e-11,
+        "minima": {
+          "primary_min_tension_N": 242.02716189042928,
+          "secondary_min_tension_N": 239.69743067866528,
+          "primary_min_local_normal_N_per_rad": 797.4638527591754,
+          "secondary_min_local_normal_N_per_rad": 799.1575651015328
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.0896350266025365e-06,
+        "minimum_static_margin": 0.5574381976451419
+      }
+    },
+    "m240_tight": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "peak": {
+        "time_s": 0.0709,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.010537167433138933,
+        "shift_speed_m_s": -0.03468363932817558,
+        "helix_qs_reaction_force_N": 2159.8371211874282,
+        "helix_full_reaction_force_N": 2235.3264748401366,
+        "helix_dynamic_total_correction_N": 75.48935365270832,
+        "helix_dynamic_shaft_accel_force_N": 75.39040522957727,
+        "helix_dynamic_shift_accel_force_N": -0.13313070199234175,
+        "helix_dynamic_curvature_force_N": 0.23207912512338522,
+        "mass_helix_reflected_active_kg": 7.071015654615974,
+        "mass_total_direct_active_kg": 9.227743973780814,
+        "lambda_primary": 0.07757516874824028,
+        "lambda_secondary": -0.0681898312672454,
+        "primary_min_local_normal_N_per_rad": 859.5519473634549,
+        "secondary_min_local_normal_N_per_rad": 849.2281912528929
+      },
+      "peak_travel_percent": 48.59648950013849,
+      "peak_percent_of_qs": 3.4951410415247435,
+      "max_fraction_percent": 3.5041490346083863,
+      "min_correction_after_ramp_N": 51.87902223993312,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.432454155292362e-11,
+        "minima": {
+          "primary_min_tension_N": 242.02723779518502,
+          "secondary_min_tension_N": 239.69750758691657,
+          "primary_min_local_normal_N_per_rad": 797.4673654545273,
+          "secondary_min_local_normal_N_per_rad": 799.1601710963151
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.092183182066947e-06,
+        "minimum_static_margin": 0.5574383510509624
+      }
+    },
+    "m240_refinement": {
+      "max_force_trace_change_N": 0.013087229623970131,
+      "max_shift_trace_change_mm": 1.6669222771201198e-05
+    },
+    "m480_nominal": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "peak": {
+        "time_s": 0.07070000000000001,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.009999378291266361,
+        "shift_speed_m_s": -0.07558926760348754,
+        "helix_qs_reaction_force_N": 2120.5570029066016,
+        "helix_full_reaction_force_N": 2281.214120948195,
+        "helix_dynamic_total_correction_N": 160.65711804159338,
+        "helix_dynamic_shaft_accel_force_N": 161.1955689289664,
+        "helix_dynamic_shift_accel_force_N": -1.6231421925922398,
+        "helix_dynamic_curvature_force_N": 1.0846913052192277,
+        "mass_helix_reflected_active_kg": 6.895503428051507,
+        "mass_total_direct_active_kg": 9.040038484741267,
+        "lambda_primary": 0.07129406496044002,
+        "lambda_secondary": -0.06386746268805418,
+        "primary_min_local_normal_N_per_rad": 918.3217969367896,
+        "secondary_min_local_normal_N_per_rad": 895.5401119849296
+      },
+      "peak_travel_percent": 45.34912740487394,
+      "peak_percent_of_qs": 7.576175402094079,
+      "max_fraction_percent": 7.636914041319343,
+      "min_correction_after_ramp_N": 113.84970302729964,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.2278178473934531e-11,
+        "minima": {
+          "primary_min_tension_N": 217.48064314838703,
+          "secondary_min_tension_N": 211.4544328078234,
+          "primary_min_local_normal_N_per_rad": 794.1651271132578,
+          "secondary_min_local_normal_N_per_rad": 796.0750586221286
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 1.554248779456202e-05,
+        "minimum_static_margin": 0.5515612964490739
+      }
+    },
+    "m480_tight": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "peak": {
+        "time_s": 0.0708,
+        "segment_index": 0.0,
+        "sample_location": "interior",
+        "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "shift_m": 0.00999185532414456,
+        "shift_speed_m_s": -0.07560580047463603,
+        "helix_qs_reaction_force_N": 2121.3517197257074,
+        "helix_full_reaction_force_N": 2281.9953447311145,
+        "helix_dynamic_total_correction_N": 160.64362500540716,
+        "helix_dynamic_shaft_accel_force_N": 161.18515188547616,
+        "helix_dynamic_shift_accel_force_N": -1.6264501280507297,
+        "helix_dynamic_curvature_force_N": 1.0849232479817084,
+        "mass_helix_reflected_active_kg": 6.893083708623839,
+        "mass_total_direct_active_kg": 9.03744997906172,
+        "lambda_primary": 0.07134230553522203,
+        "lambda_secondary": -0.06389880730759437,
+        "primary_min_local_normal_N_per_rad": 918.1919704503163,
+        "secondary_min_local_normal_N_per_rad": 895.400835101662
+      },
+      "peak_travel_percent": 45.30370105396213,
+      "peak_percent_of_qs": 7.572701099569595,
+      "max_fraction_percent": 7.6359953187900755,
+      "min_correction_after_ramp_N": 113.799228087067,
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.2960299500264227e-11,
+        "minima": {
+          "primary_min_tension_N": 217.48273324696433,
+          "secondary_min_tension_N": 211.45633879529436,
+          "primary_min_local_normal_N_per_rad": 794.1716520492976,
+          "secondary_min_local_normal_N_per_rad": 796.0799844960113
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.370868274847453e-06,
+        "minimum_static_margin": 0.5515618532738321
+      }
+    },
+    "m480_refinement": {
+      "max_force_trace_change_N": 0.06738622622059154,
+      "max_shift_trace_change_mm": 0.000121800498503917
+    }
+  },
+  "raw_sha256": {
+    "m120_nominal/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m120_nominal/local_wrap_audit.csv.gz": "9215fc8fe11488059c82830532e548fe9abc352a21e94340476e6d3500d74686",
+    "m120_nominal/trajectory.csv.gz": "73276429e5123573ed5ea7df82d358cf80c83f0d010040ce17e7df629fd905ac",
+    "m120_nominal/summary.json": "038d6d04382d1f6065db34f3ee9e43170b90a33ebfb32d7822f2be34d168784b",
+    "m120_tight/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m120_tight/local_wrap_audit.csv.gz": "b401df80c71709ad0dd44f97d13f5a6b697a98af63451f50b751b9a266b55b33",
+    "m120_tight/trajectory.csv.gz": "2458d5e336cc1c30053a39a8848d8fb1668c8f5997d6acf1e14f56361e98eddd",
+    "m120_tight/summary.json": "e73e51595ee8b036b7ca390ec29ee2ec50148f83decc07dc7d7b02d85561a4a4",
+    "m240_nominal/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m240_nominal/local_wrap_audit.csv.gz": "3d854a4865cac2046a14fe03a2bf9bb77c1f84cdc9ffd42d1db13e8a88b754cd",
+    "m240_nominal/trajectory.csv.gz": "54954949db75481a56e5f5dbfe813a1745a50a6e1fbe6139b4da86690228a9f6",
+    "m240_nominal/summary.json": "1bcae24fa88c28216cfc06a23772ade4601a86d528ab2f94928a39d21c0e5d99",
+    "m240_tight/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m240_tight/local_wrap_audit.csv.gz": "b3307cf8af6bf89af2bc2c56267409f080743f4ba7bda0214f151fe95369e398",
+    "m240_tight/trajectory.csv.gz": "a545b8ce90f7bbbc4253e3ab4a7ca999ddc96f8bd999f5f0083772ae96150e7f",
+    "m240_tight/summary.json": "4a36f17928bc568e7875dd943fbddd9e76b654ea0da3837c8395aa883dca2e29",
+    "m480_nominal/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m480_nominal/local_wrap_audit.csv.gz": "14b0d706b25aac8723f9f1047c4296bb833fbfee8705872c3a6e24e0ce0ad1df",
+    "m480_nominal/trajectory.csv.gz": "6fa0c9a80a593c4e20617b6aba13a73268c1ddffe4fcbac2497e5737485961ff",
+    "m480_nominal/summary.json": "c2790f3185e147f28d006db68b75913363c47a9283f00d042b52469e18bcbf6e",
+    "m480_tight/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m480_tight/local_wrap_audit.csv.gz": "907c8888c70524c2309e786900e351a42d31a4c19d56286cb3a69e2dbc1b2222",
+    "m480_tight/trajectory.csv.gz": "510e2c1ceea981dbc03ad3b76e78c9a221a314b990d936d875b7dda0836ca418",
+    "m480_tight/summary.json": "17c54a5c091ccc09dcde89d4e48eafa31f193cc75846bab44b8fded68a5bbe8b",
+    "m0_nominal/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m0_nominal/local_wrap_audit.csv.gz": "02e15cde72b4e4b0a812aea25644ef2925ba1d21a500429e65562b0de09a4537",
+    "m0_nominal/trajectory.csv.gz": "a99b21c27e618ab01143d939bb6ddc2289e1355659f5134b91a086dee3976e70",
+    "m0_nominal/summary.json": "563866108e68d0ee6bb3aa1398de5e7ddbb5267d30f380d7b51008b8ba958a39",
+    "m0_nominal_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m0_nominal_qs/local_wrap_audit.csv.gz": "a6c5feafed83867b29f44803e8b55b987efc37d74375fa50590a055580383bcb",
+    "m0_nominal_qs/trajectory.csv.gz": "d1f71f6f9c29dd9f0c96fa166f78990106812bf761a83ca731f9d72722adcea8",
+    "m0_nominal_qs/summary.json": "49429f7fb21a5f72a2e335edab8e8cd55c71712b7ada8187fd718f6bf6387b97",
+    "m0_tight/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m0_tight/local_wrap_audit.csv.gz": "9e3aff900d5695adaf0f360f9430da702abdfaa6baea4bea1cc88caec3088feb",
+    "m0_tight/trajectory.csv.gz": "509f0a281666d5f55217a19652869189d673248e9d98c1a10690c53d412442aa",
+    "m0_tight/summary.json": "537d216ec97fd9a974cc4bce66f68d2b435a1b455513c6aa36167d8a9e70051f",
+    "m0_tight_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m0_tight_qs/local_wrap_audit.csv.gz": "8f651060675d4fb341dc11933ecca1bb3cb4d5658f6d19a040de60ab8a505957",
+    "m0_tight_qs/trajectory.csv.gz": "f3094ccec9d6aa07f2b992a98821faffe82e40dd05933dd9c64f94af475a8905",
+    "m0_tight_qs/summary.json": "e05e5f5768f7afef381c9aa2e1a079897b6c65252942799583b7eefd9d3a9906",
+    "m120_nominal_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m120_nominal_qs/local_wrap_audit.csv.gz": "8337cd9dd00bf184f15513877489b1d5ec7dc4208a047190cc164c2399e67cd1",
+    "m120_nominal_qs/trajectory.csv.gz": "0440f45930a97743dc1d2e0c6089d83fe686ad3f30523eaca7b7b2a050445409",
+    "m120_nominal_qs/summary.json": "3bf880443147bdd6e58cc62235dc89ebc4747535938a603544cc156112a1bc59",
+    "m120_tight_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m120_tight_qs/local_wrap_audit.csv.gz": "3b121cce237799995c21d080f2a848ea825695d460ed0ff5f13923ab226d3774",
+    "m120_tight_qs/trajectory.csv.gz": "c2b65ec893843f39c615f5a7378faf5afe6b8004d19f31927b81ff266308a7d3",
+    "m120_tight_qs/summary.json": "60d3fcfa03a1cc37bee41dd22cb96423b4703dde3ed4c35a4e87dec81b45937b",
+    "m240_nominal_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m240_nominal_qs/local_wrap_audit.csv.gz": "722730d93d2833a8aed1d2dba74c3711530a9dfce866f43f66e011a598f7af30",
+    "m240_nominal_qs/trajectory.csv.gz": "24cddc197dcc1c92c1e447e20190a37fecd582c6dbe798130360d2588581d7d6",
+    "m240_nominal_qs/summary.json": "22a2373dda40cc2874ad99cc152cdbb125af936864a14221551c308bee5fca0c",
+    "m240_tight_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m240_tight_qs/local_wrap_audit.csv.gz": "12899b0cf97d1e0d2bb070d7e4981fd50c1688c387777c3a1b1e4ba70c298338",
+    "m240_tight_qs/trajectory.csv.gz": "a38dafaffd928970afa7326fa4d5338c01e9d42bd01956ea6fb1fa4537319001",
+    "m240_tight_qs/summary.json": "1245bbeb3b0d630162bbd6fdebb4d84233f0a7443d3628c9eb20e941af48c7eb",
+    "m480_nominal_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m480_nominal_qs/local_wrap_audit.csv.gz": "ac86d1034ade41e5e18e3f7c6644f0e6c5588c2a15cb1aade5c60313f1e03753",
+    "m480_nominal_qs/trajectory.csv.gz": "6b56b72d07a212bdc4b49121c687ba76b973ec60067d8315d6e91911a373d597",
+    "m480_nominal_qs/summary.json": "af5bc2a35a59a730334f65a1b746fb1908c293657afb9132a6bac7f78b117a77",
+    "m480_tight_qs/events.json": "5efc5e6717813f5f45a2bdcd0616dacb079f5c6adf0f619b6efafdc8ac1f601d",
+    "m480_tight_qs/local_wrap_audit.csv.gz": "e34fe15feb6544c2e4ff633897347d609893acb815533f5506a52450f5890be3",
+    "m480_tight_qs/trajectory.csv.gz": "b26ff7d749ef8a8bd4c35258b41099872590379d4ff04b3be443f359f0409d57",
+    "m480_tight_qs/summary.json": "baef85f19f2c45421c50ed1bb3d4f6d9d38b6d46d2f375fa311f14263c315a0b"
+  },
+  "backshift_response": {
+    "m0_nominal": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.1823431123048067e-11,
+        "minima": {
+          "primary_min_tension_N": 261.27540602626107,
+          "secondary_min_tension_N": 261.5778990341909,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.0896350266025365e-06,
+        "minimum_static_margin": 0.5646228740122516
+      },
+      "initial_reaction_guard_Nm": 35.72917028206486
+    },
+    "m0_nominal_qs": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.2737367544323206e-12,
+        "minima": {
+          "primary_min_tension_N": 262.5002383740269,
+          "secondary_min_tension_N": 262.81955561825623,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.089763659706705e-06,
+        "minimum_static_margin": 0.5654820941789653
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m0_tight": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 1.1141310096718371e-11,
+        "minima": {
+          "primary_min_tension_N": 261.27540602626107,
+          "secondary_min_tension_N": 261.5778990341909,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 3.637978807091713e-12,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.08537712598774844,
+          "primary_sticking": true,
+          "primary_min_tension_N": 261.27540602626107,
+          "primary_min_local_normal_N_per_rad": 797.7443778656572,
+          "primary_normal_N": 4610.190623498533,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07340466812666036,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 261.5778990341909,
+          "secondary_min_local_normal_N_per_rad": 799.2631128618045,
+          "secondary_normal_N": 5347.179753032868
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.08961757922566e-06,
+        "minimum_static_margin": 0.5646228740122516
+      },
+      "initial_reaction_guard_Nm": 35.72917028206486
+    },
+    "m0_tight_qs": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.7284841053187847e-12,
+        "minima": {
+          "primary_min_tension_N": 262.5002383740269,
+          "secondary_min_tension_N": 262.81955561825623,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.08961757922566e-06,
+        "minimum_static_margin": 0.5654820941789653
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m120_nominal_qs": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.7284841053187847e-12,
+        "minima": {
+          "primary_min_tension_N": 252.09696145685461,
+          "secondary_min_tension_N": 251.18767223920267,
+          "primary_min_local_normal_N_per_rad": 797.509361030337,
+          "secondary_min_local_normal_N_per_rad": 792.9481255113161
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.154591340707839e-06,
+        "minimum_static_margin": 0.5606544966549507
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m120_tight_qs": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.2737367544323206e-12,
+        "minima": {
+          "primary_min_tension_N": 252.09703968282327,
+          "secondary_min_tension_N": 251.18775076216394,
+          "primary_min_local_normal_N_per_rad": 797.5094664631144,
+          "secondary_min_local_normal_N_per_rad": 792.9482323490274
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.091029353034628e-06,
+        "minimum_static_margin": 0.5606545589650305
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m240_nominal_qs": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.7284841053187847e-12,
+        "minima": {
+          "primary_min_tension_N": 234.79883806180317,
+          "secondary_min_tension_N": 232.47982784852803,
+          "primary_min_local_normal_N_per_rad": 788.8758679259787,
+          "secondary_min_local_normal_N_per_rad": 777.2583596896853
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.1243755890293414e-06,
+        "minimum_static_margin": 0.5539637887249945
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m240_tight_qs": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 2.7284841053187847e-12,
+        "minima": {
+          "primary_min_tension_N": 234.79898550655713,
+          "secondary_min_tension_N": 232.4799768203995,
+          "primary_min_local_normal_N_per_rad": 788.8760254054633,
+          "secondary_min_local_normal_N_per_rad": 777.2585246431415
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.0957093250001435e-06,
+        "minimum_static_margin": 0.553963929000703
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m480_nominal_qs": {
+      "settings": {
+        "rtol": 0.0003,
+        "atol": 3e-07,
+        "max_step_s": 0.002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 3.183231456205249e-12,
+        "minima": {
+          "primary_min_tension_N": 203.57157787319895,
+          "secondary_min_tension_N": 197.608682308638,
+          "primary_min_local_normal_N_per_rad": 786.1134968740832,
+          "secondary_min_local_normal_N_per_rad": 756.3357445896265
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 1.5246162861970447e-05,
+        "minimum_static_margin": 0.5438180979945687
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m480_tight_qs": {
+      "settings": {
+        "rtol": 1e-05,
+        "atol": 1e-08,
+        "max_step_s": 0.0002
+      },
+      "audit": {
+        "sample_count": 1501,
+        "engaged_count": 1501,
+        "max_closure_resolve_difference": 0.0,
+        "max_balance_residual": 3.637978807091713e-12,
+        "minima": {
+          "primary_min_tension_N": 203.57203388763324,
+          "secondary_min_tension_N": 197.60903586719076,
+          "primary_min_local_normal_N_per_rad": 786.1147560027381,
+          "secondary_min_local_normal_N_per_rad": 756.3361733740468
+        },
+        "negative_local_load_count": 0,
+        "initial_engaged_state": {
+          "time_s": 0.0,
+          "segment_index": 0,
+          "sample_location": "segment_start",
+          "cvt_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+          "engaged": true,
+          "closure_resolve_difference": 0.0,
+          "balance_max_absolute_residual": 7.958078640513122e-13,
+          "primary_relative_speed_m_s": 4.2560791655432695e-06,
+          "primary_lambda": 0.0845179058210347,
+          "primary_sticking": true,
+          "primary_min_tension_N": 262.5002383740269,
+          "primary_min_local_normal_N_per_rad": 803.8639508112825,
+          "primary_normal_N": 4610.596470359603,
+          "secondary_relative_speed_m_s": -7.08961757922566e-06,
+          "secondary_lambda": -0.07264764155176842,
+          "secondary_sticking": true,
+          "secondary_min_tension_N": 262.81955561825623,
+          "secondary_min_local_normal_N_per_rad": 805.5240533397687,
+          "secondary_normal_N": 5348.006804621177
+        },
+        "first_negative_local_state": null,
+        "maximum_sticking_speed_mismatch_m_s": 7.582355923574369e-06,
+        "minimum_static_margin": 0.5438187095274235
+      },
+      "initial_reaction_guard_Nm": 35.736921491914124
+    },
+    "m120_nominal_comparison": {
+      "max_abs_shift_response_difference_mm": 0.04976165519902054,
+      "signed_shift_response_difference_at_peak_mm": -0.04976165519902054,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -1.7461017209108118,
+      "qs_response_at_peak_mm": -1.6963400657117913,
+      "max_preload_response_residual_mm": 3.847796543193782e-07
+    },
+    "m120_tight_comparison": {
+      "max_abs_shift_response_difference_mm": 0.04976881093347174,
+      "signed_shift_response_difference_at_peak_mm": -0.04976881093347174,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -1.7461010068619016,
+      "qs_response_at_peak_mm": -1.6963321959284299,
+      "max_preload_response_residual_mm": 1.7525078610525213e-09
+    },
+    "m120_refinement": {
+      "max_change_in_response_difference_mm": 9.671097842695042e-06
+    },
+    "m240_nominal_comparison": {
+      "max_abs_shift_response_difference_mm": 0.09625813161563634,
+      "signed_shift_response_difference_at_peak_mm": -0.09625813161563634,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -3.674810138102695,
+      "qs_response_at_peak_mm": -3.5785520064870586,
+      "max_preload_response_residual_mm": 1.3165429336992052e-07
+    },
+    "m240_tight_comparison": {
+      "max_abs_shift_response_difference_mm": 0.09626417868661807,
+      "signed_shift_response_difference_at_peak_mm": -0.09626417868661807,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -3.6747977202192006,
+      "qs_response_at_peak_mm": -3.5785335415325825,
+      "max_preload_response_residual_mm": 3.5050157221050426e-09
+    },
+    "m240_refinement": {
+      "max_change_in_response_difference_mm": 7.596629360284712e-06
+    },
+    "m480_nominal_comparison": {
+      "max_abs_shift_response_difference_mm": 0.17619767837628775,
+      "signed_shift_response_difference_at_peak_mm": -0.17619767837628775,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -8.140863212660769,
+      "qs_response_at_peak_mm": -7.964665534284481,
+      "max_preload_response_residual_mm": 1.6914995445982406e-08
+    },
+    "m480_tight_comparison": {
+      "max_abs_shift_response_difference_mm": 0.17613313871508485,
+      "signed_shift_response_difference_at_peak_mm": -0.17613313871508485,
+      "time_at_peak_s": 0.15,
+      "full_response_at_peak_mm": -8.140744788051633,
+      "qs_response_at_peak_mm": -7.964611649336548,
+      "max_preload_response_residual_mm": 2.0164356295815367e-09
+    },
+    "m480_refinement": {
+      "max_change_in_response_difference_mm": 6.453966120290033e-05
+    }
+  },
+  "plot_inputs_sha256": "6c4f7e8bcca009317b8ab39105025ab6726f5513ed8f3ed240db418bb513d510",
+  "scope": "Full-trajectory forces and independent full/QS backshift loaded-minus-own-control responses. No secondary-QS launch trajectory claim. OTS comparison is in secondary_publication.npz."
+}

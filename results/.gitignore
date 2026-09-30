@@ -10,3 +10,4 @@
 # (contents still subject to the exclude rules above, e.g. .venv/, __pycache__/).
 !cinder-*/
 **/artifacts/
+figure_runs/

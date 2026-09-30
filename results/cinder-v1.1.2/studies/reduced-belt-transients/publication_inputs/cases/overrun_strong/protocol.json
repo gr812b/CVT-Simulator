@@ -1,0 +1,20 @@
+{
+  "name": "overrun_strong",
+  "title": "Controlled overrun: -20\u00b0 downhill, -12 N\u00b7m primary",
+  "start_time_s": 2.0,
+  "rise_time_s": 0.2,
+  "target_grade_deg": -20.0,
+  "target_primary_torque_Nm": -12.0,
+  "family": "overrun",
+  "purpose": "Controlled power-flow reversal experiment. The reference engine/road boundaries are used before the event; primary torque is then ramped to a specified resisting torque while the road is ramped downhill. This is not a calibrated closed-throttle map.",
+  "controlled_overrun": {
+    "kind": "controlled_overrun",
+    "start_time_s": 2.0,
+    "rise_time_s": 0.2,
+    "target_grade_deg": -20.0,
+    "target_primary_torque_Nm": -12.0
+  },
+  "max_shift_m": 0.019049999999999997,
+  "static_friction_coefficient": 0.65,
+  "source": "F:\\Code\\Projects\\CVT-Simulator\\results\\cinder-v1.1.2\\studies\\reduced-belt-transients\\artifacts\\resolved_protocols\\overrun_strong.json"
+}

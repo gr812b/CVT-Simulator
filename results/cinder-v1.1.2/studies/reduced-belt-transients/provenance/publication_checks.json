@@ -1,0 +1,66 @@
+{
+  "evidence": {
+    "run_count": 42,
+    "local_loading_findings": [],
+    "raw_files_verified": 378,
+    "frozen_source_files_verified": 132
+  },
+  "plot_reproduction": {
+    "files": {
+      "belt_coefficient_driver.pdf": "a893dd357ba65e2afa8546bf730cf8da501c52e6035aab8b38d9ba3bda10dd9a",
+      "belt_coefficient_driver.png": "adfc1467d77139914d1f4f12ae5b79f7bc405f3ef0b4888e9d1ae0ce6fce5a1f",
+      "belt_coefficient_driver.svg": "5f215a31750eaaf23d8be9918ff8e4963dcb5f4fb107c723d73c22d0841fb2a0",
+      "belt_density_support.pdf": "1d500a906e81c3f31851ff6b46053fd0b4a23bdfdc0f9cc2f6aa1280031ce8e7",
+      "belt_density_support.png": "885d309daee8ea4ef597268e1461589b6856ce39e150d8b6eca0fc1114352170",
+      "belt_density_support.svg": "25a221e29bf06752f33f808a220e72adc08d8bfae8e2df256a8ad8e7fc49a7ec",
+      "belt_engagement_support.pdf": "5a58fda4d6da0ddca673fa1661bc187bebcf19027d7e53494e451efa97fff216",
+      "belt_engagement_support.png": "456084ac96b69cc4cb1b0ac58ff4e77bc19dffc8ecd5ba247d467c6f83656bbb",
+      "belt_engagement_support.svg": "368faa9be007653db4b9250604725d93fc5443fe64f6188819fe74879f462826",
+      "belt_motion_and_balance.pdf": "1bfe59e2d3d77feeaad4f3e18659459b270d78ee5fa9d3c56f0059f39bc68904",
+      "belt_motion_and_balance.png": "c9adbfffef19771da58b602240c5815958ef372777e832c05b79aefe99c4e75d",
+      "belt_motion_and_balance.svg": "8a9627c0265dad33da6077ab934ab88cd764487f69f56d6f6a4a389dfed45e85"
+    },
+    "byte_identical_count": 12,
+    "action": "canonical run.py --publication plot; supplied compact inputs; no simulation"
+  },
+  "integration": {
+    "before_belt_identical": true,
+    "between_belt_and_appendix_identical": true,
+    "after_appendix_identical": true,
+    "runner_numerical_functions_unchanged": true,
+    "pilot_sha256": "18cdcc1c1fd8685ed92e4711bb08d46a20610f7843b2dc9f52ad671c369284b7",
+    "batch_sha256": "42175c691bd73e947daffea5db0fea924b54419479a3d19c4ff1db6794d32649"
+  },
+  "preview_build": {
+    "CINDER_4_4_3_Reading": {
+      "warnings": [],
+      "pdf_sha256": "2fe9c2d62c172107cd3695dbe02b4c2381215ffb18681ae22d0a0334433a2be1"
+    },
+    "CINDER_4_4_3_Appendix_Support": {
+      "warnings": [],
+      "pdf_sha256": "de4afdec5b551525e98b65ff56afa2080b732983d13a131ebe9e072a0b737732"
+    },
+    "scope": "Build exact belt reading/support with actual manuscript numbering.\n\nThe auxiliary full-source pass suppresses graphics and bibliography only to\nresolve references. It is not a full-book layout build. Reading PDFs contain\nthe final figures at the original text width and use the source preamble.\n"
+  },
+  "tests": {
+    "count": 26,
+    "result": "passed",
+    "entrypoint": "verify_study.py invokes run.py --tests-only; run from repository root",
+    "new_checks": [
+      "exact left/right event limits without reset interpolation",
+      "joint omission biases, retained gains and restored hooks"
+    ]
+  },
+  "manifest_errors": [],
+  "layout": {
+    "main_pages": 4,
+    "support_pages": 5,
+    "inspected": "All rendered pages, with changed pages re-inspected; whole final main passage read.",
+    "scope": "Unit reading/support at manuscript width; full-source numbering only, not a full-book graphical layout build."
+  },
+  "frozen_input_git_blobs": {
+    "matched_archive_inputs": 22,
+    "byte_preservation": "Original CRLF/LF retained; *.json -text in cases/.gitattributes."
+  },
+  "source_diff_check": "No whitespace errors outside exact archived inputs and generated SVG paths."
+}

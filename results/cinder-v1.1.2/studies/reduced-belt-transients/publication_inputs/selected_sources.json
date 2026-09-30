@@ -1,0 +1,27 @@
+{
+  "archive_sha256": "9bacf2c5e8df301aa1e1a8bc080de1798222d749e7d338bf5331447da16a98cb",
+  "members": {
+    "artifacts/inertia_flat_reference/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/inertia_flat_reference/protocol.json": "d1a4c770fa61bd798486600c0a42af6bdff2b4856fd868c9e1c162ccc2e3f43f",
+    "artifacts/inertia_fast_backshift_reference/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/inertia_fast_backshift_reference/protocol.json": "c6520a1cccb9a586918eb864fa4a9596de14cc1fbb4c962702b7d668f897e8f7",
+    "artifacts/inertia_fast_unload_reference/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/inertia_fast_unload_reference/protocol.json": "f8c8020f5c4c8ccbf1322ce79aa6f1e60e0ec73a7bd0f693ae8fa3a118141a32",
+    "artifacts/controlled_18deg_050ms/simulation_case.json": "09b8b83a7c797a68e6ee7f6f736b0aaeda6a3f9e74c0277a5797f2f3b6d970b2",
+    "artifacts/controlled_18deg_050ms/protocol.json": "2c7fa3dc65086eff25429e2ffecd7e024be0c648b8f5e209ff46298c5773e403",
+    "artifacts/controlled_18deg_200ms/simulation_case.json": "09b8b83a7c797a68e6ee7f6f736b0aaeda6a3f9e74c0277a5797f2f3b6d970b2",
+    "artifacts/controlled_18deg_200ms/protocol.json": "ade073b93ecdbf01b0d467e197a2e190a5e8610d4092f940befd7b24e281d12b",
+    "artifacts/controlled_18deg_800ms/simulation_case.json": "09b8b83a7c797a68e6ee7f6f736b0aaeda6a3f9e74c0277a5797f2f3b6d970b2",
+    "artifacts/controlled_18deg_800ms/protocol.json": "3591ca8f79cb9746cddff598898cb3cff3fb0e89b629948256039bd45eef536a",
+    "artifacts/envelope_05/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/envelope_05/protocol.json": "1de7b0175d532424d2db5785d54c500402da334ff08e903e2493138515552fb1",
+    "artifacts/contact_primary_45/simulation_case.json": "409396aa9a5dcc9b5431a0895add94ac359327afe47f70091bed9d6d2c1d8b98",
+    "artifacts/contact_primary_45/protocol.json": "c4cdb5c86c3f78a4a91a7b069fe3863800e24e98e2e987f419f972c6dbd1c00f",
+    "artifacts/contact_combined_p40_s20/simulation_case.json": "b92ebc2dc5cc74f5ae1a8ae7388d6dd2b57d5a2d8e8de3c84425d6bc22d84bc3",
+    "artifacts/contact_combined_p40_s20/protocol.json": "c1e2f9b9b77a06a01cc924bfd8c91fee04c3790a5634ac23c54455b206c8b4b7",
+    "artifacts/overrun_mild/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/overrun_mild/protocol.json": "4e23cad828102637a03f63b35652b2d6c90078e5d762b15d34fffed93e15a44f",
+    "artifacts/overrun_strong/simulation_case.json": "9788bb6a379f9ac23c8508ec0521a8ad0c409a65c07a5ca45166d63111a1da77",
+    "artifacts/overrun_strong/protocol.json": "b54f8863bbc18cce62e8090d3bc69139bab6367757cffbbf803c3e319c514c2b"
+  }
+}

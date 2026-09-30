@@ -38,6 +38,13 @@ def run_analysis(script):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--primary-publication', action='store_true', help='Run the primary-only nominal/tight publication comparisons, prepare inputs and plot; preserves other artifacts.')
+    parser.add_argument('--secondary-publication', action='store_true', help='Run the secondary nominal/tight publication comparisons and local-contact audits, prepare inputs and plot; preserves other artifacts.')
+    parser.add_argument('--secondary-backshift-publication', action='store_true', help='Run the full/QS backshift family and unforced controls, compact launch evidence and plot.')
+    parser.add_argument('--primary-archive', type=Path, help='Verified primary-finalization ZIP for --secondary-backshift-publication launch extraction.')
+    parser.add_argument('--plot-only', action='store_true', help='Reproduce publication figures from verified compact inputs; no simulation.')
+    parser.add_argument('--unit', choices=('primary','secondary'), default='primary', help='Publication unit for --plot-only; default preserves the primary workflow.')
+    parser.add_argument('--figure-dir', type=Path, default=STUDY_ROOT.parents[3]/'docs/CVT_Module_Formulation/figures/results/dynamics')
     stage_names=("baseline","components","coupling","envelopes","commercial","transients")
     parser.add_argument(
         "--through",
@@ -55,8 +62,50 @@ def main():
         ),
     )
     args=parser.parse_args()
+    if args.unit == 'secondary' and not (args.plot_only or args.secondary_publication or args.secondary_backshift_publication):
+        parser.error('--unit secondary requires --plot-only or --secondary-publication')
 
     verify_environment()
+    if args.secondary_backshift_publication:
+        if args.primary_archive is None:
+            parser.error('--secondary-backshift-publication requires --primary-archive')
+        if args.plot_only or args.primary_publication or args.secondary_publication:
+            parser.error('Choose one publication operation')
+        for torque in (0,-120,-240,-480):
+            for level in ('nominal','tight'):
+                for variant in ('full','qs'):
+                    subprocess.run([sys.executable,str(STUDY_ROOT/'experiments/run_secondary_backshift.py'),
+                        '--torque',str(torque),'--level',level,'--variant',variant],check=True)
+        subprocess.run([sys.executable,str(STUDY_ROOT/'analysis/prepare_secondary_story.py'),'--primary-archive',str(args.primary_archive)],check=True)
+        subprocess.run([sys.executable,str(STUDY_ROOT/'analysis/secondary_publication_plots.py'),'--figure-dir',str(args.figure_dir)],check=True)
+        return 0
+    if args.secondary_publication or (args.plot_only and args.unit == 'secondary'):
+        if args.primary_publication or (args.secondary_publication and args.plot_only):
+            parser.error('Choose one publication run or --plot-only')
+        if args.secondary_publication:
+            for kind in ('commercial','severe','stock'):
+                for level in ('nominal','tight'):
+                    for variant in ('full','qs'):
+                        cmd=[sys.executable,str(STUDY_ROOT/'experiments/run_secondary_publication.py'),
+                             '--kind',kind,'--level',level,'--variant',variant,
+                             '--output-dir',str(STUDY_ROOT/'artifacts/secondary-publication-final')]
+                        if kind != 'commercial':cmd.append('--sticking-start')
+                        subprocess.run(cmd,check=True)
+            run_analysis('prepare_secondary_publication.py')
+        subprocess.run([sys.executable,str(STUDY_ROOT/'analysis/secondary_publication_plots.py'),
+                        '--figure-dir',str(args.figure_dir)],check=True)
+        return 0
+    if args.primary_publication or args.plot_only:
+        if args.primary_publication and args.plot_only:
+            parser.error('Choose --primary-publication or --plot-only')
+        if args.primary_publication:
+            for kind in ('baseline', 'transient'):
+                for level in ('nominal', 'tight'):
+                    for variant in ('full', 'qs'):
+                        subprocess.run([sys.executable, str(STUDY_ROOT/'experiments/run_primary_publication.py'), '--kind', kind, '--level', level, '--variant', variant], check=True)
+            run_analysis('prepare_primary_publication.py')
+        subprocess.run([sys.executable, str(STUDY_ROOT/'analysis/primary_publication_plots.py'), '--figure-dir', str(args.figure_dir)], check=True)
+        return 0
     pass  # dependencies are release-local; no runtime materialization
     if args.start_at == "baseline":
         reset_artifacts()

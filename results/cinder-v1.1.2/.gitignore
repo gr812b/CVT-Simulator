@@ -1,0 +1,4 @@
+# Local Results execution reports, preserved old attempts, and installer receipt.
+health_runs/
+.pr505-correctness-install.json
+__pycache__/

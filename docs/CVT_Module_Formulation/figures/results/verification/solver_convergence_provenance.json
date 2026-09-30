@@ -1,15 +1,27 @@
 {
-  "command": "python studies/solver-convergence/run.py --plot-only",
+  "canonical_note": "Retained literal-atol intermediate cache (historically named research); the proportional-atol main-grid row differs in late digits. No mixing of unrounded execution metrics.",
+  "code_sha256": {
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/evidence.py": "015f007e2347cfcad913746c6323a6cc41ab2ef9e5b40abd197e5f6567bf3ac4",
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/publication_plots.py": "021cd9d2b7fe3784c5cc4c81614eaf21136d0ac0a8f246dc4165c7d83a1016bb",
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/supporting_plots.py": "3c860b2bd99b36657ee47f7dede8aa2111aaf135260af4ec278e279312220d71",
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/test_publication_integrity.py": "946103187a7d981a43e6985e48dbbaacae1154aeea7731ca50440565b031e223",
+    "results/cinder-v1.1.2/studies/solver-convergence/analysis/verification.py": "db971fedd666f9fc0e39c6285530e5e1cb49e082dd319d7c74b2174e135f88cb",
+    "results/cinder-v1.1.2/studies/solver-convergence/run.py": "931c3c995786d56829f498e32a563601858c608ed8243b0df8d39fab623b1f32",
+    "results/cinder-v1.1.2/studies/solver-convergence/study.json": "b23ffa87a1e9318a2608489a6971fb869aad1ef4efd56163cb2718d777ff3c5b"
+  },
+  "command": ".venv/bin/python studies/solver-convergence/run.py --plot-only",
   "evidence_record_sha256": "a4b1ff74585b12bd2349dc9fd88923c91b855c53f1400d841ab2526ba2c5125f",
-  "figure_1": "All 40 main cells and all 7 absolute-tolerance rows. No contours or interpolated pass boundary. Missing aligned metrics remain undefined. All four guards and signature retained.",
-  "figure_2": "All 4681 completed dense rows, exact signature grouping, four-state absolute-time RMS excluding shift speed. 264 failures have no trajectory norm. Selected median settings replayed once. Shift plotted by native segment, never joined across resets; timeline uses native absolute time, including zero-duration transitions in supporting records.",
-  "figure_labels": [
-    "fig:verification_solver_refinement",
-    "fig:verification_gross_hybrid_agreement"
-  ],
   "figure_width_inches": 6.5,
+  "figures": {
+    "gross_motion_hybrid_history": "Three retained/replayed runs; segmentwise whole and signed local shift. Seating markers use exact outgoing-support events; no displacement of nearly coincident times, interpolation across resets or widening of tiny regimes.",
+    "solver_acceptance_support": "Cap-specific event-time trends underlying the main timing range; seven independent absolute-tolerance rows. Main RMS and local peaks are not duplicated. The failed main row and different-history comparisons have no corresponding-event ordinate. Guard decisions and all 47 rows remain audited.",
+    "solver_population_support": "4681 completed exploratory rows, exact signature grouping; 264 failures have no norm. Four-state compact gross metric is not formal acceptance; native points are not function evaluations.",
+    "solver_refinement": "40 formal cells: five-state aligned RMS colour, explicit failed cell; no acceptance circles or selected-setting highlight. Dimensional peak shift-speed and absolute event-time ranges across all completed caps at each tolerance; 4 at the coarsest and 5 otherwise. Bands are numerical-setting ranges, not statistical uncertainty. No fitted order."
+  },
+  "mechanics_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "mechanics_version": "1.1.2",
+  "new_simulations": 0,
   "run_id": "solver-convergence-4f39af8ca42a9693",
-  "script": "results/cinder-v1.1.2/studies/solver-convergence/analysis/publication_plots.py",
-  "script_sha256": "f4bae64a3f85db7b93d023653fe0d57df441ead29287b8089b6d2686ca47de16",
   "verification_scope": "All tabulated guards recomputed; canonical metrics and three retained/replayed histories audited from native segment endpoints. Other individual dense/formal caches were not retained."
 }

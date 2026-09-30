@@ -1,5 +1,29 @@
 # Reduced-belt transient mechanics — final closure study
 
+## Current manuscript finalization checkpoint
+
+The final evidence, commands and qualifications for Results 4.4.3 are in
+[`provenance/BELT_PUBLICATION.md`](provenance/BELT_PUBLICATION.md). Selected
+refinement and R2 are now executed: 42 integrations, exact event ledgers,
+three main figure families, one appendix family and a rebuilt manuscript/support draft.
+The reader-first revision and figure purposes are recorded in the belt unit's
+READER_REBUILD.md and FIGURE_REGISTER.md; earlier positive editorial verdicts
+were rejected by the author. Numerical evidence and that judgment are separate.
+`run.py --publication plot` reproduces final figures from committed compact
+inputs without integration. `--publication prepare/check` use the separate
+raw-run archive; `--publication run --publication-case all` can regenerate it.
+
+The historical archive review remains in
+[`provenance/BELT_REVIEW.md`](provenance/BELT_REVIEW.md). R1's arithmetic is
+resolved; final motion comparisons preserve event sides. R2's tiny shift
+separations lie below the individual numerical-refinement changes, while 3%
+density adds an early contact–seat return. Read those qualifications before
+reusing a discovery percentage or transition-count claim.
+
+The material below describes the original discovery design. Its “final closure”
+label denotes that stage, not a universal reduction result. Current publication
+values and commands take precedence. No exact massless limit was run.
+
 ## Scientific question
 
 Within CINDER's dynamically closed reduced whole-belt model, **which terms that survive in the final solved belt equations can become mechanically important, what physical variables make them grow, and does a reasonable Baja operating envelope actually reach those conditions?**
@@ -183,7 +207,7 @@ Three representative scenarios are tested: flat acceleration, a fast +30° backs
 For each scenario the full model is compared with two asymptotic continuations at 0.10x and 0.03x inertia:
 
 1. `global_transport` scales only the \(m_b\dot v_b\) coefficient in the whole-belt transport row. This isolates structural sensitivity to that small row term, but is not by itself a physical reduced belt.
-2. `coherent_density` scales belt density, so both whole-belt mass and local wrap linear-density inertia vanish together. This is the physically coherent massless-belt limit.
+2. `coherent_density` scales belt density, so both whole-belt mass and local wrap linear-density inertia vanish together. This approaches reduced inertia coherently at finite density; it does not evaluate the exact massless limit.
 
 Trajectory comparisons report RMSE/max errors in \(\omega_p,\omega_s,v_b,s,\dot s\), plus hybrid transition-count changes.
 

@@ -23,6 +23,8 @@ from infrastructure.selection import (validate_selection,shared_hashes,snapshot_
 
 def arguments(argv=None):
     p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    p.add_argument('--output-root',type=Path,default=ROOT/'artifacts',
+                   help='Dedicated output root; existing suites are never overwritten')
     p.add_argument('--jobs',type=int,default=4,help='Independent processes; never parallel LSODA threads')
     p.add_argument('--resume',action='store_true',help='Reuse hash-verified completed cases; restart interrupted cases from their original initial state')
     p.add_argument('--retry-errors',action='store_true',help='With --resume, retry completed setup/integration/timeout errors')
@@ -85,7 +87,7 @@ def main(argv=None) -> int:
         'execution':spec['execution'],'diagnostics':spec['diagnostics'],
         'experiments':groups,'smoke':a.smoke}
     fp=digest(identity)
-    output=ROOT/'artifacts'/f"{'smoke' if a.smoke else 'final_v3'}__{fp[:12]}"
+    output=a.output_root.resolve()/f"{'smoke' if a.smoke else 'final_v3'}__{fp[:12]}"
     output.mkdir(parents=True,exist_ok=True)
     manifest={**identity,'fingerprint':fp,'selection_revision':spec['selection_revision'],
         'created_utc':utc_now(),'expected_cases':expected,'expected_case_count':len(expected),
@@ -137,7 +139,7 @@ def main(argv=None) -> int:
                     archive_attempt(out,output)
                 jobs.append(job)
             write_csv(folder/'competitors_resolved.csv',resolved)
-        pointer=ROOT/'artifacts'/('latest_smoke.txt' if a.smoke else 'latest_final.txt')
+        pointer=a.output_root.resolve()/('latest_smoke.txt' if a.smoke else 'latest_final.txt')
         pointer.write_text(str(output)+'\n',encoding='utf-8')
         # Portable entry point even when some cases are still running.
         if not (output/'index.html').exists():

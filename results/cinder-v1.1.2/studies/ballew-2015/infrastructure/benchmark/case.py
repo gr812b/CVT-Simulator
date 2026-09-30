@@ -64,7 +64,7 @@ def build_ballew_inertias(
     """Map Ballew's published inertias into CINDER ownership conventions."""
 
     mapping = mapping or build_equivalent_belt_mapping()
-    return resolve_inertias(
+    resolved = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
                 # The published 0.008 kg m^2 combines engine + input pulley and
@@ -85,6 +85,10 @@ def build_ballew_inertias(
         belt_section=mapping.section,
         belt_outer_length=mapping.cinder_outer_length_m,
     )
+    if not isclose(resolved.belt.mass, PUBLISHED.belt_mass_kg,
+                   rel_tol=0.0, abs_tol=2.0e-12):
+        raise RuntimeError("The assembled Ballew belt does not preserve the published mass")
+    return resolved
 
 
 def build_secondary_actuator() -> PulleyActuator:

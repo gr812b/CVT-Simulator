@@ -1,0 +1,1099 @@
+{
+  "scope": "Exploratory archive-mode replay, common-sticking initialization checks, and 5 mm added compression check. Superseded by final runs for figures; retained for discrepancy traceability.",
+  "runs": {
+    "commercial_nominal_nominal_full": {
+      "kind": "commercial",
+      "variant": "full",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.001,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/commercial-case/run_trajectory_demo.py": "c277e09bdd473fefd646f8f0db4bd3ac86d99bbb69cfd8d48c37a500caefa3d6",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "33905667d199e8cb20d9009918f8b4a97eab23eb968fc2aff97a4064aa313a5f",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb"
+      },
+      "elapsed_s": 52.4247860079995,
+      "results": {
+        "stress": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 1.5006662579253316e-11,
+            "max_balance_residual": 1.5006662579253316e-11,
+            "minima": {
+              "primary_min_tension_N": 95.85737787827964,
+              "secondary_min_tension_N": 95.00286493957711,
+              "primary_min_local_normal_N_per_rad": 249.06162647108758,
+              "secondary_min_local_normal_N_per_rad": 244.77436039456606
+            },
+            "negative_local_load_count": 0
+          }
+        },
+        "control": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 9.094947017729282e-12,
+            "max_balance_residual": 1.3642420526593924e-11,
+            "minima": {
+              "primary_min_tension_N": 128.96202964026068,
+              "secondary_min_tension_N": 129.2983501623055,
+              "primary_min_local_normal_N_per_rad": 257.82866516641167,
+              "secondary_min_local_normal_N_per_rad": 259.51782299386645
+            },
+            "negative_local_load_count": 0
+          }
+        }
+      }
+    },
+    "commercial_nominal_nominal_qs": {
+      "kind": "commercial",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.001,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/commercial-case/run_trajectory_demo.py": "c277e09bdd473fefd646f8f0db4bd3ac86d99bbb69cfd8d48c37a500caefa3d6",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb"
+      },
+      "elapsed_s": 90.63495287800015,
+      "results": {
+        "stress": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 1.0459189070388675e-11,
+            "max_balance_residual": 2.0463630789890885e-12,
+            "minima": {
+              "primary_min_tension_N": 92.29031908481183,
+              "secondary_min_tension_N": 91.43517017431773,
+              "primary_min_local_normal_N_per_rad": 228.82681946445712,
+              "secondary_min_local_normal_N_per_rad": 224.53667343473344
+            },
+            "negative_local_load_count": 0
+          }
+        },
+        "control": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 9.549694368615746e-12,
+            "max_balance_residual": 1.8189894035458565e-12,
+            "minima": {
+              "primary_min_tension_N": 132.42822540370872,
+              "secondary_min_tension_N": 132.76310099599993,
+              "primary_min_local_normal_N_per_rad": 271.37318353493174,
+              "secondary_min_local_normal_N_per_rad": 273.05508960382076
+            },
+            "negative_local_load_count": 0
+          }
+        }
+      }
+    },
+    "commercial_nominal_tight_full": {
+      "kind": "commercial",
+      "variant": "full",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.001,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/commercial-case/run_trajectory_demo.py": "c277e09bdd473fefd646f8f0db4bd3ac86d99bbb69cfd8d48c37a500caefa3d6",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb"
+      },
+      "elapsed_s": 89.76261460400019,
+      "results": {
+        "stress": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 1.000444171950221e-11,
+            "max_balance_residual": 1.2960299500264227e-11,
+            "minima": {
+              "primary_min_tension_N": 95.85730759142675,
+              "secondary_min_tension_N": 95.0027947576535,
+              "primary_min_local_normal_N_per_rad": 249.06153870898407,
+              "secondary_min_local_normal_N_per_rad": 244.77427314817524
+            },
+            "negative_local_load_count": 0
+          }
+        },
+        "control": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 4.572431322458215e-11,
+            "max_balance_residual": 1.2505552149377763e-11,
+            "minima": {
+              "primary_min_tension_N": 128.96202964026068,
+              "secondary_min_tension_N": 129.2983501623055,
+              "primary_min_local_normal_N_per_rad": 257.82866516641167,
+              "secondary_min_local_normal_N_per_rad": 259.51782299386645
+            },
+            "negative_local_load_count": 0
+          }
+        }
+      }
+    },
+    "commercial_nominal_tight_qs": {
+      "kind": "commercial",
+      "variant": "qs",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.001,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/commercial-case/run_trajectory_demo.py": "c277e09bdd473fefd646f8f0db4bd3ac86d99bbb69cfd8d48c37a500caefa3d6",
+        "studies/actuator-dynamics/experiments/run_controlled_transients.py": "76493cc93bba4226fbe5b1a48736f39aab2e468e5546d6c118464d77aac7515c",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/infrastructure/ablation_core.py": "53df85eae28c5df5a3812637dbf8c69ddac0dd9eea6603276b44b38f59dbeb67",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb"
+      },
+      "elapsed_s": 84.52795097799935,
+      "results": {
+        "stress": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 1.4097167877480388e-11,
+            "max_balance_residual": 2.5011104298755527e-12,
+            "minima": {
+              "primary_min_tension_N": 92.29018557028193,
+              "secondary_min_tension_N": 91.43503684014989,
+              "primary_min_local_normal_N_per_rad": 228.82667652734793,
+              "secondary_min_local_normal_N_per_rad": 224.53653137914725
+            },
+            "negative_local_load_count": 0
+          }
+        },
+        "control": {
+          "completed": true,
+          "end_s": 0.425,
+          "segment_count": 1,
+          "local_audit": {
+            "sample_count": 851,
+            "engaged_count": 851,
+            "max_closure_resolve_difference": 9.549694368615746e-12,
+            "max_balance_residual": 2.0463630789890885e-12,
+            "minima": {
+              "primary_min_tension_N": 132.42822540370872,
+              "secondary_min_tension_N": 132.76310099599993,
+              "primary_min_local_normal_N_per_rad": 271.37318353493174,
+              "secondary_min_local_normal_N_per_rad": 273.05508960382076
+            },
+            "negative_local_load_count": 0
+          }
+        }
+      }
+    },
+    "severe_nominal_nominal_full": {
+      "kind": "severe",
+      "variant": "full",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.0005,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "b8042d9d944f60ed15591ce60406eaf1fdbd712bf73734033c23fab5fba9c485",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 163.2746296969999,
+      "results": {
+        "completed": true,
+        "end_s": 0.43,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4303,
+          "engaged_count": 4303,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 1.1823431123048067e-11,
+          "minima": {
+            "primary_min_tension_N": 51.52311245397044,
+            "secondary_min_tension_N": 50.51919897142866,
+            "primary_min_local_normal_N_per_rad": -0.07602769983482838,
+            "secondary_min_local_normal_N_per_rad": 1.24034757995376
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "severe_nominal_nominal_full_stick_compression5_end0.45": {
+      "kind": "severe",
+      "variant": "full",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "extra_compression_mm": 5.0,
+      "requested_end_s": 0.45,
+      "max_step_s": 0.0005,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "8fbd19fd4d8c335aa56f7e23b48d8e333d3bd7487e429c46249b7e602448aee3",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 108.42301895499986,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.45000000000000007,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4503,
+          "engaged_count": 4503,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 1.4097167877480388e-11,
+          "minima": {
+            "primary_min_tension_N": 51.14386792225727,
+            "secondary_min_tension_N": 50.12906855723618,
+            "primary_min_local_normal_N_per_rad": -0.06400212157953293,
+            "secondary_min_local_normal_N_per_rad": 1.256760430454605
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "severe_nominal_nominal_qs": {
+      "kind": "severe",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.0005,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "b8042d9d944f60ed15591ce60406eaf1fdbd712bf73734033c23fab5fba9c485",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 178.4951932720005,
+      "results": {
+        "completed": false,
+        "end_s": 0.41894931744012626,
+        "segment_count": 3,
+        "local_audit": {
+          "sample_count": 4195,
+          "engaged_count": 4195,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 4.618527782440651e-12,
+          "minima": {
+            "primary_min_tension_N": 46.92195723907538,
+            "secondary_min_tension_N": 52.1867387216713,
+            "primary_min_local_normal_N_per_rad": 0.31548728686213917,
+            "secondary_min_local_normal_N_per_rad": -42.26418731140521
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "severe_nominal_nominal_qs_stick": {
+      "kind": "severe",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "max_step_s": 0.0005,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "8fbd19fd4d8c335aa56f7e23b48d8e333d3bd7487e429c46249b7e602448aee3",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 202.49376171699987,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.43,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4303,
+          "engaged_count": 4303,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 4.575895218295045e-12,
+          "minima": {
+            "primary_min_tension_N": 51.702136547441725,
+            "secondary_min_tension_N": 49.6478216393857,
+            "primary_min_local_normal_N_per_rad": -0.7320114720083398,
+            "secondary_min_local_normal_N_per_rad": 2.30382069355762
+          },
+          "negative_local_load_count": 9
+        }
+      }
+    },
+    "severe_nominal_nominal_qs_stick_compression5_end0.45": {
+      "kind": "severe",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "extra_compression_mm": 5.0,
+      "requested_end_s": 0.45,
+      "max_step_s": 0.0005,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "8fbd19fd4d8c335aa56f7e23b48d8e333d3bd7487e429c46249b7e602448aee3",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 107.8801929199999,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.45000000000000007,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4503,
+          "engaged_count": 4503,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 5.17630383001233e-12,
+          "minima": {
+            "primary_min_tension_N": 51.338319663684636,
+            "secondary_min_tension_N": 49.26591010834802,
+            "primary_min_local_normal_N_per_rad": -0.7197644682269839,
+            "secondary_min_local_normal_N_per_rad": 2.3284228928152997
+          },
+          "negative_local_load_count": 9
+        }
+      }
+    },
+    "severe_nominal_tight_full": {
+      "kind": "severe",
+      "variant": "full",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00025,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "b8042d9d944f60ed15591ce60406eaf1fdbd712bf73734033c23fab5fba9c485",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 187.9973384370005,
+      "results": {
+        "completed": true,
+        "end_s": 0.43,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4303,
+          "engaged_count": 4303,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 1.3642420526593924e-11,
+          "minima": {
+            "primary_min_tension_N": 51.52307175544751,
+            "secondary_min_tension_N": 50.519158351499556,
+            "primary_min_local_normal_N_per_rad": -0.0760277675570563,
+            "secondary_min_local_normal_N_per_rad": 1.2403475951278198
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "severe_nominal_tight_qs": {
+      "kind": "severe",
+      "variant": "qs",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00025,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "b8042d9d944f60ed15591ce60406eaf1fdbd712bf73734033c23fab5fba9c485",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 114.04894609199982,
+      "results": {
+        "completed": true,
+        "end_s": 0.43,
+        "segment_count": 4,
+        "local_audit": {
+          "sample_count": 4307,
+          "engaged_count": 4307,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 4.583000645652646e-12,
+          "minima": {
+            "primary_min_tension_N": 46.921957236988824,
+            "secondary_min_tension_N": 49.64771852362596,
+            "primary_min_local_normal_N_per_rad": -0.7320164632235734,
+            "secondary_min_local_normal_N_per_rad": -42.26418731697071
+          },
+          "negative_local_load_count": 11
+        }
+      }
+    },
+    "severe_nominal_tight_qs_stick": {
+      "kind": "severe",
+      "variant": "qs",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "max_step_s": 0.00025,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "8fbd19fd4d8c335aa56f7e23b48d8e333d3bd7487e429c46249b7e602448aee3",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 212.2360725490007,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.43,
+        "segment_count": 2,
+        "local_audit": {
+          "sample_count": 4303,
+          "engaged_count": 4303,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 3.822719918389339e-12,
+          "minima": {
+            "primary_min_tension_N": 51.7020867489433,
+            "secondary_min_tension_N": 49.64777187760695,
+            "primary_min_local_normal_N_per_rad": -0.7320116065517154,
+            "secondary_min_local_normal_N_per_rad": 2.303820705861823
+          },
+          "negative_local_load_count": 9
+        }
+      }
+    },
+    "stock_nominal_nominal_full": {
+      "kind": "stock",
+      "variant": "full",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "cbea810a7b18a63617c4b2aa56a5fbfb5e7d2bfe06a3c4ebed1b6150f622589c",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "b8042d9d944f60ed15591ce60406eaf1fdbd712bf73734033c23fab5fba9c485",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 116.58928783200008,
+      "results": {
+        "completed": true,
+        "end_s": 0.382,
+        "segment_count": 11,
+        "local_audit": {
+          "sample_count": 3840,
+          "engaged_count": 3832,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 2.0463630789890885e-11,
+          "minima": {
+            "primary_min_tension_N": 43.92039549840793,
+            "secondary_min_tension_N": 46.13723313272306,
+            "primary_min_local_normal_N_per_rad": 9.561477520504713,
+            "secondary_min_local_normal_N_per_rad": 20.548086773544423
+          },
+          "negative_local_load_count": 0
+        }
+      }
+    },
+    "stock_nominal_nominal_qs": {
+      "kind": "stock",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "78ca6d2a6fb661f8f3d32687bd22b09511ed36f77389edd5727aadd81e25c1c9",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 181.6140747570007,
+      "results": {
+        "completed": true,
+        "end_s": 0.382,
+        "segment_count": 19,
+        "local_audit": {
+          "sample_count": 3855,
+          "engaged_count": 3841,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 7.73070496506989e-12,
+          "minima": {
+            "primary_min_tension_N": 43.73635047708607,
+            "secondary_min_tension_N": 45.92419492842308,
+            "primary_min_local_normal_N_per_rad": 9.496608068971408,
+            "secondary_min_local_normal_N_per_rad": -43.299457470677325
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "stock_nominal_nominal_qs_stick": {
+      "kind": "stock",
+      "variant": "qs",
+      "level": "nominal",
+      "estimate": "nominal",
+      "rtol": 0.0001,
+      "atol": 1e-07,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "extra_compression_mm": 0.0,
+      "requested_end_s": null,
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "fd81094162bcc6ca0b7335b00777c0ff338e41bfabce39819cb7ea719f026ac7",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 103.8698137450001,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.382,
+        "segment_count": 17,
+        "local_audit": {
+          "sample_count": 3851,
+          "engaged_count": 3837,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 1.2278178473934531e-11,
+          "minima": {
+            "primary_min_tension_N": 43.736431375625756,
+            "secondary_min_tension_N": 45.92427584582244,
+            "primary_min_local_normal_N_per_rad": 9.496625588025745,
+            "secondary_min_local_normal_N_per_rad": 20.34150288701334
+          },
+          "negative_local_load_count": 0
+        }
+      }
+    },
+    "stock_nominal_tight_full": {
+      "kind": "stock",
+      "variant": "full",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "78ca6d2a6fb661f8f3d32687bd22b09511ed36f77389edd5727aadd81e25c1c9",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 181.97190566799964,
+      "results": {
+        "completed": true,
+        "end_s": 0.382,
+        "segment_count": 11,
+        "local_audit": {
+          "sample_count": 3840,
+          "engaged_count": 3832,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 3.069544618483633e-11,
+          "minima": {
+            "primary_min_tension_N": 43.92037710784221,
+            "secondary_min_tension_N": 46.13721482132976,
+            "primary_min_local_normal_N_per_rad": 9.56147361605709,
+            "secondary_min_local_normal_N_per_rad": 20.548074336044223
+          },
+          "negative_local_load_count": 0
+        }
+      }
+    },
+    "stock_nominal_tight_qs": {
+      "kind": "stock",
+      "variant": "qs",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "78ca6d2a6fb661f8f3d32687bd22b09511ed36f77389edd5727aadd81e25c1c9",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 101.63828500900036,
+      "results": {
+        "completed": true,
+        "end_s": 0.382,
+        "segment_count": 19,
+        "local_audit": {
+          "sample_count": 3855,
+          "engaged_count": 3841,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 1.000444171950221e-11,
+          "minima": {
+            "primary_min_tension_N": 43.736310132427484,
+            "secondary_min_tension_N": 45.92416393949496,
+            "primary_min_local_normal_N_per_rad": 9.496607423095519,
+            "secondary_min_local_normal_N_per_rad": -43.299457473695945
+          },
+          "negative_local_load_count": 2
+        }
+      }
+    },
+    "stock_nominal_tight_qs_stick": {
+      "kind": "stock",
+      "variant": "qs",
+      "level": "tight",
+      "estimate": "nominal",
+      "rtol": 1e-05,
+      "atol": 1e-08,
+      "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+      "cinder_version": "1.1.2",
+      "cinder_path": "/workspace/scratch/cdacb963221e/secondary_final/repo/results/cinder-v1.1.2/.venv/lib/python3.12/site-packages/cinder/__init__.py",
+      "host_angle_policy": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained.",
+      "sticking_start": true,
+      "extra_compression_mm": 0.0,
+      "requested_end_s": null,
+      "max_step_s": 0.00016666666666666666,
+      "source_sha256": {
+        "defaults/__init__.py": "dc765d57580535b3296d850ae32410d1880d4e90f64700ef50a64a5d6a66ab42",
+        "defaults/baja/__init__.py": "ac888fe92576a355864ed6cb2b7e5dafa8dff0f179d97aa1cdba92a176f0061f",
+        "defaults/baja/provenance.json": "56ef3505a06570d9408f004b06be0a69dc84c451ef6e60aa43f40d8195e2d876",
+        "defaults/baja/reference.py": "f5a1f824c85505f587f68abc5d7b788cecf82ba2994d7b3ff0c5bfd3ad6effcc",
+        "defaults/baja/simulation_case.json": "de3e1d27fe7c33d2f72fa9e3d375a44fc9340b51596bc8d29a4b86551e636aaa",
+        "defaults/baja/tuning.json": "240bfbaa34ef2f6f65ee0c5989041853c04e31941c2e4cbffd09f8663c452164",
+        "defaults/reference_model/__init__.py": "ffda6b5524a0049c34c2765621308de08fe43007fb4994fe41ab3f49aad34df4",
+        "defaults/reference_model/policy.json": "6a7dfa4d3696faa1eadeb82b94d5f4274ceb49c0f2e821397fdb78e0b71f21a9",
+        "defaults/reference_model/reference_case.py": "4999fe4fb82534fbcc425b0461a1d1e40071e5a0d8eddd7609abebfc8f96988d",
+        "defaults/reference_model/slotted_helix.py": "4ece55c874be012ce4d9684975d1b7c3bacb725b91d8881981ea4557d9146305",
+        "defaults/verification/operating_cases.json": "39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6",
+        "studies/actuator-dynamics/experiments/run_secondary_publication.py": "fd81094162bcc6ca0b7335b00777c0ff338e41bfabce39819cb7ea719f026ac7",
+        "studies/actuator-dynamics/publication_inputs/secondary_initial_conditions.json": "65d5bb775f05dfe440a555b83d19d097850b7a74371321109c1c6ff1110f93fb",
+        "studies/helix-topology/experiments/run_paired_helix_performance.py": "1b5a386d6eca83f2397d010d38498d02e07b67747a9c0f942a75c5beae0baa56",
+        "studies/helix-topology/infrastructure/helix_mechanics.py": "10b5be29785f4e7a7f0a7d5b15e67bd950196fe5529e76deba08ba41b2b9584a",
+        "studies/helix-topology/infrastructure/study_support.py": "fb4393a771138940c0d142b41ba3e78125688706b3a3243e09f0eb9f1c268a40"
+      },
+      "elapsed_s": 111.98006967899983,
+      "results": {
+        "completed": true,
+        "termination_reason": "final_time_reached",
+        "end_s": 0.382,
+        "segment_count": 17,
+        "local_audit": {
+          "sample_count": 3851,
+          "engaged_count": 3837,
+          "max_closure_resolve_difference": 0.0,
+          "max_balance_residual": 5.4569682106375694e-12,
+          "minima": {
+            "primary_min_tension_N": 43.736390965863045,
+            "secondary_min_tension_N": 45.92424481057909,
+            "primary_min_local_normal_N_per_rad": 9.496624944306026,
+            "secondary_min_local_normal_N_per_rad": 20.341500836464732
+          },
+          "negative_local_load_count": 0
+        }
+      }
+    }
+  },
+  "raw_sha256": {
+    "commercial_nominal_nominal_full/control/components.csv.gz": "bddc848426d975a9e640a6f3b9ef4075c40c27df8148f6de2ee519a90b0d7a90",
+    "commercial_nominal_nominal_full/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_nominal_full/control/local_wrap_audit.csv.gz": "93cc2da77ec870f5c614f209005a3d52a02c25caecb8ebe1dd7cf63765e2735a",
+    "commercial_nominal_nominal_full/control/trajectory.csv.gz": "c7757c95fea9fd0f7adbdca8a0c9389c533b8b0c91d74b57eeda9431d8877d62",
+    "commercial_nominal_nominal_full/stress/components.csv.gz": "dda0bd9577a37b65803533edfbc50b2fca6ef46d7e13255cd0d5ea6f70ac59be",
+    "commercial_nominal_nominal_full/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_nominal_full/stress/local_wrap_audit.csv.gz": "304ec32f6dcf267829f0817a1abcba40a9046856aaa382318aaf814c8a78bc0b",
+    "commercial_nominal_nominal_full/stress/trajectory.csv.gz": "8444825d8cf238a1f090b84e80fe80d037c663c4cb38de88178e51569b144c23",
+    "commercial_nominal_nominal_full/summary.json": "560d16da184d468794752f26c37de05c2207db28e81d228c122bc3e07eba4ce8",
+    "commercial_nominal_nominal_qs/control/components.csv.gz": "8e04a47c9e5defb269c4b1ac51eecf94e693016e1f326622bad9fc53624299b0",
+    "commercial_nominal_nominal_qs/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_nominal_qs/control/local_wrap_audit.csv.gz": "562b22dedcd0ddad68dd8012eb1bff44c7819a8368fdfb2cf324e1a89fd88f43",
+    "commercial_nominal_nominal_qs/control/trajectory.csv.gz": "1b134006c1cdc0d9e993ffb39bce5cd8c88fc6c670ab0b2e0813daa2798b7c4f",
+    "commercial_nominal_nominal_qs/stress/components.csv.gz": "7e9f534cd5f2e4d4318f7d1d84577a62664224c2ba3e18261971f002bc3c81de",
+    "commercial_nominal_nominal_qs/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_nominal_qs/stress/local_wrap_audit.csv.gz": "3178fca45421d4cb940f78bd896e05b70927f9a358c385e6457e6f4122729c17",
+    "commercial_nominal_nominal_qs/stress/trajectory.csv.gz": "11e13f891a32e8092329101f154fcc99667355d54babd6caf33180a999515829",
+    "commercial_nominal_nominal_qs/summary.json": "0dc568d4b98f49d315f1b7b22af85cd4c7d0e3a3d6b844b8906ab226520f71a8",
+    "commercial_nominal_tight_full/control/components.csv.gz": "dfdc2b95ade8796399ed775f006388e554e4ebfd0c78e4393d6de03a189f24e7",
+    "commercial_nominal_tight_full/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_tight_full/control/local_wrap_audit.csv.gz": "468942aeb0569001e0ab892b37660468c0f657df7585a159fcd0ffc04d8938b8",
+    "commercial_nominal_tight_full/control/trajectory.csv.gz": "87c89032c974d11760fb99cc228c5f79bd9156fc3d897f5b942621c103869fde",
+    "commercial_nominal_tight_full/stress/components.csv.gz": "de65e106a0eee8a1b8e1d834bcd82eb9c4744bb5a0c1a65ad50f5fd612ee97d3",
+    "commercial_nominal_tight_full/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_tight_full/stress/local_wrap_audit.csv.gz": "f89ecc1061f80eddfd6e17baf5a60265cffee7e7dabe537b0ba4be21ce48ff5e",
+    "commercial_nominal_tight_full/stress/trajectory.csv.gz": "b5fc6836a734f07075a54703d13fc097603487179954f72567c5e537fa04c427",
+    "commercial_nominal_tight_full/summary.json": "e95a21b015480041a28a3fd30f9a046ff40528b400ebe2cfb61a2d152eb5ccaa",
+    "commercial_nominal_tight_qs/control/components.csv.gz": "f6ab7787424f65fe77e134158a3b1a0e9147f80840a6209df9c7006d04ef7cc1",
+    "commercial_nominal_tight_qs/control/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_tight_qs/control/local_wrap_audit.csv.gz": "836c008a9d97923502c9b94d97ef0341090611f41750ca4ffef9c298b28204a5",
+    "commercial_nominal_tight_qs/control/trajectory.csv.gz": "d39dcac66ac69a8bc59194ef78b8121d7192067b085b425b279c3a545bf3ed06",
+    "commercial_nominal_tight_qs/stress/components.csv.gz": "4075277e65c1541dad602c37b99049f331fe84fe2ca25a42ef20f365ce77002a",
+    "commercial_nominal_tight_qs/stress/events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "commercial_nominal_tight_qs/stress/local_wrap_audit.csv.gz": "4d0e82f53efeaa2aa490347020669aef9652cbfeafa6c728cd3f24a3c1d2dd8d",
+    "commercial_nominal_tight_qs/stress/trajectory.csv.gz": "d5844586a62a3afba06b2888075576664d6e878cddd44c4dd95c4eb7155754fa",
+    "commercial_nominal_tight_qs/summary.json": "13d5c4ab8183ce994263cca245fcd08739b83b314d359cec5daf074c6802aa49",
+    "severe_nominal_nominal_full/events.json": "8ca0b94f128eeff7c6469e605dd63a2419d069440f00df5ec8e48c23208cb51d",
+    "severe_nominal_nominal_full/local_wrap_audit.csv.gz": "1262f030f9f347ae4ae8adad07a0fed1535142f51a78708a86ec0d514ba37ba4",
+    "severe_nominal_nominal_full/summary.json": "4f107e089e9fea053fe177557826c8014e7b3e6bd24b871fdfd0375a9eeae7ab",
+    "severe_nominal_nominal_full/trajectory.csv.gz": "ebe0b4cd17598566430361517d118ef054b55794ad6b4a221c835ece42cc9d48",
+    "severe_nominal_nominal_full_stick_compression5_end0.45/events.json": "12e1b5d873c2f5c645abc1f2958fd1d28f830d23c7827a7f0fdcf035f8916f5b",
+    "severe_nominal_nominal_full_stick_compression5_end0.45/local_wrap_audit.csv.gz": "a0c4a39dead89cd6242e28a3c667e088f474b1bc5aa1336cd6ed91c8acd07110",
+    "severe_nominal_nominal_full_stick_compression5_end0.45/summary.json": "05d823fb62d7812ef280317e84961cc92c854fd4539582408f3e2d97883f7753",
+    "severe_nominal_nominal_full_stick_compression5_end0.45/trajectory.csv.gz": "f9c10308dbe8af7d8e50eac6f4fc401697ea86be141ae4c4b3eeb6aa121305bc",
+    "severe_nominal_nominal_qs/events.json": "488b6d4b435b1f253b1ab4e94d7741ebba00f4274bb4af7479e8a30d1f7d9e36",
+    "severe_nominal_nominal_qs/local_wrap_audit.csv.gz": "78ab436016a506c71b879f0cd150fedd96e8a1fcc0f981282fb7f151d39ddc91",
+    "severe_nominal_nominal_qs/summary.json": "b0879f9022310d4404b3d120a5b7bd04f8830e8608f4d1dec1263a4b009c7848",
+    "severe_nominal_nominal_qs/trajectory.csv.gz": "57d7280bb605327e2de4d162fd58771a9cd573595ca813bb2597135c87240f69",
+    "severe_nominal_nominal_qs_stick/events.json": "1b5b6c18da01ad1fa7b32785aac07a79a9cf3c54ad38ceb290821571e9ceccde",
+    "severe_nominal_nominal_qs_stick/local_wrap_audit.csv.gz": "0f3747d1bd0123cc0f688df7b9f07bda6a6d9e0542dbbef8d802945c96baa2a5",
+    "severe_nominal_nominal_qs_stick/summary.json": "0c1edc88c387fd05276c4b9d9ab4b0d72a976a983c1dc3661d53a50f5b13f568",
+    "severe_nominal_nominal_qs_stick/trajectory.csv.gz": "7593d1522bb37fc572a3a12ea6bb362fe8518852d88e7e61130741d7408221ac",
+    "severe_nominal_nominal_qs_stick_compression5_end0.45/events.json": "a3291dabfa938f59b2ed525188953eb534b7a9cc7389fb03d4a837c93aa850b2",
+    "severe_nominal_nominal_qs_stick_compression5_end0.45/local_wrap_audit.csv.gz": "57f44aaf17b492371202bb9ae265a64ea27e47373aade87cefc2b17c500650f6",
+    "severe_nominal_nominal_qs_stick_compression5_end0.45/summary.json": "ca3d05d3ca0eb629cafd0ad0cfe9c2f6884f442c04a4d20fdf20a1b1f821b4d2",
+    "severe_nominal_nominal_qs_stick_compression5_end0.45/trajectory.csv.gz": "608fd2fc850ecf6134d8c93dc3616f5d1ddfee9ee2ce420ac69781426539aa11",
+    "severe_nominal_tight_full/events.json": "213e1eadb7ae81a41082d2150f45656e414e8c54fa087ee84a6d329f5cb696de",
+    "severe_nominal_tight_full/local_wrap_audit.csv.gz": "28c8affb841551dfde683cf092fe0a29f4a6c6a56400a2e0af6b51707a115386",
+    "severe_nominal_tight_full/summary.json": "fdfcad239cefe015a8384291a667bae7e31fefe55932f6037283a8a965f087f0",
+    "severe_nominal_tight_full/trajectory.csv.gz": "9d600307bd2e8e2184c9d311b145a55125de9dff6779de60bb45a776395b41af",
+    "severe_nominal_tight_qs/events.json": "5b13925d7355c850757b1d77f6ce584816790e6f3ff15c128c72cc6f9a7f6425",
+    "severe_nominal_tight_qs/local_wrap_audit.csv.gz": "7826a3396b5f0209ead88b7e463f4d835052d319a05a2e06aa3d689ae0218583",
+    "severe_nominal_tight_qs/summary.json": "ecfa7b5eea7f4e3c64b83298d745895ae2ca02102df83efacf03fb5e78b4c560",
+    "severe_nominal_tight_qs/trajectory.csv.gz": "54dc714779ce51d67179d9976e5fefee1f1a64a3d0f83f48c8055062beee3f30",
+    "severe_nominal_tight_qs_stick/events.json": "6b34fe89350ea7cf22781baaf043cb19c996d97c35c38e7c3d587efea305a23c",
+    "severe_nominal_tight_qs_stick/local_wrap_audit.csv.gz": "7a4508f837e103eeae8ff91b19021a8b6879509346b5267fc5802e6ca34c3eec",
+    "severe_nominal_tight_qs_stick/summary.json": "2d2b05b01cd09d5474ad1445bdc5d1156120d66856f69a096f38c0bd732fcd37",
+    "severe_nominal_tight_qs_stick/trajectory.csv.gz": "e8ad64e8515f0cf82e0c0a28733c326fd7ccadeac91edba088b7ee4b6d29752e",
+    "stock_nominal_nominal_full/events.json": "d3f605ef586bfea4efbef893988dfe8fce5a5fa37da0e1b64285291700e18891",
+    "stock_nominal_nominal_full/local_wrap_audit.csv.gz": "ba330232fdb25766db48845d327c4dee3d21a90fc2f485f4a5eb9bac5f579b42",
+    "stock_nominal_nominal_full/summary.json": "3dbacba2eaeb7841b2a93f3bc21a9fd1662e8261aacbe8a172b636ac54a82950",
+    "stock_nominal_nominal_full/trajectory.csv.gz": "86a79aa296261253902acfa9b3371137b5b7679396d755c6c4dad85e41ba3772",
+    "stock_nominal_nominal_qs/events.json": "49195a0f9ecede7450ce1fcb011f30e67c875188d535bb8da9c0ea7c276be0f6",
+    "stock_nominal_nominal_qs/local_wrap_audit.csv.gz": "fb7c9f7ef717441e8fb810a7317efaadca5ce1962ea83e399134c494db814bf9",
+    "stock_nominal_nominal_qs/summary.json": "953f90df13e5a74c454b1b1b6e7a0a8f9f9029af6ed6bf6b2121cd583aecc5b3",
+    "stock_nominal_nominal_qs/trajectory.csv.gz": "36e646e8d013472050aeb2e79f25fb268b4de06994b742e0aefb69039397984d",
+    "stock_nominal_nominal_qs_stick/events.json": "076a75d1bd437a896fb5da2e6e24a0b02aeed49637d4dc766ce1ed4fe7a741d3",
+    "stock_nominal_nominal_qs_stick/local_wrap_audit.csv.gz": "6eea3b2c8d0413c78aac2347731a1a83f8a4add345dec32a765bd6995e113850",
+    "stock_nominal_nominal_qs_stick/summary.json": "d7195431e6fc5a72fea3de617141ff5595e7a44d512ac0d3d4dad694dea4b4b0",
+    "stock_nominal_nominal_qs_stick/trajectory.csv.gz": "6959d241957aaee98958de6fa0dc96d9c7ed0801632dea35cfd5bdcc3aabf6a0",
+    "stock_nominal_tight_full/events.json": "39085c9352755fe4e04a8561dbec4982269612c848484ca20ffff5700b7a3a3b",
+    "stock_nominal_tight_full/local_wrap_audit.csv.gz": "d0caa429098244d401877d809118d580f8d46dbf4d45d12f151a0905adf5cfc8",
+    "stock_nominal_tight_full/summary.json": "91ce762ca62c7a5f269cba0c45d5fc5ed7666b3b362cfb6666d9ef6673a7ab53",
+    "stock_nominal_tight_full/trajectory.csv.gz": "4560de7123d67562c7e197c8794b913c65c4b69265cc7eb06985558a2c463add",
+    "stock_nominal_tight_qs/events.json": "c2e1eef999a59f93c0a88564c36e6be0c6086f224f076fe2b64da097aa6e4117",
+    "stock_nominal_tight_qs/local_wrap_audit.csv.gz": "037a39fa89d90f3fd172be72bd817673558064db7aa7f41af989297b85678fc0",
+    "stock_nominal_tight_qs/summary.json": "030761a812a5fe64cb66e6aebcda179d49629554a8aac740fe3000c1d956487c",
+    "stock_nominal_tight_qs/trajectory.csv.gz": "3d0f7c8df20df7d51f38c358eeb156c6981036e9206ed78e6f4b212eb34e10cf",
+    "stock_nominal_tight_qs_stick/events.json": "836077895330b738e20c964fdab850ac28a321a0eb8a5e17c520014d36a1ac87",
+    "stock_nominal_tight_qs_stick/local_wrap_audit.csv.gz": "5a3d0d663ab962ba62d5b28194ced0532125856f0dca311d5d424a1d6b8c0a9e",
+    "stock_nominal_tight_qs_stick/summary.json": "954c0976a65b954cc82925ab1886041ad6fe00a730555d20e960ec0bd140b791",
+    "stock_nominal_tight_qs_stick/trajectory.csv.gz": "7aa991627bab4684804909f0ec997d83ff967acc1666de7e956f6be12bd3e3b9"
+  }
+}

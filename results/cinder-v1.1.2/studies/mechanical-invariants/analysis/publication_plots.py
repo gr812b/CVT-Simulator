@@ -231,8 +231,9 @@ def main(artifacts: Path, output: Path, core) -> dict:
         writer = csv.DictWriter(stream, fieldnames=list(selected[0]))
         writer.writeheader(); writer.writerows(selected)
     record = {
-        "manuscript_label": "fig:verification_contact_regimes",
-        "manuscript_asset": "docs/CVT_Module_Formulation/figures/results/verification/contact_regimes.pdf",
+        "former_manuscript_label": "fig:verification_contact_regimes",
+        "retained_support_asset": "contact_regimes.pdf",
+        "current_manuscript_import": False,
         "run_id": provenance["run_id"],
         "execution_record_sha256": digest(artifacts / "execution_provenance.json"),
         "mechanics_version": provenance["packages"]["cinder-cvt"],

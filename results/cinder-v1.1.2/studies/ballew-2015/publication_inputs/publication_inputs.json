@@ -1,0 +1,149 @@
+{
+  "cinder_version": "1.1.2",
+  "cinder_tag_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "derivations": {
+    "closed-loop": {
+      "source_execution_manifest_sha256": "ef290e2ef1712753153cc1764781ea8e72b4e1a62f81f9186d8f162912062142",
+      "report_selection": [
+        "time_s",
+        "segment_id",
+        "state.primary_angular_speed",
+        "state.secondary_angular_speed",
+        "geometry.effective_ratio_secondary_over_primary",
+        "actuation.primary.total_clamp_force",
+        "observer.primary_slip_dissipation",
+        "observer.secondary_slip_dissipation"
+      ],
+      "native_state_indices": {
+        "primary": 0,
+        "secondary": 1
+      },
+      "arrays_copied_without_resampling": true
+    },
+    "force-replay": {
+      "source_execution_manifest_sha256": "b3068af5c0abb25916ad3f585a4fff58df202d84230e4c4ae8083e6f8a425191",
+      "report_selection": [
+        "time_s",
+        "segment_id",
+        "state.primary_angular_speed",
+        "state.secondary_angular_speed",
+        "geometry.effective_ratio_secondary_over_primary",
+        "actuation.primary.total_clamp_force",
+        "observer.primary_slip_dissipation",
+        "observer.secondary_slip_dissipation"
+      ],
+      "native_state_indices": {
+        "primary": 0,
+        "secondary": 1
+      },
+      "arrays_copied_without_resampling": true
+    },
+    "convergence/nominal_0p50ms": {
+      "source_execution_manifest_sha256": "6738c02e81d823585e8d3f7c701a7b20ceb0054140b214e08d83a14f0a8352fb",
+      "report_selection": [
+        "time_s",
+        "segment_id",
+        "state.primary_angular_speed",
+        "state.secondary_angular_speed",
+        "geometry.effective_ratio_secondary_over_primary",
+        "actuation.primary.total_clamp_force",
+        "observer.primary_slip_dissipation",
+        "observer.secondary_slip_dissipation"
+      ],
+      "native_state_indices": {
+        "primary": 0,
+        "secondary": 1
+      },
+      "arrays_copied_without_resampling": true
+    },
+    "convergence/nominal_0p25ms": {
+      "source_execution_manifest_sha256": "28457f261aab31222f810d3754f60187b5766062a911108f5816f3eee89a6447",
+      "report_selection": [
+        "time_s",
+        "segment_id",
+        "state.primary_angular_speed",
+        "state.secondary_angular_speed",
+        "geometry.effective_ratio_secondary_over_primary",
+        "actuation.primary.total_clamp_force",
+        "observer.primary_slip_dissipation",
+        "observer.secondary_slip_dissipation"
+      ],
+      "native_state_indices": {
+        "primary": 0,
+        "secondary": 1
+      },
+      "arrays_copied_without_resampling": true
+    },
+    "convergence/tight_0p50ms": {
+      "source_execution_manifest_sha256": "a498fd2125e2d3903b0cbffc56fdabbc5df645cf20ff7b38d7ba2f43d9346551",
+      "report_selection": [
+        "time_s",
+        "segment_id",
+        "state.primary_angular_speed",
+        "state.secondary_angular_speed",
+        "geometry.effective_ratio_secondary_over_primary",
+        "actuation.primary.total_clamp_force",
+        "observer.primary_slip_dissipation",
+        "observer.secondary_slip_dissipation"
+      ],
+      "native_state_indices": {
+        "primary": 0,
+        "secondary": 1
+      },
+      "arrays_copied_without_resampling": true
+    }
+  },
+  "files": {
+    "closed-loop/comparison_grid.npz": "47bb8c713b653d7f6506bf8b051c0bea04280a0b778a39525cd1a3a59d91e409",
+    "closed-loop/execution_provenance.json": "ef290e2ef1712753153cc1764781ea8e72b4e1a62f81f9186d8f162912062142",
+    "closed-loop/metrics.json": "60f93bcc3ce0c7a4ddf848781057d6a3242198965cec14e4f09d8bff84b4b98b",
+    "closed-loop/native_trace.npz": "a6d0248614c7c6d866ac2fc101e54f3d2984d0d97f1cd9efdd6ed75359846736",
+    "closed-loop/primary_force_comparison.csv": "6d74f9c831e3f1e71a5a362c9148006ebd0ff37493ccbda1469970df17a75619",
+    "closed-loop/primary_rpm_comparison.csv": "fbe142234dbe2d7964d397edc7c61dc67c2c5f27afc82334e9b389de86aea934",
+    "closed-loop/secondary_rpm_comparison.csv": "89dc022dd0959dd9b5fb744073cee25b420ba8a2856ba8b493b40fb880a5c6fb",
+    "closed-loop/segmented_report.npz": "d98f41752d8330adf4219ff81f2aa0751da6b7de993678a1407901ca30fe2143",
+    "closed-loop/speed_ratio_comparison.csv": "cf3f7229e56ec92e84fe998f42218505c0236e57d900081083296b5c988909ce",
+    "closed-loop/trace_manifest.json": "541e4b8a3e213ff99c65c9d4744ba741489232753f3646437ac25729c29c5df5",
+    "convergence/nominal_0p25ms/comparison_grid.npz": "f12d34cb4cf8f5150b0a5c91c83650730cfc81711bbd38626ac094c6f6101eae",
+    "convergence/nominal_0p25ms/execution_provenance.json": "28457f261aab31222f810d3754f60187b5766062a911108f5816f3eee89a6447",
+    "convergence/nominal_0p25ms/metrics.json": "7327919599832c0db5655f11006dd2684b60bd441421c78d166064bc8910cf77",
+    "convergence/nominal_0p25ms/native_trace.npz": "6ff11254656d98d7a9c0269857472dd9e62b602223785df8971a1292d0e3c469",
+    "convergence/nominal_0p25ms/primary_force_comparison.csv": "e4da185ee58b14587cd4db94130d023c32d40537bb92761e500b326d17bc23ca",
+    "convergence/nominal_0p25ms/primary_rpm_comparison.csv": "e3d8b682dfaac8ea7d9f387410a4dde8cc79caa681603fbe96fee5478963bb5e",
+    "convergence/nominal_0p25ms/secondary_rpm_comparison.csv": "bea9de1c695742198004f75349c23c667be06c62852fe0580a8332e805721d10",
+    "convergence/nominal_0p25ms/segmented_report.npz": "fa5c9fcee3124eafb76cd32da666256f79fa02ffff3718e9215a2487eab686b1",
+    "convergence/nominal_0p25ms/speed_ratio_comparison.csv": "d2adfceea85ad4d0931c6f137d5e891b7f8c77be0aba6ba9e4500017408b4cc5",
+    "convergence/nominal_0p25ms/trace_manifest.json": "b41f2836b817c2d62c5fb50b1912b0bf5769c704171feddc46ae92c0e3840ce9",
+    "convergence/nominal_0p50ms/comparison_grid.npz": "7ddfa6e18631e72bee7012d27ce15c29646883b6b298f1b9da9305db6d959fd8",
+    "convergence/nominal_0p50ms/execution_provenance.json": "6738c02e81d823585e8d3f7c701a7b20ceb0054140b214e08d83a14f0a8352fb",
+    "convergence/nominal_0p50ms/metrics.json": "70d4a94fe05bf8e5e8fa3c532d443ee032cd3cc4eeea863d19ede3b57a372b16",
+    "convergence/nominal_0p50ms/native_trace.npz": "31de03cbfd7c0644f2dccc27324fb0e51433602aa8c43a6f2aa1504b3220d93b",
+    "convergence/nominal_0p50ms/primary_force_comparison.csv": "72ba2f89f7fe5cf5482b7eee9008249bed5229466ab33a1a0be36d8d02308849",
+    "convergence/nominal_0p50ms/primary_rpm_comparison.csv": "6aa84deb8b26a666a8e5750f905010aa388347a0cc8d64ee3f8b33e90a2987a4",
+    "convergence/nominal_0p50ms/secondary_rpm_comparison.csv": "ffbd89478ed1e6410f917e47f5d8eb5595fec6ae0bb283ee1c11d097a5e1027b",
+    "convergence/nominal_0p50ms/segmented_report.npz": "5c5d6932aa0b0227190b0ab7ed849c2eb1a46f2b06a7857cc7bd1a199bee63e3",
+    "convergence/nominal_0p50ms/speed_ratio_comparison.csv": "953a267cb0143b0d34ef259d663c0227513c2f05146bd8ae3f4201bd84f4441f",
+    "convergence/nominal_0p50ms/trace_manifest.json": "617cd09ed63c6c4e8177a33a113d932a08bd382fc9a12249899c772054ac9126",
+    "convergence/tight_0p50ms/comparison_grid.npz": "1e5a9c71e316cb5db0ee2f76dcbf465d2b284c54545a87678e8818f1a50d68f2",
+    "convergence/tight_0p50ms/execution_provenance.json": "a498fd2125e2d3903b0cbffc56fdabbc5df645cf20ff7b38d7ba2f43d9346551",
+    "convergence/tight_0p50ms/metrics.json": "863b8d7992bff315ac69d60a6ace1ba55dc8bcd2c4c8c8fd58a94516ed983618",
+    "convergence/tight_0p50ms/native_trace.npz": "c5d874b88a41aff2d6e00b0b81bb1cccafe26760fd35d63da660363e346f4410",
+    "convergence/tight_0p50ms/primary_force_comparison.csv": "e150ddac1875f879ab25a0b9203027cce0c1f85c1c3a3dd8a0b945cd3f8bac43",
+    "convergence/tight_0p50ms/primary_rpm_comparison.csv": "476ef33a6740f89cedb0505bbe25891d7106c4a69e8bf9a0e04b3c66efb2984f",
+    "convergence/tight_0p50ms/secondary_rpm_comparison.csv": "e1bfd5a1325ed37dedf5ff9f905e8d9c7503167ca71cf8cd4304fe44037737a9",
+    "convergence/tight_0p50ms/segmented_report.npz": "43d71fd88151da52208750aa24d10c5de74e63773a05f2d00cea213602750be6",
+    "convergence/tight_0p50ms/speed_ratio_comparison.csv": "f340542d2c5201a9a0886b36eca8d5cc064b1d8cdb2ee66f39c5d2550a7584ac",
+    "convergence/tight_0p50ms/trace_manifest.json": "470097798e2b15dbfad0ae81f4d6a9d19d59812b311fae8ff5f2b53a2b016c05",
+    "convergence.json": "e523985aef258182ea8d444ed59e591e63886d4df22c7b9b42b261809e406f52",
+    "evidence_audit.json": "f9e8b5b1a5e54e2fb903517ed3fa8a30d0687faabeb1b2fd85606f54ead4e076",
+    "force-replay/execution_provenance.json": "b3068af5c0abb25916ad3f585a4fff58df202d84230e4c4ae8083e6f8a425191",
+    "force-replay/metrics.json": "35b9238e1c015a668a35e257fc0eebfe2a91a9549c9f39bd19f708bc0f326e73",
+    "force-replay/native_trace.npz": "030f8f2cf42e2f7e64130d1305f6015c74965d0493bef5952437ebe5df8602fd",
+    "force-replay/primary_rpm_comparison.csv": "67fa34b333f623c6b46b0988807b21e393f142d9d224dac6b1a6aec862d6b393",
+    "force-replay/secondary_rpm_comparison.csv": "3f730fed7f37124603e6b37dc33c1fee7bb0ead61e5faabc732713b256c7682e",
+    "force-replay/segmented_report.npz": "5b215dcc543f809556b5d31599a2468504acdc556be0d63de0ab44a3713d3cb8",
+    "force-replay/speed_ratio_comparison.csv": "abddce8b3f4be3f91fff8c73bcd009f758b737187c1fea9235b4cd1862a8610f",
+    "force-replay/trace_manifest.json": "cde8c72366489757446c67c0dd474cf7eca15fd9588b30e75b8b0309b5c84475"
+  },
+  "note": "Compact plot and refinement inputs selected from hash-verified full executions. Full output hashes and executed source snapshots are retained in the delivery evidence archive."
+}

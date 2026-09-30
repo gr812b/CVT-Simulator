@@ -1,0 +1,564 @@
+{
+  "raw_execution_hashes_verified": true,
+  "all_five_runs_completed": true,
+  "runs": {
+    "closed-loop": {
+      "metrics": {
+        "primary_rpm": {
+          "rmse": 110.32235188393301,
+          "percent": 4.415092533936597,
+          "samples": 113
+        },
+        "secondary_rpm": {
+          "rmse": 32.57959041508059,
+          "percent": 2.71417832778649,
+          "samples": 64
+        },
+        "speed_ratio": {
+          "rmse": 0.1001994963841922,
+          "percent": 4.8055277362192514,
+          "samples": 158
+        },
+        "primary_force": {
+          "rmse": 1196.2490759963873,
+          "percent": 46.66133454960144,
+          "samples": 207
+        }
+      },
+      "trace": {
+        "events": 1735,
+        "all_segment_sides_retained": true,
+        "radius_ratio_min": 0.4620215367107726,
+        "radius_ratio_max": 2.4905062126062663,
+        "slip_loss": {
+          "primary": {
+            "reported_J": 12300.842612360699,
+            "decimated_quadrature_difference_J": -4.58836862494536
+          },
+          "secondary": {
+            "reported_J": 7404.973680610251,
+            "decimated_quadrature_difference_J": -3.3922775920691493
+          }
+        },
+        "mode_duration_s": {
+          "engaged/free/stick_stick": 0.000315332647131715,
+          "engaged/free/primary_stick_secondary_slip": 0.030407968039639216,
+          "engaged/free/both_slip": 3.282342927078084,
+          "engaged/free/primary_slip_secondary_stick": 0.8777068550931094,
+          "engaged/low_ratio_seat/both_slip": 0.8081083639949882,
+          "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185531470475699
+        },
+        "transition_reasons": {
+          "static_capacity_exhausted_entered_kinetic_slip": 209,
+          "contact_restuck_with_static_reserve": 381,
+          "kinetic_slip_direction_updated_at_zero_crossing": 320,
+          "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+          "low_ratio_seat_released_by_tensile_reaction": 174,
+          "zero_crossing_simultaneous_contact_topology_exchange": 412,
+          "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+        }
+      }
+    },
+    "force-replay": {
+      "metrics": {
+        "primary_rpm": {
+          "rmse": 1946.1746647249886,
+          "percent": 77.8857691594884,
+          "samples": 113
+        },
+        "secondary_rpm": {
+          "rmse": 13.086265404482722,
+          "percent": 1.0902057852780176,
+          "samples": 64
+        },
+        "speed_ratio": {
+          "rmse": 1.6327376089730203,
+          "percent": 78.30544213320007,
+          "samples": 158
+        }
+      },
+      "trace": {
+        "events": 58,
+        "all_segment_sides_retained": true,
+        "radius_ratio_min": 0.40152479641851646,
+        "radius_ratio_max": 2.4905062126062663,
+        "slip_loss": {
+          "primary": {
+            "reported_J": 173.41736608719776,
+            "decimated_quadrature_difference_J": -4.046943341976657
+          },
+          "secondary": {
+            "reported_J": 426.1771259279788,
+            "decimated_quadrature_difference_J": -11.058769434151031
+          }
+        },
+        "mode_duration_s": {
+          "engaged/free/stick_stick": 2.732493163728755,
+          "engaged/free/primary_stick_secondary_slip": 0.08166232921504304,
+          "engaged/free/both_slip": 0.08639313186661934,
+          "engaged/free/primary_slip_secondary_stick": 0.02844013713100017,
+          "engaged/upper_stop/stick_stick": 2.0710112380585826
+        },
+        "transition_reasons": {
+          "static_capacity_exhausted_entered_kinetic_slip": 6,
+          "upper_stop_impact_immediately_released_by_tensile_reaction": 5,
+          "contact_restuck_with_static_reserve": 9,
+          "zero_crossing_simultaneous_contact_topology_exchange": 9,
+          "low_ratio_secondary_stop_immediately_released_into_engaged_shift": 5,
+          "kinetic_slip_direction_updated_at_zero_crossing": 6,
+          "upper_stop_reached_perfectly_inelastic_impact": 9,
+          "upper_stop_released_by_tensile_reaction": 9
+        }
+      }
+    },
+    "convergence/nominal_0p50ms": {
+      "metrics": {
+        "primary_rpm": {
+          "rmse": 110.3219787905203,
+          "percent": 4.415077602765236,
+          "samples": 113
+        },
+        "secondary_rpm": {
+          "rmse": 32.57959514345117,
+          "percent": 2.7141787217030737,
+          "samples": 64
+        },
+        "speed_ratio": {
+          "rmse": 0.10019911550827802,
+          "percent": 4.805509469562874,
+          "samples": 158
+        },
+        "primary_force": {
+          "rmse": 1196.2490461443379,
+          "percent": 46.66133338518135,
+          "samples": 207
+        }
+      },
+      "trace": {
+        "events": 1735,
+        "all_segment_sides_retained": true,
+        "radius_ratio_min": 0.46202131533046786,
+        "radius_ratio_max": 2.4905062126062663,
+        "slip_loss": {
+          "primary": {
+            "reported_J": 12300.843760597469,
+            "decimated_quadrature_difference_J": -4.5867197010175005
+          },
+          "secondary": {
+            "reported_J": 7404.974989795722,
+            "decimated_quadrature_difference_J": -3.3919317490635876
+          }
+        },
+        "mode_duration_s": {
+          "engaged/free/stick_stick": 0.000315332647131715,
+          "engaged/free/primary_stick_secondary_slip": 0.030407981866374955,
+          "engaged/free/both_slip": 3.282343413470551,
+          "engaged/free/primary_slip_secondary_stick": 0.8777065008291203,
+          "engaged/low_ratio_seat/both_slip": 0.8081082180079275,
+          "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185531788945012
+        },
+        "transition_reasons": {
+          "static_capacity_exhausted_entered_kinetic_slip": 209,
+          "contact_restuck_with_static_reserve": 381,
+          "kinetic_slip_direction_updated_at_zero_crossing": 320,
+          "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+          "low_ratio_seat_released_by_tensile_reaction": 174,
+          "zero_crossing_simultaneous_contact_topology_exchange": 412,
+          "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+        }
+      }
+    },
+    "convergence/nominal_0p25ms": {
+      "metrics": {
+        "primary_rpm": {
+          "rmse": 110.32183477673173,
+          "percent": 4.415071839343846,
+          "samples": 113
+        },
+        "secondary_rpm": {
+          "rmse": 32.5795949787984,
+          "percent": 2.714178707985989,
+          "samples": 64
+        },
+        "speed_ratio": {
+          "rmse": 0.10019899821528214,
+          "percent": 4.8055038442377445,
+          "samples": 158
+        },
+        "primary_force": {
+          "rmse": 1196.2490104700746,
+          "percent": 46.66133199365782,
+          "samples": 207
+        }
+      },
+      "trace": {
+        "events": 1722,
+        "all_segment_sides_retained": true,
+        "radius_ratio_min": 0.4620212816304293,
+        "radius_ratio_max": 2.4905062126062663,
+        "slip_loss": {
+          "primary": {
+            "reported_J": 12300.843941712948,
+            "decimated_quadrature_difference_J": -4.584864495682268
+          },
+          "secondary": {
+            "reported_J": 7404.975119658984,
+            "decimated_quadrature_difference_J": -3.3916043447707125
+          }
+        },
+        "mode_duration_s": {
+          "engaged/free/stick_stick": 0.000315332647131715,
+          "engaged/free/primary_stick_secondary_slip": 0.03040798000460127,
+          "engaged/free/both_slip": 3.2823434771628093,
+          "engaged/free/primary_slip_secondary_stick": 0.8777065416447842,
+          "engaged/low_ratio_seat/both_slip": 0.8081081155937627,
+          "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185529469106767
+        },
+        "transition_reasons": {
+          "static_capacity_exhausted_entered_kinetic_slip": 209,
+          "contact_restuck_with_static_reserve": 381,
+          "kinetic_slip_direction_updated_at_zero_crossing": 307,
+          "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+          "low_ratio_seat_released_by_tensile_reaction": 174,
+          "zero_crossing_simultaneous_contact_topology_exchange": 412,
+          "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+        }
+      }
+    },
+    "convergence/tight_0p50ms": {
+      "metrics": {
+        "primary_rpm": {
+          "rmse": 110.32111332560436,
+          "percent": 4.415042966921969,
+          "samples": 113
+        },
+        "secondary_rpm": {
+          "rmse": 32.57961483976289,
+          "percent": 2.7141803625862684,
+          "samples": 64
+        },
+        "speed_ratio": {
+          "rmse": 0.10019834926683975,
+          "percent": 4.805472720930226,
+          "samples": 158
+        },
+        "primary_force": {
+          "rmse": 1196.2488347630713,
+          "percent": 46.66132513996536,
+          "samples": 207
+        }
+      },
+      "trace": {
+        "events": 1421,
+        "all_segment_sides_retained": true,
+        "radius_ratio_min": 0.4620212303848931,
+        "radius_ratio_max": 2.4905062126062663,
+        "slip_loss": {
+          "primary": {
+            "reported_J": 12300.843464500467,
+            "decimated_quadrature_difference_J": -4.583663545010495
+          },
+          "secondary": {
+            "reported_J": 7404.97383127623,
+            "decimated_quadrature_difference_J": -3.391064861250925
+          }
+        },
+        "mode_duration_s": {
+          "engaged/free/stick_stick": 0.0003153326328112071,
+          "engaged/free/primary_stick_secondary_slip": 0.030408006717243766,
+          "engaged/free/both_slip": 3.282343541305678,
+          "engaged/free/primary_slip_secondary_stick": 0.8777066611506278,
+          "engaged/low_ratio_seat/both_slip": 0.8081079004280949,
+          "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185577655441759
+        },
+        "transition_reasons": {
+          "static_capacity_exhausted_entered_kinetic_slip": 209,
+          "contact_restuck_with_static_reserve": 381,
+          "kinetic_slip_direction_updated_at_zero_crossing": 6,
+          "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+          "low_ratio_seat_released_by_tensile_reaction": 174,
+          "zero_crossing_simultaneous_contact_topology_exchange": 412,
+          "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+        }
+      }
+    }
+  },
+  "refinement": [
+    {
+      "label": "nominal_1p00ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.001,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1735,
+      "segment_count": 1736,
+      "artifact_path": "closed-loop",
+      "primary_rpm_rmse": 110.32235188393301,
+      "secondary_rpm_rmse": 32.57959041508059,
+      "speed_ratio_rmse": 0.1001994963841922,
+      "primary_force_rmse": 1196.2490759963873,
+      "common_grid_samples": 25001,
+      "shift_speed_peak_difference": {
+        "time_s": 0.0,
+        "nominal_mode": "engaged/free/stick_stick",
+        "comparison_mode": "engaged/free/stick_stick",
+        "maximum_when_same_mode_m_per_s": 0.0
+      },
+      "difference_from_nominal": {
+        "primary_rpm": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        },
+        "secondary_rpm": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        },
+        "belt_speed_m_per_s": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        },
+        "shift_mm": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        },
+        "shift_speed_m_per_s": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        },
+        "primary_force_N": {
+          "rms": 0.0,
+          "maximum_absolute": 0.0
+        }
+      },
+      "common_grid_mode_mismatch_count": 0,
+      "sequence_excluding_direction_updates_equal": true,
+      "event_count_excluding_direction_updates": 1415,
+      "maximum_matched_event_time_difference_s": 0.0,
+      "mode_duration_s": {
+        "engaged/free/stick_stick": 0.000315332647131715,
+        "engaged/free/primary_stick_secondary_slip": 0.030407968039639216,
+        "engaged/free/both_slip": 3.282342927078084,
+        "engaged/free/primary_slip_secondary_stick": 0.8777068550931094,
+        "engaged/low_ratio_seat/both_slip": 0.8081083639949882,
+        "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185531470475699
+      },
+      "transition_reasons": {
+        "static_capacity_exhausted_entered_kinetic_slip": 209,
+        "contact_restuck_with_static_reserve": 381,
+        "kinetic_slip_direction_updated_at_zero_crossing": 320,
+        "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+        "low_ratio_seat_released_by_tensile_reaction": 174,
+        "zero_crossing_simultaneous_contact_topology_exchange": 412,
+        "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+      }
+    },
+    {
+      "label": "nominal_0p50ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.0005,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1735,
+      "segment_count": 1736,
+      "artifact_path": "convergence/nominal_0p50ms",
+      "primary_rpm_rmse": 110.3219787905203,
+      "secondary_rpm_rmse": 32.57959514345117,
+      "speed_ratio_rmse": 0.10019911550827802,
+      "primary_force_rmse": 1196.2490461443379,
+      "common_grid_samples": 25001,
+      "shift_speed_peak_difference": {
+        "time_s": 4.9972,
+        "nominal_mode": "engaged/free/both_slip",
+        "comparison_mode": "engaged/free/both_slip",
+        "maximum_when_same_mode_m_per_s": 0.0007980325061565097
+      },
+      "difference_from_nominal": {
+        "primary_rpm": {
+          "rms": 0.009416638823624607,
+          "maximum_absolute": 0.03353385793840737
+        },
+        "secondary_rpm": {
+          "rms": 0.00010612894977296835,
+          "maximum_absolute": 0.0003078612141266417
+        },
+        "belt_speed_m_per_s": {
+          "rms": 0.00011897839834999397,
+          "maximum_absolute": 0.0006721570856456083
+        },
+        "shift_mm": {
+          "rms": 0.0007762719112823611,
+          "maximum_absolute": 0.003840991039157901
+        },
+        "shift_speed_m_per_s": {
+          "rms": 0.00019959433478557346,
+          "maximum_absolute": 0.0007980325061565097
+        },
+        "primary_force_N": {
+          "rms": 0.047146022729185395,
+          "maximum_absolute": 0.17613356145329817
+        }
+      },
+      "common_grid_mode_mismatch_count": 2,
+      "sequence_excluding_direction_updates_equal": true,
+      "event_count_excluding_direction_updates": 1415,
+      "maximum_matched_event_time_difference_s": 5.131899039056975e-07,
+      "mode_duration_s": {
+        "engaged/free/stick_stick": 0.000315332647131715,
+        "engaged/free/primary_stick_secondary_slip": 0.030407981866374955,
+        "engaged/free/both_slip": 3.282343413470551,
+        "engaged/free/primary_slip_secondary_stick": 0.8777065008291203,
+        "engaged/low_ratio_seat/both_slip": 0.8081082180079275,
+        "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185531788945012
+      },
+      "transition_reasons": {
+        "static_capacity_exhausted_entered_kinetic_slip": 209,
+        "contact_restuck_with_static_reserve": 381,
+        "kinetic_slip_direction_updated_at_zero_crossing": 320,
+        "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+        "low_ratio_seat_released_by_tensile_reaction": 174,
+        "zero_crossing_simultaneous_contact_topology_exchange": 412,
+        "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+      }
+    },
+    {
+      "label": "nominal_0p25ms",
+      "rtol": 1e-07,
+      "atol": 1e-09,
+      "max_step_s": 0.00025,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1722,
+      "segment_count": 1723,
+      "artifact_path": "convergence/nominal_0p25ms",
+      "primary_rpm_rmse": 110.32183477673173,
+      "secondary_rpm_rmse": 32.5795949787984,
+      "speed_ratio_rmse": 0.10019899821528214,
+      "primary_force_rmse": 1196.2490104700746,
+      "common_grid_samples": 25001,
+      "shift_speed_peak_difference": {
+        "time_s": 0.8270000000000001,
+        "nominal_mode": "engaged/low_ratio_seat/both_slip",
+        "comparison_mode": "engaged/free/both_slip",
+        "maximum_when_same_mode_m_per_s": 0.0010728556023469338
+      },
+      "difference_from_nominal": {
+        "primary_rpm": {
+          "rms": 0.012958132716433838,
+          "maximum_absolute": 0.045013973903431766
+        },
+        "secondary_rpm": {
+          "rms": 0.00014613579391544777,
+          "maximum_absolute": 0.00041729180162110736
+        },
+        "belt_speed_m_per_s": {
+          "rms": 0.00016368064990960357,
+          "maximum_absolute": 0.0009025468355901012
+        },
+        "shift_mm": {
+          "rms": 0.001067712081698334,
+          "maximum_absolute": 0.005159690919930069
+        },
+        "shift_speed_m_per_s": {
+          "rms": 0.04051902554774674,
+          "maximum_absolute": 6.406601424803351
+        },
+        "primary_force_N": {
+          "rms": 0.06487707371025216,
+          "maximum_absolute": 0.23641348029741494
+        }
+      },
+      "common_grid_mode_mismatch_count": 4,
+      "sequence_excluding_direction_updates_equal": true,
+      "event_count_excluding_direction_updates": 1415,
+      "maximum_matched_event_time_difference_s": 6.878281162414623e-07,
+      "mode_duration_s": {
+        "engaged/free/stick_stick": 0.000315332647131715,
+        "engaged/free/primary_stick_secondary_slip": 0.03040798000460127,
+        "engaged/free/both_slip": 3.2823434771628093,
+        "engaged/free/primary_slip_secondary_stick": 0.8777065416447842,
+        "engaged/low_ratio_seat/both_slip": 0.8081081155937627,
+        "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185529469106767
+      },
+      "transition_reasons": {
+        "static_capacity_exhausted_entered_kinetic_slip": 209,
+        "contact_restuck_with_static_reserve": 381,
+        "kinetic_slip_direction_updated_at_zero_crossing": 307,
+        "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+        "low_ratio_seat_released_by_tensile_reaction": 174,
+        "zero_crossing_simultaneous_contact_topology_exchange": 412,
+        "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+      }
+    },
+    {
+      "label": "tight_0p50ms",
+      "rtol": 3e-08,
+      "atol": 3e-10,
+      "max_step_s": 0.0005,
+      "completed": true,
+      "termination_reason": "final_time_reached",
+      "transition_count": 1421,
+      "segment_count": 1422,
+      "artifact_path": "convergence/tight_0p50ms",
+      "primary_rpm_rmse": 110.32111332560436,
+      "secondary_rpm_rmse": 32.57961483976289,
+      "speed_ratio_rmse": 0.10019834926683975,
+      "primary_force_rmse": 1196.2488347630713,
+      "common_grid_samples": 25001,
+      "shift_speed_peak_difference": {
+        "time_s": 0.8270000000000001,
+        "nominal_mode": "engaged/low_ratio_seat/both_slip",
+        "comparison_mode": "engaged/free/both_slip",
+        "maximum_when_same_mode_m_per_s": 0.002618968043782921
+      },
+      "difference_from_nominal": {
+        "primary_rpm": {
+          "rms": 0.03203297975093663,
+          "maximum_absolute": 0.10984868889642542
+        },
+        "secondary_rpm": {
+          "rms": 0.00036152704203048846,
+          "maximum_absolute": 0.0009695893946840063
+        },
+        "belt_speed_m_per_s": {
+          "rms": 0.00040397996028284196,
+          "maximum_absolute": 0.0022014060997346263
+        },
+        "shift_mm": {
+          "rms": 0.0026357296184791913,
+          "maximum_absolute": 0.012576979938750028
+        },
+        "shift_speed_m_per_s": {
+          "rms": 0.040522259122295685,
+          "maximum_absolute": 6.406362672024033
+        },
+        "primary_force_N": {
+          "rms": 0.16038503974863988,
+          "maximum_absolute": 0.5770568430789353
+        }
+      },
+      "common_grid_mode_mismatch_count": 8,
+      "sequence_excluding_direction_updates_equal": true,
+      "event_count_excluding_direction_updates": 1415,
+      "maximum_matched_event_time_difference_s": 1.6726091640606455e-06,
+      "mode_duration_s": {
+        "engaged/free/stick_stick": 0.0003153326328112071,
+        "engaged/free/primary_stick_secondary_slip": 0.030408006717243766,
+        "engaged/free/both_slip": 3.282343541305678,
+        "engaged/free/primary_slip_secondary_stick": 0.8777066611506278,
+        "engaged/low_ratio_seat/both_slip": 0.8081079004280949,
+        "engaged/low_ratio_seat/primary_slip_secondary_stick": 0.0011185577655441759
+      },
+      "transition_reasons": {
+        "static_capacity_exhausted_entered_kinetic_slip": 209,
+        "contact_restuck_with_static_reserve": 381,
+        "kinetic_slip_direction_updated_at_zero_crossing": 6,
+        "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact": 207,
+        "low_ratio_seat_released_by_tensile_reaction": 174,
+        "zero_crossing_simultaneous_contact_topology_exchange": 412,
+        "contact_transition_released_low_ratio_seat_by_tensile_reaction": 32
+      }
+    }
+  ]
+}

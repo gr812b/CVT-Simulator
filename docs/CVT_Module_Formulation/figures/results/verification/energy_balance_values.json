@@ -92,6 +92,28 @@
     "max_abs_balance_residual_J": 0.038512683813905824,
     "max_abs_balance_residual_during_active_shift_J": 0.038512683813905824
   },
+  "final_energy_ledger": {
+    "nominal": {
+      "primary_boundary_work_J": 66778.13238951417,
+      "secondary_boundary_work_J": -14609.239155717625,
+      "external_work_J": 52168.893233796545,
+      "kinetic_energy_change_J": 50531.49210284842,
+      "potential_energy_change_J": 48.78195356687337,
+      "slip_dissipation_J": 1588.3398738025076,
+      "impact_capture_dissipation_J": 0.2538590432136516,
+      "balance_residual_J": 0.02544453553218773
+    },
+    "tight": {
+      "primary_boundary_work_J": 66778.10372936039,
+      "secondary_boundary_work_J": -14609.246051156948,
+      "external_work_J": 52168.857678203436,
+      "kinetic_energy_change_J": 50531.50546668599,
+      "potential_energy_change_J": 48.78195356687337,
+      "slip_dissipation_J": 1588.3392146392086,
+      "impact_capture_dissipation_J": 0.25388407794207524,
+      "balance_residual_J": -0.02284076657656442
+    }
+  },
   "quadrature": [
     {
       "audit_step_s": 0.005,

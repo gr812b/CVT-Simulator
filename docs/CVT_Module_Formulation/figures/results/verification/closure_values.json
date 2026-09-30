@@ -92,6 +92,7 @@
       "state": "free_shift_opening_70"
     }
   ],
+  "contour_execution": "closure-contours-ee32817dcedffb9f",
   "expanded_accepted": 163,
   "expanded_census": [
     {
@@ -299,6 +300,10 @@
   ],
   "mixed_search_states": 62,
   "no_transient_rerun": true,
+  "operating_root_condition_range": [
+    1520.0898736256847,
+    10404.7070570235
+  ],
   "root_jacobian_matrices_checked": 150,
   "run_id": "closure-conditioning-2cd896930d63882e",
   "selected_roots": [

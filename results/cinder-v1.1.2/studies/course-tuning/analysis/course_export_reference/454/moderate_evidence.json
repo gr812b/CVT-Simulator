@@ -1,0 +1,1777 @@
+{
+  "archive_name": "final_v3__36b4acf99e52_return.zip",
+  "archive_sha256": "b7b8f3396fcdcc8fca6778fa0618c70f921e1f68f43ceb5319a7e5fde4c50027",
+  "cases": {
+    "R00": {
+      "summary": {
+        "id": "R00",
+        "label": "Baja reference",
+        "family": "reference",
+        "intent": "Unchanged reference hardware; the common point of comparison.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 127.86822750000283,
+        "setup_wall_s": 8.051205700001447,
+        "postprocess_wall_s": 82.27396410000074,
+        "rhs_calls": 27211,
+        "native_solver_points": 15992,
+        "checkpoint_count": 38,
+        "last_completed_time_s": 75.95724928210053,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T00:56:14+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 218.19341410000197,
+        "finished_utc": "2026-09-23T00:59:52+00:00",
+        "finish_time_s": 75.95724928210053,
+        "max_distance_m": 732.0,
+        "final_distance_m": 732.0,
+        "diagnostic_samples": 15370,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 22.01476469015534,
+        "max_primary_rpm": 4866.417140762351,
+        "hill_min_speed_m_s": 3.7697490882042204,
+        "hill_min_primary_rpm": 2864.4038533648795,
+        "first_hill_backshift_time_s": 10.92522293739618,
+        "first_hill_backshift_distance_m": 132.8407081423472,
+        "engagement_time_s": 0.061969837276026445,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 2060.234334172318,
+        "first_upper_stop_time_s": 6.7822187544398975,
+        "primary_slip_work_J": 1588.2357183236604,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 464009.25181589613,
+        "secondary_shaft_work_J": -395335.0705072891,
+        "engine_absorbed_work_J": 27543.36235868492,
+        "primary_slip_duration_s": 0.5960058377128624,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 4.056698841152823,
+        "capture_loss_J": 0.25521401254172815,
+        "physical_transition_count": 31,
+        "min_normal_primary_N": 424.3097644894014,
+        "min_normal_secondary_N": 729.383265624916,
+        "min_local_primary_normal_N_per_rad": 0.9437712405635127,
+        "min_local_secondary_normal_N_per_rad": 2.8967571449841922,
+        "max_realized_cyclic_frequency_hz": 1.4537080424546545,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "R00",
+        "label": "Baja reference",
+        "family": "reference",
+        "intent": "Unchanged reference hardware; the common point of comparison.",
+        "tip_mass_per_flyweight_kg": 0.25,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.263646,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 94.09049026972177,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 110.0,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 300.0,
+        "helix_angle_from_circumferential_deg": 20.0,
+        "ramp_end_angle_deg": 20.0,
+        "ramp_unchanged_prefix_mm": null,
+        "ramp_blend_mm": null,
+        "ramp_tail_kind": "baseline",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": []
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free",
+        "upper_stop"
+      ],
+      "entry": {
+        "time_s": 38.367154634623816,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3824.3204221969672,
+        "speed_m_s": 17.300513243981154
+      },
+      "hold_entry": {
+        "time_s": 38.833417062701386,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3711.7132134799117,
+        "speed_m_s": 16.791099206792808
+      },
+      "hold_exit": {
+        "time_s": 67.20790444291306,
+        "shift_mm": 9.546424186844856,
+        "primary_rpm": 3132.4130824991025,
+        "speed_m_s": 7.225515843514195
+      },
+      "events": [
+        {
+          "event_id": "E0030",
+          "time_s": 39.731533991243076,
+          "distance_m": 370.3376268991869,
+          "reason": "upper_stop_released_by_tensile_reaction"
+        }
+      ],
+      "tail_start_s": 62.2000000000001,
+      "tail_end_s": 67.2049999999989,
+      "tail_duration_s": 5.004999999998802,
+      "tail_start_m": 559.8135421780898,
+      "tail_end_m": 595.9790139020635,
+      "tail_means": {
+        "shift_mm": 9.547093484059303,
+        "active_shift_fraction": 0.4261807089065327,
+        "speed_m_s": 7.2258689597202475,
+        "primary_rpm": 3132.413464807815,
+        "secondary_rpm": 1866.066046768518,
+        "belt_speed_m_s": 16.733652022107524,
+        "geometric_ratio_rp_over_rs": 0.5956932396518336,
+        "shaft_speed_ratio_ws_over_wp": 0.5957278844972514,
+        "primary_actuator_closing_N": 2277.696406596311,
+        "secondary_actuator_closing_N": 2716.5942135596715,
+        "normal_primary_N": 4648.717185732439,
+        "normal_secondary_N": 5544.495817327982,
+        "primary_lambda": 0.09032270704437863,
+        "secondary_lambda": -0.07573002688801261,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 7026.17006414689,
+        "secondary_boundary_power_W": -7027.073735753752,
+        "vehicle_acceleration_m_s2": -0.000212446575123274,
+        "primary_static_utilization": 0.13895801083750559,
+        "secondary_static_utilization": 0.11650773367386555
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.0009960752906152698,
+        "max_abs_vehicle_acceleration_m_s2": 0.0005208622575159382,
+        "max_abs_primary_rpm_rate_rpm_s": 0.002241357027691522,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.13451162472109413,
+        "max_abs_belt_acceleration_m_s2": 0.0008060732219394344,
+        "max_abs_shift_acceleration_m_s2": 4.49591091982918e-05,
+        "shift_range_mm": 0.002020652750035268,
+        "vehicle_speed_range_m_s": 0.001062342302251551,
+        "primary_rpm_range": 0.0011640475172498554,
+        "secondary_rpm_range": 0.2743477512985919,
+        "belt_speed_range_m_s": 0.0016240613875950771
+      },
+      "tail_failed_checks": [],
+      "first_passing_window": {
+        "id": "R00",
+        "start_time_s": "56.63000000000032",
+        "end_time_s": "61.630000000000834",
+        "start_distance_m": "519.5398604476467",
+        "end_distance_m": "555.6943011532577",
+        "duration_s": "5.000000000000512",
+        "sample_count": "1004",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.011240434917390624",
+        "max_abs_vehicle_acceleration_m_s2": "0.005888242281045059",
+        "max_abs_primary_rpm_rate_rpm_s": "0.007672434916794948",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.5206266619358113",
+        "max_abs_belt_acceleration_m_s2": "0.00910254565998747",
+        "max_abs_shift_acceleration_m_s2": "5.4558026129334436e-05",
+        "shift_range_mm": "0.022903111240989205",
+        "vehicle_speed_range_m_s": "0.01199072661553302",
+        "primary_rpm_range": "0.01449403766036994",
+        "secondary_rpm_range": "3.096580900934896",
+        "belt_speed_range_m_s": "0.018557145451602253",
+        "mean_shift_mm": "9.55667926300274",
+        "mean_active_shift_fraction": "0.4267595323295217",
+        "mean_speed_m_s": "7.230888812849523",
+        "mean_primary_rpm": "3132.419261519228",
+        "mean_secondary_rpm": "1867.3624136880574",
+        "mean_belt_speed_m_s": "16.74141572519499",
+        "mean_geometric_ratio_rp_over_rs": "0.5961058843941601",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.5961406365786631",
+        "mean_primary_actuator_closing_N": "2277.6864496727485",
+        "mean_secondary_actuator_closing_N": "2715.97513206764",
+        "mean_normal_primary_N": "4648.696858940248",
+        "mean_normal_secondary_N": "5543.232291389406",
+        "mean_primary_lambda": "0.09028165827893456",
+        "mean_secondary_lambda": "-0.07571271201313486",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "7026.166547036814",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 4.8020824124250794e-05,
+        "secondary": 2.6580469693726627e-05
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12,
+      "interpolated_mechanism_at_mean_shift": {
+        "roller_contact_coordinate_mm": 14.991622751767567,
+        "centrifugal_force_3000rpm_N": 3304.441634887847,
+        "helix_dtheta_dx_rad_m": 61.810515623276075
+      }
+    },
+    "W85": {
+      "summary": {
+        "id": "W85",
+        "label": "Tip hardware 85%",
+        "family": "flyweight",
+        "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 138.79429510000045,
+        "setup_wall_s": 8.059904399997322,
+        "postprocess_wall_s": 83.16984790000424,
+        "rhs_calls": 28390,
+        "native_solver_points": 16257,
+        "checkpoint_count": 39,
+        "last_completed_time_s": 76.16894766409736,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T00:56:14+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 230.02406669999618,
+        "finished_utc": "2026-09-23T01:00:04+00:00",
+        "finish_time_s": 76.16894766409736,
+        "max_distance_m": 732.0,
+        "final_distance_m": 732.0,
+        "diagnostic_samples": 15419,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 22.029847106512715,
+        "max_primary_rpm": 4869.7511454896485,
+        "hill_min_speed_m_s": 3.769995213588791,
+        "hill_min_primary_rpm": 2864.590869162825,
+        "first_hill_backshift_time_s": 10.720496664402571,
+        "first_hill_backshift_distance_m": 128.69729371224193,
+        "engagement_time_s": 0.09963645591294246,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 2225.9477913472792,
+        "first_upper_stop_time_s": 8.095545027489116,
+        "primary_slip_work_J": 1853.3722825926598,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 464211.1791247606,
+        "secondary_shaft_work_J": -395279.5496418805,
+        "engine_absorbed_work_J": 27743.34383920374,
+        "primary_slip_duration_s": 0.6505334930065085,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 4.0689476640974505,
+        "capture_loss_J": 0.24636116237229544,
+        "physical_transition_count": 33,
+        "min_normal_primary_N": 409.06146770445787,
+        "min_normal_secondary_N": 703.0634559167055,
+        "min_local_primary_normal_N_per_rad": 0.9097560441488564,
+        "min_local_secondary_normal_N_per_rad": 2.7902321890484014,
+        "max_realized_cyclic_frequency_hz": 1.4557151139288018,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "W85",
+        "label": "Tip hardware 85%",
+        "family": "flyweight",
+        "intent": "Change centrifugal closing and its consistent inertia together; spring and geometry unchanged. Higher/lower working speed is a hypothesis, not a guaranteed performance gain.",
+        "tip_mass_per_flyweight_kg": 0.2125,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.22614599999999999,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 94.09049026972177,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 110.0,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 300.0,
+        "helix_angle_from_circumferential_deg": 20.0,
+        "ramp_end_angle_deg": 20.0,
+        "ramp_unchanged_prefix_mm": null,
+        "ramp_blend_mm": null,
+        "ramp_tail_kind": "baseline",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": [
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/mass_per_flyweight_kg",
+            "baseline": 0.263646,
+            "value": 0.22614599999999999
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/first_moment_u_kg_m",
+            "baseline": 0.0080954205122,
+            "value": 0.0069133680122
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/second_moment_u_kg_m2",
+            "baseline": 0.00025291921358550735,
+            "value": 0.00021565926391200736
+          }
+        ]
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free",
+        "upper_stop"
+      ],
+      "entry": {
+        "time_s": 38.464846628761805,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3825.970185921361,
+        "speed_m_s": 17.307976467748002
+      },
+      "hold_entry": {
+        "time_s": 38.93094460922828,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3712.77663181864,
+        "speed_m_s": 16.79590991325196
+      },
+      "hold_exit": {
+        "time_s": 67.4207144268098,
+        "shift_mm": 8.542529638645513,
+        "primary_rpm": 3360.0164948894703,
+        "speed_m_s": 7.2042570577939715
+      },
+      "events": [
+        {
+          "event_id": "E0032",
+          "time_s": 39.165490691061216,
+          "distance_m": 359.88520793739053,
+          "reason": "upper_stop_released_by_tensile_reaction"
+        }
+      ],
+      "tail_start_s": 62.41500000000021,
+      "tail_end_s": 67.41999999999871,
+      "tail_duration_s": 5.004999999998496,
+      "tail_start_m": 559.9360298078466,
+      "tail_end_m": 595.9948530856875,
+      "tail_means": {
+        "shift_mm": 8.543230568967546,
+        "active_shift_fraction": 0.3655638960054796,
+        "speed_m_s": 7.204560519189833,
+        "primary_rpm": 3360.0147819026442,
+        "secondary_rpm": 1860.5631850912514,
+        "belt_speed_m_s": 17.081601344615976,
+        "geometric_ratio_rp_over_rs": 0.5536657867789698,
+        "shaft_speed_ratio_ws_over_wp": 0.5537366070946983,
+        "primary_actuator_closing_N": 2213.7068617540976,
+        "secondary_actuator_closing_N": 2702.4716619856686,
+        "normal_primary_N": 4518.116213257439,
+        "normal_secondary_N": 5515.672085326709,
+        "primary_lambda": 0.09075544214288697,
+        "secondary_lambda": -0.07434157160702677,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 7004.110193114721,
+        "secondary_boundary_power_W": -7005.443893804586,
+        "vehicle_acceleration_m_s2": -0.00018976377384764497,
+        "primary_static_utilization": 0.139623757142903,
+        "secondary_static_utilization": 0.11437164862619503
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.006766931253289602,
+        "max_abs_vehicle_acceleration_m_s2": 0.00047581205457456583,
+        "max_abs_primary_rpm_rate_rpm_s": 0.1643434626437777,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.12287750091155013,
+        "max_abs_belt_acceleration_m_s2": 0.005016076909660956,
+        "max_abs_shift_acceleration_m_s2": 0.0033136909695693326,
+        "shift_range_mm": 0.001944050708468481,
+        "vehicle_speed_range_m_s": 0.0009471713862918563,
+        "primary_rpm_range": 0.004913341120300174,
+        "secondary_rpm_range": 0.24460509514938167,
+        "belt_speed_range_m_s": 0.001490390892179505
+      },
+      "tail_failed_checks": [
+        "max_abs_shift_acceleration_m_s2"
+      ],
+      "first_passing_window": {
+        "id": "W85",
+        "start_time_s": "56.73000000000037",
+        "end_time_s": "61.730000000000885",
+        "start_distance_m": "518.953159427164",
+        "end_distance_m": "555.0003421122426",
+        "duration_s": "5.000000000000512",
+        "sample_count": "1004",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.010962307929242026",
+        "max_abs_vehicle_acceleration_m_s2": "0.005756501082886254",
+        "max_abs_primary_rpm_rate_rpm_s": "0.026711349219596937",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.4866047639170206",
+        "max_abs_belt_acceleration_m_s2": "0.009343237848480117",
+        "max_abs_shift_acceleration_m_s2": "2.0028265929755235e-05",
+        "shift_range_mm": "0.02222798630296019",
+        "vehicle_speed_range_m_s": "0.011663458495763557",
+        "primary_rpm_range": "0.05539031180569509",
+        "secondary_rpm_range": "3.012064570802977",
+        "belt_speed_range_m_s": "0.018935786347896055",
+        "mean_shift_mm": "8.55254255893293",
+        "mean_active_shift_fraction": "0.3661261870762844",
+        "mean_speed_m_s": "7.209436902405464",
+        "mean_primary_rpm": "3359.991292224865",
+        "mean_secondary_rpm": "1861.8225011957152",
+        "mean_belt_speed_m_s": "17.08950741844753",
+        "mean_geometric_ratio_rp_over_rs": "0.5540452968044587",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.5541152768449908",
+        "mean_primary_actuator_closing_N": "2213.683845870337",
+        "mean_secondary_actuator_closing_N": "2701.860040848388",
+        "mean_normal_primary_N": "4518.06926283259",
+        "mean_normal_secondary_N": "5514.423769834188",
+        "mean_primary_lambda": "0.09071439088309316",
+        "mean_secondary_lambda": "-0.07432417803452783",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "7004.11048609011",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 0.0035393533235037467,
+        "secondary": 0.0019139966325383284
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12,
+      "interpolated_mechanism_at_mean_shift": {
+        "roller_contact_coordinate_mm": 13.607834328268272,
+        "centrifugal_force_3000rpm_N": 2810.6881247113074,
+        "helix_dtheta_dx_rad_m": 61.810515623276075
+      }
+    },
+    "H28": {
+      "summary": {
+        "id": "H28",
+        "label": "Helix 28 deg",
+        "family": "helix",
+        "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 121.54502879999927,
+        "setup_wall_s": 8.271888200004469,
+        "postprocess_wall_s": 93.7380714999963,
+        "rhs_calls": 26537,
+        "native_solver_points": 16022,
+        "checkpoint_count": 38,
+        "last_completed_time_s": 75.88315164852104,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T01:00:14+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 223.55500820000452,
+        "finished_utc": "2026-09-23T01:03:57+00:00",
+        "finish_time_s": 75.88315164852104,
+        "max_distance_m": 731.9999999999997,
+        "final_distance_m": 731.9999999999997,
+        "diagnostic_samples": 15373,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 22.00241767457256,
+        "max_primary_rpm": 4863.6878030160515,
+        "hill_min_speed_m_s": 3.7692462837130534,
+        "hill_min_primary_rpm": 2864.021802704854,
+        "first_hill_backshift_time_s": 11.205412494249511,
+        "first_hill_backshift_distance_m": 137.58308762201094,
+        "engagement_time_s": 0.061969837276026445,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 2060.234334172318,
+        "first_upper_stop_time_s": 5.542069546753821,
+        "primary_slip_work_J": 1588.3324237400507,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 463975.9886810722,
+        "secondary_shaft_work_J": -395350.33534119255,
+        "engine_absorbed_work_J": 27370.621793489405,
+        "primary_slip_duration_s": 0.5941060609303366,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 4.0450995536146905,
+        "capture_loss_J": 0.25535157682998033,
+        "physical_transition_count": 37,
+        "min_normal_primary_N": 453.4503980277791,
+        "min_normal_secondary_N": 779.3736532510142,
+        "min_local_primary_normal_N_per_rad": 1.0084938019053715,
+        "min_local_secondary_normal_N_per_rad": 3.0934130885520745,
+        "max_realized_cyclic_frequency_hz": 1.4523666283622518,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "H28",
+        "label": "Helix 28 deg",
+        "family": "helix",
+        "intent": "Change the same constant-angle helix, measured from the circumferential direction; torque sensitivity and reflected shift inertia both change. Radius and preload unchanged.",
+        "tip_mass_per_flyweight_kg": 0.25,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.263646,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 94.09049026972177,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 110.0,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 300.0,
+        "helix_angle_from_circumferential_deg": 28.0,
+        "ramp_end_angle_deg": 20.0,
+        "ramp_unchanged_prefix_mm": null,
+        "ramp_blend_mm": null,
+        "ramp_tail_kind": "baseline",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": [
+          {
+            "path": "/assembly/pulleys/secondary/helical_coupling/profile/circumferential_profile/segments/0/angle_rad",
+            "baseline": 1.2217304763960306,
+            "value": 1.0821041362364843
+          }
+        ]
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free",
+        "upper_stop"
+      ],
+      "entry": {
+        "time_s": 38.27633840138846,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3823.222365546789,
+        "speed_m_s": 17.295545840213617
+      },
+      "hold_entry": {
+        "time_s": 38.74271193305592,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3710.960581805326,
+        "speed_m_s": 16.787694441273576
+      },
+      "hold_exit": {
+        "time_s": 67.11786151087203,
+        "shift_mm": 10.667861222039999,
+        "primary_rpm": 2876.5353016043005,
+        "speed_m_s": 7.190085005657557
+      },
+      "events": [
+        {
+          "event_id": "E0036",
+          "time_s": 40.4624740893367,
+          "distance_m": 382.2644048840901,
+          "reason": "upper_stop_released_by_tensile_reaction"
+        }
+      ],
+      "tail_start_s": 62.110000000000056,
+      "tail_end_s": 67.11499999999899,
+      "tail_duration_s": 5.00499999999893,
+      "tail_start_m": 559.9909830199655,
+      "tail_end_m": 595.9794254939998,
+      "tail_means": {
+        "shift_mm": 10.66865091086652,
+        "active_shift_fraction": 0.4939043349878341,
+        "speed_m_s": 7.1904985572763005,
+        "primary_rpm": 2876.5393750673215,
+        "secondary_rpm": 1856.9317118630395,
+        "belt_speed_m_s": 16.196989664019387,
+        "geometric_ratio_rp_over_rs": 0.6455296600196534,
+        "shaft_speed_ratio_ws_over_wp": 0.6455436445109785,
+        "primary_actuator_closing_N": 1705.6075276797283,
+        "secondary_actuator_closing_N": 1981.6963950882748,
+        "normal_primary_N": 3481.0991495001613,
+        "normal_secondary_N": 4044.5891110000143,
+        "primary_lambda": 0.12398100535979911,
+        "secondary_lambda": -0.10670806556452304,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 6990.444107451385,
+        "secondary_boundary_power_W": -6991.174237596244,
+        "vehicle_acceleration_m_s2": -0.0002482172780415316,
+        "primary_static_utilization": 0.1907400082458448,
+        "secondary_static_utilization": 0.16416625471465082
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.0011542234639352492,
+        "max_abs_vehicle_acceleration_m_s2": 0.0006047133631269134,
+        "max_abs_primary_rpm_rate_rpm_s": 0.006642461331102531,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.15616600318226953,
+        "max_abs_belt_acceleration_m_s2": 0.0008880511380260902,
+        "max_abs_shift_acceleration_m_s2": 5.974801103135686e-05,
+        "shift_range_mm": 0.0023656423983577923,
+        "vehicle_speed_range_m_s": 0.0012411972985955089,
+        "primary_rpm_range": 0.01221137896845903,
+        "secondary_rpm_range": 0.320536692425776,
+        "belt_speed_range_m_s": 0.001832829987417739
+      },
+      "tail_failed_checks": [],
+      "first_passing_window": {
+        "id": "H28",
+        "start_time_s": "56.540000000000276",
+        "end_time_s": "61.54000000000079",
+        "start_distance_m": "519.9104462139638",
+        "end_distance_m": "555.8918203335248",
+        "duration_s": "5.000000000000512",
+        "sample_count": "1004",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.012703114423301989",
+        "max_abs_vehicle_acceleration_m_s2": "0.006669601765625328",
+        "max_abs_primary_rpm_rate_rpm_s": "0.06695467482958392",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.7224111687714072",
+        "max_abs_belt_acceleration_m_s2": "0.009782067591190161",
+        "max_abs_shift_acceleration_m_s2": "0.00011359088447163932",
+        "shift_range_mm": "0.026102399175742974",
+        "vehicle_speed_range_m_s": "0.01369000710070356",
+        "primary_rpm_range": "0.13627122508887624",
+        "secondary_rpm_range": "3.535416649962599",
+        "belt_speed_range_m_s": "0.020096130963008108",
+        "mean_shift_mm": "10.679668440985804",
+        "mean_active_shift_fraction": "0.4945696126386289",
+        "mean_speed_m_s": "7.1962755505625235",
+        "mean_primary_rpm": "2876.5965772392346",
+        "mean_secondary_rpm": "1858.4236086970288",
+        "mean_belt_speed_m_s": "16.205470364811",
+        "mean_geometric_ratio_rp_over_rs": "0.6460355689240431",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.6460494359038789",
+        "mean_primary_actuator_closing_N": "1705.6234601466692",
+        "mean_secondary_actuator_closing_N": "1981.200937952228",
+        "mean_normal_primary_N": "3481.1316616688973",
+        "mean_normal_secondary_N": "4043.5778994600705",
+        "mean_primary_lambda": "0.12391718508931977",
+        "mean_secondary_lambda": "-0.10668106916672056",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "6990.495187072955",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 6.381685102496704e-05,
+        "secondary": 3.626048373917001e-05
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12,
+      "interpolated_mechanism_at_mean_shift": {
+        "roller_contact_coordinate_mm": 16.564905013125053,
+        "centrifugal_force_3000rpm_N": 3311.808473193743,
+        "helix_dtheta_dx_rad_m": 42.31105658821893
+      }
+    },
+    "RC40L": {
+      "summary": {
+        "id": "RC40L",
+        "label": "Ramp arc tail 40 deg late",
+        "family": "ramp_shape",
+        "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 40 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 122.45933640000294,
+        "setup_wall_s": 8.012377500002913,
+        "postprocess_wall_s": 92.5271320000029,
+        "rhs_calls": 27153,
+        "native_solver_points": 15967,
+        "checkpoint_count": 39,
+        "last_completed_time_s": 76.00229292883027,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T01:00:11+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 222.99886379999953,
+        "finished_utc": "2026-09-23T01:03:54+00:00",
+        "finish_time_s": 76.00229292883027,
+        "max_distance_m": 732.0,
+        "final_distance_m": 732.0,
+        "diagnostic_samples": 15375,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 22.009318738466156,
+        "max_primary_rpm": 4865.2132999263495,
+        "hill_min_speed_m_s": 3.769708098028263,
+        "hill_min_primary_rpm": 2508.79706297481,
+        "first_hill_backshift_time_s": 11.901947080616967,
+        "first_hill_backshift_distance_m": 146.02530385278118,
+        "engagement_time_s": 0.061969837276026445,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 2060.234334172318,
+        "first_upper_stop_time_s": 4.156309346009595,
+        "primary_slip_work_J": 1588.23634816513,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 464050.3227998577,
+        "secondary_shaft_work_J": -395374.3995968821,
+        "engine_absorbed_work_J": 27469.153595088173,
+        "primary_slip_duration_s": 0.5960406398335251,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 4.055017288382672,
+        "capture_loss_J": 0.29688274390991864,
+        "physical_transition_count": 29,
+        "min_normal_primary_N": 424.3097644894015,
+        "min_normal_secondary_N": 729.3832656249114,
+        "min_local_primary_normal_N_per_rad": 0.9437712405635145,
+        "min_local_secondary_normal_N_per_rad": 2.8967571449840555,
+        "max_realized_cyclic_frequency_hz": 1.452712569061825,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "RC40L",
+        "label": "Ramp arc tail 40 deg late",
+        "family": "ramp_shape",
+        "intent": "Keep first 18 mm of the physical ramp unchanged, C3-blend over 5 mm, then use a arc tail ending at 40 degrees. Test a change of shift-curve shape, not a centrifugal-force scale.",
+        "tip_mass_per_flyweight_kg": 0.25,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.263646,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 94.09049026972177,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 110.0,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 300.0,
+        "helix_angle_from_circumferential_deg": 20.0,
+        "ramp_end_angle_deg": 40.0,
+        "ramp_unchanged_prefix_mm": 18.0,
+        "ramp_blend_mm": 5.0,
+        "ramp_tail_kind": "arc",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": [
+          {
+            "path": "/assembly/pulleys/primary/components/0/geometry/ramp_profile/segments",
+            "baseline": [
+              {
+                "kind": "linear_segment",
+                "length_m": 0.005,
+                "angle_rad": 0.6108652381980153
+              },
+              {
+                "kind": "c3_transition_segment",
+                "length_m": 0.003,
+                "slope_start": 0.7002075382097097,
+                "curvature_start_per_m": 0.0,
+                "third_derivative_start_per_m2": 0.0,
+                "slope_end": 0.7002075382097099,
+                "curvature_end_per_m": -14.042414082433282,
+                "third_derivative_end_per_m2": 277.9461266190616
+              },
+              {
+                "kind": "circular_segment",
+                "length_m": 0.03,
+                "angle_start_rad": 0.6108652381980153,
+                "angle_end_rad": 0.3490658503988659,
+                "quadrant": 2
+              }
+            ],
+            "value": [
+              {
+                "kind": "linear_segment",
+                "length_m": 0.005,
+                "angle_rad": 0.6108652381980153
+              },
+              {
+                "kind": "c3_transition_segment",
+                "length_m": 0.003,
+                "slope_start": 0.7002075382097097,
+                "curvature_start_per_m": 0.0,
+                "third_derivative_start_per_m2": 0.0,
+                "slope_end": 0.7002075382097099,
+                "curvature_end_per_m": -14.042414082433282,
+                "third_derivative_end_per_m2": 277.9461266190616
+              },
+              {
+                "kind": "circular_segment",
+                "length_m": 0.009999999999999998,
+                "angle_start_rad": 0.6108652381980153,
+                "angle_end_rad": 0.5194364567658214,
+                "quadrant": 2
+              },
+              {
+                "kind": "c3_transition_segment",
+                "length_m": 0.005,
+                "slope_start": 0.5718137835898353,
+                "curvature_start_per_m": -11.798518635031906,
+                "third_derivative_start_per_m2": 179.95727464404393,
+                "slope_end": 0.5149262195439519,
+                "curvature_end_per_m": 17.54962808919108,
+                "third_derivative_end_per_m2": 376.06283451090405
+              },
+              {
+                "kind": "circular_segment",
+                "length_m": 0.015,
+                "angle_start_rad": 0.47551715686700485,
+                "angle_end_rad": 0.6981317007977318,
+                "quadrant": 4
+              }
+            ]
+          }
+        ]
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free",
+        "upper_stop"
+      ],
+      "entry": {
+        "time_s": 38.3661499291875,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3823.507028429598,
+        "speed_m_s": 17.296833602061486
+      },
+      "hold_entry": {
+        "time_s": 38.832494239005605,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3711.1674834766286,
+        "speed_m_s": 16.788630425884868
+      },
+      "hold_exit": {
+        "time_s": 67.26078868999252,
+        "shift_mm": 9.54642523377195,
+        "primary_rpm": 3132.412969946843,
+        "speed_m_s": 7.225159859730294
+      },
+      "events": [
+        {
+          "event_id": "E0028",
+          "time_s": 42.49771863762048,
+          "distance_m": 406.662855391944,
+          "reason": "upper_stop_released_by_tensile_reaction"
+        }
+      ],
+      "tail_start_s": 62.25500000000013,
+      "tail_end_s": 67.25999999999885,
+      "tail_duration_s": 5.004999999998724,
+      "tail_start_m": 559.8308017415469,
+      "tail_end_m": 595.9943015888742,
+      "tail_means": {
+        "shift_mm": 9.547023132238124,
+        "active_shift_fraction": 0.4261764608133741,
+        "speed_m_s": 7.225474917642468,
+        "primary_rpm": 3132.413407438128,
+        "secondary_rpm": 1865.964286198759,
+        "belt_speed_m_s": 16.733554730018547,
+        "geometric_ratio_rp_over_rs": 0.595690212272532,
+        "shaft_speed_ratio_ws_over_wp": 0.5956954090930747,
+        "primary_actuator_closing_N": 2277.6964428195924,
+        "secondary_actuator_closing_N": 2716.5987173416966,
+        "normal_primary_N": 4648.717259098499,
+        "normal_secondary_N": 5544.50500973868,
+        "primary_lambda": 0.09032300915797342,
+        "secondary_lambda": -0.07573015398514768,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 7026.170098955945,
+        "secondary_boundary_power_W": -7026.673676951392,
+        "vehicle_acceleration_m_s2": -0.0001898146168997724,
+        "primary_static_utilization": 0.13895847562765143,
+        "secondary_static_utilization": 0.11650792920791947
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.0008906146451710386,
+        "max_abs_vehicle_acceleration_m_s2": 0.00046569764898654826,
+        "max_abs_primary_rpm_rate_rpm_s": 0.0021442951898160817,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.12026547612169342,
+        "max_abs_belt_acceleration_m_s2": 0.0007207193393403959,
+        "max_abs_shift_acceleration_m_s2": 4.209857666657097e-05,
+        "shift_range_mm": 0.0018069666882762903,
+        "vehicle_speed_range_m_s": 0.0009491577030287246,
+        "primary_rpm_range": 0.0011255883446210646,
+        "secondary_rpm_range": 0.24511805742986326,
+        "belt_speed_range_m_s": 0.0014568482798296145
+      },
+      "tail_failed_checks": [],
+      "first_passing_window": {
+        "id": "RC40L",
+        "start_time_s": "56.380000000000194",
+        "end_time_s": "61.380000000000706",
+        "start_distance_m": "517.3544172881727",
+        "end_distance_m": "553.5077537524487",
+        "duration_s": "5.000000000000512",
+        "sample_count": "1004",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.011492268404200683",
+        "max_abs_vehicle_acceleration_m_s2": "0.006020341003486228",
+        "max_abs_primary_rpm_rate_rpm_s": "0.007874702752816942",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.554740889877541",
+        "max_abs_belt_acceleration_m_s2": "0.009306646300175239",
+        "max_abs_shift_acceleration_m_s2": "4.9858930317106045e-06",
+        "shift_range_mm": "0.023423289099980593",
+        "vehicle_speed_range_m_s": "0.012259682606898359",
+        "primary_rpm_range": "0.014859282055112999",
+        "secondary_rpm_range": "3.1660382418249355",
+        "belt_speed_range_m_s": "0.01896213569238725",
+        "mean_shift_mm": "9.55694308406676",
+        "mean_active_shift_fraction": "0.42677546278360706",
+        "mean_speed_m_s": "7.230667308204428",
+        "mean_primary_rpm": "3132.4194100719014",
+        "mean_secondary_rpm": "1867.3052105613854",
+        "mean_belt_speed_m_s": "16.741578942417622",
+        "mean_geometric_ratio_rp_over_rs": "0.5961172452979869",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.5961223466467933",
+        "mean_primary_actuator_closing_N": "2277.686140502379",
+        "mean_secondary_actuator_closing_N": "2715.958056335016",
+        "mean_normal_primary_N": "4648.696226527812",
+        "mean_normal_secondary_N": "5543.197441055093",
+        "mean_primary_lambda": "0.0902805290920499",
+        "mean_secondary_lambda": "-0.07571223514018259",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "7026.166456904823",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 4.496548808674561e-05,
+        "secondary": 2.4889376163628185e-05
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12,
+      "interpolated_mechanism_at_mean_shift": {
+        "roller_contact_coordinate_mm": 14.991524992486198,
+        "centrifugal_force_3000rpm_N": 3304.440957036841,
+        "helix_dtheta_dx_rad_m": 61.810515623276075
+      }
+    },
+    "D01": {
+      "summary": {
+        "id": "D01",
+        "label": "Premature-shift stress control",
+        "family": "stress_control",
+        "intent": "Intentionally adverse hypothesis: early primary closing and weak secondary opposition may pull the engine down under load.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 155.84187189999648,
+        "setup_wall_s": 7.780700999996043,
+        "postprocess_wall_s": 81.05603680000058,
+        "rhs_calls": 44140,
+        "native_solver_points": 19061,
+        "checkpoint_count": 41,
+        "last_completed_time_s": 80.5020441620052,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T01:01:45+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 244.67862669999886,
+        "finished_utc": "2026-09-23T01:05:49+00:00",
+        "finish_time_s": 80.5020441620052,
+        "max_distance_m": 732.0,
+        "final_distance_m": 732.0,
+        "diagnostic_samples": 16277,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 21.9107041486409,
+        "max_primary_rpm": 4843.414305620977,
+        "hill_min_speed_m_s": 3.495556881522805,
+        "hill_min_primary_rpm": 2357.0580404585257,
+        "first_hill_backshift_time_s": 11.982808543473745,
+        "first_hill_backshift_distance_m": 145.60349684911856,
+        "engagement_time_s": 0.005123178916983144,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 1815.512946636183,
+        "first_upper_stop_time_s": 3.9903549144009647,
+        "primary_slip_work_J": 1071.1523864392802,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 461058.06921750336,
+        "secondary_shaft_work_J": -393263.68932551006,
+        "engine_absorbed_work_J": 26135.71467031352,
+        "primary_slip_duration_s": 0.4645313845284972,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 3.967044162005692,
+        "capture_loss_J": 0.8914827319647429,
+        "physical_transition_count": 27,
+        "min_normal_primary_N": 921.7365383979395,
+        "min_normal_secondary_N": 1349.5132155648714,
+        "min_local_primary_normal_N_per_rad": 2.0553240069952716,
+        "min_local_secondary_normal_N_per_rad": 6.418649943759573,
+        "max_realized_cyclic_frequency_hz": 1.4397880077451222,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "D01",
+        "label": "Premature-shift stress control",
+        "family": "stress_control",
+        "intent": "Intentionally adverse hypothesis: early primary closing and weak secondary opposition may pull the engine down under load.",
+        "tip_mass_per_flyweight_kg": 0.325,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.338646,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 75.27239221577742,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 88.00000000000001,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 239.99999999999997,
+        "helix_angle_from_circumferential_deg": 28.0,
+        "ramp_end_angle_deg": 20.0,
+        "ramp_unchanged_prefix_mm": null,
+        "ramp_blend_mm": null,
+        "ramp_tail_kind": "baseline",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": [
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/mass_per_flyweight_kg",
+            "baseline": 0.263646,
+            "value": 0.338646
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/first_moment_u_kg_m",
+            "baseline": 0.0080954205122,
+            "value": 0.0104595255122
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/second_moment_u_kg_m2",
+            "baseline": 0.00025291921358550735,
+            "value": 0.0003274391129325073
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/1/initial_compression_m",
+            "baseline": 0.09409049026972177,
+            "value": 0.07527239221577742
+          },
+          {
+            "path": "/assembly/pulleys/secondary/components/0/initial_compression_m",
+            "baseline": 0.11,
+            "value": 0.08800000000000001
+          },
+          {
+            "path": "/assembly/pulleys/secondary/components/1/initial_twist_rad",
+            "baseline": 5.235987755982989,
+            "value": 4.1887902047863905
+          },
+          {
+            "path": "/assembly/pulleys/secondary/helical_coupling/profile/circumferential_profile/segments/0/angle_rad",
+            "baseline": 1.2217304763960306,
+            "value": 1.0821041362364843
+          }
+        ]
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free",
+        "upper_stop"
+      ],
+      "entry": {
+        "time_s": 40.03026083021036,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3812.6100078670556,
+        "speed_m_s": 17.247537510798452
+      },
+      "hold_entry": {
+        "time_s": 40.49770565025448,
+        "shift_mm": 19.049999999999997,
+        "primary_rpm": 3703.809096365658,
+        "speed_m_s": 16.7553424532248
+      },
+      "hold_exit": {
+        "time_s": 71.4078237254895,
+        "shift_mm": 11.828804641821225,
+        "primary_rpm": 2367.7953351305628,
+        "speed_m_s": 6.424628631543886
+      },
+      "events": [
+        {
+          "event_id": "E0026",
+          "time_s": 44.08451938140566,
+          "distance_m": 405.6971519660542,
+          "reason": "upper_stop_released_by_tensile_reaction"
+        }
+      ],
+      "tail_start_s": 66.39999999999964,
+      "tail_end_s": 71.40499999999872,
+      "tail_duration_s": 5.004999999999086,
+      "tail_start_m": 563.8260849274911,
+      "tail_end_m": 595.981858612459,
+      "tail_means": {
+        "shift_mm": 11.829022847757436,
+        "active_shift_fraction": 0.5639717192259696,
+        "speed_m_s": 6.424730147742781,
+        "primary_rpm": 2367.796682915383,
+        "secondary_rpm": 1659.173568630152,
+        "belt_speed_m_s": 14.039538461044016,
+        "geometric_ratio_rp_over_rs": 0.7006970109413095,
+        "shaft_speed_ratio_ws_over_wp": 0.7007246781748996,
+        "primary_actuator_closing_N": 1553.6826589197995,
+        "secondary_actuator_closing_N": 1756.5580206211505,
+        "normal_primary_N": 3171.024572562448,
+        "normal_secondary_N": 3585.087736647683,
+        "primary_lambda": 0.13968732993624425,
+        "secondary_lambda": -0.12355401430711377,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 6218.811882779278,
+        "secondary_boundary_power_W": -6219.189271195746,
+        "vehicle_acceleration_m_s2": -6.31807760368883e-05,
+        "primary_static_utilization": 0.21490358451729885,
+        "secondary_static_utilization": 0.19008309893402117
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.0003475509443774329,
+        "max_abs_vehicle_acceleration_m_s2": 0.00016256663187365095,
+        "max_abs_primary_rpm_rate_rpm_s": 0.003822516413858815,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.04198250394076916,
+        "max_abs_belt_acceleration_m_s2": 0.00022423501367749797,
+        "max_abs_shift_acceleration_m_s2": 6.211059656817865e-05,
+        "shift_range_mm": 0.0006761467726157377,
+        "vehicle_speed_range_m_s": 0.0003158285225666191,
+        "primary_rpm_range": 0.004176217669737525,
+        "secondary_rpm_range": 0.08156207728779918,
+        "belt_speed_range_m_s": 0.000416280331160479
+      },
+      "tail_failed_checks": [],
+      "first_passing_window": {
+        "id": "D01",
+        "start_time_s": "58.29500000000015",
+        "end_time_s": "63.29500000000066",
+        "start_distance_m": "511.7231788216673",
+        "end_distance_m": "543.87529017915",
+        "duration_s": "5.000000000000512",
+        "sample_count": "1004",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.014741228202231687",
+        "max_abs_vehicle_acceleration_m_s2": "0.00691946817378772",
+        "max_abs_primary_rpm_rate_rpm_s": "0.09270301311239565",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.786938663402018",
+        "max_abs_belt_acceleration_m_s2": "0.009534026096333338",
+        "max_abs_shift_acceleration_m_s2": "6.777962989096758e-06",
+        "shift_range_mm": "0.028773371501870315",
+        "vehicle_speed_range_m_s": "0.01348938706854863",
+        "primary_rpm_range": "0.1795074786105033",
+        "secondary_rpm_range": "3.48360693235054",
+        "belt_speed_range_m_s": "0.01859955766983923",
+        "mean_shift_mm": "11.84117476496282",
+        "mean_active_shift_fraction": "0.5647054952033007",
+        "mean_speed_m_s": "6.430422304041629",
+        "mean_primary_rpm": "2367.8721344476735",
+        "mean_secondary_rpm": "1660.6435564837088",
+        "mean_belt_speed_m_s": "14.047377267597728",
+        "mean_geometric_ratio_rp_over_rs": "0.7012959671152376",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.7013231469734358",
+        "mean_primary_actuator_closing_N": "1553.6696289218648",
+        "mean_secondary_actuator_closing_N": "1756.0360360083419",
+        "mean_normal_primary_N": "3170.9979731317408",
+        "mean_normal_secondary_N": "3584.022383320662",
+        "mean_primary_lambda": "0.13961676356794542",
+        "mean_secondary_lambda": "-0.12352756680688631",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "6219.01263392062",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 6.634032729380124e-05,
+        "secondary": 3.873839591506112e-05
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12
+    },
+    "D02_P": {
+      "summary": {
+        "id": "D02_P",
+        "label": "D02: restore reference primary preload",
+        "family": "diagnostic_repair",
+        "intent": "One-change intervention on D02: retain 65% tips but restore reference primary spring compression. Distinguish a lower spring opposition from increasing centrifugal actuation.",
+        "status": "finished",
+        "reason": "course_finish",
+        "integration_wall_s": 144.6529389999996,
+        "setup_wall_s": 7.704207399998268,
+        "postprocess_wall_s": 80.62756149999768,
+        "rhs_calls": 34754,
+        "native_solver_points": 19227,
+        "checkpoint_count": 45,
+        "last_completed_time_s": 88.70396015638038,
+        "requested_maximum_time_s": 180.0,
+        "started_utc": "2026-09-23T01:06:01+00:00",
+        "parallel_workers": 4,
+        "blas_threads": {
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        },
+        "total_wall_s": 232.984721599998,
+        "finished_utc": "2026-09-23T01:09:54+00:00",
+        "finish_time_s": 88.70396015638038,
+        "max_distance_m": 732.0,
+        "final_distance_m": 732.0,
+        "diagnostic_samples": 17921,
+        "inspection_errors": 0,
+        "interior_inspection_errors": 0,
+        "sampled_admissibility_review_count": 0,
+        "review_required": false,
+        "first_review_time_s": null,
+        "max_speed_m_s": 21.789691769494635,
+        "max_primary_rpm": 4816.6642256445075,
+        "hill_min_speed_m_s": 3.768791050286181,
+        "hill_min_primary_rpm": 2863.675898418382,
+        "first_hill_backshift_time_s": 11.325000000000207,
+        "first_hill_backshift_distance_m": 122.45199405478485,
+        "engagement_time_s": 0.16732213735299084,
+        "engagement_distance_m": 0.0,
+        "engagement_primary_rpm": 2526.728243416642,
+        "first_upper_stop_time_s": 84.78992878683859,
+        "primary_slip_work_J": 2362.8695306183618,
+        "secondary_slip_work_J": 0.0,
+        "primary_shaft_work_J": 453976.864590871,
+        "secondary_shaft_work_J": -385629.87537007214,
+        "engine_absorbed_work_J": 24496.375963232265,
+        "primary_slip_duration_s": 0.7734802119977756,
+        "secondary_slip_duration_s": 0.0,
+        "reverse_transmission_duration_s": 3.849031369541848,
+        "capture_loss_J": 0.23067365488191172,
+        "physical_transition_count": 25,
+        "min_normal_primary_N": 382.9164551642108,
+        "min_normal_secondary_N": 657.9374276315801,
+        "min_local_primary_normal_N_per_rad": 0.8514353172474258,
+        "min_local_secondary_normal_N_per_rad": 1.1256793341856797,
+        "max_realized_cyclic_frequency_hz": 1.2968375563151457,
+        "review_margin_tolerance": 1e-05,
+        "metric_note": "Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero."
+      },
+      "numerical_settings": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "max_step_s": 0.005,
+        "maximum_time_s": 180.0,
+        "diagnostic_step_s": 0.005
+      },
+      "resolved_tune": {
+        "id": "D02_P",
+        "label": "D02: restore reference primary preload",
+        "family": "diagnostic_repair",
+        "intent": "One-change intervention on D02: retain 65% tips but restore reference primary spring compression. Distinguish a lower spring opposition from increasing centrifugal actuation.",
+        "tip_mass_per_flyweight_kg": 0.1625,
+        "body_mass_per_flyweight_kg": 0.013645999999999991,
+        "total_mass_per_flyweight_kg": 0.176146,
+        "primary_stiffness_N_per_m": 12784.0,
+        "primary_preload_mm": 94.09049026972177,
+        "secondary_stiffness_N_per_m": 3532.0,
+        "secondary_preload_mm": 110.0,
+        "torsional_stiffness_Nm_per_rad": 3.476,
+        "secondary_twist_deg": 300.0,
+        "helix_angle_from_circumferential_deg": 20.0,
+        "ramp_end_angle_deg": 20.0,
+        "ramp_unchanged_prefix_mm": null,
+        "ramp_blend_mm": null,
+        "ramp_tail_kind": "baseline",
+        "spring_matches": [],
+        "mass_partition": "Concentrated tip delta; body and constant shaft-inertia entries unchanged",
+        "changes": [
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/mass_per_flyweight_kg",
+            "baseline": 0.263646,
+            "value": 0.176146
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/first_moment_u_kg_m",
+            "baseline": 0.0080954205122,
+            "value": 0.0053372980122
+          },
+          {
+            "path": "/assembly/pulleys/primary/components/0/mass_geometry/second_moment_u_kg_m2",
+            "baseline": 0.00025291921358550735,
+            "value": 0.00016597933101400735
+          }
+        ]
+      },
+      "stops_mm": [
+        2.4891999999999994,
+        19.049999999999997
+      ],
+      "contact_modes": [
+        "stick_stick"
+      ],
+      "support_modes": [
+        "free"
+      ],
+      "entry": {
+        "time_s": 42.51294629550913,
+        "shift_mm": 17.464245180533556,
+        "primary_rpm": 3826.7816934677116,
+        "speed_m_s": 15.42742180400518
+      },
+      "hold_entry": {
+        "time_s": 43.036667859677664,
+        "shift_mm": 16.92723694466992,
+        "primary_rpm": 3819.1999173885565,
+        "speed_m_s": 14.814798469306934
+      },
+      "hold_exit": {
+        "time_s": 79.31057844703545,
+        "shift_mm": 4.55059495872489,
+        "primary_rpm": 3718.774622224237,
+        "speed_m_s": 5.84978915073769
+      },
+      "events": [],
+      "tail_start_s": 74.30499999999972,
+      "tail_end_s": 79.30999999999881,
+      "tail_duration_s": 5.004999999999086,
+      "tail_start_m": 566.718284494745,
+      "tail_end_m": 595.9966162068148,
+      "tail_means": {
+        "shift_mm": 4.550632907649851,
+        "active_shift_fraction": 0.1244766501406847,
+        "speed_m_s": 5.849816556503889,
+        "primary_rpm": 3718.774339851524,
+        "secondary_rpm": 1510.7032962771666,
+        "belt_speed_m_s": 15.084072653522654,
+        "geometric_ratio_rp_over_rs": 0.4061826991722503,
+        "shaft_speed_ratio_ws_over_wp": 0.4062368829666209,
+        "primary_actuator_closing_N": 1974.6120645176243,
+        "secondary_actuator_closing_N": 2641.718324326135,
+        "normal_primary_N": 4030.130189701318,
+        "normal_secondary_N": 5391.676136376916,
+        "primary_lambda": 0.09285901394253479,
+        "secondary_lambda": -0.06940957001813076,
+        "primary_slip_loss_W": 0.0,
+        "secondary_slip_loss_W": 0.0,
+        "primary_boundary_power_W": 5644.9753189468065,
+        "secondary_boundary_power_W": -5645.755354166753,
+        "vehicle_acceleration_m_s2": -1.4315319711203823e-05,
+        "primary_static_utilization": 0.1428600214500535,
+        "secondary_static_utilization": 0.10678395387404734
+      },
+      "tail_checks": {
+        "max_abs_shift_rate_mm_s": 0.0009253643067914687,
+        "max_abs_vehicle_acceleration_m_s2": 2.9791850009772312e-05,
+        "max_abs_primary_rpm_rate_rpm_s": 0.017530371608926024,
+        "max_abs_secondary_rpm_rate_rpm_s": 0.00769368502024548,
+        "max_abs_belt_acceleration_m_s2": 0.0008145159838880591,
+        "max_abs_shift_acceleration_m_s2": 0.00047218861438932166,
+        "shift_range_mm": 0.00013306354713815693,
+        "vehicle_speed_range_m_s": 7.21768798488398e-05,
+        "primary_rpm_range": 0.001198275849219499,
+        "secondary_rpm_range": 0.018639533265741193,
+        "belt_speed_range_m_s": 0.00037588766388729766
+      },
+      "tail_failed_checks": [],
+      "first_passing_window": {
+        "id": "D02_P",
+        "start_time_s": "61.11500000000057",
+        "end_time_s": "66.11999999999989",
+        "start_distance_m": "489.5283177103688",
+        "end_distance_m": "518.8334020079141",
+        "duration_s": "5.00499999999932",
+        "sample_count": "1005",
+        "contact_modes": "[\"stick_stick\"]",
+        "physical_event_count": "0",
+        "max_abs_shift_rate_mm_s": "0.009934608645389578",
+        "max_abs_vehicle_acceleration_m_s2": "0.004691612971525108",
+        "max_abs_primary_rpm_rate_rpm_s": "0.07397626621875747",
+        "max_abs_secondary_rpm_rate_rpm_s": "1.211599562563989",
+        "max_abs_belt_acceleration_m_s2": "0.009206905680886732",
+        "max_abs_shift_acceleration_m_s2": "3.832621825467333e-06",
+        "shift_range_mm": "0.022005179415796938",
+        "vehicle_speed_range_m_s": "0.010386506587107824",
+        "primary_rpm_range": "0.16433454399520997",
+        "secondary_rpm_range": "2.6822943226322877",
+        "belt_speed_range_m_s": "0.020392303632533526",
+        "mean_shift_mm": "4.5619320989317975",
+        "mean_active_shift_fraction": "0.12515893549416685",
+        "mean_speed_m_s": "5.855161721407912",
+        "mean_primary_rpm": "3718.689784132914",
+        "mean_secondary_rpm": "1512.0836743046918",
+        "mean_belt_speed_m_s": "15.094652058902572",
+        "mean_geometric_ratio_rp_over_rs": "0.40656242766109824",
+        "mean_shaft_speed_ratio_ws_over_wp": "0.4066173226670355",
+        "mean_primary_actuator_closing_N": "1974.6942326432124",
+        "mean_secondary_actuator_closing_N": "2641.146531461554",
+        "mean_normal_primary_N": "4030.297882109984",
+        "mean_normal_secondary_N": "5390.509127696158",
+        "mean_primary_lambda": "0.09281422824884283",
+        "mean_secondary_lambda": "-0.06939422186083076",
+        "mean_primary_slip_loss_W": "0.0",
+        "mean_secondary_slip_loss_W": "0.0",
+        "mean_primary_boundary_power_W": "5646.4485174441525",
+        "passed": "True",
+        "failed_checks": "[]"
+      },
+      "tail_axial_actuator_minus_belt_max_abs_N": {
+        "primary": 0.0005043446601575852,
+        "secondary": 0.00024887790277716704
+      },
+      "power_identity_max_residual_W": 1.8189894035458565e-12
+    }
+  },
+  "verified_file_hashes": [
+    {
+      "case": "R00",
+      "file": "status.json",
+      "sha256": "5b9e927d914e407638f37089ce7adc9830fa7ab41822959979f583a402127528"
+    },
+    {
+      "case": "R00",
+      "file": "summary.json",
+      "sha256": "d1aaa22ffabbdbfc69e6a3acd8c1feb77d47afe2b9eae355f6068fa0e0745dba"
+    },
+    {
+      "case": "R00",
+      "file": "resolved_case.json",
+      "sha256": "644454a8886515dc28020c8cd035733c59c22ffad0af95ed6723e02f3d7d8d3a"
+    },
+    {
+      "case": "R00",
+      "file": "diagnostics.csv",
+      "sha256": "700d34b26d6a6fd0775681fcee00b151d465faf214dff71dda80bef5ac4a4879"
+    },
+    {
+      "case": "R00",
+      "file": "events.json",
+      "sha256": "dd6d263d201a5c4cb8e4df67efb7c4ff3c30273dba0470e3f7b08878c01c3b65"
+    },
+    {
+      "case": "R00",
+      "file": "events.csv",
+      "sha256": "ee312634a57aca19f03ea841b7e6353bc0d5fdbeefe041eb2ab9a889d8aa5106"
+    },
+    {
+      "case": "R00",
+      "file": "segments.csv",
+      "sha256": "556f3271ccc7b7e6c70edebd25241bf9fd56031feb343741db4d9b8338b620c6"
+    },
+    {
+      "case": "R00",
+      "file": "sector_metrics.csv",
+      "sha256": "f88254eb9ce497284b574cc81d91433a248e356d52af70eb6b9b524d6d4337e2"
+    },
+    {
+      "case": "R00",
+      "file": "interesting_windows.csv",
+      "sha256": "41658f3ba88039c290600f2d42f1486fac3b87f13d32d17464b4efb0769865fd"
+    },
+    {
+      "case": "R00",
+      "file": "event_windows.csv",
+      "sha256": "94ad8e7317bcf9d959e8be5dc72eddb138f5e540da7d31ec91b674a919a5ba5b"
+    },
+    {
+      "case": "W85",
+      "file": "status.json",
+      "sha256": "c6f4395f7f6d884201d8fd65554e403ff43819c728e47c29f0c60ece8872b32e"
+    },
+    {
+      "case": "W85",
+      "file": "summary.json",
+      "sha256": "5524e15dbd282861318e4d18c4a26480dc07383b6224d8cd440af4dd164a1171"
+    },
+    {
+      "case": "W85",
+      "file": "resolved_case.json",
+      "sha256": "568b34f8e06511f2f9304357d022c08965002d14ea801576b08849ca7477838e"
+    },
+    {
+      "case": "W85",
+      "file": "diagnostics.csv",
+      "sha256": "ec20e8f48ba29f6dbf333e4903a9a673ee8a920b7bb14de3b2dd30e0182dae94"
+    },
+    {
+      "case": "W85",
+      "file": "events.json",
+      "sha256": "61c96c2a6378eb89c56fd96ca13ba1a2a5e3a068cd5556ebddbe2b9f6f2b9fd4"
+    },
+    {
+      "case": "W85",
+      "file": "events.csv",
+      "sha256": "109e1348594b4c5a293ed4882ccf20a7986ebadc65940372cb1ae2e9e7e8e0a9"
+    },
+    {
+      "case": "W85",
+      "file": "segments.csv",
+      "sha256": "a9fef0f8d9d070ad79d94f57f8b5bcfb271946b69d49fc2afb1ba364fab394ec"
+    },
+    {
+      "case": "W85",
+      "file": "sector_metrics.csv",
+      "sha256": "8d3574b55ddcbf34c08bcb528cc7761ff14484a9422fa228fb2b4b7890daa454"
+    },
+    {
+      "case": "W85",
+      "file": "interesting_windows.csv",
+      "sha256": "db8ca8e15bc72efbfded4ef753970935dc9b78ad56fb9f8f2203750aba2c096e"
+    },
+    {
+      "case": "W85",
+      "file": "event_windows.csv",
+      "sha256": "a0697f7daddd2c3e2d1590cc96410ba51f694da14658b4dc4e14d689857593e6"
+    },
+    {
+      "case": "H28",
+      "file": "status.json",
+      "sha256": "c152469a56f6c3d4bddaf1b3c061eeaae883836621a701a0b8391e20befd2287"
+    },
+    {
+      "case": "H28",
+      "file": "summary.json",
+      "sha256": "4fb34c21c16803fe003ad8849f56a93ce72a473573a5268a858bef1bd149e39d"
+    },
+    {
+      "case": "H28",
+      "file": "resolved_case.json",
+      "sha256": "79686f88504b0b45d9f781b5ca5f008c086944dece8bd590975f78e84a180770"
+    },
+    {
+      "case": "H28",
+      "file": "diagnostics.csv",
+      "sha256": "b0b623a45da604a4833961404c4a987b39a36bb8049071ee1320c399e5ad334b"
+    },
+    {
+      "case": "H28",
+      "file": "events.json",
+      "sha256": "c9cf08763f762992a43e4ca8d01e825007728768a14f248192151a8c9d8824cf"
+    },
+    {
+      "case": "H28",
+      "file": "events.csv",
+      "sha256": "2a43556c5756d7ef0fdb5ded3486699fa28ece20d55287162de27f8ab7f93a72"
+    },
+    {
+      "case": "H28",
+      "file": "segments.csv",
+      "sha256": "f8de36197f922e0817602445b1b06926d7fa3f77a361c1b83fed4b09720a2fdb"
+    },
+    {
+      "case": "H28",
+      "file": "sector_metrics.csv",
+      "sha256": "f5ca90b7c86fb50a9fa23008af9b5eee86dc9c92d1b017d10e0c0adf48401868"
+    },
+    {
+      "case": "H28",
+      "file": "interesting_windows.csv",
+      "sha256": "c38db7ea3cc4455f194c40a51fc1092a580eda5481cd5ee29c49a727ed514551"
+    },
+    {
+      "case": "H28",
+      "file": "event_windows.csv",
+      "sha256": "96809f042406d7c3262291d7827fddef268eab73cd8ab73a7470b3e556a9ff31"
+    },
+    {
+      "case": "RC40L",
+      "file": "status.json",
+      "sha256": "059709d617ded9fd072fbf7624efc071d192ae9faee7636fe1b0d7f46a399c9a"
+    },
+    {
+      "case": "RC40L",
+      "file": "summary.json",
+      "sha256": "37debbb534d0a0b13e824d1efa520f22e29eea91a9a36cea7e4e57d2e4db4122"
+    },
+    {
+      "case": "RC40L",
+      "file": "resolved_case.json",
+      "sha256": "4b4d557f2b501a48b1489cf15d719c2e026f2fbfae62ff0d6d88a85df85a204a"
+    },
+    {
+      "case": "RC40L",
+      "file": "diagnostics.csv",
+      "sha256": "b730bc743c387948d41656b28cb38bf3869baab8f63f90c84ff035b7b9db47d8"
+    },
+    {
+      "case": "RC40L",
+      "file": "events.json",
+      "sha256": "84df917373458fdaebe2aaf0055ba2c68853d617e894c36d450211f14d5f96f5"
+    },
+    {
+      "case": "RC40L",
+      "file": "events.csv",
+      "sha256": "ed17cba5d28f1c489d4db6c7cb952bda24f7e130e6083c0cf32a9cd974d5acf2"
+    },
+    {
+      "case": "RC40L",
+      "file": "segments.csv",
+      "sha256": "fb24439f4e4fc728d528e8c34b5063763073815689393267df575665a4fa8ac3"
+    },
+    {
+      "case": "RC40L",
+      "file": "sector_metrics.csv",
+      "sha256": "eb8f4c69f2ba641473f06a52ef68bf81acb6f6f944fdbe47fab3334c6396aeca"
+    },
+    {
+      "case": "RC40L",
+      "file": "interesting_windows.csv",
+      "sha256": "a117e3662ab9a222f044f2d2192831a5858c2f4f5ab4fc02de02f3b0854a5515"
+    },
+    {
+      "case": "RC40L",
+      "file": "event_windows.csv",
+      "sha256": "4cf418c7673412982c9f06dca33006b8e2cae1d587db611a81e09c20ad52162d"
+    },
+    {
+      "case": "D01",
+      "file": "status.json",
+      "sha256": "6b9d2c68144184baaba9a16ad110b23d44b7996d7474eea45b9f2dd33fd364ca"
+    },
+    {
+      "case": "D01",
+      "file": "summary.json",
+      "sha256": "6243c23deebd1370a3f4abf28030b962eaa4bb8f4a25e45a591167aeedef4ea1"
+    },
+    {
+      "case": "D01",
+      "file": "resolved_case.json",
+      "sha256": "7c037066ec77b2ad5d7410147b2d46ed34d4f87685c7be0ffc1696a4c1de2625"
+    },
+    {
+      "case": "D01",
+      "file": "diagnostics.csv",
+      "sha256": "d0fad6423fa4fa422cf1383243b618e99b40ff96d3c9547cae3c5022acfc8840"
+    },
+    {
+      "case": "D01",
+      "file": "events.json",
+      "sha256": "22c14c67b7a7a32a06d93b0b26adfc3efcf17b4bda8604e5a5e40600b6eab482"
+    },
+    {
+      "case": "D01",
+      "file": "events.csv",
+      "sha256": "491fe89de4a76871079fa9bfcca329a84c2e6a2c0f8459133ff7d38cc7a4439a"
+    },
+    {
+      "case": "D01",
+      "file": "segments.csv",
+      "sha256": "7074921c958cee07b6e712cc1feb0f2a54f3a045b25212aec104f8e0ae82517e"
+    },
+    {
+      "case": "D01",
+      "file": "sector_metrics.csv",
+      "sha256": "8c874a9560296d18b4293b6420ffcc319bfc00c88bf3f9975d248761b60a456a"
+    },
+    {
+      "case": "D01",
+      "file": "interesting_windows.csv",
+      "sha256": "67292a88cd156e4ee4c7fbf68cc2eb3ac96d08ace1bd7d075f5afb3c64049ef6"
+    },
+    {
+      "case": "D01",
+      "file": "event_windows.csv",
+      "sha256": "9ee2f6aa5562bdbc35d59843dbd3b5dd23fdf9cd79eb5bc7864967b31020775e"
+    },
+    {
+      "case": "D02_P",
+      "file": "status.json",
+      "sha256": "448bf266c477c4fb4d5abb6cb4180aabe1220f34167ed97f40bf674ee6bb8dcd"
+    },
+    {
+      "case": "D02_P",
+      "file": "summary.json",
+      "sha256": "0e2a3fc432ac561cb321f638feea868d4e8f912b6c7b0f66e3d721bae4f00b79"
+    },
+    {
+      "case": "D02_P",
+      "file": "resolved_case.json",
+      "sha256": "08632bad76f5a3a279946609c2c04ee51a23e454a8b28e8b1a8028d3c3f1881d"
+    },
+    {
+      "case": "D02_P",
+      "file": "diagnostics.csv",
+      "sha256": "0cd2a18df94a1b9d23bea4294ba33f26209f5cdad992303780e880907ffb437d"
+    },
+    {
+      "case": "D02_P",
+      "file": "events.json",
+      "sha256": "e57e96a8f7a5a55f6f7da57073c52dce68d54c99076bbe367a4ad773adcb0421"
+    },
+    {
+      "case": "D02_P",
+      "file": "events.csv",
+      "sha256": "99c21236bcba8f4146c8aba0f846ff01403f5804eb2e0b42add54da723209790"
+    },
+    {
+      "case": "D02_P",
+      "file": "segments.csv",
+      "sha256": "317803de27c799eb554bf1f1f4e30d3292b8acc8b007837eab09e6e00a189cf5"
+    },
+    {
+      "case": "D02_P",
+      "file": "sector_metrics.csv",
+      "sha256": "cfc51be66e838c20487fd08e2697b43d305733275dfb82971412fe1f5b855a8c"
+    },
+    {
+      "case": "D02_P",
+      "file": "interesting_windows.csv",
+      "sha256": "8583bb49e0392ba191227131d095006168a71b56470b6a34bf1d0625ff97e0e0"
+    },
+    {
+      "case": "D02_P",
+      "file": "event_windows.csv",
+      "sha256": "abef6260c785bd6bfdbf9647bc11d22807a6988d596b827bbdc29f2089f5071f"
+    }
+  ],
+  "mean_convention": "Time-weighted trapezoidal means over final stored test window",
+  "plot_origin": "Interpolated crossing of 348 m within a continuous segment",
+  "plot_end": "Interpolated 596 m; no exit taper included",
+  "verified_file_count": 60
+}

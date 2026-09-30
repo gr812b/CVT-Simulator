@@ -198,12 +198,24 @@ work remains a diagnostic, not dissipation. These are accounting/export changes;
 case inputs, dynamics, solver settings, quadrature spacings and acceptance
 limits are unchanged.
 
-The fourth figure panel was not imposed by the handoff placeholder. A short-time
+The upper-stop detail panel was not imposed by the handoff placeholder. A short-time
 view is necessary because the ten-second residual curve compresses the interval
 around the upper stop into an apparent jump. The detail retains each native
 side and separates continuous integration from the energy update at capture.
 See `provenance/SECTION_4_2_2.md` for the complete selection, numerical comparison
 with the draft, limitations, and source locators.
+
+The 24 September reader-evidence take reuses this verified execution. Its
+updated argument, four-panel design, complete TeX, integration scripts and
+review are in
+`docs/CVT_Module_Formulation/results-finalization/rebuild-4-2-2/`. The revised
+figure is 6.5 by 4.6 inches. Its first panel separates signed primary and
+secondary work from kinetic-energy increase; the last shows actual power-
+evaluation intervals halved along the fixed calculated motion. Kinetic and spring storage are separate in the
+manuscript ledger. The event-loss comparison is described as an inventory/
+bookkeeping check, because the release records loss from the kinetic-energy
+drop itself. Figure changes did not alter inputs, numerical outputs, masks,
+quadrature rules or the retained dynamics.
 
 The focused integrity regressions use the retained evidence and make in-memory
 corruptions only (dropped incoming endpoint, unsigned residual, and capture loss

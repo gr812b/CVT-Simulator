@@ -20,6 +20,7 @@ import argparse
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any
 
@@ -32,8 +33,9 @@ from defaults.reference_model import (
     reference_model_status,
     write_reference_model_provenance,
 )
-from analysis.execution_record import capture_inputs, write_execution_record
-from analysis.publication_plots import main as publication_plots
+from analysis.execution_record import capture_inputs, write_execution_record, digest
+from analysis.reader_evidence import main as reader_evidence
+from analysis.plot_profile import main as plot_profile
 from analysis.build_capability_map import main as capability_map
 
 CORE_PATH = HERE / "infrastructure" / "core.py"
@@ -194,10 +196,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plot-only", action="store_true",
                         help="Verify and reuse identified audit outputs; do not rerun dynamics.")
+    parser.add_argument("--check-stick-drift", action="store_true",
+                        help="Replay the largest retained sticking-drift case and one tighter integration; leave the audit unchanged.")
     parser.add_argument("--artifacts-dir", type=Path, default=HERE / "artifacts",
                         help="Audit output/input directory (a full run recreates this directory).")
     parser.add_argument("--figure-dir", type=Path,
                         help="Publication outputs; default: <artifacts-dir>/publication.")
+    parser.add_argument("--profile-data-dir", type=Path,
+                        help="Verified spatial CSV/record; default: <artifacts-dir>/profiles.")
     args = parser.parse_args()
     artifacts = args.artifacts_dir.resolve()
     # Protect source directories from the core's documented output recreation.
@@ -206,6 +212,17 @@ def main() -> int:
     ):
         parser.error("--artifacts-dir must be a dedicated generated-output directory.")
     figures = (args.figure_dir or artifacts / "publication").resolve()
+    profiles = (args.profile_data_dir or artifacts / "profiles").resolve()
+    if args.check_stick_drift:
+        if args.plot_only or args.profile_data_dir is not None:
+            parser.error("--check-stick-drift is separate from --plot-only and --profile-data-dir.")
+        from analysis.sticking_drift import main as check_stick_drift
+        result = check_stick_drift(artifacts, figures)
+        print(json.dumps({key: result[key] for key in (
+            "case_id", "same_event_signature", "peak_drift_ratio_tighter_to_nominal")}, indent=2))
+        return 0
+    if not args.plot_only and args.profile_data_dir is not None:
+        parser.error("--profile-data-dir is for retained-data plotting only; a full run writes <artifacts-dir>/profiles.")
     core.ARTIFACTS = artifacts
     if args.plot_only:
         core.verify_environment()
@@ -219,8 +236,17 @@ def main() -> int:
         )
         if code:
             return code
-    publication_plots(artifacts, figures, core)
-    capability_map(artifacts)
+    reader_evidence(artifacts, figures, core)
+    if not args.plot_only:
+        subprocess.run([sys.executable, str(HERE / "analysis/reconstruct_profile.py"),
+                        "--inputs", str(artifacts), "--output", str(profiles)], check=True)
+    profile_record = json.loads((profiles / "profile_verification.json").read_text())
+    for name, expected in profile_record["input_sha256"].items():
+        if digest(artifacts / name) != expected:
+            raise ValueError(f"Profile data belongs to a different audit: {name}")
+    plot_profile(profiles, figures)
+    if not args.plot_only:
+        capability_map(artifacts)
     return 0
 
 

@@ -1,0 +1,50 @@
+{
+  "kind": "full_throttle_engine",
+  "points": [
+    {
+      "angular_speed_rad_per_s": 104.71975511965977,
+      "torque_Nm": 0.0
+    },
+    {
+      "angular_speed_rad_per_s": 188.49555921538757,
+      "torque_Nm": 24.4047230694
+    },
+    {
+      "angular_speed_rad_per_s": 251.32741228718345,
+      "torque_Nm": 25.08263204355
+    },
+    {
+      "angular_speed_rad_per_s": 272.2713633111154,
+      "torque_Nm": 24.54030486423
+    },
+    {
+      "angular_speed_rad_per_s": 293.21531433504737,
+      "torque_Nm": 23.591232300419996
+    },
+    {
+      "angular_speed_rad_per_s": 314.1592653589793,
+      "torque_Nm": 22.50657794178
+    },
+    {
+      "angular_speed_rad_per_s": 335.1032163829112,
+      "torque_Nm": 20.87959640382
+    },
+    {
+      "angular_speed_rad_per_s": 356.0471674068432,
+      "torque_Nm": 19.659360250349998
+    },
+    {
+      "angular_speed_rad_per_s": 376.99111843077515,
+      "torque_Nm": 18.303542302049998
+    },
+    {
+      "angular_speed_rad_per_s": 418.87902047863906,
+      "torque_Nm": 0.0
+    }
+  ],
+  "low_speed_braking_torque_Nm": -5.0,
+  "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
+  "high_speed_braking_torque_Nm": -28.0,
+  "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
+  "equivalent_rotational_inertia_kg_m2": 0.05
+}

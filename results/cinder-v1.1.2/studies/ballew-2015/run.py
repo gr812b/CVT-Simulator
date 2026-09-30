@@ -60,6 +60,7 @@ from infrastructure.benchmark.simulation import (
     run_setup,
     sample_dense,
 )
+from infrastructure.benchmark.retention import retain_result, record_execution
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
@@ -78,6 +79,14 @@ def parse_args() -> argparse.Namespace:
         default="both",
     )
     parser.add_argument("--no-plots", action="store_true")
+    parser.add_argument("--plot-only", action="store_true",
+                        help="regenerate publication figures from retained, verified inputs")
+    parser.add_argument("--figure", choices=("all", "protocol-comparison", "internal-response"),
+                        default="all", help="select publication figure exports (default: both)")
+    parser.add_argument("--with-refinement", action="store_true",
+                        help="run both protocols plus the three additional refinement cases, then audit/freeze")
+    parser.add_argument("--figure-dir", type=Path, default=ARTIFACTS / "publication")
+    parser.add_argument("--publication-inputs", type=Path, default=STUDY_ROOT / "publication_inputs")
     parser.add_argument(
         "--keep-artifacts",
         action="store_true",
@@ -139,9 +148,10 @@ def _run_protocol(
     reference_dir: Path,
     make_plots: bool,
     args: argparse.Namespace,
+    output_dir: Path | None = None,
 ) -> dict[str, object]:
     output_name = "force-replay" if protocol == "force_replay" else "closed-loop"
-    output_dir = ARTIFACTS / output_name
+    output_dir = output_dir or ARTIFACTS / output_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     input_ref = load_series(
@@ -185,6 +195,7 @@ def _run_protocol(
         encoding="utf-8",
     )
     _write_report_csv(projected, output_dir / "report.csv")
+    retain_result(setup, result, output_dir)
 
     payload: dict[str, object] = {
         "protocol": protocol,
@@ -316,6 +327,7 @@ def _run_protocol(
                 force_ref=force_ref,
                 force_pred=force_pred,
             )
+    record_execution(STUDY_ROOT, output_dir, solver)
     return payload
 
 
@@ -396,6 +408,14 @@ def main() -> int:
             f"Expected CINDER {EXPECTED_CINDER_VERSION}, found {cinder.__version__}."
         )
 
+    if args.plot_only:
+        subprocess.run([sys.executable, str(STUDY_ROOT / "analysis/publication_plots.py"),
+            "--input-dir", str(args.publication_inputs), "--output-dir", str(args.figure_dir),
+            "--figure", args.figure], check=True)
+        return 0
+    if args.with_refinement and (args.protocol != "both" or any(
+        v is not None for v in (args.rtol, args.atol, args.max_step, args.maximum_transitions))):
+        raise SystemExit("Publication refinement requires both protocols at the canonical settings.")
     spec = json.loads(STUDY_FILE.read_text(encoding="utf-8"))
     reference_dir = validate_reference_data(study_root=STUDY_ROOT)
 
@@ -449,7 +469,7 @@ def main() -> int:
             protocol=protocol,
             spec=spec,
             reference_dir=reference_dir,
-            make_plots=not args.no_plots,
+            make_plots=not args.no_plots and not args.with_refinement,
             args=args,
         )
         print(
@@ -458,6 +478,15 @@ def main() -> int:
         )
 
     _write_headline(results)
+    if args.with_refinement and all(bool(r["completed"]) for r in results.values()):
+        subprocess.run([sys.executable, str(STUDY_ROOT / "analysis/run_convergence.py"),
+                        "--reuse-nominal"], check=True)
+        subprocess.run([sys.executable, str(STUDY_ROOT / "analysis/publication_evidence.py"),
+                        "--freeze-to", str(args.publication_inputs)], check=True)
+        if not args.no_plots:
+            subprocess.run([sys.executable, str(STUDY_ROOT / "analysis/publication_plots.py"),
+                "--input-dir", str(args.publication_inputs), "--output-dir", str(args.figure_dir),
+                "--figure", args.figure], check=True)
     print(f"Artifacts: {ARTIFACTS}")
     return 0 if all(bool(result["completed"]) for result in results.values()) else 1
 

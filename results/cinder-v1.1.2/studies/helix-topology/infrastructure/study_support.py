@@ -353,6 +353,7 @@ def _sample_result_with_fresh_system(
     primary_boundary=None,
     secondary_boundary=None,
     deadzone_lock_absolute_tolerance: float | None = None,
+    reporting_variant=None,
 ):
     """Sample an integrated result with a fresh contact evaluator.
 
@@ -384,7 +385,7 @@ def _sample_result_with_fresh_system(
             deadzone_lock_absolute_tolerance
         )
     samples, contributions = ab.sample_variant(
-        variant=_full_variant(ab),
+        variant=_full_variant(ab) if reporting_variant is None else reporting_variant,
         system=reporting_system,
         result=result,
         step_s=sample_step_s,
@@ -715,6 +716,7 @@ def run_secondary_torque_probe(
     rtol: float,
     atol: float,
     max_step_s: float,
+    reporting_variant=None,
 ):
     duration_s = float(onset_s + ramp_s + hold_s)
     programme = flat_programme(route, duration_s)
@@ -758,6 +760,7 @@ def run_secondary_torque_probe(
         result=result,
         sample_step_s=sample_step_s,
         added_secondary_torque=signal,
+        reporting_variant=reporting_variant,
     )
     _assert_restart_reporting_consistency(restart=restart, samples=samples)
     return (

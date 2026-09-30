@@ -1,8 +1,8 @@
 # Section 4.2.1 — selected evidence and interpretation
 
-Status: reproduced; selected for author review, not author accepted. The actual
-code commit and review status are recorded in the manuscript's
-`results-finalization/CONTINUATION.md`.
+Status: retained diagnostic support. The contact-regimes figure was part of the
+24 September Section 4.2.1 rebuild but was later removed from the final manuscript;
+the underlying audit and extracted values remain retained evidence.
 
 ## Execution identity
 
@@ -24,8 +24,8 @@ code commit and review status are recorded in the manuscript's
   `39037f5268abad792c1fd3c60328fe362b39df1526eb49beeace66587b85f0d6`.
 
 The committed `execution_2026-09-23.json` retains the full hash inventory;
-`contact_regimes.json` links the selected PDF/PNG and values to the plotting
-script hash. The delivery archive also includes the actual raw outputs and
+`contact_regimes.json` links the retained diagnostic PDF/PNG and values to the
+plotting script hash. The delivery archive also includes the actual raw outputs and
 input snapshots for `run.py --plot-only`.
 
 ## Claims and their exact sources
@@ -42,7 +42,7 @@ input snapshots for `run.py --plot-only`.
 
 All contact-case dwell times and physical extrema agree with the recap at its
 printed precision. The old capability helper used screening-run dwell. The
-selected plot and corrected helper use the actual audit's first event instead.
+retained diagnostic plot and corrected helper use the actual audit's first event instead.
 The largest screening/audit difference here is only about 3 ps, but keeping
 their identities separate prevents a future misleading comparison.
 
@@ -52,7 +52,7 @@ slip-direction reversal. Appendix D now describes those outcomes explicitly.
 The prose reports the observed reversal without inventing an unrecorded static
 root or treating numerical reattachment hysteresis as a physical friction law.
 
-## Figure purposes and transformations
+## Retained diagnostic figure purposes and transformations
 
 | Panel | Reader's question | Variables / subset / transformation |
 | --- | --- | --- |
@@ -71,8 +71,7 @@ undefined engaged wrap fields are explicitly excluded, not treated as zero
 loads: reverse stick–stick (22 states), primary slip (−) (39), both slip (−,+)
 (7), both slip (−,−) (35). No engaged nonfinite value is silently discarded.
 
-The figure exports at 6.5 × 3.25 inches, matching the manuscript's 6.5-inch
-text width. PDF and PNG are generated together. `contact_regimes_values.csv`
+The retained diagnostic figure exports at 6.5 × 3.25 inches. PDF and PNG are generated together. `contact_regimes_values.csv`
 retains event outcomes, minima, their times/event sides and matched resultants;
 `contact_regimes_provenance.json` records the exact script and output hashes.
 

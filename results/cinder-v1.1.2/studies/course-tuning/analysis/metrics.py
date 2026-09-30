@@ -4,6 +4,12 @@ from collections import defaultdict
 from math import isfinite
 import numpy as np
 from infrastructure.common import finite
+from pathlib import Path
+import sys
+_release_root = Path(__file__).resolve().parents[3]
+if str(_release_root) not in sys.path:
+    sys.path.insert(0, str(_release_root))
+from results_health.guards import course_row_failures, course_endpoint_audit
 
 
 def first_passage(rows:list[dict]) -> tuple[np.ndarray,np.ndarray]:
@@ -83,7 +89,8 @@ def summarize(rows:list[dict],events:list[dict],course,outcome:dict,tune:dict,re
     errors=[r for r in rows if r.get('inspection_error')]
     interior_errors=[r for r in errors if r.get('sample_location')=='interior']
     margin_keys=('normal_primary_N','normal_secondary_N','min_tension_N','primary_min_dN_dtheta_N_per_rad','secondary_min_dN_dtheta_N_per_rad')
-    bad=[r for r in interiors if any(finite(r.get(k)) and float(r[k])<-review_tolerance for k in margin_keys) or any(k.startswith('mechanism_margin.') and finite(v) and float(v)<-review_tolerance for k,v in r.items())]
+    engaged=[r for r in rows if r.get('engagement')=='engaged']
+    bad=[r for r in rows if course_row_failures(r,review_tolerance)]
     physical_events=[e for e in events if any(n.startswith('cvt:') for n in e['event_names'])]
     finish=passage_at(xx,tt,course.finish_m) if outcome.get('status')=='finished' else None
     hill_start=next((s.start_m for s in course.sectors if s.name=='hill_entry'),float('inf'))
@@ -97,8 +104,8 @@ def summarize(rows:list[dict],events:list[dict],course,outcome:dict,tune:dict,re
     summary.update(
         finish_time_s=finish,max_distance_m=float(xx[-1]),final_distance_m=float(rows[-1]['distance_m']),
         diagnostic_samples=len(rows),inspection_errors=len(errors),interior_inspection_errors=len(interior_errors),
-        sampled_admissibility_review_count=len(bad),review_required=bool(interior_errors or bad),
-        first_review_time_s=float((bad or interior_errors)[0]['time_s']) if bad or interior_errors else None,
+        sampled_admissibility_review_count=len(bad),review_required=bool(errors or bad),
+        first_review_time_s=min(float(r['time_s']) for r in bad+errors) if bad or errors else None,
         max_speed_m_s=maximum(rows,'speed_m_s'),max_primary_rpm=maximum(rows,'primary_rpm'),
         hill_min_speed_m_s=minimum(hill,'speed_m_s'),hill_min_primary_rpm=minimum(hill,'primary_rpm'),
         first_hill_backshift_time_s=back['time_s'] if back else None,first_hill_backshift_distance_m=back['distance_m'] if back else None,
@@ -111,10 +118,11 @@ def summarize(rows:list[dict],events:list[dict],course,outcome:dict,tune:dict,re
         primary_slip_duration_s=boolean_duration(rows,'primary_sliding'),secondary_slip_duration_s=boolean_duration(rows,'secondary_sliding'),
         reverse_transmission_duration_s=boolean_duration(rows,'power_flow','reverse'),
         capture_loss_J=sum(float(e.get('capture_loss_J') or 0.) for e in events),physical_transition_count=len(physical_events),
-        min_normal_primary_N=minimum(interiors,'normal_primary_N'),min_normal_secondary_N=minimum(interiors,'normal_secondary_N'),
-        min_local_primary_normal_N_per_rad=minimum(interiors,'primary_min_dN_dtheta_N_per_rad'),min_local_secondary_normal_N_per_rad=minimum(interiors,'secondary_min_dN_dtheta_N_per_rad'),
+        min_normal_primary_N=minimum(engaged,'normal_primary_N'),min_normal_secondary_N=minimum(engaged,'normal_secondary_N'),
+        min_local_primary_normal_N_per_rad=minimum(engaged,'primary_min_dN_dtheta_N_per_rad'),min_local_secondary_normal_N_per_rad=minimum(engaged,'secondary_min_dN_dtheta_N_per_rad'),
         max_realized_cyclic_frequency_hz=maximum(rows,'cyclic_encounter_frequency_hz'),
         review_margin_tolerance=review_tolerance,metric_note='Sampled mechanical extrema and segmentwise trapezoidal work diagnostics; not a repeated formal energy/convergence audit. Missing sectors are censored, not zero.')
+    summary["endpoint_audit"] = course_endpoint_audit(rows, review_tolerance)
     return summary,sectors
 
 

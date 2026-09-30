@@ -99,12 +99,14 @@
     "study_specific": "infrastructure/, experiments/, analysis/",
     "exploration_excluded_from_run": true
   },
-  "publication_selection": {
+  "retained_support": {
     "section": "4.2.1",
-    "manuscript_label": "fig:verification_contact_regimes",
+    "asset": "contact_regimes.pdf",
     "plotter": "analysis/publication_plots.py",
     "plot_only_command": "python run.py --plot-only",
     "record": "provenance/SECTION_4_2_1.md",
-    "author_status": "ready_for_author_review_not_author_accepted"
+    "current_manuscript_import": false,
+    "status": "retained_diagnostic_support",
+    "former_manuscript_label": "fig:verification_contact_regimes"
   }
 }

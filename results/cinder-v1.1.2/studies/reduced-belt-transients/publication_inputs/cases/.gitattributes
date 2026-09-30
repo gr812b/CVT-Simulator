@@ -1,0 +1,2 @@
+# Frozen archive inputs retain their original byte representation.
+*.json -text

@@ -1,0 +1,280 @@
+{
+  "early_radial_peak_and_signed_balance": {
+    "time_s": 0.06601245350786879,
+    "loop.radial_shift_acceleration_N": 22.39305098961642,
+    "loop.radial_geometry_curvature_N": -1.165412590495489e-09,
+    "loop.tangential_belt_acceleration_N": -17.751943361785894,
+    "loop.tangential_shifting_radius_N": 3.1150656708617825e-07,
+    "loop.normal_contact_N": -4.641107938171729
+  },
+  "reference_at_1_5s": {
+    "time_s": 1.5,
+    "loop.radial_shift_acceleration_N": 0.0016809483004795289,
+    "loop.radial_geometry_curvature_N": -0.00016434028335918108,
+    "loop.tangential_belt_acceleration_N": -0.18620921563817336,
+    "loop.tangential_shifting_radius_N": -0.00027597674842733735,
+    "loop.normal_contact_N": 0.1849685843695852,
+    "primary_normal_part_N": 785.721074799509,
+    "secondary_normal_part_N": 785.5361062151394
+  },
+  "matched_rises": {
+    "rise50": {
+      "time_s": 1.5259999999999938,
+      "loop.radial_shift_acceleration_N": 0.03492293481473028,
+      "loop.radial_geometry_curvature_N": -5.78816770522413e-05,
+      "loop.tangential_belt_acceleration_N": -0.10822781154200244,
+      "loop.tangential_shifting_radius_N": -9.945853221183483e-05,
+      "loop.normal_contact_N": 0.07346221693637744,
+      "all_displayed_states_free_stick_stick": true,
+      "radial_fraction_of_opposing_belt_speed_term": 0.3226798575814955
+    },
+    "rise200": {
+      "time_s": 1.5929999999999864,
+      "loop.radial_shift_acceleration_N": 0.009265815182440653,
+      "loop.radial_geometry_curvature_N": -5.2214051640633195e-05,
+      "loop.tangential_belt_acceleration_N": -0.10310834908917334,
+      "loop.tangential_shifting_radius_N": -9.306072048667799e-05,
+      "loop.normal_contact_N": 0.09398780867888945,
+      "all_displayed_states_free_stick_stick": true,
+      "radial_fraction_of_opposing_belt_speed_term": 0.0898648389222788
+    },
+    "rise800": {
+      "time_s": 1.7369999999999706,
+      "loop.radial_shift_acceleration_N": 0.00257239000935279,
+      "loop.radial_geometry_curvature_N": -6.384815797366985e-05,
+      "loop.tangential_belt_acceleration_N": -0.1134743645941989,
+      "loop.tangential_shifting_radius_N": -0.00012485045271572786,
+      "loop.normal_contact_N": 0.11109067319534915,
+      "all_displayed_states_free_stick_stick": true,
+      "radial_fraction_of_opposing_belt_speed_term": 0.022669349315610068
+    }
+  },
+  "regional_shares": {
+    "free_shift": {
+      "start_s": 0.9572460916826651,
+      "end_s": 5.0,
+      "percent": {
+        "radial_shift_acceleration": 0.4744512540534071,
+        "radial_geometry_curvature": 0.02834175894245787,
+        "tangential_belt_acceleration": 49.68190991884471,
+        "tangential_shifting_radius": 0.05712040442698647,
+        "normal_contact": 49.758176663732456
+      },
+      "maximum_refinement_change_percentage_points": 1.2358611052476487e-05
+    },
+    "engagement": {
+      "start_s": 0.061971867086026255,
+      "end_s": 0.06601245350786879,
+      "percent": {
+        "radial_shift_acceleration": 49.987676162886224,
+        "radial_geometry_curvature": 0.016268479269516387,
+        "tangential_belt_acceleration": 39.25137149359774,
+        "tangential_shifting_radius": 0.012325323245912484,
+        "normal_contact": 10.732358541000599
+      },
+      "maximum_refinement_change_percentage_points": 0.0004546875763793423
+    },
+    "midshift_load": {
+      "start_s": 2.4875,
+      "end_s": 2.5433643569036106,
+      "percent": {
+        "radial_shift_acceleration": 21.234562127467406,
+        "radial_geometry_curvature": 0.012379899159370298,
+        "tangential_belt_acceleration": 41.46833807344224,
+        "tangential_shifting_radius": 0.032213451651983055,
+        "normal_contact": 37.25250644827899
+      },
+      "maximum_refinement_change_percentage_points": 0.0016294627565187625
+    }
+  },
+  "matched_fast_signed_display": {
+    "window_s": [
+      1.48,
+      1.62
+    ],
+    "all_states_free_stick_stick": true,
+    "radial_and_contact_positive": true,
+    "belt_acceleration_negative": true,
+    "maximum_signed_five_term_sum_N": 5.539457781367219e-13,
+    "normalization": "100 F_i(t) / sum_k |F_k(t)|",
+    "sum_absolute_force_range_N": [
+      0.05290380937314687,
+      0.38402820120847214
+    ],
+    "maximum_signed_sum_percentage_points": 9.44368139244034e-10,
+    "radial_percentage_peak": {
+      "time_s": 1.5409999999999922,
+      "signed_percent": {
+        "radial_shift_acceleration": 24.936815906820343,
+        "radial_geometry_curvature": -0.012132434827800487,
+        "tangential_belt_acceleration": -49.967109959947074,
+        "tangential_shifting_radius": -0.02075760525818252,
+        "normal_contact": 25.0631840931466
+      }
+    },
+    "signed_percent_ranges": {
+      "radial_shift_acceleration": [
+        0.3934875148359639,
+        24.936815906820343
+      ],
+      "radial_geometry_curvature": [
+        -0.04486153722545181,
+        -0.006649403944128607
+      ],
+      "tangential_belt_acceleration": [
+        -49.98200934767681,
+        -49.8808141611874
+      ],
+      "tangential_shifting_radius": [
+        -0.07432430160834383,
+        -0.011341248367009045
+      ],
+      "normal_contact": [
+        25.0631840931466,
+        49.60651248526956
+      ]
+    }
+  },
+  "matched_rate_summary": {
+    "rise800": {
+      "share_percent": 1.2468974840796472,
+      "peak_N": 0.00257239000935279
+    },
+    "rise200": {
+      "share_percent": 3.2795197282265236,
+      "peak_N": 0.009265815182440653
+    },
+    "rise50": {
+      "share_percent": 10.549747847066648,
+      "peak_N": 0.03492293481473028
+    }
+  },
+  "instantaneous_rate_shares": {
+    "rise800": {
+      "maximum_sampled_share_percent": 49.9999645538573,
+      "time_s": 2.247999999999914,
+      "radial_N": 0.0003957837185598261,
+      "sum_absolute_N": 0.0007915679982802967
+    },
+    "rise200": {
+      "maximum_sampled_share_percent": 8.132543296418714,
+      "time_s": 1.6629999999999787,
+      "radial_N": 0.005316950449323513,
+      "sum_absolute_N": 0.06537869219417389
+    },
+    "rise50": {
+      "maximum_sampled_share_percent": 24.936815906820343,
+      "time_s": 1.5409999999999922,
+      "radial_N": 0.023344098376211528,
+      "sum_absolute_N": 0.09361298757403427
+    }
+  },
+  "fast_to_slow_radial_peak_ratio": 13.576065327479965,
+  "midshift_display": {
+    "window_s": [
+      2.4675,
+      2.6075
+    ],
+    "all_states_free_stick_stick": true,
+    "shift_changes_direction": true,
+    "maximum_signed_five_term_sum_N": 5.990694051938306e-13
+  },
+  "combined_tune_support_window_peak_moving_radius_N": 0.007075036942269866,
+  "omission": {
+    "flat_tight_omission": {
+      "max_shift_um": 0.006636199888221395,
+      "refinement_um": 0.1747513544538351,
+      "max_event_time_us": 0.017727444456827612,
+      "same_event_mode_order_both_settings": true
+    },
+    "loading_tight_omission": {
+      "max_shift_um": 0.006636199888221395,
+      "refinement_um": 0.1747513544538351,
+      "max_event_time_us": 0.017727444456827612,
+      "same_event_mode_order_both_settings": true
+    },
+    "unloading_tight_omission": {
+      "max_shift_um": 0.010925822375301708,
+      "refinement_um": 0.1747513544538351,
+      "max_event_time_us": 0.4792430874367426,
+      "same_event_mode_order_both_settings": true
+    },
+    "contact_tight_omission": {
+      "max_shift_um": 0.0005421017267893957,
+      "refinement_um": 0.21346989817049716,
+      "max_event_time_us": 0.008489207337092353,
+      "same_event_mode_order_both_settings": true
+    },
+    "contact_combined_tight_omission": {
+      "max_shift_um": 0.016333855840360706,
+      "refinement_um": 0.1529990549544412,
+      "max_event_time_us": 0.8291570594565201,
+      "same_event_mode_order_both_settings": true
+    },
+    "overrun_mild_tight_omission": {
+      "max_shift_um": 0.006636199888221395,
+      "refinement_um": 0.1747513544538351,
+      "max_event_time_us": 0.2926393092295143,
+      "same_event_mode_order_both_settings": true
+    },
+    "overrun_strong_tight_omission": {
+      "max_shift_um": 0.006636199888221395,
+      "refinement_um": 0.1747513544538351,
+      "max_event_time_us": 0.026666586272483528,
+      "same_event_mode_order_both_settings": true
+    }
+  },
+  "density": {
+    "flat_nominal_density03": {
+      "max_shift_mm": 0.06990932697030494,
+      "later_shift_mm": 0.03530042586369787,
+      "primary_rpm": 8.334699513261109,
+      "full_events": 15,
+      "lighter_events": 17,
+      "later_order_agrees": true
+    },
+    "loading_nominal_density03": {
+      "max_shift_mm": 0.06990932697030494,
+      "later_shift_mm": 0.04538388705788068,
+      "primary_rpm": 8.334699513261109,
+      "full_events": 15,
+      "lighter_events": 17,
+      "later_order_agrees": true
+    },
+    "unloading_nominal_density03": {
+      "max_shift_mm": 0.06990932697030494,
+      "later_shift_mm": 0.03530042586369787,
+      "primary_rpm": 8.334699513261109,
+      "full_events": 16,
+      "lighter_events": 18,
+      "later_order_agrees": true
+    },
+    "flat_tight_density03": {
+      "max_shift_mm": 0.06991127822621006,
+      "later_shift_mm": 0.03528593123461321,
+      "primary_rpm": 8.33458284358528,
+      "full_events": 15,
+      "lighter_events": 17,
+      "later_order_agrees": true
+    },
+    "loading_tight_density03": {
+      "max_shift_mm": 0.06991127822621006,
+      "later_shift_mm": 0.04538294456292186,
+      "primary_rpm": 8.33458284358528,
+      "full_events": 15,
+      "lighter_events": 17,
+      "later_order_agrees": true
+    },
+    "unloading_tight_density03": {
+      "max_shift_mm": 0.06991127822621006,
+      "later_shift_mm": 0.03528593123461321,
+      "primary_rpm": 8.33458284358528,
+      "full_events": 16,
+      "lighter_events": 18,
+      "later_order_agrees": true
+    }
+  },
+  "early_positions_retain_segment_limits": true,
+  "raw_files_in_verified_archive": 378,
+  "compact_inputs_sha256": "9fb3d0a2923843092c86c742ade6aae34a266c009489be593962751061614535"
+}

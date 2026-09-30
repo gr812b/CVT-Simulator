@@ -317,3 +317,4 @@ outputs/
 # Generated API/CINDER contract artifacts
 backend/generated/
 frontend/src/api/generated/
+.cinder_*_backups/

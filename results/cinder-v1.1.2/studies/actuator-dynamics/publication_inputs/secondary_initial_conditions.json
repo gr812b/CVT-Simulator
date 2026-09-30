@@ -1,0 +1,111 @@
+{
+  "release": "cinder-cvt==1.1.2",
+  "release_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "commercial": {
+    "low": {
+      "full": {
+        "cvt_vector": [
+          276.8682772792055,
+          180.0568158483273,
+          14.954244104850343,
+          0.010767429057806994,
+          0.005950970554710357
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      },
+      "qs": {
+        "cvt_vector": [
+          277.4258663704423,
+          180.45435684274372,
+          14.986199092301222,
+          0.010770131148421359,
+          0.005944715144760698
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      }
+    },
+    "nominal": {
+      "full": {
+        "cvt_vector": [
+          285.2139709242657,
+          185.5412366835107,
+          15.407635539826549,
+          0.01077120680578969,
+          0.005602149492279023
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      },
+      "qs": {
+        "cvt_vector": [
+          286.6398304258021,
+          186.44653853218813,
+          15.483519685067884,
+          0.010769565929805188,
+          0.005591048714127599
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      }
+    },
+    "high": {
+      "full": {
+        "cvt_vector": [
+          290.16109735346373,
+          188.77624142254095,
+          15.675601746557858,
+          0.01077216896107388,
+          0.00535131643616608
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      },
+      "qs": {
+        "cvt_vector": [
+          292.5521365138058,
+          190.28423700388467,
+          15.802304318319772,
+          0.010768738168753384,
+          0.005333207053878417
+        ],
+        "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+        "initial_time_s": 0.0
+      }
+    }
+  },
+  "paired": {
+    "severe": {
+      "case_id": "E58_reversal_270_s30_engine_m28_r050",
+      "cvt_vector": [
+        325.68365714064794,
+        166.50246572007924,
+        14.941033567175555,
+        0.0074567222881836434,
+        0.007966836216071053
+      ],
+      "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+      "initial_time_s": 0.0
+    },
+    "stock": {
+      "case_id": "E58_stock_300_s30_output_m120_r002",
+      "cvt_vector": [
+        329.08169879202893,
+        168.24805601661123,
+        15.09800006049104,
+        0.007458103743361836,
+        0.007715903633062174
+      ],
+      "expected_mode": "CVTOperatingRegime(engagement=<CVTEngagementState.ENGAGED: 'engaged'>, shift_constraint=<CVTShiftConstraint.FREE: 'free'>, contact_regime=ContactRegime(mode=<EngagedContactMode.STICK_STICK: 'stick_stick'>, primary_slip_direction=None, secondary_slip_direction=None))",
+      "initial_time_s": 0.0
+    }
+  },
+  "source_sha256": {
+    "commercial_archive5/artifacts/trajectory-demo/low/trajectory_samples.csv": "81754bb63b8212fbc3442da1caf84d80e04290fae401463fb104ba9323efe318",
+    "commercial_archive5/artifacts/trajectory-demo/nominal/trajectory_samples.csv": "38e6c3da479a7ac3128d63e2b1adac96507f30b597788c4943ec0889e8b76fcc",
+    "commercial_archive5/artifacts/trajectory-demo/high/trajectory_samples.csv": "170fed1c620534332e12b843bf57158552c3cd419295b3a433928929e7a024b3",
+    "helix_archive5/artifacts/paired-helix-performance/paired_trace.csv": "de4ec0f0ba1156b30e8a9c211e1542ddacf7c523c482cb75dc76ce6ef417234c"
+  },
+  "host_angle": "Reset passive secondary-angle accumulator to zero; both timed boundaries depend on time and speeds, not accumulated angle. The archived five CVT coordinates and discrete mode are retained."
+}
