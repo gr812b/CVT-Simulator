@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "kind": "cinder-v1.1.2-results-freeze",
+  "created_utc": "2026-09-30T04:46:20.742467Z",
+  "source_commit": "bb348b9d960d05f22bb725461902b8c3f0b68639",
+  "mechanics": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_commit": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "accepted_numerical_evidence": {
+    "all_run": "20260929T124106516965Z",
+    "corrected_ballew_run": "20260929T165922834300Z",
+    "localized_prep": "prep_20260929T205331850596Z",
+    "course_plot_inputs_sha256": "990c70ea87f3a42f0e941952a2f700abf479a5a0909f5c2505f2f6daff571266",
+    "solver_retained_archive": {
+      "filename": "CINDER_4_2_3_Rebuilt_2026-09-25.zip",
+      "sha256": "aa840628e21592db0abb6920054f31d3b384a2b92c4c2980c9aae5772911e926"
+    },
+    "closure_retained_archive": {
+      "filename": "CINDER_4_2_4_Rebuilt_2026-09-25.zip",
+      "sha256": "175a2eb2de9cb92c13c7e7126bd4f0762c665e3d3967d6bf65cd0421c98e2a12"
+    }
+  },
+  "figure_reproduction": {
+    "candidate_directory_name": "final_freeze_20260930",
+    "health_report_sha256": "6bbfa633b5ef4c56ee1214fb631c3af096b5f45fc76cfdf9bc65e4c95baf21b8",
+    "final_asset_manifest_sha256": "c99fc1deb36924204b20d0eb0fb9cfea812c373022b67b17018b97e8e6c6eb36",
+    "ready_to_freeze": true,
+    "step_counts": {
+      "PASS": 16,
+      "FAIL": 0,
+      "MISSING": 0,
+      "BLOCKED": 0
+    },
+    "asset_count": 28,
+    "simulations_reexecuted": 0,
+    "broad_solver_or_closure_searches_reexecuted": 0,
+    "limitations": [
+      "The later original Section 4.5.1 plotting source was not recovered; the three current 4.5.1 figures use an explicit presentation reconstruction anchored to current committed assets while retaining recovered v4 numerical selections.",
+      "This runner exports from accepted retained evidence only; it does not re-integrate simulations or repeat historical solver/root searches."
+    ],
+    "export_identity": {
+      "git_head": "bb348b9d960d05f22bb725461902b8c3f0b68639",
+      "baseline_head": "953d1b0423d0655002271de2af43a72c47cff87e",
+      "dirty_status": "",
+      "files": {
+        "results/cinder-v1.1.2/results_health/workflows/figures.py": {
+          "sha256": "0ed8beffbe3664d0a5186fc0887e6b0c26e079842525eac0d3bae5dc753aed59"
+        },
+        "results/cinder-v1.1.2/results_health/figure_only_worker.py": {
+          "sha256": "372dec1b5a66bb11c7e6a291b6c36d50b90c7db1024737e83f98dc2380b793a8"
+        },
+        "results/cinder-v1.1.2/results_health/belt.py": {
+          "sha256": "cfdcce2561dd2d659ef860c05ec451c5a08cbacb4e6d7f8c7f29436d230ebe75"
+        },
+        "results/cinder-v1.1.2/studies/course-tuning/analysis/course_publication_export.py": {
+          "sha256": "8269005876c444c95ae0037cfbd178e2f7c61c53a5baaf80c47a58e81dcbd998"
+        },
+        "results/cinder-v1.1.2/studies/actuator-dynamics/analysis/primary_publication_plots.py": {
+          "sha256": "f0f0bcdfb82536cb20c2bec775e057b481315d8eeb491b76c5df97e4a6565bd7"
+        },
+        "results/cinder-v1.1.2/studies/actuator-dynamics/analysis/secondary_publication_plots.py": {
+          "sha256": "10f52a5a93707fefb10835d0d2f8f0c47da1f09cf692a4095f1fd8a238adbea1"
+        },
+        "results/cinder-v1.1.2/studies/ballew-2015/analysis/publication_plots.py": {
+          "sha256": "3734f16536426f2bdd3b03be6b756cf58e5cde96a3f520ea7805f85eb78b609e"
+        },
+        "results/cinder-v1.1.2/studies/energy-consistency/analysis/publication_plots.py": {
+          "sha256": "a647b3e437e00e237debed9bd1aba35e97f802d908c38e171e3a70daf34ea708"
+        },
+        "results/cinder-v1.1.2/studies/solver-convergence/analysis/publication_plots.py": {
+          "sha256": "021cd9d2b7fe3784c5cc4c81614eaf21136d0ac0a8f246dc4165c7d83a1016bb"
+        },
+        "results/cinder-v1.1.2/studies/closure-conditioning/analysis/publication_plots.py": {
+          "sha256": "b2e94c663ba5896fd51fee73f83eb65bdaef08ebf3391258c098e4c95f09e6ab"
+        },
+        "results/cinder-v1.1.2/studies/reduced-belt-transients/analysis/publication_plots.py": {
+          "sha256": "8f174150f0ce0d18f3fa85ee4d96a275bdf5d24cf31f001da603199e182744da"
+        }
+      }
+    }
+  },
+  "manuscript": {
+    "tex_sha256": "125f0007f41b21963e41b8dfd44a3a5bcd1b5430ff0a6b0eb8f008491d605fde",
+    "pdf_sha256": "1c894840f0b42b5d50227d32038754073f2f0cdd09fee4d79df79102a58999fc",
+    "results_assets": {
+      "ballew/internal_response.pdf": {
+        "sha256": "cbf59e33c9c18872df8dc5f3646595d391c9a8888a92d6cddc5b5d0ccbf77afa",
+        "bytes": 1736269
+      },
+      "ballew/protocol_comparison.pdf": {
+        "sha256": "dee4d001824156cc4776c5bc0760aa769e952a365c2260aa24578c693f1da6d1",
+        "bytes": 867272
+      },
+      "course/common_course_profile.png": {
+        "sha256": "8adcc306f28bcc4d204a3c0c01d4b674bbb8f0285bdd669dc20e4658ccb45f50",
+        "bytes": 148704
+      },
+      "course/cyclic_shift_and_support.png": {
+        "sha256": "cf1902b72fe47602fc52fe2b71bca42dbf04040c9b434859c3bc3df3a3429343",
+        "bytes": 249659
+      },
+      "course/d02_hill_repairs.png": {
+        "sha256": "5ba485ffbde07600aa88ecf8b37aefd104fbf36476030ffcca91cb90943ef5de",
+        "bytes": 206701
+      },
+      "course/d02_traction_power.png": {
+        "sha256": "c4f8bb9a549f7069d6bba74553b1a969fcac3907e6292e27c37050ff189be2dc",
+        "bytes": 126438
+      },
+      "course/descent_reverse_power.png": {
+        "sha256": "1fb0d1b45d865c1a0333d6c03893fddf2d720cdb369eb87d978ca417d489e669",
+        "bytes": 92472
+      },
+      "course/moderate_hill_operating_conditions.png": {
+        "sha256": "397e5af98ae1a354bace143eea5dd2fa347413d46173c45e748a0f079f5c9ec8",
+        "bytes": 192577
+      },
+      "course/opening_free_shift_characteristics.png": {
+        "sha256": "be595ac3a00a8fcb5568f749317e71a9154fe5d1c0e3d4e9bfdd955e5e406f23",
+        "bytes": 177960
+      },
+      "course/severe_hill_response.png": {
+        "sha256": "378071144ddbdde2f1bdedd5e848d712c0fb020b6ced1bfcd3b73a10b236ef37",
+        "bytes": 206074
+      },
+      "course/shift_curve_mechanical_causes.png": {
+        "sha256": "a486c0652eea6534689d5e0f7e00d3d1a8cde5affbc6238431bba7a4289f66cb",
+        "bytes": 339176
+      },
+      "dynamics/belt_coefficient_driver.pdf": {
+        "sha256": "99f59f6a0b3c19b834b5a5667e664f726e47f4704bc1e2c816db9b5df64aee06",
+        "bytes": 30124
+      },
+      "dynamics/belt_density_response.pdf": {
+        "sha256": "853424ad156f74f1a5d8df9ff4c48506faaad22d9859598603cd8143ddf0879d",
+        "bytes": 16381
+      },
+      "dynamics/belt_load_rate.pdf": {
+        "sha256": "4cbbd592bccdd7a0a2fd9432c9ac9a5acafabe8fb96412e384c26b08517a1cd0",
+        "bytes": 19820
+      },
+      "dynamics/belt_shift_transient.pdf": {
+        "sha256": "8098295d50e5d3fcdcc9c4e84f188f55695c199649e6d458ba1afe19fc6b63f8",
+        "bytes": 17013
+      },
+      "dynamics/primary_engagement.pdf": {
+        "sha256": "ba667d0aad3fa8a5dce95d11cf7e9cf06d2a0dcfd1da1d3a4e7acbb7c89dfa6c",
+        "bytes": 16091
+      },
+      "dynamics/primary_torque_ramps.pdf": {
+        "sha256": "83b4faae1cc1183570d9541270037bb74e2b7b0801f4e0473882f4171444456a",
+        "bytes": 17138
+      },
+      "dynamics/secondary_backshift.pdf": {
+        "sha256": "a3cb315c8340a59b6e898089ae39ab3b0ffe42bef30a70f1ff4b3f741659f2c6",
+        "bytes": 15026
+      },
+      "dynamics/secondary_continuous_response.pdf": {
+        "sha256": "9106809371b2adbd695b0c6162362cc062426bcb8062b62702c3a038d5f95b75",
+        "bytes": 15717
+      },
+      "dynamics/secondary_launch.pdf": {
+        "sha256": "ec4bbbe7194e7f0a2f66a1be482618419fd345c17ceae5993ab9bbee8b44c9f9",
+        "bytes": 14571
+      },
+      "dynamics/secondary_support.pdf": {
+        "sha256": "8c06cf51e902498a082470d73737c9ac0e8be02fe8f8689a7c3d16fb8af73028",
+        "bytes": 21049
+      },
+      "verification/closure_robustness.pdf": {
+        "sha256": "e501830b5a0d0d48a01d6eebcf4ebe4465cb03551d90babb26f0c8ed5acfa0ea",
+        "bytes": 175585
+      },
+      "verification/energy_balance.pdf": {
+        "sha256": "14691d8c469f947ccebe56ac7cc097fdbcd7aa8208f623533d44d99d2315092f",
+        "bytes": 32987
+      },
+      "verification/gross_motion_hybrid_history.pdf": {
+        "sha256": "341fd364f937b42964fa6a9a05614d4eebcada9e2436a604a3a2f62e7a6b89c7",
+        "bytes": 17918
+      },
+      "verification/solver_acceptance_support.pdf": {
+        "sha256": "6fe2036e83fecab0a5838132cdfde9757fbda21dc8d90e9047fd2ae85201391c",
+        "bytes": 17406
+      },
+      "verification/solver_population_support.pdf": {
+        "sha256": "4f8842782ae434eaec55476c1b3b60242a5a126e49b5906d89d381302fdfe820",
+        "bytes": 136274
+      },
+      "verification/solver_refinement.pdf": {
+        "sha256": "1b57af4ca83c050add0e604ff035499f81b70296a4820b3973d0f2021b701516",
+        "bytes": 20947
+      },
+      "verification/sticking_closure_fold.pdf": {
+        "sha256": "6968ad80555d577ea32af87d7f391e9a8d6d3d30046c367e9ecc0d3d36454177",
+        "bytes": 65127
+      }
+    }
+  }
+}
