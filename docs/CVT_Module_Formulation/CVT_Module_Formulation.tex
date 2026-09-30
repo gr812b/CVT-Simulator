@@ -369,7 +369,7 @@ W.~Spencer Smith\\
 \thispagestyle{empty}
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-\vspace{-0.9cm}
+\vspace{-0.4cm}
 
 Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio
 change, clamping, torque transfer and shaft motion through the same hardware. Predicting their
@@ -390,21 +390,21 @@ activation.
 Mechanical, energy and numerical checks support internal consistency across the tested regimes.
 In the nominal \SI{10}{\second} reference acceleration, stored-energy changes and modelled sliding
 and capture losses account for net shaft work with a final remainder of
-\(4.9\times10^{-7}\). A reconstructed benchmark against a more detailed transient belt model
+\(4.9\times10^{-7}\). A reconstructed benchmark against a transient model with a more detailed belt representation
 gives relatively close feedback-controlled shaft-speed histories despite substantially different
 clamping demand; replaying the published clamp produces a much larger primary-speed discrepancy.
 Reconstruction differences limit attribution of the mismatch to any single omitted mechanism, and
 experimental validation remains outstanding.
 
-The importance of the retained dynamics is strongly motion-dependent. Primary flyweight dynamics
-alter engagement but remain close to a quasi-static reduction during the tested smooth shifting and
-engaged torque changes, whereas secondary shaft deceleration can sustain additional clamping
+The importance of the retained dynamics is strongly motion-dependent. Primary flyweight dynamics alter 
+engagement, but the quasi-static reduction remains close during the tested smooth 
+shifting and engaged torque changes, whereas secondary shaft deceleration can sustain additional clamping 
 during continuous loaded backshift. In the belt, circulation acceleration supplies the main inertial
-adjustment during gentle shifting and radial inertia becomes appreciable under rapid changes in shift
-speed, while the curvature and moving-radius contributions remain small over the tested conditions.
+adjustment during gentle shifting; radial inertia becomes appreciable during rapid shift-speed
+changes, while curvature and moving-radius contributions remain small in the tested conditions.
 
 Coupled engine--CVT--vehicle simulations demonstrate the full-transient capability by carrying the
-state produced in one part of a continuous drive into the next while the same CVT formulation passes
+state produced in one part of a continuous drive into the next while the same formulation follows the CVT
 through engagement, shifting, ratio-limit support, traction loss and reverse power. Hardware changes
 consequently propagate through clamping, ratio, traction, engine operating point and vehicle response
 rather than altering one quantity in isolation. Together with the benchmark, these simulations show
