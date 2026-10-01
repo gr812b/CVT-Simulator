@@ -94,11 +94,11 @@
        {\texttt{\detokenize{#2}}}%
 }
 
-% Working Results references point to develop until the paper-facing archive is frozen.
-\newcommand{\ResultsGitRef}{develop}
-\newcommand{\ResultsTag}{\texttt{develop (working)}}
-\newcommand{\ResultsCommit}{\texttt{TBD-at-results-freeze}}
-\newcommand{\ResultsDOI}{\texttt{TBD-at-results-freeze}}
+% Frozen study record from the merged Results freeze (PR #505).
+% RESULTS_FREEZE.json records the tested source revision and evidence hashes.
+\newcommand{\ResultsGitRef}{e31f9054fb9d5d111a182c45b897f6100356fbc6}
+\newcommand{\ResultsTag}{\texttt{Frozen Results (2026-09-30)}}
+\newcommand{\ResultsCommit}{\texttt{\ResultsGitRef}}
 \NewDocumentCommand{\ResultsCode}{m m}{%
   \href{https://github.com/gr812b/CVT-Simulator/blob/\ResultsGitRef/results/cinder-v1.1.2/#1}%
        {\texttt{\detokenize{#2}}}%
@@ -344,17 +344,30 @@ A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Si
 }
 
 \author{
-Kai Arseneau\\
-\small Independent Researcher\\
-\small \href{mailto:kai@kaiarseneau.dev}{kai@kaiarseneau.dev}\\
-\small \href{https://orcid.org/0009-0003-7811-9634}
-{ORCID: 0009-0003-7811-9634}
-\and
-W.~Spencer Smith\\
-\small Department of Computing and Software\\
-\small McMaster University\\
-\small \href{https://orcid.org/0000-0002-0760-0987}
-{ORCID: 0000-0002-0760-0987}
+\begin{tabular}{c@{\hspace{4em}}c}
+Kai Arseneau
+&
+W.~Spencer Smith
+\\[0.25em]
+{\small Independent Researcher}
+&
+{\small Department of Computing and Software}
+\\
+&
+{\small McMaster University}
+\\[0.2em]
+{\small \href{mailto:kai@kaiarseneau.dev}{kai@kaiarseneau.dev}}
+&
+{\small \href{mailto:smiths@mcmaster.ca}{smiths@mcmaster.ca}}
+\\[0.2em]
+{\small
+\href{https://orcid.org/0009-0003-7811-9634}
+{ORCID: 0009-0003-7811-9634}}
+&
+{\small
+\href{https://orcid.org/0000-0002-0760-0987}
+{ORCID: 0000-0002-0760-0987}}
+\end{tabular}
 }
 
 \hypersetup{
@@ -371,48 +384,46 @@ W.~Spencer Smith\\
 \addcontentsline{toc}{chapter}{Abstract}
 \vspace{-0.4cm}
 
-Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio
-change, clamping, torque transfer and shaft motion through the same hardware. Predicting their
-complete transient response therefore requires these interactions to be resolved without prescribing the
-internal motion or operating sequence. This work develops a first-principles transient formulation
-in which the CVT itself is solved as one coupled mechanical system under the loading applied at
-its two pulley shafts.
+Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio change, 
+clamping, torque transfer and shaft motion through the same hardware. Predicting their complete 
+transient response therefore requires these interactions to evolve together rather than prescribing 
+part of the CVT motion.To the authors' knowledge, this is the first mechanically actuated rubber V-belt 
+formulation in which all retained CVT motion is determined by the coupled dynamics, while attached 
+systems enter only through shaft torque and inertia.
 
-Primary flyweight motion and helix-constrained secondary-sheave rotation enter both the axial force
-and shaft angular-momentum balances, retaining direct inertial coupling through the clamping
-hardware. A reduced, fixed-length belt retains independent transport motion and the radial and
-tangential accelerations associated with changing pulley radii, linking the pulleys through
+Primary flyweight motion and helix-constrained secondary-sheave rotation enter both the axial
+force and shaft angular-momentum balances, retaining direct inertial coupling through the clamping
+hardware. A reduced, fixed-length belt retains independent transport motion and the radial
+and tangential accelerations associated with changing pulley radii, linking the pulleys through
 closed-loop tension compatibility and traction-limited contact. Contact and support conditions
 determine engagement, free shifting, ratio-limit support and changes between sticking and sliding,
-with impulse--momentum balance supplying the velocity changes at finite-speed constraint
-activation.
+with impulse--momentum balance supplying the velocity changes at finite-speed constraint activation.
 
-Mechanical, energy and numerical checks support internal consistency across the tested regimes.
-In the nominal \SI{10}{\second} reference acceleration, stored-energy changes and modelled sliding
-and capture losses account for net shaft work with a final remainder of
-\(4.9\times10^{-7}\). A reconstructed benchmark against a transient model with a more detailed belt representation
-gives relatively close feedback-controlled shaft-speed histories despite substantially different
-clamping demand; replaying the published clamp produces a much larger primary-speed discrepancy.
-Reconstruction differences limit attribution of the mismatch to any single omitted mechanism, and
-experimental validation remains outstanding.
+Mechanical, energy and numerical checks support internal consistency across the tested regimes. In
+the nominal 10~s reference acceleration, stored-energy changes and modelled sliding and capture losses
+account for net shaft work with a final relative remainder of \(4.9\times10^{-5}\%\). A reconstructed
+benchmark against a transient model with a more detailed belt representation gives relatively close
+feedback-controlled shaft-speed histories despite substantially different clamping demand; replaying
+the published clamp produces a much larger primary-speed discrepancy. Reconstruction differences
+limit attribution of the mismatch to any single omitted mechanism, and experimental validation
+remains to be done.
 
-The importance of the retained dynamics is strongly motion-dependent. Primary flyweight dynamics alter 
-engagement, but the quasi-static reduction remains close during the tested smooth 
-shifting and engaged torque changes, whereas secondary shaft deceleration can sustain additional clamping 
-during continuous loaded backshift. In the belt, circulation acceleration supplies the main inertial
-adjustment during gentle shifting; radial inertia becomes appreciable during rapid shift-speed
-changes, while curvature and moving-radius contributions remain small in the tested conditions.
+The retained dynamics are strongly motion-dependent. Primary flyweight dynamics alter engagement,
+but the quasi-static reduction remains close during the tested smooth shifting and engaged torque
+changes, whereas secondary shaft deceleration can sustain additional clamping during continuous
+loaded backshift. In the belt, circulation acceleration supplies the main inertial adjustment during
+gentle shifting; radial inertia becomes appreciable during rapid shift-speed changes, while curvature
+and moving-radius contributions remain small in the tested conditions.
 
-Coupled engine--CVT--vehicle simulations demonstrate the full-transient capability by carrying the
-state produced in one part of a continuous drive into the next while the same formulation follows the CVT
-through engagement, shifting, ratio-limit support, traction loss and reverse power. Hardware changes
-consequently propagate through clamping, ratio, traction, engine operating point and vehicle response
-rather than altering one quantity in isolation. Together with the benchmark, these simulations show
-that similar external trajectories can coexist with different internal mechanical states; agreement in
-selected trajectories therefore does not by itself establish agreement in the mechanics that produced
-them. Resolving those mechanics together with the motion allows a response to be followed back to
-the forces and constraints that produced it, and a hardware change forward through the operating
-conditions it creates.
+Coupled engine--CVT--vehicle simulations demonstrate full-transient capability by carrying state
+continuously through engagement, shifting, ratio-limit support, traction loss and reverse power.
+Hardware changes consequently propagate through clamping, ratio, traction, engine operating point
+and vehicle response rather than altering one quantity in isolation. Together with the benchmark,
+these simulations show that similar external trajectories can coexist with different internal mechanical
+states; agreement in selected trajectories therefore does not by itself establish agreement in the
+mechanics that produced them. Resolving those mechanics together with the motion allows responses
+to be traced to their causes and hardware changes through the operating conditions they create,
+supporting mechanics-based design and tuning studies.
 
 % =========================
 % Acknowledgements (sample page)
@@ -10544,8 +10555,8 @@ models, are defined separately in \Cref{app:results_boundary_models}.
 The results reported here use a frozen CINDER release and a separate frozen
 study record containing the case definitions, analysis scripts, and outputs.
 Both records are identified in \Cref{tab:results_reproducibility_record}.
-The correspondence between the archived outputs and the manuscript figures
-and tables is given in \Cref{app:artifact_index}.
+The linked freeze record specifies the retained numerical evidence,
+checksums of the manuscript figures, and limits of figure reproduction.
 
 \begin{table}[H]
 \centering
@@ -10568,18 +10579,11 @@ CINDER implementation
 \addlinespace[4pt]
 Study record
     & \ResultsTag\newline\ResultsCommit
-    & \ResultsTree{}{Working Results source}\newline\ResultsDOI \\
+    & \ResultsTree{}{Frozen Results source}\newline
+      \ResultsCode{RESULTS_FREEZE.json}{RESULTS_FREEZE.json} \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-% Replacement for Section 4.2 only.
-% Baseline: CVT_Module_Formulation_20260919_appendix_actuators_v9.tex.
-% Existing subsection labels are retained. No appendix changes are required.
-% Figure paths are relative to the manuscript's compilation directory.
-% Each missing file produces a labelled box; captions and references remain active.
-% Source-page and assembly notes are given immediately above each figure.
-% This draft uses the study recap results, not newly generated simulations.
 
 % Keep the figure helper and paragraph-break preferences local to this section.
 \begingroup
@@ -11066,18 +11070,21 @@ shift-position differences below \SI{0.068}{\micro\metre}, compared with
 the approximately \SI{20}{mm} travel scale, and event-time differences below
 \SI{30}{\micro\second}. Together with the reduction in the local speed
 difference, this supports numerical convergence of the calculated
-acceleration through engagement, shifting and stop arrival. Agreement
-extends to the motion between changes of constraint and to when those
-changes occur, under the fixed contact and seating rules.
+transient through engagement, shifting and stop arrival. Agreement extends
+to the motion between changes of constraint and to when those changes
+occur, under the fixed contact and seating rules.
 \FloatBarrier
 
 \subsection{Closure Conditioning and Root Structure}
 \label{sec:results_closure_structure}
 
 The time integration relies on a force and acceleration calculation at
-each instant. Its reliability therefore also depends on whether the
-mechanical balances remain solvable as the operating conditions change,
-and whether the tractions required for sticking can be found consistently.
+each instant. Its reliability raises three separate numerical questions.
+For a prescribed traction pair, do the mechanical balances remain solvable?
+When a contact sticks, can the traction search reliably recover a pair that
+preserves matching tangential accelerations? Finally, can more than one
+mechanically admissible sticking pair satisfy the same state and applied
+loading? The following tests address these questions in turn.
 
 For a prescribed \((\lambda_p,\lambda_s)\),
 \Cref{sec:engaged_mechanical_core} reduces these balances to a
@@ -11154,11 +11161,16 @@ the four mapped states also recovers only their existing solutions.
 The same sticking response is therefore recovered repeatedly at each
 state, although the numerical search remains sensitive to its starting guess.
 
-The applied shaft torques also affect the acceleration mismatches. To examine how the sticking solution changes with loading, the closure is evaluated at a constructed opening state with \(95\%\) engaged travel, \(-40~\mathrm{mm/s}\) shift speed and \(3000~\mathrm{rpm}\) primary speed. The primary boundary
-torque is fixed at \(-81.15~\mathrm{N\,m}\) while the secondary torque
-varies. Both shafts rotate positively, so at the selected positive secondary
-torque the secondary supplies power and the primary absorbs it. These are
-fixed-state bench loads, rather than another vehicle trajectory.
+Repeated recovery of the same solution at the sampled operating states
+does not establish uniqueness. A separate fixed-state loading continuation
+therefore asks whether distinct admissible sticking responses can satisfy
+the same applied shaft loading. It uses a constructed opening state at
+\(95\%\) engaged travel, with \(-40~\mathrm{mm/s}\) shift speed and
+\(3000~\mathrm{rpm}\) primary speed. The primary boundary torque is fixed at
+\(-81.15~\mathrm{N\,m}\) while the secondary torque varies. Both shafts
+rotate positively, so at the selected positive secondary torque the secondary
+supplies power and the primary absorbs it. These are fixed-state bench loads,
+rather than another vehicle trajectory.
 
 At \(+189.96~\mathrm{N\,m}\) secondary torque,
 \Cref{fig:verification_closure_fold}(a) has two intersections. Both pairs
@@ -11248,6 +11260,11 @@ common force history.
 \subsection{Benchmark Reconstruction}
 \label{sec:results_ballew_reconstruction}
 
+These benchmark cases replace the reference mechanical actuator laws with
+the axial-force inputs used in Ballew's model. The comparison therefore tests
+CINDER's shaft, shift and belt response under the reconstructed benchmark
+loading rather than the reference Baja actuator mechanics.
+
 Both protocols use the same reconstructed belt geometry, shaft inertias and
 ATV road-load boundary, with a constant primary torque of \SI{18}{N.m} and
 secondary closing force of \SI{2000}{N}. The initial shaft speeds are Ballew's
@@ -11264,7 +11281,7 @@ reference histories.
 The translations preserve the published belt mass and combined shaft
 inertias. Friction coefficients are converted between the two normal-force
 conventions so that the same clamp gives the same gross tangential capacity.
-Both literal moving-sheave masses are set to zero because Ballew obtains
+Both translating sheave masses are set to zero because Ballew obtains
 radial position from an algebraic axial-force balance. CINDER's belt inertia
 and reduced shift dynamics remain active. Ballew also initializes internal
 belt-deformation states, including zero longitudinal tension, that have no
@@ -11510,10 +11527,12 @@ for almost all of it; the motion-ratio term is below \SI{0.001}{N} at that
 instant. Even this rapid torque change produces far less flyweight
 acceleration than engagement does.
 
-Both models are already shifting before the added torque is applied. Each
-is therefore also continued from its own starting state with the original
-engine boundary and no torque increment. Subtracting that motion from the
-ramped case leaves the change caused by the torque ramp.
+Because both models are already shifting when the torque ramp begins, their
+absolute motions include the response already underway as well as the
+response to the added load. Each loaded run is therefore compared with that
+model's own continuation under the original engine boundary and no torque
+increment. Subtracting the continuation isolates the additional shift caused
+by the torque ramp.
 
 The torque reduction initially lowers the belt's opening reaction more than
 the actuator's closing force, so the primary closes further than it would
@@ -11540,13 +11559,14 @@ accompanied by a small, numerically resolved change in the motion.
   \label{fig:results_primary_ramps}
 \end{figure}
 
-For this primary mechanism, the centrifugal approximation is consequently
-well supported for the smooth shifting and torque changes examined here.
-Engagement requires a different level of detail: the rapid flyweight motion
-changes both the approach to contact and the force subsequently delivered
-to the sheave. Retaining the primary dynamics allows these parts of the same
-drive to be represented without extending the quasi-static approximation
-beyond the motion for which it is accurate.
+For this primary mechanism, the centrifugal approximation consequently
+reproduces the full-model response closely for the smooth shifting and torque
+changes examined here. Engagement requires a different level of detail: the
+rapid flyweight motion changes both the approach to contact and the force
+subsequently delivered to the sheave. Retaining the primary dynamics allows
+both parts of the same drive to be represented without applying the
+quasi-static reduction to the engagement motion where the two responses
+separate.
 \FloatBarrier
 
 \subsection{Secondary Helix Dynamics and Transient Sensitivity}
@@ -11683,8 +11703,10 @@ state. The extra closing action follows from the torque needed to decelerate
 the movable assembly; it does not require slip, a stop impact or a reversal
 of helix reaction.
 
-The motion comparison follows the same approach as on the primary: each
-model is also continued without the added torque, and that continuation is
+Because the mechanism is already shifting when the load is applied, the
+motion comparison uses the same baseline subtraction as on the primary to
+isolate the load-induced response from the motion already underway. Each
+model is continued without the added torque, and that continuation is
 subtracted from its loaded motion. Panel~(b) shows the difference between
 these load-induced shift responses. The full model backshifts further in
 all three cases. At \SI{100}{ms} after load onset, the largest load has
@@ -11806,7 +11828,10 @@ force correction implies an equally large change in the trajectory.
 The preceding comparisons examined how actuator inertia changes the forces
 available to clamp and shift the belt. The belt itself must also accelerate,
 both as its circulation speed changes and as shifting moves it between pulley
-radii.
+radii. The question here is which transient belt contributions materially
+affect the closed-loop tension balance, what motions bring them into
+prominence, and whether the smaller terms can be omitted without changing the
+predicted response.
 
 The centrifugal-corrected capstan limit of the wrap solution,
 \Cref{eq:gerbert_inertia_corrected_relation}, accounts for the tension needed
@@ -11930,11 +11955,6 @@ the two wrap-boundary tension sums, although centrifugal loading remains
 in the local tension and contact equations. In the steady, fixed-radius
 limit, the four acceleration contributions vanish and the relation reduces
 to \(F_N=0\).
-
-The question is how much those additional contributions matter during the
-simulated motion: which terms govern the balance, what changes in motion
-bring the others into prominence, and whether the smaller terms can be
-omitted with little change in the predicted response.
 
 \subsubsection{The balance during engagement and free shifting}
 \label{sec:results_belt_hierarchy}
@@ -12133,7 +12153,28 @@ caused by tightening the numerical settings. All seven pairs preserve the
 same ordered contact and support changes. The complete comparisons are
 reported in \Cref{tab:belt_omission_results}.
 
-During gentle shifting, changing circulation speed supplies the main inertial adjustment between the two wrap tension sums. Abrupt changes in shift speed bring radial acceleration into that balance, even when the attained shift speeds leave the other path-dependent terms small. The two shift-speed contributions remain small in the examined cases, and omitting them together produces little change in the calculated shift histories: the differences are smaller than those produced by numerical refinement, and the ordered contact and support changes are preserved. Both acceleration mechanisms remain in this reduced description.
+These omission results concern two specific shift-speed terms; reducing the
+belt inertia more broadly is not equivalent to suppressing one equation term.
+In the archived transport comparisons, scaling only the complete-belt
+transport term while leaving the local wrap inertia unchanged causes the
+implemented contact search to fail during the common early engagement.
+Reducing belt density consistently across the corresponding global and local
+inertia terms instead allows those continuations to complete, although the
+finite-density runs modify the early engagement sequence. This comparison
+establishes a difference between these reductions, not the exact massless-belt
+limit. The archived comparisons are documented in
+\Cref{app:study_belt_dynamics}.
+
+Taken together, the belt studies separate the roles of the retained transient
+terms. Changing circulation speed supplies the principal inertial adjustment
+during gentle free shift, while rapid changes in shift speed can make radial
+acceleration an appreciable part of the closed-loop balance. The curvature
+and moving-radius contributions remain small over the motions examined here,
+and independently omitting them together changes the calculated shift
+histories by less than numerical refinement while preserving the ordered
+contact and support changes. The transport comparison adds a separate point:
+changing one occurrence of belt inertia is not equivalent to reducing the
+common belt density throughout the coupled belt description.
 \FloatBarrier
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
@@ -12149,27 +12190,22 @@ the same internal mechanics carry the transmission through the changing
 conditions of a drive, and can the resulting behaviour be followed back to the
 hardware that produced it?
 
-To answer that question, each configuration is placed in the same vehicle,
-started from the same state, and driven at full throttle over the same
+To answer that question, each configuration begins from the same initial
+state and uses the same engine and vehicle boundary laws over the same
 continuous road. The drive is not divided into independent launch, hill, and
-backshift tests. The shaft speeds, ratio, contact state, and hardware motion
-left by one part of the road are carried into the next. Several different CVTs can therefore encounter the same sequence of road features under the same boundary laws, while the model determines how each one engages, shifts, transmits torque, and uses its available supports and traction.
+backshift tests: the state produced by one road feature is carried directly
+into the next. Specifically, every run uses the full-throttle Kohler CH440
+primary boundary of \Cref{app:primary_engine_boundary}, the locked-final-drive
+vehicle boundary of \Cref{app:secondary_vehicle_boundary}, and the initial
+state in \Cref{eq:results_reference_initial_state}. Only the selected CVT
+hardware changes between runs, while the model determines how each
+configuration engages, shifts, transmits torque, and uses its available
+supports and traction.
 
-Every configuration therefore operates between the same engine and the same vehicle.
-At the primary shaft, every run uses the same full-throttle Kohler CH440
-boundary described in \Cref{app:primary_engine_boundary}. At the secondary,
-the same locked-final-drive vehicle boundary of
-\Cref{app:secondary_vehicle_boundary} supplies the vehicle inertia and road
-load; road grade enters that load through
-\Cref{eq:reference_vehicle_torque}. Every run also begins from the state in
-\Cref{eq:results_reference_initial_state}. The engine map, vehicle, final
-drive, shaft-boundary inertias, and starting condition are therefore unchanged
-from one hardware case to another.
-
-The road itself is also common to every run. It is prescribed as a function of
-travelled distance rather than clock time, so a faster vehicle reaches a road
-feature sooner but does not encounter a different feature. The complete course
-is shown in \Cref{fig:results_course_overview}.
+The road is prescribed as a function of travelled distance rather than clock
+time, so a faster vehicle reaches a road feature sooner without encountering
+a different feature. The complete course is shown in
+\Cref{fig:results_course_overview}.
 
 \begin{figure}[H]
   \centering
@@ -12204,16 +12240,14 @@ The descent reverses the road-grade contribution and allows any corresponding
 reverse transfer of power through the drivetrain to emerge from the same
 signed mechanics.
 
-Every vehicle has now been given the same engine boundary, vehicle boundary,
-starting state, and road. What changes from run to run is selected hardware
-inside the CVT. Those configurations are defined in
-\Cref{tab:results_course_cases}. The nominal case, R00, is the unmodified Baja
-reference CVT of \Cref{app:common_physical_configuration}, using the bilateral
-secondary helix topology of \Cref{app:reference_helix_topology}. Every other
-row lists only the hardware changed from that baseline; unlisted quantities
-retain the reference values. The mass percentages refer to the replaceable
-flyweight tip mass rather than the total flyweight mass, and the corresponding
-mass moments are changed consistently.
+The hardware variants are defined in \Cref{tab:results_course_cases}. The
+nominal case, R00, is the unmodified Baja reference CVT of
+\Cref{app:common_physical_configuration}, using the bilateral secondary helix
+topology of \Cref{app:reference_helix_topology}. Every other row lists only the
+hardware changed from that baseline; unlisted quantities retain the reference
+values. The mass percentages refer to the replaceable flyweight tip mass
+rather than the total flyweight mass, and the corresponding mass moments are
+changed consistently.
 
 \begin{table}[H]
   \centering\small
@@ -12801,11 +12835,18 @@ beyond that, a lower ratio alone does not make the vehicle climb faster.
 
 On the final \(-22^\circ\) descent, gravity can drive the vehicle and return
 power through the CVT to the engine. Both shafts continue to turn forward;
-the change is in which side drives the belt. \Cref{fig:results_descent_power}
-follows R00 from the level approach through the descent and onto the final
-level road. The two boundary powers use the same sign convention: positive
-power adds energy to the corresponding shaft-side system, while negative
-power removes it.
+the change is in which side drives the belt. The same full-throttle primary
+boundary remains active during this calculation. Its negative torque at the
+speeds reached on the descent comes from the bounded high-speed braking tail
+in \Cref{app:primary_engine_boundary}, rather than a measured closed-throttle
+CH440 braking characteristic. The case therefore tests whether
+the CVT can carry reversed power under the supplied boundary rather than
+reconstructing a measured engine-braking response.
+
+\Cref{fig:results_descent_power} follows R00 from the level approach through
+the descent and onto the final level road. The two boundary powers use the
+same sign convention: positive power adds energy to the corresponding
+shaft-side system, while negative power removes it.
 
 \begin{figure}[H]
   \centering
@@ -12842,18 +12883,14 @@ over the descent entry, hold and exit, the primary uses at most about
 clamping therefore carries the reversed torque with substantial capacity
 remaining.
 
-Full throttle remains prescribed throughout this calculation. The negative
-engine torque comes from the extrapolated high-speed extension described in
-\Cref{app:primary_engine_boundary}, not a measured closed-throttle CH440
-braking characteristic. The absorption magnitude consequently depends on
-that supplied boundary. The CVT carries this reverse power through the same
-coupled shaft, belt and support mechanics used earlier for forward drive.
+Under that supplied boundary, the CVT carries this reverse power through the
+same coupled shaft, belt and support mechanics used earlier for forward drive.
 
 \subsection{What the Common Course Establishes}
 \label{sec:results_course_synthesis}
 
-The common course has shown the CVT responding as a complete dynamic
-component between the engine and vehicle. Its motion and the internal
+The common course has shown the CVT responding as one coupled transmission
+between the engine and vehicle. Its motion and the internal
 conditions needed to sustain it have been determined together as the
 loading changes. Successful drive and loss of progress have therefore been
 explained within the same formulation, through the forces carried by the
@@ -15343,10 +15380,9 @@ implemented in
 
 This appendix records exact case inputs, numerical settings, normalization
 definitions, and other reproduction details that are referenced by the Results
-chapter but are not needed in its main discussion. The working paper
-references the Results tree on \ResultsTag; the single ref used by
-\verb|\ResultsCode| and \verb|\ResultsTree| will be replaced by the frozen
-Results revision before publication.
+chapter but are not needed in its main discussion. All Results source links
+use the frozen study revision identified in
+\Cref{tab:results_reproducibility_record}.
 
 \section{Mechanical Invariants and Operating-Domain Audit}
 \label{app:study_mechanical_invariants}
