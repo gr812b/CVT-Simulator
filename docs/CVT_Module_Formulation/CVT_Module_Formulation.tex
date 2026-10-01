@@ -344,17 +344,30 @@ A First-Principles Dynamic Model of a Rubber V-Belt CVT for General Transient Si
 }
 
 \author{
-Kai Arseneau\\
-\small Independent Researcher\\
-\small \href{mailto:kai@kaiarseneau.dev}{kai@kaiarseneau.dev}\\
-\small \href{https://orcid.org/0009-0003-7811-9634}
-{ORCID: 0009-0003-7811-9634}
-\and
-W.~Spencer Smith\\
-\small Department of Computing and Software\\
-\small McMaster University\\
-\small \href{https://orcid.org/0000-0002-0760-0987}
-{ORCID: 0000-0002-0760-0987}
+\begin{tabular}{c@{\hspace{4em}}c}
+Kai Arseneau
+&
+W.~Spencer Smith
+\\[0.25em]
+{\small Independent Researcher}
+&
+{\small Department of Computing and Software}
+\\
+&
+{\small McMaster University}
+\\[0.2em]
+{\small \href{mailto:kai@kaiarseneau.dev}{kai@kaiarseneau.dev}}
+&
+{\small \href{mailto:smiths@mcmaster.ca}{smiths@mcmaster.ca}}
+\\[0.2em]
+{\small
+\href{https://orcid.org/0009-0003-7811-9634}
+{ORCID: 0009-0003-7811-9634}}
+&
+{\small
+\href{https://orcid.org/0000-0002-0760-0987}
+{ORCID: 0000-0002-0760-0987}}
+\end{tabular}
 }
 
 \hypersetup{
@@ -371,48 +384,46 @@ W.~Spencer Smith\\
 \addcontentsline{toc}{chapter}{Abstract}
 \vspace{-0.4cm}
 
-Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio
-change, clamping, torque transfer and shaft motion through the same hardware. Predicting their
-complete transient response therefore requires these interactions to be resolved without prescribing the
-internal motion or operating sequence. This work develops a first-principles transient formulation
-in which the CVT itself is solved as one coupled mechanical system under the loading applied at
-its two pulley shafts.
+Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio change, 
+clamping, torque transfer and shaft motion through the same hardware. Predicting their complete 
+transient response therefore requires these interactions to evolve together rather than prescribing 
+part of the CVT motion.To the authors' knowledge, this is the first mechanically actuated rubber V-belt 
+formulation in which all retained CVT motion is determined by the coupled dynamics, while attached 
+systems enter only through shaft torque and inertia.
 
-Primary flyweight motion and helix-constrained secondary-sheave rotation enter both the axial force
-and shaft angular-momentum balances, retaining direct inertial coupling through the clamping
-hardware. A reduced, fixed-length belt retains independent transport motion and the radial and
-tangential accelerations associated with changing pulley radii, linking the pulleys through
+Primary flyweight motion and helix-constrained secondary-sheave rotation enter both the axial
+force and shaft angular-momentum balances, retaining direct inertial coupling through the clamping
+hardware. A reduced, fixed-length belt retains independent transport motion and the radial
+and tangential accelerations associated with changing pulley radii, linking the pulleys through
 closed-loop tension compatibility and traction-limited contact. Contact and support conditions
 determine engagement, free shifting, ratio-limit support and changes between sticking and sliding,
-with impulse--momentum balance supplying the velocity changes at finite-speed constraint
-activation.
+with impulse--momentum balance supplying the velocity changes at finite-speed constraint activation.
 
-Mechanical, energy and numerical checks support internal consistency across the tested regimes.
-In the nominal \SI{10}{\second} reference acceleration, stored-energy changes and modelled sliding
-and capture losses account for net shaft work with a final remainder of
-\(4.9\times10^{-7}\). A reconstructed benchmark against a transient model with a more detailed belt representation
-gives relatively close feedback-controlled shaft-speed histories despite substantially different
-clamping demand; replaying the published clamp produces a much larger primary-speed discrepancy.
-Reconstruction differences limit attribution of the mismatch to any single omitted mechanism, and
-experimental validation remains outstanding.
+Mechanical, energy and numerical checks support internal consistency across the tested regimes. In
+the nominal 10~s reference acceleration, stored-energy changes and modelled sliding and capture losses
+account for net shaft work with a final relative remainder of \(4.9\times10^{-5}\%\). A reconstructed
+benchmark against a transient model with a more detailed belt representation gives relatively close
+feedback-controlled shaft-speed histories despite substantially different clamping demand; replaying
+the published clamp produces a much larger primary-speed discrepancy. Reconstruction differences
+limit attribution of the mismatch to any single omitted mechanism, and experimental validation
+remains to be done.
 
-The importance of the retained dynamics is strongly motion-dependent. Primary flyweight dynamics alter 
-engagement, but the quasi-static reduction remains close during the tested smooth 
-shifting and engaged torque changes, whereas secondary shaft deceleration can sustain additional clamping 
-during continuous loaded backshift. In the belt, circulation acceleration supplies the main inertial
-adjustment during gentle shifting; radial inertia becomes appreciable during rapid shift-speed
-changes, while curvature and moving-radius contributions remain small in the tested conditions.
+The retained dynamics are strongly motion-dependent. Primary flyweight dynamics alter engagement,
+but the quasi-static reduction remains close during the tested smooth shifting and engaged torque
+changes, whereas secondary shaft deceleration can sustain additional clamping during continuous
+loaded backshift. In the belt, circulation acceleration supplies the main inertial adjustment during
+gentle shifting; radial inertia becomes appreciable during rapid shift-speed changes, while curvature
+and moving-radius contributions remain small in the tested conditions.
 
-Coupled engine--CVT--vehicle simulations demonstrate the full-transient capability by carrying the
-state produced in one part of a continuous drive into the next while the same formulation follows the CVT
-through engagement, shifting, ratio-limit support, traction loss and reverse power. Hardware changes
-consequently propagate through clamping, ratio, traction, engine operating point and vehicle response
-rather than altering one quantity in isolation. Together with the benchmark, these simulations show
-that similar external trajectories can coexist with different internal mechanical states; agreement in
-selected trajectories therefore does not by itself establish agreement in the mechanics that produced
-them. Resolving those mechanics together with the motion allows a response to be followed back to
-the forces and constraints that produced it, and a hardware change forward through the operating
-conditions it creates.
+Coupled engine--CVT--vehicle simulations demonstrate full-transient capability by carrying state
+continuously through engagement, shifting, ratio-limit support, traction loss and reverse power.
+Hardware changes consequently propagate through clamping, ratio, traction, engine operating point
+and vehicle response rather than altering one quantity in isolation. Together with the benchmark,
+these simulations show that similar external trajectories can coexist with different internal mechanical
+states; agreement in selected trajectories therefore does not by itself establish agreement in the
+mechanics that produced them. Resolving those mechanics together with the motion allows responses
+to be traced to their causes and hardware changes through the operating conditions they create,
+supporting mechanics-based design and tuning studies.
 
 % =========================
 % Acknowledgements (sample page)
