@@ -36,7 +36,7 @@
 \tcbset{
   enhanced,
   sharp corners,
-  boxrule=0.5pt,
+  boxrule=0.8pt,
   colback=white,
   colframe=black,
   left=6pt,right=6pt,top=6pt,bottom=6pt
@@ -194,7 +194,7 @@
   \refstepcounter{equation}%
   \begin{tcolorbox}
     \textbf{#2}\hfill\textbf{(\theequation)}\\[-4pt]
-    \rule{\textwidth}{0.4pt}
+    \rule{\textwidth}{0.8pt}
     \[
       #3
     \]
@@ -209,7 +209,7 @@
 \NewDocumentEnvironment{bigeqalign}{m m}{%
   \begin{tcolorbox}
     \phantomsection\label{#1}
-    \textbf{#2}\\[-2pt]\rule{\textwidth}{0.4pt}
+    \textbf{#2}\\[-2pt]\rule{\textwidth}{0.8pt}
     \begin{align}
 }{%
     \end{align}
@@ -233,12 +233,12 @@
   % Center a box of the measured width; if it is wider than \linewidth
   % TeX will allow symmetric overflow because the glue becomes negative.
     \noindent\hbox to \linewidth{\hss
-    \begin{tcolorbox}[width=\bigeqwidth,boxrule=0.6pt,left=8pt,right=8pt,top=8pt,bottom=8pt]
+    \begin{tcolorbox}[width=\bigeqwidth,boxrule=0.8pt,left=8pt,right=8pt,top=8pt,bottom=8pt]
       \noindent\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l r@{}}
         \textbf{#2} & \textbf{(\theequation)}
       \end{tabular*}
       \vspace{6pt}
-      \rule{\linewidth}{0.4pt}
+      \rule{\linewidth}{0.8pt}
       \vspace{8pt}
       \makebox[\linewidth][c]{\(\displaystyle #3\)}%
     \end{tcolorbox}
@@ -317,8 +317,8 @@
   \begin{tcolorbox}[
     enhanced,
     colback=gray!5,
-    colframe=black!40,
-    boxrule=0.6pt,
+    colframe=black!55,
+    boxrule=0.8pt,
     arc=2pt,
     left=8pt,
     right=8pt,
@@ -694,7 +694,7 @@ rather than retained as independent state. Purely local dummy variables and
 temporary algebraic abbreviations are defined where they are used and are not
 repeated here.
 
-\begin{center}
+\begingroup
 \small
 \setlength{\LTleft}{0pt}
 \setlength{\LTright}{0pt}
@@ -783,7 +783,7 @@ $T^-,\ T^+$ & \si{\joule} & Total retained kinetic energy immediately before and
 \end{longtable}
 \labelcurrentlongtable{tab:cvt_instantaneous_quantities}
 \normalsize
-\end{center}
+\endgroup
 
 % Restore the normal chapter-based table numbering for the body of the manuscript.
 \let\thetable\bodythetable
