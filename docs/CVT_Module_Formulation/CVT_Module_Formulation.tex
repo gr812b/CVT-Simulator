@@ -349,10 +349,10 @@ Kai Arseneau
 &
 W.~Spencer Smith
 \\[0.25em]
-{\small Independent Researcher}
+{\small \raisebox{-0.5\baselineskip}{Independent Researcher}}
 &
 {\small Department of Computing and Software}
-\\
+\\[-0.3em]
 &
 {\small McMaster University}
 \\[0.2em]
@@ -387,7 +387,7 @@ W.~Spencer Smith
 Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) couple ratio change, 
 clamping, torque transfer and shaft motion through the same hardware. Predicting their complete 
 transient response therefore requires these interactions to evolve together rather than prescribing 
-part of the CVT motion.To the authors' knowledge, this is the first mechanically actuated rubber V-belt 
+part of the CVT motion. To the authors' knowledge, this is the first mechanically actuated rubber V-belt 
 formulation in which all retained CVT motion is determined by the coupled dynamics, while attached 
 systems enter only through shaft torque and inertia.
 
@@ -463,7 +463,7 @@ grateful for his help with experimental data and the capstone derivation, as wel
 as his involvement in our tuning work. His willingness to discuss ideas and work 
 through difficulties with me has been a continuing source of help. I greatly 
 value the time he has given to this project and his friendship throughout these 
-years. a
+years.
 
 I thank my capstone teammates, Cameron Dunn, Travis Wing, and Grace McKenna, for 
 their contributions to our earlier CVT simulator and the work we shared during 
@@ -702,6 +702,8 @@ Symbol & Unit & Meaning \\ \midrule
 \endhead
 \bottomrule
 \endfoot
+\bottomrule
+\caption{Principal instantaneous and derived quantities used by the CVT formulation.}\\
 \endlastfoot
 
 \multicolumn{3}{@{}l}{\textbf{Geometry and kinematics}} \\
@@ -773,8 +775,6 @@ $\mathbf c_i$ & mixed & One outgoing event-constraint row; examples include stop
 $\Gamma_i,\ \boldsymbol{\Gamma}$ & \si{\newton\second} & Scalar constraint impulse and assembled vector of active event impulses. \\
 $T^-,\ T^+$ & \si{\joule} & Total retained kinetic energy immediately before and after a finite event. \\
 
-\bottomrule
-\caption{Principal instantaneous and derived quantities used by the CVT formulation.}
 \end{longtable}
 \labelcurrentlongtable{tab:cvt_instantaneous_quantities}
 \normalsize
@@ -1234,7 +1234,19 @@ The contact and efficiency literature therefore provides the foundation for unde
 
 The contact and force-balance literature establishes how a rubber belt CVT behaves at a specified operating condition. Transient models extend this picture by asking how the transmission moves between operating conditions and which parts of that motion must be resolved in time. In the rubber-belt literature, this has been approached through models of shift mechanics, distributed belt motion, pulley rotational dynamics, and mechanically actuated vehicle response. A useful comparison among these works is therefore which parts of the CVT state are advanced dynamically and which quantities are supplied as operating conditions or inputs.
 
-\citet{Sorge2008} provides an important bridge from quasi-static analysis to transient shift mechanics. Rather than representing ratio change as a sequence of neighbouring equilibria, the formulation treats the radial migration of the belt through the pulley grooves as a time-dependent process coupled to circumferential belt motion, mass conservation, and sliding. \citet{CammalleriSorge2009} later develop approximate closed-form solutions for the same class of shift problem. These works establish a mechanical basis for transient ratio change, while taking the pulley loading and active shift condition as part of the problem definition.
+\citet{Sorge2008} provides an important bridge from quasi-static analysis to
+transient shift mechanics. Rather than representing ratio change as a sequence
+of neighbouring equilibria, the formulation treats the radial migration of the
+belt through the pulley grooves as a time-dependent process coupled to
+circumferential belt motion, mass conservation, and sliding. Its belt
+mass-conservation treatment is reformulated for the shifting control volume,
+while inertia forces associated with the shifting motion are taken as
+negligible relative to the other belt forces, leaving the belt equilibrium
+conditions similar to the steady case. \citet{CammalleriSorge2009} later
+develop approximate closed-form solutions for the same class of shift problem.
+These works establish a mechanical basis for transient ratio change, while
+taking the pulley loading and active shift condition as part of the problem
+definition.
 
 A more detailed transient treatment is given by \citet{JulioPlante2011}, who discretize the rubber belt and apply Newton's law to the individual belt elements. Their model predicts the time response of transmission ratio under specified drive-pulley axial force, drive-pulley speed, and load torque, while resolving belt elasticity, bending, damping, and frictional contact directly. The formulation is validated for steady and shifting conditions and provides substantially greater local belt detail than reduced force-balance models. The authors also report difficulty obtaining a stabilized prediction for the low-torque start-up condition in which belt clamping itself acts as the clutch, indicating that the operating range of the formulation is narrower than the full sequence of CVT engagement and shift behaviour.
 
@@ -1483,9 +1495,9 @@ prevent more detailed component laws from being introduced in future work.
 \label{sec:contributions}
 
 The principal contribution of this work is a first-principles transient
-formulation of the mechanically actuated rubber V-belt CVT as a complete
-dynamic component. Its internal response is solved as one coupled mechanical
-system under the loading applied at the primary and secondary shafts, without
+formulation of the complete mechanically actuated rubber V-belt CVT. Its
+internal response is solved as one coupled mechanical system under the loading
+applied at the primary and secondary shafts, without
 requiring prescribed histories of ratio, clamping force, pulley speed, or
 shift direction. The same formulation is constructed to remain valid across
 the major operating regimes of the transmission rather than around one
@@ -4973,8 +4985,9 @@ the conventional helix orientation considered here,
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{./figures_compressed/actuation/helix_unwrap.png}
-    \caption{Unwrapped secondary-helix geometry. The same track angle relates
-    relative rotation to axial travel and reaction torque to axial force.}
+    \caption{Unwrapped geometry of a single secondary-helix contact flank. The
+    local track angle relates relative rotation to axial travel and reaction
+    torque to axial force.}
     \label{fig:secondary_helix_geometry}
 \end{figure}
 
@@ -5638,8 +5651,11 @@ deformation fields of \citet{JulioPlante2011} and \citet{Ballew2015}, or the
 prescribed-shift, face-resolved torque distribution of
 \citet{SorgeCammalleri2011}. It instead keeps the actuator and movable-sheave
 inertias explicit while closing the nominal belt geometry without spatial
-discretization. Among the reviewed mechanically actuated rubber-belt
-formulations, no equivalent combination of these features was identified.
+discretization. Among the mechanically actuated rubber-belt formulations
+reviewed here, neither of these explicit actuator-inertia treatments was
+identified: flyweight pivot inertia entering the primary axial balance, or
+helix-constrained movable-side rotational inertia entering the secondary axial
+balance.
 
 % --------------------------------------------------------------
 
@@ -10554,9 +10570,12 @@ models, are defined separately in \Cref{app:results_boundary_models}.
 
 The results reported here use a frozen CINDER release and a separate frozen
 study record containing the case definitions, analysis scripts, and outputs.
-Both records are identified in \Cref{tab:results_reproducibility_record}.
-The linked freeze record specifies the retained numerical evidence,
-checksums of the manuscript figures, and limits of figure reproduction.
+The same simulator release is distributed through PyPI as
+\href{https://pypi.org/project/cinder-cvt/1.1.2/}{\texttt{cinder-cvt==1.1.2}},
+providing a versioned installation route for that release. Both frozen records
+are identified in \Cref{tab:results_reproducibility_record}. The linked freeze record specifies
+the retained numerical evidence, checksums of the manuscript figures, and
+limits of figure reproduction.
 
 \begin{table}[H]
 \centering
@@ -10571,11 +10590,12 @@ checksums of the manuscript figures, and limits of figure reproduction.
     >{\raggedright\arraybackslash}p{\dimexpr0.31\linewidth-4\tabcolsep\relax}
     @{}}
 \toprule
-Record & Release / source revision & Source / archive \\
+Record & Release / source revision & Source / distribution / archive \\
 \midrule
 CINDER implementation
     & \CINDERtag\newline\CINDERcommit
-    & \href{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}{Tagged source} \\
+    & \href{https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.1.2}{Tagged source}\newline
+      \href{https://pypi.org/project/cinder-cvt/1.1.2/}{PyPI package} \\
 \addlinespace[4pt]
 Study record
     & \ResultsTag\newline\ResultsCommit
@@ -11282,12 +11302,12 @@ The translations preserve the published belt mass and combined shaft
 inertias. Friction coefficients are converted between the two normal-force
 conventions so that the same clamp gives the same gross tangential capacity.
 Both translating sheave masses are set to zero because Ballew obtains
-radial position from an algebraic axial-force balance. CINDER's belt inertia
-and reduced shift dynamics remain active. Ballew also initializes internal
-belt-deformation states, including zero longitudinal tension, that have no
-direct counterpart in CINDER. The reconstruction therefore matches the
-specified external conditions without making the internal initial states
-identical.
+radial position from an algebraic axial-force balance. The reconstruction
+retains the present formulation's belt inertia and reduced shift dynamics.
+Ballew also initializes internal belt-deformation states, including zero
+longitudinal tension, that have no direct counterpart in the present
+formulation. The reconstruction therefore matches the specified external
+conditions without making the internal initial states identical.
 
 \subsection{Closed- and Open-Loop Comparisons}
 \label{sec:results_ballew_closed_loop}
@@ -11405,9 +11425,10 @@ resolution.
 Force replay shows that the discrepancy does not arise solely from the
 reconstructed controller: the models also respond differently when its
 adjustment is removed. The principal difference in the belt descriptions is
-the motion each can represent. Ballew resolves internal deformation and local nodal motion,
-whereas CINDER uses a fixed belt length, one transport speed and a prescribed
-path controlled by the shift coordinate. Local deformation and force
+the motion each can represent. Ballew resolves internal deformation and local
+nodal motion, whereas the present formulation uses a fixed belt length, one
+transport speed and a prescribed path controlled by the shift coordinate.
+Local deformation and force
 redistribution can therefore alter the response to a given clamp. The
 unmatched initial tension and other necessary reconstruction choices still
 limit how directly this difference can be assigned to any one belt mechanism.
@@ -11427,17 +11448,17 @@ incomplete test of a CVT model. The required clamp and the response when that
 clamp is imposed provide additional, distinct information. Here they reveal
 a substantial difference in the reconstructed relation between clamp force,
 shift and slip, despite the closer controlled shaft histories. The benchmark
-therefore identifies where CINDER's reduced belt description needs further
-physical assessment; it is an independent model comparison, not experimental
-validation of either formulation.
+therefore identifies where the present formulation's reduced belt description
+needs further physical assessment; it is an independent model comparison, not
+experimental validation of either formulation.
 \FloatBarrier
 
-\section{Dynamic Mechanics Retained by CINDER}
+\section{Dynamic Mechanics Retained in the Formulation}
 \label{sec:results_dynamic_mechanics}
 
 The preceding consistency checks, numerical refinements and comparison with
-Ballew provide a basis for examining the additional dynamics retained by
-CINDER. The primary flyweights, secondary helix and belt are considered in
+Ballew provide a basis for examining the additional dynamics retained in the
+formulation. The primary flyweights, secondary helix and belt are considered in
 turn to determine how large these contributions become and how much they
 change the predicted motion. Their force and torque contributions are
 evaluated along the full-model motion; separately integrating a reduced
@@ -12168,13 +12189,21 @@ limit. The archived comparisons are documented in
 Taken together, the belt studies separate the roles of the retained transient
 terms. Changing circulation speed supplies the principal inertial adjustment
 during gentle free shift, while rapid changes in shift speed can make radial
-acceleration an appreciable part of the closed-loop balance. The curvature
-and moving-radius contributions remain small over the motions examined here,
-and independently omitting them together changes the calculated shift
-histories by less than numerical refinement while preserving the ordered
-contact and support changes. The transport comparison adds a separate point:
-changing one occurrence of belt inertia is not equivalent to reducing the
-common belt density throughout the coupled belt description.
+acceleration an appreciable part of the closed-loop balance. This motion
+dependence places a useful boundary on the simplification adopted by
+\citet{Sorge2008}, whose one-dimensional shift formulation treats inertia
+forces associated with shifting motion as negligible relative to the other
+belt forces. The two reduced descriptions are not identical, but in the
+present formulation the analogous shift-related contributions are not
+uniformly negligible: the radial contribution associated with shift
+acceleration becomes appreciable during engagement and rapid load-induced
+changes in shift speed. By contrast, the curvature and moving-radius
+contributions remain small over the motions examined here, and independently
+omitting them together changes the calculated shift histories by less than
+numerical refinement while preserving the ordered contact and support changes.
+The transport comparison adds a separate point: changing one occurrence of
+belt inertia is not equivalent to reducing the common belt density throughout
+the coupled belt description.
 \FloatBarrier
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
@@ -15738,7 +15767,7 @@ outgoing side.
 
 \Cref{tab:energy_capture_inventory} identifies the captures in the nominal
 calculation. The early sequence ends with the numerical low-ratio seating
-rule documented in \Cref{app:numerical_low_ratio_seating}; it is not a model
+rule documented in \Cref{app:study_solver_convergence}; it is not a model
 of compliant rebound. Lower-stop release, the return to sticking and
 release from the low-ratio seat are also retained in the event ledger,
 but have no capture loss. The tighter calculation has the same counts
@@ -15867,9 +15896,8 @@ configuration and shaft boundaries of
 throttle and zero road grade for ten seconds. The belt and vehicle start at
 rest and the engine at \SI{1800}{rpm}. The study overrides the shared case's
 \SI{5}{s} duration to include upper-stop arrival. Only the LSODA controls
-change; the contact, event and low-ratio seating rules remain fixed.
-The last of these is documented in \Cref{app:numerical_low_ratio_seating}.
-The maintained definition is
+change; the contact, event and low-ratio seating rules remain fixed. The
+maintained study definition is
 \ResultsCode{studies/solver-convergence/study.json}{solver-convergence/study.json}.
 \Cref{tab:solver_convergence_design} separates the formal verification grid
 from the supplementary dense exploration.
