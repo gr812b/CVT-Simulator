@@ -540,6 +540,7 @@ $\hat{\mathbf e}_{(\cdot)}$ & Unit vector in the direction indicated by its subs
 \normalsize
 \end{center}
 
+\vspace{-1cm}
 \section*{Fixed CVT Data}
 
 The quantities in \Cref{tab:cvt_fixed_data} define the CVT selected for a
@@ -623,6 +624,8 @@ $\mu_k$ & 1 & Kinetic belt--pulley traction coefficient used on sliding branches
 \normalsize
 \end{center}
 
+
+\vspace{-1cm}
 \section*{Current CVT Condition}
 
 Only the continuous state and discrete mechanical regime are retained as the
@@ -653,6 +656,7 @@ $q(t)$ & -- & Discrete mechanical regime identifying the currently active struct
 \normalsize
 \end{center}
 
+\vspace{-1cm}
 \section*{Shaft-Interface Conditions}
 
 The attached systems communicate with the CVT only through the mechanical
@@ -680,6 +684,7 @@ $I_{\mathrm{B},j}$ & \si{\kilogram\meter\squared} & Equivalent rotational inerti
 \normalsize
 \end{center}
 
+\vspace{-1cm}
 \section*{Instantaneous CVT Quantities}
 
 The quantities in \Cref{tab:cvt_instantaneous_quantities} are evaluated from
@@ -6988,14 +6993,13 @@ that tangential contact force to the normal contact already present in the
 radial balance.
 
 Under \AssRef{assump:gross_coulomb_traction}, the sheave contact obeys Coulomb
-friction. While the belt sticks, the tangential force is a reaction that can
-act in either direction and take any magnitude up to the static limit. Once
-the belt slides, its magnitude is fixed by kinetic friction and its direction
-opposes the relative sliding. Both cases relate the tangential force on the
-element to the same normal-force increment \(dN_j\), but with different rules
-for the allowable proportionality.
+friction. While the belt sticks, the tangential force is a reaction whose
+signed magnitude is whatever is required to maintain sticking, provided that
+the static-friction limit is not exceeded. Once the belt slides, the
+tangential force has the kinetic-friction magnitude and acts opposite the
+relative sliding.
 
-Rather than carrying a separate magnitude condition and direction sign
+Rather than carrying the tangential force magnitude and direction separately
 through the remaining equations, define the signed traction utilization
 \(\lambda_j\) by
 
@@ -7010,23 +7014,28 @@ through the remaining equations, define the signed traction utilization
     =
     \begin{cases}
         \lambda_{j,\mathrm{st}},
-        \quad
-        \left|\lambda_{j,\mathrm{st}}\right|\leq\mu_s,
         & \text{sticking},
-        \\
+        \\[4pt]
         \sigma_j\mu_k,
-        \quad
-        \sigma_j\in\{-1,+1\},
         & \text{sliding}.
     \end{cases}
 }
 
-The magnitude of \(\lambda_j\) gives the tangential force used per unit normal
+Here \(\lambda_{j,\mathrm{st}}\) denotes the static traction reaction required
+by a sticking contact. It is admissible only while
+\[
+    \left|\lambda_{j,\mathrm{st}}\right|\leq\mu_s.
+\]
+For a sliding contact, \(\sigma_j\in\{-1,+1\}\) denotes the direction of the
+kinetic traction; its sign is selected from the relative contact motion when
+the tangential contact state is closed in
+\Cref{sec:tangential_contact_states}.
+
+The magnitude of \(\lambda_j\) gives the tangential force per unit normal
 load, while its sign gives the direction of that force. Thus,
 \(\lambda_j>0\) acts with increasing \(\theta\),
 \(\lambda_j<0\) acts against it, and \(\lambda_j=0\) represents normal contact
-with no tangential force. In sliding, \(\sigma_j\) selects the direction that
-opposes the relative motion, while \(\mu_k\) fixes the magnitude. Under
+with no tangential force. Under
 \AssRef{assump:wrap_contact_resolution}, one value of \(\lambda_j\) represents
 the complete wrap at a given instant.
 
