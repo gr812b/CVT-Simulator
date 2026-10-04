@@ -3,7 +3,6 @@ import {
   Accordion,
   Alert,
   Badge,
-  Button,
   Code,
   Container,
   Group,
@@ -14,6 +13,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cancelRun, isActive, message, rerun, type RunStatus } from './api';
 import { useRunActivity } from './RunActivity';
@@ -28,7 +28,18 @@ import { ResultDetails } from '../results/ResultDetails';
 export function RunPage() {
   const { runId } = useParams();
   const navigate = useNavigate();
-  const { refresh, activity } = useRunActivity();
+  const { refresh, activity, dismiss } = useRunActivity();
+  const readingNotices = useRef(new Set<string>());
+  useEffect(() => {
+    for (const notice of activity?.unread ?? []) {
+      if (notice.run.id !== runId || readingNotices.current.has(notice.id))
+        continue;
+      readingNotices.current.add(notice.id);
+      void dismiss(notice.id).catch(() =>
+        readingNotices.current.delete(notice.id),
+      );
+    }
+  }, [runId, activity, dismiss]);
   const [run, setRun] = useState<RunStatus | null>(null);
   const [inspection, setInspection] = useState<RunInspection | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -126,7 +137,9 @@ export function RunPage() {
                     />
                     <Button
                       loading={busy}
-                      disabled={!name.trim()}
+                      disabledReason={
+                        !name.trim() ? 'Enter a run name.' : undefined
+                      }
                       onClick={() =>
                         void act(async () => {
                           const next = await renameRun(run.id, {
@@ -190,6 +203,13 @@ export function RunPage() {
                   </Alert>
                 )}
                 <Group>
+                  <Button
+                    component={Link}
+                    to={`/catalog/runs/${run.id}`}
+                    variant="subtle"
+                  >
+                    Public run page
+                  </Button>
                   {inspection?.availability.full_result && (
                     <Button component={Link} to={`/playback?run=${run.id}`}>
                       Open result playback
@@ -200,7 +220,11 @@ export function RunPage() {
                       variant="light"
                       color="red"
                       loading={busy}
-                      disabled={Boolean(run.cancel_requested_at)}
+                      disabledReason={
+                        run.cancel_requested_at
+                          ? 'Cancellation has already been requested.'
+                          : undefined
+                      }
                       onClick={() =>
                         void act(async () => setRun(await cancelRun(run.id)))
                       }
@@ -211,7 +235,11 @@ export function RunPage() {
                     <Button
                       variant="light"
                       loading={busy}
-                      disabled={Boolean(activity?.active)}
+                      disabledReason={
+                        activity?.active
+                          ? 'You already have a queued or running simulation. Wait for it to finish or cancel it from Activity.'
+                          : undefined
+                      }
                       onClick={() =>
                         void act(async () => {
                           const next = await rerun(run.id, retryKey.current);
@@ -234,9 +262,11 @@ export function RunPage() {
                   <Button
                     variant="default"
                     loading={busy}
-                    disabled={
-                      !inspection ||
-                      !!inspection.experiment_copy_unavailable_reason
+                    disabledReason={
+                      !inspection
+                        ? 'Wait for the run details to load.'
+                        : (inspection.experiment_copy_unavailable_reason ??
+                          undefined)
                     }
                     onClick={() =>
                       void act(async () => {
@@ -255,7 +285,7 @@ export function RunPage() {
                 </Group>
                 <Text size="sm" c="dimmed">
                   {inspection?.experiment_copy_unavailable_reason ??
-                    'Starting a new experiment makes a private copy of this run’s frozen hardware, tuning, mass and scenario. Review and edit it before submitting.'}
+                    'Starting a new experiment makes an independent public copy of this run’s frozen hardware, tuning, mass and scenario. Review and edit it before submitting.'}
                 </Text>
                 {!isActive(run) && (
                   <Text size="sm" c="dimmed">

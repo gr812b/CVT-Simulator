@@ -5,6 +5,7 @@ import io
 import json
 from copy import deepcopy
 
+from pydantic import TypeAdapter
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import defer
 
@@ -26,7 +27,7 @@ from app.core.errors import ApiProblem
 from app.database import runs as artifacts
 from app.database.models import Run, RunArtifact, RunCacheEntry
 from app.database.publication_models import ConfigurationCopy
-from app.schemas.experiments import ScenarioDocument
+from app.schemas.experiments import PrimaryOverride, ScenarioDocument
 from app.schemas.physical_library import SetupDocument
 from app.schemas.results import (
     ResultAvailability,
@@ -130,13 +131,15 @@ def history(
     limit=24,
     offset=0,
     oldest_first=False,
+    scope="own",
 ):
     if since and until and since > until:
         raise ApiProblem(
             422, "date_range", "The start date must be before the end date."
         )
-    jobs.recover(session, settings, principal.account_id)
-    conditions = [Run.account_id == principal.account_id]
+    if principal.account_id:
+        jobs.recover(session, settings, principal.account_id)
+    conditions = [Run.account_id == principal.account_id] if scope == "own" else []
     if query.strip():
         escaped = (
             query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -247,6 +250,13 @@ def _experiment_configuration(run, settings):
             "This older or specialized run has no editable scenario definition. Its canonical input can still be exported or rerun."
         )
     scenario = ScenarioDocument.model_validate(p["scenario"])
+    primary = case["shaft_boundaries"]["primary"]
+    override = None
+    if primary["kind"] != "full_throttle_engine":
+        override = TypeAdapter(PrimaryOverride).validate_python(
+            p.get("primary_boundary")
+        )
+    engine = baseline_case()["shaft_boundaries"]["primary"] if override else primary
     document = SetupDocument.model_validate(
         {
             "kind": "setups",
@@ -254,8 +264,10 @@ def _experiment_configuration(run, settings):
             "source_label": f"Simulation {run.id}",
             "data": {
                 "engine": {
-                    "name": "Engine from run",
-                    "data": case["shaft_boundaries"]["primary"],
+                    "name": "Baseline engine (inactive)"
+                    if override
+                    else "Engine from run",
+                    "data": engine,
                 },
                 "cvt": {
                     "name": "CVT from run",
@@ -276,7 +288,9 @@ def _experiment_configuration(run, settings):
     candidate = baseline_case()
     candidate["assembly"] = document.data.cvt.data.assembly
     candidate["shaft_boundaries"] = {
-        "primary": document.data.engine.data.model_dump(),
+        "primary": override.model_dump()
+        if override
+        else document.data.engine.data.model_dump(),
         "secondary": vehicle_boundary(document.data.vehicle),
     }
     apply_scenario(candidate, scenario, settings)
@@ -303,8 +317,9 @@ def copy_unavailable_reason(run, settings):
 
 
 def inspect_run(session, principal, settings, run_id):
-    run = access.owned(session.get(Run, run_id), principal)
-    jobs.recover(session, settings, principal.account_id)
+    run = access.public_run(session, run_id)
+    if principal.account_id == run.account_id:
+        jobs.recover(session, settings, principal.account_id)
     summary = run.summary_scalars or {}
     return RunInspection(
         run=jobs.status(run),
@@ -330,7 +345,7 @@ def inspect_run(session, principal, settings, run_id):
 
 
 def series(session, principal, run_id, resolution):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     table = (
         artifacts.get_database_run_result(session, run.id)["report_table"]
         if resolution == "full"
@@ -379,7 +394,7 @@ def rename(session, principal, run_id, request):
 
 
 def export(session, principal, run_id, kind):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     if kind == "input":
         payload = run.input_contract
     elif kind == "summary":
@@ -419,7 +434,7 @@ def export(session, principal, run_id, kind):
 
 
 def copy_experiment(session, principal, settings, run_id, request):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     existing, fingerprint = configuration_copies.begin_copy(
         session, principal, request, {"run": run.id}
     )

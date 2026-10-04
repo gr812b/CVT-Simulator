@@ -1,5 +1,7 @@
 # M3 — Revisioned experiments and durable simulation jobs
 
+> Current setup and visibility policy: [Public workspace refinements](PUBLIC_WORKSPACE_REFINEMENTS.md). This historical milestone document may describe superseded private-data or migration behavior.
+
 M3 completes the tune/scenario/run milestone from the implementation baseline. CINDER 1.1.4 remains pinned and owns the mechanics. This milestone does not change the research formulation, add a unit-test suite, or change testing CI.
 
 ## User workflow
@@ -46,7 +48,7 @@ The frozen record contains the canonical executable case, source revisions, subm
 
 There is **one queued or running job per account/workspace**, including requests from different users in that workspace. The account row serializes admission; a second tab or concurrent request cannot allocate another slot. A request key (16–64 characters; UUID recommended) is unique per account: the same key and payload return the same run, while reuse with different content returns 409. Accepted submissions have a rolling rate limit; rejected/invalid attempts also have a separate, independently committed fixed-window throttle. Ordinary previewing/saving is not a job submission.
 
-The standalone worker claims queued jobs with compare-and-swap, then executes one isolated child process. Multiple workers can share the queue. A worker token fences all completion writes. The database clock owns lease deadlines; each child gets a conservative local monotonic deadline, avoiding cross-host wall-clock skew. The child arms POSIX `SIGALRM` before importing CINDER, applies address-space/output-file limits, disables core dumps, and uses one BLAS thread. Linux also kills the child when its worker parent dies.
+The standalone worker claims queued jobs with compare-and-swap, then executes one isolated child process. Multiple workers can share the queue. A worker token fences all completion writes. The database clock owns lease deadlines; each child gets a conservative local monotonic deadline, avoiding cross-host wall-clock skew. The child arms POSIX `SIGALRM` before importing CINDER, applies output-file limits, disables core dumps, and uses one BLAS thread. Linux additionally caps address space and kills the child when its worker parent dies. The [post-M4 worker fix](DEMO_AND_WORKER_TROUBLESHOOTING.md) adds resident-memory monitoring on Linux and macOS, with bounded startup diagnostics in the worker log.
 
 Lifecycle states are `queued`, `running`, `completed`, `failed`, `timed_out` and `cancelled` (the old `validating` transport value remains readable). Queued cancellation is immediate. Running cancellation requests shutdown and retains the slot until the child has been killed and reaped. An orphaned running record is failed only after its hard deadline plus recovery grace; stale workers cannot overwrite a terminal result. Expired queued work is also released. Retries are deliberate new runs, not an automatic retry loop. There is no invented progress percentage.
 
@@ -102,7 +104,7 @@ Configuration lives in `app/core/settings.py`; `backend/.env.example` lists the 
 | `RUN_MAX_DURATION_SECONDS` | 120 simulated seconds |
 | `RUN_MAX_REPORT_SAMPLES` | 20,000 |
 | `RUN_MAX_INPUT_BYTES` / `RUN_MAX_RESULT_BYTES` | 2,000,000 / 64,000,000 |
-| `RUN_MEMORY_LIMIT_MB` | 4,096 per child address space |
+| `RUN_MEMORY_LIMIT_MB` | 4,096 per child resident memory; Linux also caps address space |
 | `ROAD_MAX_FEATURES` / `ROAD_MAX_SEGMENTS` | 64 / 512, including any flat endpoint segment |
 | `ROAD_MAX_DISTANCE_M` / `ROAD_MAX_GRADE_DEGREES` | 100,000 m / 60° |
 | `WORKER_POLL_SECONDS` | 1 s |
@@ -124,7 +126,7 @@ Downgrade deliberately refuses to discard durable history. Rollback means restor
 - `application/experiment_tuning.py` and `experiments.py`: effective tuning fields, strict value application, immutable saves and access-aware resolution.
 - `application/jobs.py`: atomic admission, lifecycle fencing, recovery and per-user notices. `scripts/run_worker.py` and `run_child.py`: supervision and bounded computation.
 - `database/runs.py`: result/artifact storage and read-only legacy-cache compatibility. The old synchronous runner and process-local run store have been removed.
-- `features/experiments`: reusable editor/history/activity components; Mantine controls, the shared quantity validator, shared transport and centralized theme remain in use. Dashboard/demo shortcuts also submit background jobs.
+- `features/experiments`: reusable editor/history/activity components; Mantine controls, the shared quantity validator, shared transport and centralized theme remain in use. Signed-in dashboard shortcuts submit background jobs. The public demo now opens a retained result without submitting work.
 
 Old `POST/PATCH /library/tunes` writes now return 410 with a pointer to the revisioned API; old reads are retained for compatibility. Every run submission/rerun requires `request_key`. Regenerate contracts through the ordinary frontend build; do not edit generated files. Existing legacy black-box scripts must be adapted to these contracts and a real worker during M5, not treated as current passing coverage.
 

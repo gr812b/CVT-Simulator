@@ -1,15 +1,12 @@
-"""Search, inspect, export and reuse the owner's durable run evidence."""
+"""Search, inspect, export and reuse public durable run evidence."""
 
 from typing import Literal
-
-from fastapi import APIRouter, Depends, Query, Response
-from pydantic import AwareDatetime
-from sqlalchemy.orm import Session
 
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
     get_database_session,
+    get_public_reader,
 )
 from app.application import run_results as service
 from app.application.auth import Principal
@@ -23,6 +20,9 @@ from app.schemas.results import (
     RunSeries,
 )
 from app.schemas.runs import RunSource, RunStatus, RunStatusResponse
+from fastapi import APIRouter, Depends, Query, Response
+from pydantic import AwareDatetime
+from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["results"])
 SessionDep = Depends(get_database_session)
@@ -40,8 +40,9 @@ def history(
     limit: int = Query(default=24, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
     oldest_first: bool = False,
+    scope: Literal["own", "all"] = "own",
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
     container: ApplicationContainer = ContainerDep,
 ):
     return service.history(
@@ -56,6 +57,7 @@ def history(
         limit=limit,
         offset=offset,
         oldest_first=oldest_first,
+        scope=scope,
     )
 
 
@@ -63,7 +65,7 @@ def history(
 def inspection(
     run_id: str,
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
     container: ApplicationContainer = ContainerDep,
 ):
     return service.inspect_run(session, principal, container.settings, run_id)
@@ -74,7 +76,7 @@ def series(
     run_id: str,
     resolution: Literal["preview", "full"] = "preview",
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
 ):
     return service.series(session, principal, run_id, resolution)
 
@@ -123,7 +125,7 @@ def export(
     run_id: str,
     kind: Literal["input", "summary", "result", "csv"],
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
 ):
     content, media, extension = service.export(session, principal, run_id, kind)
     return Response(

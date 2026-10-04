@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Modal,
   Select,
@@ -11,6 +10,7 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { DifferenceList } from '../physicalLibrary/PhysicalStatus';
 import {
   archiveExperiment,
@@ -24,6 +24,7 @@ import {
 
 export function RevisionToolbar({
   label,
+  showPicker = true,
   document,
   detail,
   items,
@@ -37,6 +38,7 @@ export function RevisionToolbar({
   onRefresh,
 }: {
   label: string;
+  showPicker?: boolean;
   document: ExperimentDocument;
   detail: ExperimentDetail | null;
   items: ExperimentItem[];
@@ -81,19 +83,21 @@ export function RevisionToolbar({
             : `Saved · revision ${detail!.item.revision_number}`}
         </Badge>
       </Group>
-      <Select
-        label={`Open saved ${label.toLowerCase()}`}
-        placeholder="New working copy"
-        searchable
-        clearable
-        value={detail?.item.id ?? null}
-        data={items.map((item) => ({
-          value: item.id,
-          label: `${item.name} · r${item.revision_number}${item.owned ? '' : ' · sample'}${item.archived ? ' · archived' : ''}`,
-        }))}
-        disabled={busy || working}
-        onChange={(id) => (id ? onLoad(id) : onNew())}
-      />
+      {showPicker && (
+        <Select
+          label={`Open saved ${label.toLowerCase()}`}
+          placeholder="New working copy"
+          searchable
+          clearable
+          value={detail?.item.id ?? null}
+          data={items.map((item) => ({
+            value: item.id,
+            label: `${item.name} · r${item.revision_number}${item.owned ? ' · mine' : item.sample ? ' · default' : ' · public'}${item.archived ? ' · archived' : ''}`,
+          }))}
+          disabled={busy || working}
+          onChange={(id) => (id ? onLoad(id) : onNew())}
+        />
+      )}
       <TextInput
         label={`${label} name`}
         value={document.name}
@@ -118,12 +122,16 @@ export function RevisionToolbar({
         <Button
           size="xs"
           variant="light"
-          disabled={
-            busy ||
-            working ||
-            invalid ||
-            !document.name.trim() ||
-            Boolean(detail?.item.archived)
+          disabledReason={
+            busy || working
+              ? 'Please wait for the current action.'
+              : invalid
+                ? 'Correct the highlighted inputs and road profile.'
+                : !document.name.trim()
+                  ? 'Enter a name.'
+                  : detail?.item.archived
+                    ? 'Unarchive this item before saving a revision.'
+                    : undefined
           }
           onClick={() => onSave(false)}
         >
@@ -132,7 +140,15 @@ export function RevisionToolbar({
         <Button
           size="xs"
           variant="default"
-          disabled={busy || working || invalid || !document.name.trim()}
+          disabledReason={
+            busy || working
+              ? 'Please wait for the current action.'
+              : invalid
+                ? 'Correct the highlighted inputs and road profile.'
+                : !document.name.trim()
+                  ? 'Enter a name.'
+                  : undefined
+          }
           onClick={() => onSave(true)}
         >
           Save as / Duplicate
@@ -140,7 +156,13 @@ export function RevisionToolbar({
         <Button
           size="xs"
           variant="subtle"
-          disabled={!detail || busy || working}
+          disabledReason={
+            !detail
+              ? 'Save this item to start its revision history.'
+              : busy || working
+                ? 'Please wait for the current action.'
+                : undefined
+          }
           onClick={() => {
             setHistoryOpen(true);
             setRevision(null);
@@ -154,7 +176,11 @@ export function RevisionToolbar({
           <Button
             size="xs"
             variant="subtle"
-            disabled={busy || working}
+            disabledReason={
+              busy || working
+                ? 'Please wait for the current action.'
+                : undefined
+            }
             onClick={() =>
               void task(async () => {
                 if (
@@ -226,11 +252,16 @@ export function RevisionToolbar({
           {differences && <DifferenceList differences={differences} />}
           <Button
             loading={working}
-            disabled={
-              !revision ||
-              revision === detail?.item.revision_id ||
-              !detail?.item.owned ||
-              detail.item.archived
+            disabledReason={
+              !revision
+                ? 'Choose an earlier revision.'
+                : revision === detail?.item.revision_id
+                  ? 'This is already the current revision.'
+                  : !detail?.item.owned
+                    ? 'Make your own copy to restore earlier values.'
+                    : detail.item.archived
+                      ? 'Unarchive this item before restoring a revision.'
+                      : undefined
             }
             onClick={() => {
               if (!detail || !revision) return;

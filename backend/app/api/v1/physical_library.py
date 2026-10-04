@@ -218,12 +218,7 @@ def archive(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ):
-    obj = service._lock_current(
-        session, principal, kind, object_id, request.expected_revision_id
-    )
-    obj.lifecycle_status = "archived" if request.archived else "active"
-    session.flush()
-    return service.item_response(obj, kind, principal)
+    return service.archive(session, principal, kind, object_id, request)
 
 
 def _check_kind(kind, request):

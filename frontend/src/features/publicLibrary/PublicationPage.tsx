@@ -3,7 +3,6 @@ import {
   Alert,
   Anchor,
   Badge,
-  Button,
   Code,
   Group,
   Loader,
@@ -16,6 +15,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
 import { CatalogFrame } from './CatalogFrame';
@@ -32,7 +32,7 @@ import {
   DifferenceList,
   PhysicalStatus,
 } from '../physicalLibrary/PhysicalStatus';
-import type { PhysicalField } from '../physicalLibrary/api';
+import { kindLabels, type PhysicalField } from '../physicalLibrary/api';
 import { formatMetric } from '../results/api';
 import { message } from '../experiments/api';
 
@@ -120,8 +120,8 @@ function PublicPublication({ id }: { id: string }) {
           {!detail && (
             <>
               <Text size="sm">
-                Private or withdrawn publications cannot be opened here.
-                Existing copies remain in their owners’ libraries.
+                This saved revision could not be found. Existing copies remain
+                in their owners’ libraries.
               </Text>
               <Button
                 variant="subtle"
@@ -140,12 +140,10 @@ function PublicPublication({ id }: { id: string }) {
           <Group justify="space-between" align="start">
             <Stack gap="sm">
               <Group>
-                <Badge>
-                  {detail.item.kind === 'setups' ? 'Vehicle setup' : 'CVT'}
-                </Badge>
+                <Badge>{kindLabels[detail.item.kind]}</Badge>
                 <Badge variant="outline">{detail.item.visibility}</Badge>
                 {detail.item.sample && (
-                  <Badge color="blue">Illustrative project sample</Badge>
+                  <Badge color="blue">Catalog default</Badge>
                 )}
               </Group>
               <Title order={1}>{detail.item.name}</Title>
@@ -178,8 +176,8 @@ function PublicPublication({ id }: { id: string }) {
               </Title>
               <Text size="sm">
                 Publication {detail.item.publication_number} · source revision{' '}
-                {detail.item.revision_number}. Copying creates your own setup or
-                CVT and its required components. Later source edits or
+                {detail.item.revision_number}. Copying creates your own public
+                item and its required components. Later source edits or
                 publications do not update your copy.
               </Text>
               <SimpleGrid cols={{ base: 2, sm: 4 }}>
@@ -246,25 +244,38 @@ function PublicPublication({ id }: { id: string }) {
             Input validation checks compatibility with CINDER; it does not
             establish measurement accuracy or experimental validation.
           </Text>
-          <Paper withBorder p="lg">
-            <Stack>
-              <Title order={2} size="h3">
-                Included components
-              </Title>
-              {detail.dependencies.map((dependency, index) => (
-                <Text key={index} size="sm">
-                  {dependency.name} · {dependency.kind}
-                  {dependency.revision_number
-                    ? ` · revision ${dependency.revision_number}`
-                    : ''}
+          {detail.dependencies.length > 0 && (
+            <Paper withBorder p="lg">
+              <Stack>
+                <Title order={2} size="h3">
+                  Included components
+                </Title>
+                {detail.dependencies.map((dependency, index) => (
+                  <Text key={index} size="sm">
+                    {dependency.name} · {dependency.kind}
+                    {dependency.revision_number
+                      ? ` · revision ${dependency.revision_number}`
+                      : ''}
+                  </Text>
+                ))}
+                <Text size="xs" c="dimmed">
+                  These values are embedded in this publication. Source notes
+                  and assumptions are included; each revision keeps its original
+                  values.
                 </Text>
-              ))}
-              <Text size="xs" c="dimmed">
-                These values are embedded in this publication. Private
-                measurement notes and other source revisions are excluded.
+              </Stack>
+            </Paper>
+          )}
+          {detail.document.source_notes && (
+            <Paper withBorder p="lg">
+              <Title order={2} size="h3">
+                Sources & assumptions
+              </Title>
+              <Text size="sm" mt="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                {detail.document.source_notes}
               </Text>
-            </Stack>
-          </Paper>
+            </Paper>
+          )}
           <ConfigurationView document={detail.document} fields={fields} />
           {detail.history.length > 1 && (
             <Paper withBorder p="lg">
@@ -298,8 +309,12 @@ function PublicPublication({ id }: { id: string }) {
                 The{' '}
                 {detail.item.kind === 'setups'
                   ? 'vehicle, engine, CVT and belt'
-                  : 'CVT and belt'}{' '}
-                will become private items in your workspace. Their published
+                  : detail.item.kind === 'cvts'
+                    ? 'CVT and belt'
+                    : detail.item.kind === 'belts'
+                      ? 'belt'
+                      : 'engine'}{' '}
+                will become public items in your workspace. Their published
                 source will remain recorded.
               </Text>
               <TextInput

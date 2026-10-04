@@ -1,11 +1,5 @@
-import {
-  Accordion,
-  Button,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { Accordion, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import {
   expandJsonPointerTemplate,

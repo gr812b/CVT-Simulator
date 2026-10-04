@@ -65,6 +65,9 @@ class EngineData(PhysicalModel):
 
 
 class BeltData(PhysicalModel):
+    recommended_sheave_half_angle_rad: float | None = Field(
+        default=None, gt=0, lt=1.5707963267948966
+    )
     length_reference: Literal["outer"] = "outer"
     outer_length_m: Positive
     height_m: Positive

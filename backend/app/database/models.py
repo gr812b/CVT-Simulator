@@ -70,6 +70,7 @@ class User(StringUUIDPrimaryKeyMixin, Base):
 
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    school: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
     password_hash: Mapped[str | None] = mapped_column(String(500), nullable=True)
     auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
@@ -183,7 +184,7 @@ class VersionedDraftMixin(TimestampMixin, SoftDeleteMixin):
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     slug: Mapped[str | None] = mapped_column(String(180), nullable=True, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="private")
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="public")
     gallery_listed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     lifecycle_status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     catalog_status: Mapped[str] = mapped_column(String(32), nullable=False, default="user_created")
@@ -572,7 +573,7 @@ class LoadCase(StringUUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base)
     )
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     kind: Mapped[str] = mapped_column(String(80), nullable=False)
-    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="private")
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="public")
     payload: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
 
 

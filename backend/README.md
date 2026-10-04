@@ -55,6 +55,10 @@ searchable run history, exact exports, frozen experiment copying, fixed publicat
 bundles, explicit dependency consent and independent copies. Migration `20261004_0008`
 adds publication/copy history without modifying existing scientific records.
 
+The [demo and worker follow-up](../docs/DEMO_AND_WORKER_TROUBLESHOOTING.md) adds an
+anonymous recorded demo and portable memory monitoring. Install the updated
+requirements before restarting the worker; its new dependency is `psutil`.
+
 ## Local development
 
 From `backend/`:

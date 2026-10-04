@@ -76,11 +76,12 @@ def library_version(
     parent = session.get(binding.object_model, getattr(version, binding.object_fk_name))
     if write:
         owned(parent, principal, write=True)
-    elif parent is None or parent.deleted_at is not None:
-        raise unavailable()
     elif (
-        shared or parent.account_id != principal.account_id
-    ) and not version_is_shared(version, parent):
+        parent is None
+        or parent.deleted_at is not None
+        or (shared or parent.account_id != principal.account_id)
+        and not version_is_shared(version, parent)
+    ):
         raise unavailable()
     if resource == "vehicle-assemblies":
         for key, kind in COMPONENTS:
@@ -88,7 +89,9 @@ def library_version(
                 session, principal, kind, getattr(version, key), shared=shared
             )
     if resource == "cvt-designs" and version.belt_version_id:
-        library_version(session, principal, "belts", version.belt_version_id, shared=shared)
+        library_version(
+            session, principal, "belts", version.belt_version_id, shared=shared
+        )
     return version
 
 
@@ -139,3 +142,12 @@ def run_selection(session: Session, principal: Principal, selection: Any) -> Non
         preset = session.get(ExecutionPreset, selection.execution_preset_id)
         if preset is None or preset.account_id not in {None, principal.account_id}:
             raise unavailable()
+
+
+def public_run(session, run_id):
+    from app.database.models import Run
+
+    run = session.get(Run, run_id)
+    if run is None:
+        raise unavailable()
+    return run

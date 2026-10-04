@@ -22,7 +22,11 @@ class EmailRequest(ApiModel):
         return value.lower()
 
 
+School = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
+
+
 class RegisterRequest(EmailRequest):
+    school: School = ""
     display_name: DisplayName
     password: Password
 
@@ -43,9 +47,11 @@ class ChangePasswordRequest(ApiModel):
 
 class UpdateProfileRequest(ApiModel):
     display_name: DisplayName
+    school: School = ""
 
 
 class AuthUserResponse(ApiModel):
+    school: str
     id: str
     email: str
     display_name: str

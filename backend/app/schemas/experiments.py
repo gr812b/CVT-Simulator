@@ -179,6 +179,8 @@ class ExperimentRevisionInfo(ExperimentModel):
 
 
 class ExperimentItem(ExperimentModel):
+    sample: bool = False
+    description: str = ""
     id: str
     kind: ExperimentKind
     name: str
@@ -283,7 +285,44 @@ class ExperimentMetadata(ExperimentModel):
     conventions: list[str]
 
 
+class TorquePrimaryBoundary(ExperimentModel):
+    kind: Literal["fixed_shaft"] = "fixed_shaft"
+    external_torque_Nm: float
+    equivalent_inertia_kg_m2: float = Field(ge=0)
+
+
+class SpeedReferencePoint(ExperimentModel):
+    time_s: float = Field(ge=0)
+    value: float = Field(ge=0, le=2000)
+
+
+class SpeedReference(ExperimentModel):
+    points: list[SpeedReferencePoint] = Field(min_length=2, max_length=1000)
+
+    @model_validator(mode="after")
+    def increasing(self):
+        if self.points[0].time_s != 0 or any(
+            b.time_s <= a.time_s for a, b in zip(self.points, self.points[1:])
+        ):
+            raise ValueError(
+                "Speed profile must start at zero with strictly increasing times."
+            )
+        return self
+
+
+class SpeedPrimaryBoundary(ExperimentModel):
+    kind: Literal["speed_replay_shaft"] = "speed_replay_shaft"
+    speed_reference: SpeedReference
+    tracking_gain_Nm_s_per_rad: float = Field(default=400, gt=0)
+
+
+PrimaryOverride = Annotated[
+    TorquePrimaryBoundary | SpeedPrimaryBoundary, Field(discriminator="kind")
+]
+
+
 class ExperimentSelection(ExperimentModel):
+    primary_boundary: PrimaryOverride | None = None
     setup_revision_id: str
     tune_revision_id: str | None = None
     scenario_revision_id: str | None = None

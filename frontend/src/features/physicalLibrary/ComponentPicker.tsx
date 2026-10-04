@@ -1,13 +1,6 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Group,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { Alert, Group, Select, Stack, Text, TextInput } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   getPhysical,
   physicalTemplate,
@@ -39,7 +32,7 @@ export function ComponentPicker<K extends keyof Choices>({
   const [error, setError] = useState<string | null>(null);
   const options = items.map((item) => ({
     value: item.revision_id,
-    label: `${item.name} · r${item.revision_number}${item.owned ? '' : ' · sample'}`,
+    label: `${item.name} · r${item.revision_number}${item.owned ? ' · mine' : ' · public'}`,
   }));
   if (
     value.revision_id &&
@@ -137,8 +130,8 @@ export function ComponentPicker<K extends keyof Choices>({
       {!disabled && (
         <Text size="xs" c="dimmed">
           Editing an owned component saves a new revision with this setup.
-          Editing a sample creates a private copy. Other setups keep their
-          selected revisions.
+          Editing a sample creates a independent public copy. Other setups keep
+          their selected revisions.
         </Text>
       )}
       {error && (

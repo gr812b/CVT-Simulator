@@ -1,12 +1,10 @@
 """Every simulation entry point uses the durable, account-limited queue."""
 
-from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy.orm import Session
-
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
     get_database_session,
+    get_public_reader,
 )
 from app.api.v1.run_admission import submission_attempt
 from app.application import access, jobs
@@ -29,6 +27,8 @@ from app.schemas.runs import (
     RunResultResponse,
     RunStatusResponse,
 )
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 PrincipalDep = Depends(get_current_principal)
@@ -249,9 +249,9 @@ def rerun(
 
 @router.get("/{run_id}/input", response_model=RunInputResponse)
 def input_document(
-    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
 ):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     return RunInputResponse(
         run=jobs.status(run), input_document_snapshot=run.input_contract
     )
@@ -259,9 +259,9 @@ def input_document(
 
 @router.get("/{run_id}/preview", response_model=RunPreviewResponse)
 def preview(
-    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
 ):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     return RunPreviewResponse(
         run=jobs.status(run),
         preview=artifacts.get_database_run_preview(session, run_id),
@@ -270,9 +270,9 @@ def preview(
 
 @router.get("/{run_id}/result", response_model=RunResultResponse)
 def result(
-    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
 ):
-    run = access.owned(session.get(Run, run_id), principal)
+    run = access.public_run(session, run_id)
     return RunResultResponse(
         run=jobs.status(run),
         input_document_snapshot=run.input_contract,

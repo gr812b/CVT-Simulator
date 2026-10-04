@@ -1,8 +1,4 @@
-"""Publishing explicitly shares one sanitized, self-contained configuration.
-
-The source and dependencies remain private. A publication stores fixed values,
-not an access grant to their mutable objects or other revisions.
-"""
+"""Automatic public, self-contained snapshots of saved configurations."""
 
 from copy import deepcopy
 
@@ -12,38 +8,34 @@ from app.application import access, configuration_copies
 from app.application import physical_library as physical
 from app.application.auth import aware
 from app.application.physical_contracts import validate_physical
-from app.core.errors import ApiProblem
 from app.database.hashing import canonical_json_hash
 from app.database.models import CVTDesignVersion
 from app.database.publication_models import ConfigurationCopy, PhysicalPublication
-from app.schemas.physical_library import CvtDocument, SetupDocument
+from app.schemas.physical_library import SetupDocument
 from app.schemas.publications import (
     ManagedPublication,
     PublicationDetail,
     PublicationItem,
     PublicationPage,
-    PublicationPreview,
 )
 
 
 def _bundle(session, principal, kind, revision_id):
     document = physical.document_for_revision(session, principal, kind, revision_id)
     revision = physical._revision(session, principal, kind, revision_id)
-    dependencies = []
-    choices = (
-        [("belts", document.data.belt)]
-        if kind == "cvts"
-        else [
+    choices = []
+    cvt_revision = None
+    if kind == "cvts":
+        choices = [("belts", document.data.belt)]
+        cvt_revision = revision
+    elif kind == "setups":
+        choices = [
             ("engines", document.data.engine),
             ("cvts", document.data.cvt),
             ("belts", document.data.cvt.data.belt),
         ]
-    )
-    cvt_revision = (
-        revision
-        if kind == "cvts"
-        else session.get(CVTDesignVersion, revision.cvt_design_version_id)
-    )
+        cvt_revision = session.get(CVTDesignVersion, revision.cvt_design_version_id)
+    dependencies = []
     for component_kind, choice in choices:
         source = (
             physical._revision(session, principal, component_kind, choice.revision_id)
@@ -61,99 +53,50 @@ def _bundle(session, principal, kind, revision_id):
             }
         )
         choice.revision_id = None
-        choice.source_notes = ""
-    document.source_notes = ""
-    tuning = deepcopy(cvt_revision.tuning_schema)
-    payload = document.model_dump(mode="json")
+    tuning = deepcopy(cvt_revision.tuning_schema) if cvt_revision else {}
     fingerprint = canonical_json_hash(
-        {"document": payload, "dependencies": dependencies, "tuning_schema": tuning}
+        {
+            "document": document.model_dump(mode="json"),
+            "dependencies": dependencies,
+            "tuning_schema": tuning,
+        }
     )
     return document, revision, dependencies, tuning, fingerprint
 
 
-def preview(session, principal, kind, object_id):
-    obj = access.library_object(
-        session, principal, physical.RESOURCES[kind], object_id, write=True
-    )
-    if obj.lifecycle_status == "archived":
-        raise ApiProblem(
-            409, "archived_publication", "Unarchive this item before publishing."
-        )
-    document, revision, dependencies, _, fingerprint = _bundle(
-        session, principal, kind, obj.released_version_id
-    )
-    validation, _ = validate_physical(document)
-    return PublicationPreview(
-        source_revision_id=revision.id,
-        source_revision_number=revision.version_number,
-        document=document,
-        dependencies=dependencies,
-        snapshot_hash=fingerprint,
-        validation=validation,
-    )
-
-
-def publish(session, principal, kind, object_id, request):
-    # Lock and compare the root, just like Save. Nested revisions are immutable.
-    obj = physical._lock_current(
-        session, principal, kind, object_id, request.expected_revision_id
-    )
-    if obj.lifecycle_status == "archived":
-        raise ApiProblem(
-            409, "archived_publication", "Unarchive this item before publishing."
-        )
-    if request.gallery_listed and request.visibility != "public":
-        raise ApiProblem(
-            422,
-            "publication_listing",
-            "Only public publications can be listed in the gallery.",
-        )
-    document, revision, dependencies, tuning, fingerprint = _bundle(
-        session, principal, kind, obj.released_version_id
-    )
-    if fingerprint != request.snapshot_hash:
-        raise ApiProblem(
-            409,
-            "publication_preview_changed",
-            "Review the current publication preview before sharing it.",
-        )
+def publish_saved_revision(session, principal, kind, obj, *, author=None, sample=False):
+    """Save and publish in one transaction. Older snapshots remain immutable."""
     existing = session.scalar(
         select(PhysicalPublication).where(
             PhysicalPublication.kind == kind,
-            PhysicalPublication.source_revision_id == revision.id,
+            PhysicalPublication.source_revision_id == obj.released_version_id,
         )
     )
     if existing:
-        return managed(existing)
+        return existing
+    document, revision, dependencies, tuning, fingerprint = _bundle(
+        session, principal, kind, obj.released_version_id
+    )
     validation, _ = validate_physical(document)
-    if not validation["is_valid"]:
-        raise ApiProblem(
-            422,
-            "publication_invalid",
-            "Fix this configuration's input errors before publishing.",
-            validation,
+    # Discovery shows the latest revision, while old URLs and history stay valid.
+    session.execute(
+        update(PhysicalPublication)
+        .where(
+            PhysicalPublication.kind == kind,
+            PhysicalPublication.source_object_id == obj.id,
         )
-    number = (
-        session.scalar(
-            select(func.count())
-            .select_from(PhysicalPublication)
-            .where(
-                PhysicalPublication.kind == kind,
-                PhysicalPublication.source_object_id == object_id,
-            )
-        )
-        + 1
+        .values(gallery_listed=False)
     )
     row = PhysicalPublication(
-        account_id=principal.account_id,
+        account_id=obj.account_id,
         kind=kind,
-        source_object_id=object_id,
+        source_object_id=obj.id,
         source_revision_id=revision.id,
         revision_number=revision.version_number,
-        publication_number=number,
+        publication_number=revision.version_number,
         name=document.name,
         description=document.description,
-        author=principal.user.display_name or "CINDER member",
+        author=author or principal.user.display_name or "CINDER member",
         source_label=document.source_label,
         source_url=document.source_url,
         document=document.model_dump(mode="json"),
@@ -161,31 +104,57 @@ def publish(session, principal, kind, object_id, request):
         tuning_schema=tuning,
         validation=validation,
         snapshot_hash=fingerprint,
-        visibility=request.visibility,
-        gallery_listed=request.gallery_listed,
+        visibility="public",
+        gallery_listed=obj.lifecycle_status != "archived",
+        sample=sample,
     )
     session.add(row)
     session.flush()
-    return managed(row)
+    return row
 
 
 def item(row):
     document = physical.DOCUMENTS[row.kind].model_validate(row.document)
-    cvt = document.data if isinstance(document, CvtDocument) else document.data.cvt.data
-    properties = [
-        {
-            "key": "belt_length",
-            "label": "Belt outer length",
-            "value": cvt.belt.data.outer_length_m,
-            "unit": "m",
-        },
-        {
-            "key": "belt_density",
-            "label": "Belt density",
-            "value": cvt.belt.data.density_kg_per_m3,
-            "unit": "kg/m³",
-        },
-    ]
+    properties = []
+    belt = (
+        document.data
+        if row.kind == "belts"
+        else document.data.belt.data
+        if row.kind == "cvts"
+        else document.data.cvt.data.belt.data
+        if row.kind == "setups"
+        else None
+    )
+    if belt:
+        properties = [
+            {
+                "key": "belt_length",
+                "label": "Belt outer length",
+                "value": belt.outer_length_m,
+                "unit": "m",
+            },
+            {
+                "key": "belt_width",
+                "label": "Belt top width",
+                "value": belt.outer_width_m,
+                "unit": "m",
+            },
+        ]
+    if row.kind == "engines":
+        properties = [
+            {
+                "key": "inertia",
+                "label": "Equivalent inertia",
+                "value": document.data.equivalent_rotational_inertia_kg_m2,
+                "unit": "kg·m²",
+            },
+            {
+                "key": "curve_points",
+                "label": "Torque-curve points",
+                "value": len(document.data.points),
+                "unit": "",
+            },
+        ]
     if isinstance(document, SetupDocument):
         properties[:0] = [
             {
@@ -280,7 +249,6 @@ def detail(session, publication_id):
             PhysicalPublication.kind == row.kind,
             PhysicalPublication.source_object_id == row.source_object_id,
             PhysicalPublication.visibility == "public",
-            PhysicalPublication.gallery_listed.is_(True),
         )
         .order_by(PhysicalPublication.publication_number.desc())
     )
@@ -292,38 +260,6 @@ def detail(session, publication_id):
         validation=row.validation,
         history=[item(other) for other in history],
     )
-
-
-def set_access(session, principal, publication_id, request):
-    row = access.owned(
-        session.get(PhysicalPublication, publication_id), principal, write=True
-    )
-    if request.gallery_listed and request.visibility != "public":
-        raise ApiProblem(
-            422,
-            "publication_listing",
-            "Only public publications can be listed in the gallery.",
-        )
-    if not session.execute(
-        update(PhysicalPublication)
-        .where(
-            PhysicalPublication.id == row.id,
-            PhysicalPublication.access_version == request.expected_access_version,
-        )
-        .values(
-            visibility=request.visibility,
-            gallery_listed=request.gallery_listed,
-            access_version=row.access_version + 1,
-        )
-        .execution_options(synchronize_session=False)
-    ).rowcount:
-        raise ApiProblem(
-            409,
-            "publication_conflict",
-            "Publication access changed in another tab. Reload before changing it.",
-        )
-    session.refresh(row)
-    return managed(row)
 
 
 def copy_publication(session, principal, publication_id, request):

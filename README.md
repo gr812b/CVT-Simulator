@@ -17,9 +17,14 @@ Implementation references: [M1 foundation and coding standards](docs/M1_APPLICAT
 [M2 physical library](docs/M2_PHYSICAL_LIBRARY.md),
 [M3 experiments and durable jobs](docs/M3_EXPERIMENTS_AND_JOBS.md), and
 [M4 results and public configurations](docs/M4_RESULTS_AND_PUBLIC_LIBRARY.md).
-M3 requires a separate worker process. Before the first M2→M3 deployment, back up
-the database and stop/drain the old API processes; do not migrate underneath
-an in-flight synchronous computation. Testing CI and broad E2E work remain M5.
+For the account-free recorded demo and macOS worker startup fix, see
+[demo and worker troubleshooting](docs/DEMO_AND_WORKER_TROUBLESHOOTING.md).
+The current scope is [public workspace refinements](docs/PUBLIC_WORKSPACE_REFINEMENTS.md):
+all saved designs, load cases, tunes and runs are public, with a guided run builder
+and an expanded belt catalog. This update uses a fresh database; follow that
+document's reset and startup steps. Earlier milestone documents are historical
+where their visibility or migration policies differ. A separate worker process
+is required for simulations. Testing CI and broad E2E work remain M5.
 
 ## Production Docker deployment
 

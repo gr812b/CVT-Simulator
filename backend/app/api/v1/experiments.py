@@ -1,12 +1,10 @@
 """Typed scenario/tune intent and immutable revision operations."""
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.orm import Session
-
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
     get_database_session,
+    get_public_reader,
 )
 from app.api.v1.run_admission import submission_attempt
 from app.application import access, jobs, roads
@@ -15,7 +13,6 @@ from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.application.experiment_tuning import tune_surface
 from app.application.physical_library import differences
-from app.database.models import Run
 from app.schemas.experiments import (
     ExperimentArchive,
     ExperimentCompare,
@@ -36,6 +33,8 @@ from app.schemas.experiments import (
     TuneSurface,
 )
 from app.schemas.runs import RunStatusResponse
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 PrincipalDep = Depends(get_current_principal)
@@ -92,7 +91,7 @@ def submit(
     if previous:
         return jobs.status(previous)
     if request.parent_run_id:
-        access.owned(session.get(Run, request.parent_run_id), principal)
+        access.public_run(session, request.parent_run_id)
     resolved = service.resolve(session, principal, container.settings, request)
     return jobs.status(
         jobs.submit(
@@ -116,7 +115,7 @@ def list_items(
     kind: ExperimentKind,
     include_archived: bool = False,
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
 ):
     return ExperimentList(
         items=service.list_items(session, principal, kind, include_archived)
@@ -148,7 +147,7 @@ def detail(
     object_id: str,
     revision_id: str | None = None,
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
 ):
     return service.detail(session, principal, object_id, revision_id)
 
@@ -237,7 +236,7 @@ def compare(
     before: str,
     after: str,
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=Depends(get_public_reader),
 ):
     left, right = [
         service.get_revision(session, principal, rev) for rev in (before, after)

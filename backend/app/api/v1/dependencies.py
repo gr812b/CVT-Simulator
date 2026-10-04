@@ -68,3 +68,23 @@ def get_current_principal(
 def get_writer(principal: Principal = Depends(get_current_principal)) -> Principal:
     principal.require_write()
     return principal
+
+
+class PublicReader:
+    """Anonymous read identity; never passed to mutation dependencies."""
+
+    account_id = None
+    user_id = None
+
+
+def get_public_reader(
+    token: str | None = Depends(session_cookie),
+    session: Session = Depends(get_database_session),
+):
+    if token:
+        try:
+            return get_principal(session, token)
+        except ApiProblem as error:
+            if error.status_code != 401:
+                raise
+    return PublicReader()

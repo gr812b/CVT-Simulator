@@ -82,6 +82,7 @@ def register(
     user = User(
         email=body.email,
         display_name=body.display_name,
+        school=body.school,
         password_hash=passwords.hash(body.password),
         auth_version=0,
     )
@@ -156,6 +157,7 @@ def profile(
     session: Session = Depends(get_database_session),
 ) -> AuthSessionResponse:
     principal.user.display_name = body.display_name
+    principal.user.school = body.school
     session.flush()
     return principal.response()
 

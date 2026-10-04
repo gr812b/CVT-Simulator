@@ -2,7 +2,7 @@
 
 A setup save commits changed owned components and its selected revisions together.
 Unchanged references stay pinned. Editing someone else's component creates a
-private copy; it never writes through to that person's object.
+public copy; it never writes through to that person's object.
 """
 
 import copy
@@ -27,6 +27,7 @@ from app.database import library
 from app.database.base import utc_now
 from app.database.hashing import canonical_json_hash
 from app.database.models import OutputSystemVersion
+from app.database.publication_models import PhysicalPublication
 from app.database.resolver import _current_assembly_document, _current_primary_boundary
 from app.database.tuning import readable_tuning_schema
 from app.schemas.physical_library import (
@@ -85,9 +86,6 @@ def _version_metadata(session, principal, kind, version):
         for field in PhysicalMetadata.model_fields
     }
     metadata = copy.deepcopy(metadata)
-    # Internal source notes remain private, consistently with the generic API.
-    if parent.account_id != principal.account_id:
-        metadata["source_notes"] = ""
     return metadata
 
 
@@ -166,7 +164,11 @@ def list_items(session, principal, kind, scope="own", include_archived=False):
         model.deleted_at.is_(None), model.released_version_id.is_not(None)
     )
     statement = statement.where(
-        own if scope == "own" else samples if scope == "samples" else own | samples
+        own
+        if scope == "own"
+        else samples
+        if scope == "samples"
+        else model.visibility == "public"
     )
     if not include_archived:
         statement = statement.where(model.lifecycle_status != "archived")
@@ -260,7 +262,7 @@ def _save_output(session, principal, setup_obj, vehicle, previous):
             data={
                 "account_id": principal.account_id,
                 "name": f"Vehicle for {setup_obj.name}",
-                "visibility": "private",
+                "visibility": "public",
                 "draft_payload": payload,
             },
         )
@@ -271,7 +273,7 @@ def _save_output(session, principal, setup_obj, vehicle, previous):
         release_data={
             "payload": payload,
             "created_by_user_id": principal.user_id,
-            "visibility_at_release": "private",
+            "visibility_at_release": "public",
             "release_notes": "Saved with vehicle setup.",
         },
     )
@@ -314,7 +316,7 @@ def save_document(
             data={
                 "account_id": principal.account_id,
                 **_metadata(document),
-                "visibility": "private",
+                "visibility": "public",
                 "forked_from_version_id": forked_from,
             },
         )
@@ -408,6 +410,9 @@ def save_document(
     obj.draft_updated_at = utc_now()
     session.flush()
     session.expire(obj, ["released_version"])
+    from app.application.publications import publish_saved_revision
+
+    publish_saved_revision(session, principal, kind, obj)
     return obj, True
 
 
@@ -588,3 +593,30 @@ def update_preview(session, principal, kind, object_id, component, target_revisi
     document = normalize_document(document)
     changes = differences(current.document.model_dump(), document.model_dump())
     return current.item.revision_id, document, changes, validate_physical(document)[0]
+
+
+def archive(session, principal, kind, object_id, request):
+    """Archive discovery without changing public immutable snapshot URLs."""
+    obj = _lock_current(
+        session, principal, kind, object_id, request.expected_revision_id
+    )
+    obj.lifecycle_status = "archived" if request.archived else "active"
+    session.execute(
+        update(PhysicalPublication)
+        .where(
+            PhysicalPublication.kind == kind,
+            PhysicalPublication.source_object_id == obj.id,
+        )
+        .values(gallery_listed=False)
+    )
+    if not request.archived:
+        session.execute(
+            update(PhysicalPublication)
+            .where(
+                PhysicalPublication.kind == kind,
+                PhysicalPublication.source_revision_id == obj.released_version_id,
+            )
+            .values(gallery_listed=True)
+        )
+    session.flush()
+    return item_response(obj, kind, principal)

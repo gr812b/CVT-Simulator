@@ -11,7 +11,7 @@ import {
 } from '@api/client';
 import { useRunActivity } from '../features/experiments/RunActivity';
 
-/** Existing dashboard/demo shortcuts now hand off to the same durable run page. */
+/** Signed-in dashboard shortcuts hand off to the same durable run page. */
 export function useRunSimulation() {
   const navigate = useNavigate();
   const { setLoading } = useLoading();

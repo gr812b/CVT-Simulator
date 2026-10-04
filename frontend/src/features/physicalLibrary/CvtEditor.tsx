@@ -2,13 +2,13 @@ import { useState } from 'react';
 import {
   Accordion,
   Badge,
-  Button,
   Checkbox,
   Group,
   SimpleGrid,
   Stack,
   Text,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import {
   expandJsonPointerTemplate,
@@ -59,7 +59,11 @@ function ProfileActions({
           <Button
             size="xs"
             variant="light"
-            disabled={profile.segments.length >= 24}
+            disabledReason={
+              profile.segments.length >= 24
+                ? 'The profile has reached its 24-segment limit.'
+                : undefined
+            }
             onClick={() =>
               onChange(
                 setValueAtJsonPointer(assembly, profile.path, [
@@ -75,7 +79,11 @@ function ProfileActions({
             size="xs"
             variant="subtle"
             color="red"
-            disabled={profile.segments.length <= 1}
+            disabledReason={
+              profile.segments.length <= 1
+                ? 'At least one profile segment is required.'
+                : undefined
+            }
             onClick={() =>
               onChange(
                 setValueAtJsonPointer(

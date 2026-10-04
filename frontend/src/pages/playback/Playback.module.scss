@@ -1,78 +1,53 @@
-@use '@styles/_fonts';
-@use '@styles/_colors';
-@use '@styles/_mixins';
-@use 'sass:map';
-
 .playback {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--background);
-    min-height: calc(100dvh - 96px);
-    width: 100%;
-    @include mixins.scrollbar;
-
-    .buttonsContainer {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-
-        .leftButtons,
-        .rightButtons {
-            display: flex;
-            flex-direction: row;
-        }
-
-        .navigateButton {
-            margin: 0.5rem;
-            margin-right: 0rem;
-        }
-
-        .rightButtons .navigateButton {
-            margin-right: 0.5rem;
-        }
-    }
-
-    .displayGrid {
-        flex-grow: 1;
-
-        // make grid of 2 columns and as many rows as needed
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: 1fr;
-        overflow-x: hidden;
-        padding-right: 1rem;
-
-        .sceneContainer {
-            grid-column: 1 / -1;
-            height: 60vh;
-            min-height: 31.25rem;
-            padding-left: 1rem;
-        }
-
-        .graphCategory {
-            grid-column: 1 / -1;
-            display: contents;
-
-            .categoryTitle {
-                grid-column: 1 / -1;
-                @include fonts.title-medium;
-                color: var(--text-color);
-                min-height: 4rem;
-                margin-left: 1rem;
-                border-bottom: 0.25rem solid currentColor;
-            }
-
-            .categoryGraphs {
-                grid-column: 1 / -1;
-                display: contents;
-            }
-        }
-    }
-
-    .playbarContainer {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-    }
+  width: 100%;
+  min-width: 0;
+  padding-bottom: calc(var(--playbar-height, 100px) + 1rem);
+}
+.buttonsContainer {
+  padding: 0.5rem 0 1rem;
+}
+.sceneContainer {
+  height: clamp(360px, 60vh, 650px);
+  overflow: hidden;
+}
+.playbarContainer {
+  position: fixed;
+  left: var(--app-shell-navbar-offset, 0px);
+  right: var(--app-shell-aside-offset, 0px);
+  bottom: 0;
+  z-index: 110;
+  background: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+  padding: 0.3rem max(0.3rem, env(safe-area-inset-right))
+    max(0.3rem, env(safe-area-inset-bottom))
+    max(0.3rem, env(safe-area-inset-left));
+  box-shadow: 0 -3px 18px #0003;
+}
+.emptyState {
+  padding: 2rem;
+}
+.plotContainer {
+  overflow-x: auto;
+}
+@media (max-width: 36em) {
+  .playbarContainer > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    padding: 0.35rem;
+    font-size: 0.75rem;
+  }
+  .playbarContainer > div > div {
+    min-width: 0;
+  }
+  .playbarContainer > div > :nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: auto;
+    margin: 0.5rem;
+  }
+  .playbarContainer > div > :nth-child(4) {
+    grid-column: 3;
+    grid-row: 1;
+  }
 }

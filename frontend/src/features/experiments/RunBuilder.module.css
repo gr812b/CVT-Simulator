@@ -1,0 +1,16 @@
+.summaryColumn {
+  position: sticky;
+  top: calc(var(--app-shell-header-height, 64px) + 1rem);
+}
+.summary {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 62em) {
+  .summaryColumn {
+    position: static;
+    order: -1;
+  }
+  .steps :global(.mantine-Stepper-stepBody) {
+    display: none;
+  }
+}

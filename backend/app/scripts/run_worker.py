@@ -8,9 +8,11 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
+import psutil
 from sqlalchemy import update
 
 from app.application import jobs
@@ -21,6 +23,33 @@ from app.database.models import Run
 from app.database.session import make_engine, make_session_factory
 
 LOG = logging.getLogger("cinder.worker")
+
+
+def capture_stderr(stream, tail):
+    """Drain continuously, retaining at most 16 KiB; never block the solver pipe."""
+    with stream:
+        while chunk := stream.read(4096):
+            tail.extend(chunk)
+            del tail[:-16384]
+
+
+def stopped_error(returncode):
+    if returncode == -signal.SIGXFSZ:
+        return {
+            "code": "run_result_size_limit",
+            "message": "The result exceeded the storage limit. Reduce reporting detail or shorten the scenario.",
+        }
+    if returncode is not None and returncode < 0:
+        try:
+            reason = signal.Signals(-returncode).name
+        except ValueError:
+            reason = f"signal {-returncode}"
+        message = f"The simulation process was terminated by {reason}. See the worker terminal for details."
+        if returncode == -signal.SIGKILL:
+            message += " The operating system may have stopped it for memory pressure."
+    else:
+        message = f"The simulation process exited with code {returncode} before returning a result. See the worker terminal for the startup or runtime error."
+    return {"code": "worker_process_stopped", "message": message}
 
 
 def execute(factory, settings, run):
@@ -58,6 +87,9 @@ def execute(factory, settings, run):
             "MKL_NUM_THREADS": "1",
         }
         child = None
+        stopped_by_supervisor = False
+        stderr_thread = None
+        stderr_tail = bytearray()
         try:
             child = subprocess.Popen(
                 [
@@ -67,10 +99,19 @@ def execute(factory, settings, run):
                     str(input_path),
                     str(output_path),
                 ],
+                cwd=Path(__file__).resolve().parents[2],
                 env=env,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
             )
+            stderr_thread = threading.Thread(
+                target=capture_stderr, args=(child.stderr, stderr_tail), daemon=True
+            )
+            stderr_thread.start()
+            try:
+                monitored = psutil.Process(child.pid)
+            except psutil.NoSuchProcess:
+                monitored = None
             while child.poll() is None:
                 with factory.begin() as session:
                     current = session.get(Run, run.id)
@@ -87,6 +128,7 @@ def execute(factory, settings, run):
                             .values(heartbeat_at=utc_now())
                         )
                 if stop or time.monotonic() >= deadline_monotonic:
+                    stopped_by_supervisor = stop
                     child.kill()
                     child.wait()
                     if not stop:
@@ -96,15 +138,33 @@ def execute(factory, settings, run):
                             "message": "The simulation exceeded its wall-clock time limit. Shorten the scenario or review its numerical settings.",
                         }
                     break
+                try:
+                    resident_bytes = monitored.memory_info().rss if monitored else 0
+                except psutil.NoSuchProcess:
+                    # Exit can race with sampling; the result/exit code below owns it.
+                    resident_bytes = 0
+                if resident_bytes > settings.run_memory_limit_mb * 1024 * 1024:
+                    child.kill()
+                    child.wait()
+                    error = {
+                        "code": "run_memory_limit",
+                        "message": "The simulation exceeded its memory budget. Shorten the scenario or reduce reporting detail.",
+                    }
+                    break
                 time.sleep(min(settings.worker_poll_seconds, 0.5))
             # The deadline may interrupt output serialization. Classify the exit
             # before attempting to parse any partial output file.
-            if error is None and child.returncode in {-signal.SIGALRM, 124}:
+            if stopped_by_supervisor:
+                # finish() owns cancellation and rejects a stale worker token.
+                pass
+            elif error is None and child.returncode in {-signal.SIGALRM, 124}:
                 terminal = "timed_out"
                 error = {
                     "code": "run_timeout",
                     "message": "The simulation exceeded its wall-clock time limit.",
                 }
+            elif error is None and child.returncode != 0:
+                error = stopped_error(child.returncode)
             elif (
                 error is None
                 and output_path.exists()
@@ -112,11 +172,8 @@ def execute(factory, settings, run):
             ):
                 payload = json.loads(output_path.read_text())
                 result, error = payload.get("result"), payload.get("error")
-            if result is None and error is None:
-                error = {
-                    "code": "worker_process_stopped",
-                    "message": "The simulation process stopped without a result (cancellation or resource limit).",
-                }
+            if result is None and error is None and not stopped_by_supervisor:
+                error = stopped_error(child.returncode)
         except Exception:
             LOG.exception("Run %s could not execute", run.id)
             error = {
@@ -128,6 +185,21 @@ def execute(factory, settings, run):
             if child is not None and child.poll() is None:
                 child.kill()
                 child.wait()
+            if stderr_thread:
+                stderr_thread.join(timeout=2)
+            if error:
+                LOG.error(
+                    "Run %s failed: %s (child exit %s)",
+                    run.id,
+                    error["code"],
+                    child.returncode if child else None,
+                )
+                if stderr_tail:
+                    LOG.error(
+                        "Run %s child stderr (last 16 KiB):\n%s",
+                        run.id,
+                        stderr_tail.decode("utf-8", errors="replace"),
+                    )
         try:
             with factory.begin() as session:
                 jobs.finish(

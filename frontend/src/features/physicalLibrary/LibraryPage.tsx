@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Checkbox,
   Container,
   Group,
@@ -16,6 +15,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { IconPlus, IconSearch } from '@tabler/icons-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -100,10 +100,10 @@ function LibraryList({ kind }: { kind: PhysicalKind }) {
         <Group justify="space-between">
           <Button
             component={Link}
-            to={`/catalog?kind=${kind === 'cvts' ? 'cvts' : 'setups'}`}
+            to={`/catalog?kind=${kind}`}
             variant="subtle"
           >
-            Browse public setups & CVTs
+            Browse public library
           </Button>
           <SegmentedControl
             value={scope}
@@ -170,7 +170,7 @@ function LibraryList({ kind }: { kind: PhysicalKind }) {
                         {item.archived
                           ? 'Archived'
                           : item.owned
-                            ? 'Private library'
+                            ? 'My item · public'
                             : 'Sample'}
                       </Badge>
                     </Group>

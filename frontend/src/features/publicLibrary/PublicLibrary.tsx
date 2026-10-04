@@ -2,28 +2,35 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Loader,
   Pagination,
   Paper,
-  SegmentedControl,
+  Tabs,
   SimpleGrid,
   Stack,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Link, useSearchParams } from 'react-router-dom';
+import { LoadCaseLibrary } from '../experiments/LoadCaseLibrary';
+import { PublicTuneList } from './PublicExperiment';
+import { PublicRunList } from './PublicRuns';
+import {
+  kindLabels,
+  isPhysicalKind,
+  type PhysicalKind,
+} from '../physicalLibrary/api';
 import { CatalogFrame } from './CatalogFrame';
 import { browsePublications, type PublicationPage } from './api';
 import { formatMetric } from '../results/api';
 import { message } from '../experiments/api';
 
-export function PublicLibrary() {
+function PhysicalCatalog({ kind }: { kind: PhysicalKind }) {
   const [params, setParams] = useSearchParams();
-  const kind = params.get('kind') === 'cvts' ? 'cvts' : 'setups';
   const search = params.get('q') ?? '';
   const [query] = useDebouncedValue(search, 250);
   const page = Math.max(1, Number(params.get('page')) || 1);
@@ -62,23 +69,15 @@ export function PublicLibrary() {
     return () => controller.abort();
   }, [kind, query, page, retry]);
   return (
-    <CatalogFrame>
+    <>
       <div>
-        <Title order={1}>Explore setups & CVTs</Title>
+        <Title order={1}>Public configurations</Title>
         <Text c="dimmed" mt="sm">
           Inspect a published configuration, then make an independent copy for
           your own measurements and experiments.
         </Text>
       </div>
       <Group justify="space-between">
-        <SegmentedControl
-          value={kind}
-          onChange={(value) => update('kind', value)}
-          data={[
-            { value: 'setups', label: 'Vehicle setups' },
-            { value: 'cvts', label: 'CVTs' },
-          ]}
-        />
         <TextInput
           aria-label="Search public library"
           placeholder="Search names, sources or authors"
@@ -104,8 +103,8 @@ export function PublicLibrary() {
           <>
             <Text size="sm" c="dimmed">
               {data.total} listed{' '}
-              {data.total === 1 ? 'publication' : 'publications'}. Only
-              explicitly listed public versions appear here.
+              {data.total === 1 ? 'publication' : 'publications'}. The latest
+              saved revisions appear here.
             </Text>
             {!data.items.length ? (
               <Paper withBorder p="xl">
@@ -113,8 +112,8 @@ export function PublicLibrary() {
                   No matching publications
                 </Title>
                 <Text mt="sm">
-                  Try another search, or publish a saved setup or CVT from your
-                  physical library.
+                  Try another search, or save an item from your physical
+                  library.
                 </Text>
               </Paper>
             ) : (
@@ -124,12 +123,10 @@ export function PublicLibrary() {
                     <Stack h="100%" justify="space-between">
                       <Stack gap="sm">
                         <Group>
-                          <Badge>
-                            {item.kind === 'setups' ? 'Vehicle setup' : 'CVT'}
-                          </Badge>
+                          <Badge>{kindLabels[item.kind]}</Badge>
                           {item.sample && (
                             <Badge color="blue" variant="outline">
-                              Project sample
+                              Catalog default
                             </Badge>
                           )}
                         </Group>
@@ -186,6 +183,46 @@ export function PublicLibrary() {
             )}
           </>
         )
+      )}
+    </>
+  );
+}
+
+export function PublicLibrary() {
+  const [params, setParams] = useSearchParams();
+  const selected = params.get('kind') ?? 'setups';
+  const kind =
+    ['load-cases', 'tunes', 'runs'].includes(selected) ||
+    isPhysicalKind(selected)
+      ? selected
+      : 'setups';
+  return (
+    <CatalogFrame>
+      <Title order={1}>Public library</Title>
+      <Text c="dimmed">
+        Free accounts share saved configurations, load cases, tunes and
+        simulation results.
+      </Text>
+      <Tabs value={kind} onChange={(next) => next && setParams({ kind: next })}>
+        <Tabs.List>
+          {Object.entries(kindLabels).map(([value, label]) => (
+            <Tabs.Tab key={value} value={value}>
+              {label}
+            </Tabs.Tab>
+          ))}
+          <Tabs.Tab value="load-cases">Load cases</Tabs.Tab>
+          <Tabs.Tab value="tunes">Tunes</Tabs.Tab>
+          <Tabs.Tab value="runs">Runs</Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
+      {kind === 'load-cases' ? (
+        <LoadCaseLibrary publicView />
+      ) : kind === 'tunes' ? (
+        <PublicTuneList />
+      ) : kind === 'runs' ? (
+        <PublicRunList />
+      ) : (
+        <PhysicalCatalog kind={kind as PhysicalKind} />
       )}
     </CatalogFrame>
   );

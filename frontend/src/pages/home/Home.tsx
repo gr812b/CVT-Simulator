@@ -1,5 +1,6 @@
+import { Brand } from '@components/appShell/Brand';
 import { Link, useNavigate } from 'react-router-dom';
-import { Anchor, Button as AccountButton, Group } from '@mantine/core';
+import { Button as AccountButton, Group } from '@mantine/core';
 import { useAuth } from '@contexts/AuthContext';
 import styles from './Home.module.scss';
 import { Button } from '@components/button/Button';
@@ -20,10 +21,13 @@ export const Home = () => {
 
   return (
     <div className={styles.home}>
-      <Group component="nav" justify="space-between" p="lg" aria-label="Main navigation">
-        <Anchor component={Link} to="/" fw={900} size="xl" c="red.4">
-          CINDER
-        </Anchor>
+      <Group
+        component="nav"
+        justify="space-between"
+        p="lg"
+        aria-label="Main navigation"
+      >
+        <Brand />
         <Group>
           {session ? (
             <AccountButton component={Link} to="/dashboard">
@@ -50,9 +54,11 @@ export const Home = () => {
               <b>Simulator</b>
             </h1>
             <p className={styles.description}>
-              A dynamic drivetrain simulator for Baja SAE vehicles equipped with a CVT, gear
-              reduction box, and wheels. Models a CH440 Kohler engine, external forces, torque
-              transmission, slip&nbsp;vs.&nbsp;stick behaviour, and shifting dynamics. Based on an{' '}
+              A dynamic drivetrain simulator for Baja SAE vehicles equipped with
+              a CVT, gear reduction box, and wheels. Models a CH440 Kohler
+              engine, external forces, torque transmission,
+              slip&nbsp;vs.&nbsp;stick behaviour, and shifting dynamics. Based
+              on an{' '}
               <a
                 href={PAPER_URL}
                 target="_blank"
@@ -115,10 +121,11 @@ export const Home = () => {
             <span className={styles.stepNumber}>01</span>
             <h3 className={styles.stepTitle}>Configure Parameters</h3>
             <p className={styles.stepText}>
-              Click <strong>New Simulation</strong> to define your CVT parameters from scratch —
-              spring rates, helix angle, flyweight mass, and throttle ramp profile. Or click{' '}
-              <strong>Load Simulation</strong> to start from a previously saved or default parameter
-              set.
+              Click <strong>New Simulation</strong> to define your CVT
+              parameters from scratch — spring rates, helix angle, flyweight
+              mass, and throttle ramp profile. Or click{' '}
+              <strong>Load Simulation</strong> to start from a previously saved
+              or default parameter set.
             </p>
           </div>
 
@@ -128,9 +135,9 @@ export const Home = () => {
             <span className={styles.stepNumber}>02</span>
             <h3 className={styles.stepTitle}>Run the Simulation</h3>
             <p className={styles.stepText}>
-              Hit <strong>Run</strong> on the input page. The solver resolves torque transmission,
-              slip&nbsp;vs.&nbsp;stick conditions, and CVT ratio shifting across the full launch
-              event.
+              Hit <strong>Run</strong> on the input page. The solver resolves
+              torque transmission, slip&nbsp;vs.&nbsp;stick conditions, and CVT
+              ratio shifting across the full launch event.
             </p>
           </div>
 
@@ -140,9 +147,9 @@ export const Home = () => {
             <span className={styles.stepNumber}>03</span>
             <h3 className={styles.stepTitle}>Explore Results</h3>
             <p className={styles.stepText}>
-              The playback view animates the 3D CVT model in real time alongside time-series graphs
-              for vehicle speed, gear ratio, torque, and more. Export the full dataset to CSV for
-              further analysis.
+              The playback view animates the 3D CVT model in real time alongside
+              time-series graphs for vehicle speed, gear ratio, torque, and
+              more. Export the full dataset to CSV for further analysis.
             </p>
           </div>
         </div>
@@ -151,41 +158,39 @@ export const Home = () => {
       <section className={styles.pitfalls}>
         <h2 className={styles.sectionTitle}>Known Issues &amp; Disclaimers</h2>
         <p className={styles.pitfallsIntro}>
-          This tool is a work in progress — many features are still planned and some rough edges
-          remain. Read below before diving in.
+          This tool is a work in progress — many features are still planned and
+          some rough edges remain. Read below before diving in.
         </p>
         <ul className={styles.pitfallList}>
           <li className={styles.pitfallItem}>
             <span className={styles.pitfallLabel}>Slow model loading</span>
             <span className={styles.pitfallText}>
-              The 3D CVT model on the Playback page can take a moment to load. Be patient — it will
-              appear.
+              The 3D CVT model on the Playback page can take a moment to load.
+              Be patient — it will appear.
             </span>
           </li>
           <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Solver progress bar</span>
+            <span className={styles.pitfallLabel}>Background simulations</span>
             <span className={styles.pitfallText}>
-              The loading bar may appear stuck at certain percentages. Some parts of the simulation
-              are harder to resolve — give it time. The solver will automatically time out after 10
-              minutes. If that happens, try adjusting your input parameters. If you believe the case
-              should work and it didn&apos;t, feel free to report it.
+              Runs continue in the background. Follow their status in Activity
+              and open the notification when they finish. Each account can have
+              one queued or running simulation at a time.
             </span>
           </li>
           <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Inactive parameters</span>
+            <span className={styles.pitfallLabel}>Reusable road loads</span>
             <span className={styles.pitfallText}>
-              Some inputs currently have no effect on the simulation: <strong>Traction (%)</strong>{' '}
-              and <strong>Total Distance</strong> are placeholders, and the{' '}
-              <strong>Hill Incline</strong> setting is largely untested.
+              Choose a default road grade or build a named load case with hills,
+              points and repeated whoops. Reuse it with different vehicle and
+              CVT configurations.
             </span>
           </li>
           <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Fixed physical parameters</span>
+            <span className={styles.pitfallLabel}>Public configurations</span>
             <span className={styles.pitfallText}>
-              The vehicle&apos;s physical parameters (engine, drivetrain geometry, etc.) are based
-              on a specific Baja SAE vehicle and are not yet editable. For now, only the tuning
-              parameters visible on the input page can be changed — full physical parameter editing
-              is planned for a future release.
+              Edit vehicles, engines, CVTs and belts in your library. Free
+              accounts share saved configurations, load cases, tunes and runs
+              publicly. Every run retains the input values used to compute it.
             </span>
           </li>
           <li className={styles.pitfallItem}>
@@ -199,7 +204,8 @@ export const Home = () => {
 
       <footer className={styles.footer}>
         <span className={styles.footerText}>
-          &copy; {CURRENT_YEAR} McMaster Baja SAE &mdash; CVT Simulator. All rights reserved.
+          &copy; {CURRENT_YEAR} McMaster Baja SAE &mdash; CVT Simulator. All
+          rights reserved.
         </span>
         <div className={styles.footerLinks}>
           <a

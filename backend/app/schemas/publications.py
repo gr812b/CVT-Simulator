@@ -8,22 +8,8 @@ from app.schemas.physical_library import PhysicalDifference, PhysicalDocument
 from app.schemas.projections import CaseValidation
 from app.schemas.results import ResultMetric
 
-PublicationKind = Literal["setups", "cvts"]
-PublicationVisibility = Literal["private", "unlisted", "public"]
-
-
-class PublishRequest(ApiModel):
-    expected_revision_id: str
-    visibility: Literal["unlisted", "public"]
-    gallery_listed: bool
-    snapshot_hash: str
-    share_dependencies: Literal[True]
-
-
-class PublicationAccessRequest(ApiModel):
-    expected_access_version: int
-    visibility: PublicationVisibility
-    gallery_listed: bool
+PublicationKind = Literal["setups", "cvts", "engines", "belts"]
+PublicationVisibility = Literal["public"]
 
 
 class PublishedDependency(ApiModel):
@@ -31,15 +17,6 @@ class PublishedDependency(ApiModel):
     name: str
     revision_number: int | None
     owned: bool
-
-
-class PublicationPreview(ApiModel):
-    source_revision_id: str
-    source_revision_number: int
-    document: PhysicalDocument
-    dependencies: list[PublishedDependency]
-    snapshot_hash: str
-    validation: CaseValidation
 
 
 class PublicationItem(ApiModel):

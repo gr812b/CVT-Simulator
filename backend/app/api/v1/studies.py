@@ -51,3 +51,25 @@ def clamping_response(
     except (TypeError, ValueError) as error:
         raise ApiProblem(422, "clamping_study_invalid", str(error)) from error
     return StaticStudyResponse(study=study)
+
+
+from app.application import geometry_inputs
+from app.schemas.studies import SimpleGeometryRequest, SimpleGeometryResponse
+
+
+@router.get("/geometry/template", response_model=SimpleGeometryRequest)
+def geometry_template():
+    return geometry_inputs.template()
+
+
+@router.post("/geometry/simple", response_model=SimpleGeometryResponse)
+def geometry_simple(
+    request: SimpleGeometryRequest,
+    container: ApplicationContainer = Depends(get_container),
+):
+    resolved = geometry_inputs.resolve(request)
+    try:
+        study = container.gateway.geometry_from_endpoint_radii(resolved.model_dump())
+    except (TypeError, ValueError) as error:
+        raise ApiProblem(422, "geometry_study_invalid", str(error)) from error
+    return SimpleGeometryResponse(study=study, resolved_context=resolved.context)

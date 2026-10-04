@@ -1,5 +1,7 @@
 # M1 — Application foundation
 
+> Current setup and visibility policy: [Public workspace refinements](PUBLIC_WORKSPACE_REFINEMENTS.md). This historical milestone document may describe superseded private-data or migration behavior.
+
 This milestone implements the account and application foundation in the agreed CINDER web application baseline. CINDER remains the mechanics authority. The existing solver and research formulations are unchanged.
 
 ## Delivered scope

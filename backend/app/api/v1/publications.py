@@ -1,9 +1,5 @@
 """Public snapshot reads; session/CSRF protected publishing and copying."""
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
 from app.api.v1.dependencies import get_current_principal, get_database_session
 from app.application import access, physical_library
 from app.application import publications as service
@@ -12,17 +8,16 @@ from app.application.physical_contracts import cvt_fields
 from app.database.publication_models import ConfigurationCopy, PhysicalPublication
 from app.schemas.physical_library import PhysicalKind, PhysicalMetadataResponse
 from app.schemas.publications import (
-    ManagedPublication,
     ManagedPublications,
-    PublicationAccessRequest,
     PublicationComparison,
     PublicationDetail,
     PublicationKind,
     PublicationPage,
-    PublicationPreview,
-    PublishRequest,
 )
 from app.schemas.results import ConfigurationCopyResult, CopyConfiguration, CopyOrigin
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/publications", tags=["public library"])
 SessionDep = Depends(get_database_session)
@@ -65,29 +60,6 @@ def manage(
         .order_by(PhysicalPublication.publication_number.desc())
     )
     return ManagedPublications(items=[service.managed(row) for row in rows])
-
-
-@router.get("/preview/{kind}/{object_id}", response_model=PublicationPreview)
-def preview(
-    kind: PublicationKind,
-    object_id: str,
-    session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
-):
-    return service.preview(session, principal, kind, object_id)
-
-
-@router.post(
-    "/publish/{kind}/{object_id}", response_model=ManagedPublication, status_code=201
-)
-def publish(
-    kind: PublicationKind,
-    object_id: str,
-    request: PublishRequest,
-    session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
-):
-    return service.publish(session, principal, kind, object_id, request)
 
 
 @router.get("/origin/{kind}/{object_id}", response_model=CopyOrigin | None)
@@ -134,16 +106,6 @@ def compare(before: str, after: str, session: Session = SessionDep):
 @router.get("/{publication_id}", response_model=PublicationDetail)
 def detail(publication_id: str, session: Session = SessionDep):
     return service.detail(session, publication_id)
-
-
-@router.patch("/{publication_id}/access", response_model=ManagedPublication)
-def set_access(
-    publication_id: str,
-    request: PublicationAccessRequest,
-    session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
-):
-    return service.set_access(session, principal, publication_id, request)
 
 
 @router.post(

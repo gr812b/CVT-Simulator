@@ -1,5 +1,7 @@
 # M4 — Results and the public configuration library
 
+> Current setup and visibility policy: [Public workspace refinements](PUBLIC_WORKSPACE_REFINEMENTS.md). This historical milestone document may describe superseded private-data or migration behavior.
+
 M4 completes the results and vehicle/CVT publication workflows in the implementation baseline. It builds on M3's durable jobs and immutable inputs. CINDER remains pinned to 1.1.4; this milestone adds no mechanics, runtime dependencies, unit-test suite or testing CI.
 
 ## Finding and understanding a run

@@ -62,7 +62,12 @@ def with_belt(data: CvtData) -> CvtData:
         {
             "belt_outer_length_m": belt.outer_length_m,
             "belt": belt.model_dump(
-                exclude={"outer_length_m", "density_kg_per_m3", "length_reference"}
+                exclude={
+                    "outer_length_m",
+                    "density_kg_per_m3",
+                    "length_reference",
+                    "recommended_sheave_half_angle_rad",
+                }
             ),
         }
     )
@@ -214,8 +219,8 @@ def import_engine_curve(request: CurveImportRequest) -> list[EnginePoint]:
             # Only an explicit, recognizable first-row header is ignored.
             if (
                 index == 1
-                and re.search(r"rpm|speed|rad", row[0], re.I)
-                and re.search(r"torque|nm|n.m|lb", row[1], re.I)
+                and re.search(r"rpm|speed|rad", row[0], re.IGNORECASE)
+                and re.search(r"torque|nm|n.m|lb", row[1], re.IGNORECASE)
             ):
                 continue
             raise ApiProblem(

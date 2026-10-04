@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Container,
   Group,
   Loader,
@@ -13,16 +12,17 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link } from 'react-router-dom';
 import {
   IconArrowRight,
-  IconFlask,
   IconGeometry,
   IconPlayerPlay,
 } from '@tabler/icons-react';
 import { useAuth } from '@contexts/AuthContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useRunSimulation } from '@hooks/useRunSimulation';
+import { useRunActivity } from '../../features/experiments/RunActivity';
 import {
   buildRunSetupForVehicle,
   getDefaultRunSetup,
@@ -33,6 +33,7 @@ export function Dashboard() {
   const { session } = useAuth();
   const { isLoading, loadingMessage } = useLoading();
   const { runLibrarySetup } = useRunSimulation();
+  const { activity } = useRunActivity();
   const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,10 +171,15 @@ export function Dashboard() {
                   <Button
                     leftSection={<IconPlayerPlay size={18} />}
                     loading={isLoading}
-                    disabled={
-                      busy ||
-                      !setup.selectedLoadCase ||
-                      !setup.selectedExecutionPreset
+                    disabledReason={
+                      activity?.active
+                        ? 'You already have a queued or running simulation. Wait for it to finish or cancel it first.'
+                        : busy
+                          ? 'Wait for the selected baseline to load.'
+                          : !setup.selectedLoadCase ||
+                              !setup.selectedExecutionPreset
+                            ? 'Choose a baseline with a load case and execution preset.'
+                            : undefined
                     }
                     onClick={() => void runLibrarySetup(setup.selection)}
                   >
@@ -185,7 +191,7 @@ export function Dashboard() {
                     variant="default"
                     rightSection={<IconArrowRight size={18} />}
                   >
-                    Tune & configure
+                    Build a run
                   </Button>
                 </Group>
               </>
@@ -205,25 +211,25 @@ export function Dashboard() {
                 Explore geometry
               </Title>
               <Text size="sm" c="dimmed">
-                Study the primary architecture, ramp shape, and force response.
+                Explore belt dimensions, pulley radii and the available CVT
+                ratio range.
               </Text>
-              <Button component={Link} to="/primary-design" variant="light">
-                Open primary design
+              <Button component={Link} to="/geometry" variant="light">
+                Open geometry study
               </Button>
             </Stack>
           </Paper>
           <Paper withBorder p="xl">
             <Stack>
-              <IconFlask size={28} color="var(--mantine-color-red-4)" />
               <Title order={2} size="h3">
-                Validate with measurements
+                Reusable load cases
               </Title>
               <Text size="sm" c="dimmed">
-                Bring in dyno data and compare measured signals with your
-                simulation.
+                Pick a flat road, climb, descent or custom route for any
+                vehicle.
               </Text>
-              <Button component={Link} to="/validation" variant="light">
-                Open dyno validation
+              <Button component={Link} to="/load-cases" variant="light">
+                Open load cases
               </Button>
             </Stack>
           </Paper>

@@ -6,15 +6,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  Alert,
-  Badge,
-  Button,
-  Drawer,
-  Group,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { Alert, Badge, Drawer, Group, Stack, Text } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { IconActivity } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import {
@@ -238,6 +231,9 @@ export function RunActivityBanner() {
           <Button
             component={Link}
             to={`/runs/${notice.run.id}`}
+            onClick={() =>
+              void dismiss(notice.id).catch((cause) => setError(message(cause)))
+            }
             size="xs"
             variant="light"
           >

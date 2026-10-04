@@ -137,6 +137,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
         from app.database.physical_seed import seed_physical_catalog
 
         seed_physical_catalog(session)
+        from app.database.belt_catalog import seed_belt_catalog
+
+        seed_belt_catalog(session)
         from app.database.experiment_seed import seed_experiments
 
         seed_experiments(session)
@@ -512,6 +515,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     from app.database.physical_seed import seed_physical_catalog
 
     seed_physical_catalog(session)
+    from app.database.belt_catalog import seed_belt_catalog
+
+    seed_belt_catalog(session)
     from app.database.experiment_seed import seed_experiments
 
     seed_experiments(session)

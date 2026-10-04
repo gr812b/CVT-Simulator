@@ -1,10 +1,10 @@
+import { Brand } from './Brand';
 import { useState } from 'react';
 import {
   Alert,
   AppShell,
   Badge,
   Burger,
-  Button,
   Center,
   Group,
   Loader,
@@ -12,10 +12,10 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconChartLine,
-  IconFlask,
   IconGeometry,
   IconHome,
   IconLibrary,
@@ -36,12 +36,11 @@ import {
 const navigation = [
   { to: '/dashboard', label: 'Workspace', icon: IconHome },
   { to: '/library', label: 'Physical library', icon: IconLibrary },
-  { to: '/input', label: 'Tune & run', icon: IconTool },
+  { to: '/input', label: 'Build a run', icon: IconTool },
+  { to: '/load-cases', label: 'Load cases', icon: IconTool },
   { to: '/runs', label: 'Runs & results', icon: IconChartLine },
   { to: '/catalog', label: 'Public library', icon: IconLibrary },
   { to: '/geometry', label: 'Geometry study', icon: IconGeometry },
-  { to: '/primary-design', label: 'Primary design', icon: IconTool },
-  { to: '/validation', label: 'Dyno validation', icon: IconFlask },
   { to: '/account', label: 'Account settings', icon: IconSettings },
 ];
 
@@ -105,16 +104,7 @@ export function ApplicationShell() {
                 size="sm"
                 aria-label="Toggle navigation"
               />
-              <Text
-                component={Link}
-                to="/dashboard"
-                fw={900}
-                size="xl"
-                c="red.4"
-                td="none"
-              >
-                CINDER
-              </Text>
+              <Brand />
               <Badge variant="light" visibleFrom="sm">
                 Workspace
               </Badge>

@@ -1,4 +1,5 @@
 import { Accordion, Stack } from '@mantine/core';
+import { BeltEditor } from '../physicalLibrary/BeltEditor';
 import { EngineEditor } from '../physicalLibrary/EngineEditor';
 import { CvtEditor } from '../physicalLibrary/CvtEditor';
 import { VehicleEditor } from '../physicalLibrary/VehicleEditor';
@@ -44,6 +45,22 @@ export function ConfigurationView({
               onChange={() => {}}
               disabled
             />
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+      {document.kind === 'engines' && (
+        <Accordion.Item value="engine">
+          <Accordion.Control>Engine torque curve & inertia</Accordion.Control>
+          <Accordion.Panel>
+            <EngineEditor value={document.data} onChange={() => {}} disabled />
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+      {document.kind === 'belts' && (
+        <Accordion.Item value="belt">
+          <Accordion.Control>Belt dimensions & density</Accordion.Control>
+          <Accordion.Panel>
+            <BeltEditor value={document.data} onChange={() => {}} disabled />
           </Accordion.Panel>
         </Accordion.Item>
       )}

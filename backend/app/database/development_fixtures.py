@@ -56,7 +56,7 @@ def seed_development_fixtures(session: Session) -> None:
                     "id": sample_id(key),
                     "account_id": account_id,
                     "name": name,
-                    "visibility": "private",
+                    "visibility": "public",
                     "draft_payload": payload,
                     "forked_from_version_id": source.id,
                     "source_label": "Development fixture copied from a fixed project sample",
@@ -66,7 +66,7 @@ def seed_development_fixtures(session: Session) -> None:
                 "id": sample_id(f"{key}:r1"),
                 "payload": payload,
                 "created_by_user_id": user_id,
-                "visibility_at_release": "private",
+                "visibility_at_release": "public",
                 "release_notes": "Isolated local ownership fixture.",
             }
             if resource == "cvt-designs":
@@ -107,5 +107,10 @@ def seed_development_fixtures(session: Session) -> None:
         )
         from app.database.publication_seed import seed_publication_fixtures
 
-        seed_publication_fixtures(session, account_id=account_id, setup_revision_id=setup_revision_id, label=label)
+        seed_publication_fixtures(
+            session,
+            account_id=account_id,
+            setup_revision_id=setup_revision_id,
+            label=label,
+        )
     session.flush()

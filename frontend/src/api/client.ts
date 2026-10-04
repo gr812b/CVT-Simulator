@@ -75,6 +75,21 @@ export interface CompletedSimulationRun {
   result: SimulationResult;
 }
 
+export type DemoPlayback = Omit<Schema['DemoPlaybackResponse'], 'input_document_snapshot' | 'result'> & {
+  inputDocumentSnapshot: SimulationCaseDocument;
+  result: SimulationResult;
+};
+
+export async function getDemoPlayback(signal?: AbortSignal): Promise<DemoPlayback> {
+  const data = dataOrThrow(await client.GET('/api/v1/demo', { signal }));
+  const { input_document_snapshot, result, ...metadata } = data;
+  return {
+    ...metadata,
+    inputDocumentSnapshot: input_document_snapshot as unknown as SimulationCaseDocument,
+    result: parseSimulationResult(result),
+  };
+}
+
 export type ProjectedField = Camel<Schema['ProjectedField']>;
 
 export type ProjectedScalar = Camel<Schema['ProjectedScalar']>;

@@ -28,7 +28,7 @@ class GeometryDesignContextRequest(ApiModel):
     max_shift_m: float = Field(ge=0.0)
 
     @model_validator(mode="after")
-    def _check_shift_range(self) -> "GeometryDesignContextRequest":
+    def _check_shift_range(self) -> GeometryDesignContextRequest:
         if self.max_shift_m < self.deadzone_shift_m:
             raise ValueError(
                 "max_shift_m must be greater than or equal to deadzone_shift_m."
@@ -69,7 +69,7 @@ class TargetRatiosGeometryStudyRequest(GeometryStudyOptions):
     minimum_ratio: float = Field(gt=0.0)
 
     @model_validator(mode="after")
-    def _check_ratio_order(self) -> "TargetRatiosGeometryStudyRequest":
+    def _check_ratio_order(self) -> TargetRatiosGeometryStudyRequest:
         if self.maximum_ratio <= self.minimum_ratio:
             raise ValueError("maximum_ratio must exceed minimum_ratio.")
         return self
@@ -118,7 +118,7 @@ class ClampingResponseStudyRequest(ApiModel):
     axes: list[ActuationAxisRequest] = Field(min_length=1, max_length=2)
 
     @model_validator(mode="after")
-    def _check_axis_coordinates(self) -> "ClampingResponseStudyRequest":
+    def _check_axis_coordinates(self) -> ClampingResponseStudyRequest:
         coordinates = [axis.coordinate for axis in self.axes]
         if len(set(coordinates)) != len(coordinates):
             raise ValueError("each actuation axis must use a distinct coordinate.")
@@ -134,3 +134,29 @@ from .projections import GeometryStudy
 
 class GeometryStudyResponse(ApiModel):
     study: GeometryStudy
+
+
+class SimpleGeometryRequest(ApiModel):
+    section_mode: Literal["matching_angle", "measured"] = "matching_angle"
+    belt_outer_length_m: float = Field(gt=0)
+    belt_height_m: float = Field(gt=0)
+    belt_outer_width_m: float = Field(gt=0)
+    cord_depth_from_outer_m: float = Field(ge=0)
+    measured_inner_width_m: float | None = Field(default=None, gt=0)
+    sheave_half_angle_rad: float = Field(gt=0, lt=1.5707963267948966)
+    primary_outer_radius_at_zero_shift_m: float = Field(gt=0)
+    secondary_outer_radius_at_zero_shift_m: float = Field(gt=0)
+    deadzone_shift_m: float = Field(default=0, ge=0)
+    active_travel_limit_m: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def valid_section(self):
+        if self.cord_depth_from_outer_m > self.belt_height_m:
+            raise ValueError("Cord depth must lie inside the belt height.")
+        if self.section_mode == "measured" and self.measured_inner_width_m is None:
+            raise ValueError("Enter the measured bottom width.")
+        return self
+
+
+class SimpleGeometryResponse(GeometryStudyResponse):
+    resolved_context: GeometryDesignContextRequest

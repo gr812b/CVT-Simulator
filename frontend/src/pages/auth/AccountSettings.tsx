@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Container,
   Group,
   Paper,
@@ -12,6 +11,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { useForm } from '@mantine/form';
 import { changePassword, updateProfile } from '@api/auth';
 import { useAuth } from '@contexts/AuthContext';
@@ -22,14 +22,21 @@ export function AccountSettings() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const profile = useForm({
-    initialValues: { display_name: session?.user.display_name ?? '' },
-    validate: { display_name: (value) => (value.trim() ? null : 'Enter your name.') },
+    initialValues: {
+      display_name: session?.user.display_name ?? '',
+      school: session?.user.school ?? '',
+    },
+    validate: {
+      display_name: (value) => (value.trim() ? null : 'Enter your name.'),
+    },
   });
   const password = useForm({
     initialValues: { current_password: '', password: '', confirm: '' },
     validate: {
-      password: (value) => (value.length >= 12 ? null : 'Use at least 12 characters.'),
-      confirm: (value, values) => (value === values.password ? null : 'Passwords do not match.'),
+      password: (value) =>
+        value.length >= 12 ? null : 'Use at least 12 characters.',
+      confirm: (value, values) =>
+        value === values.password ? null : 'Passwords do not match.',
     },
   });
   const save = async (
@@ -48,7 +55,9 @@ export function AccountSettings() {
       );
       if (kind === 'password') password.reset();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to save changes.');
+      setError(
+        reason instanceof Error ? reason.message : 'Unable to save changes.',
+      );
     } finally {
       setBusy(null);
     }
@@ -73,7 +82,12 @@ export function AccountSettings() {
         <Paper withBorder p="lg">
           <form
             onSubmit={profile.onSubmit((values) =>
-              save('profile', () => updateProfile({ display_name: values.display_name.trim() })),
+              save('profile', () =>
+                updateProfile({
+                  display_name: values.display_name.trim(),
+                  school: values.school.trim(),
+                }),
+              ),
             )}
           >
             <Stack>
@@ -83,7 +97,11 @@ export function AccountSettings() {
                 </Title>
                 <Badge>Free workspace</Badge>
               </Group>
-              <TextInput label="Email" value={session?.user.email ?? ''} readOnly />
+              <TextInput
+                label="Email"
+                value={session?.user.email ?? ''}
+                readOnly
+              />
               <TextInput
                 label="Your name"
                 autoComplete="name"
@@ -91,7 +109,20 @@ export function AccountSettings() {
                 required
                 {...profile.getInputProps('display_name')}
               />
-              <Button type="submit" loading={busy === 'profile'} disabled={busy !== null}>
+              <TextInput
+                label="School"
+                description="Optional"
+                maxLength={200}
+                {...profile.getInputProps('school')}
+              />
+              <Text size="sm" c="dimmed">
+                Free accounts save simulation content publicly.
+              </Text>
+              <Button
+                type="submit"
+                loading={busy === 'profile'}
+                disabled={busy !== null}
+              >
                 Save profile
               </Button>
             </Stack>
@@ -132,7 +163,11 @@ export function AccountSettings() {
                 required
                 {...password.getInputProps('confirm')}
               />
-              <Button type="submit" loading={busy === 'password'} disabled={busy !== null}>
+              <Button
+                type="submit"
+                loading={busy === 'password'}
+                disabled={busy !== null}
+              >
                 Update password
               </Button>
             </Stack>

@@ -1,4 +1,4 @@
-import { Alert, SimpleGrid, Stack } from '@mantine/core';
+import { Alert, Checkbox, SimpleGrid, Stack } from '@mantine/core';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import type { BeltData } from './api';
 
@@ -76,6 +76,32 @@ export function BeltEditor({
           onChange={(next) => patch({ density_kg_per_m3: next })}
         />
       </SimpleGrid>
+      <Checkbox
+        label="Specify a recommended sheave half-angle"
+        checked={value.recommended_sheave_half_angle_rad != null}
+        disabled={disabled}
+        onChange={(event) =>
+          patch({
+            recommended_sheave_half_angle_rad: event.currentTarget.checked
+              ? Math.PI / 18
+              : null,
+          })
+        }
+      />
+      {value.recommended_sheave_half_angle_rad != null && (
+        <QuantityInput
+          label="Recommended sheave half-angle"
+          description="Catalog guidance for the geometry study. Selecting this belt does not change your CVT's sheave geometry."
+          value={value.recommended_sheave_half_angle_rad}
+          unit="deg"
+          min={Number.MIN_VALUE}
+          max={Math.PI / 2 - Number.EPSILON}
+          disabled={disabled}
+          onChange={(next) =>
+            patch({ recommended_sheave_half_angle_rad: next })
+          }
+        />
+      )}
     </Stack>
   );
 }

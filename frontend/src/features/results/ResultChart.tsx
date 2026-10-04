@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Button,
   Group,
   Loader,
   Paper,
@@ -11,6 +10,7 @@ import {
   Title,
   useMantineTheme,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
 import { getSeries, type RunInspection, type RunSeries } from './api';

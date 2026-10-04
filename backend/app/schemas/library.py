@@ -23,7 +23,7 @@ LibraryResource = Literal[
     "vehicle-assemblies",
 ]
 
-Visibility = Literal["private", "unlisted", "public"]
+Visibility = Literal["public"]
 LifecycleStatus = Literal["active", "deprecated", "archived"]
 CatalogStatus = Literal[
     "user_created",
@@ -42,7 +42,7 @@ class CreateLibraryObjectRequest(ApiModel):
     name: str
     slug: str | None = None
     description: str | None = None
-    visibility: Visibility = "private"
+    visibility: Visibility = "public"
     gallery_listed: bool = False
     catalog_priority: int = 0
     is_default: bool = False
@@ -88,7 +88,7 @@ class ForkLibraryVersionRequest(ApiModel):
     name: str | None = None
     slug: str | None = None
     description: str | None = None
-    visibility: Visibility = "private"
+    visibility: Visibility = "public"
 
 
 class ArchiveLibraryObjectRequest(ApiModel):
@@ -220,7 +220,7 @@ class TuneListResponse(ApiModel):
 class CreateLoadCaseRequest(ApiModel):
     name: str
     kind: str
-    visibility: Visibility = "private"
+    visibility: Visibility = "public"
     payload: JsonObject
 
 

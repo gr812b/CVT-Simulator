@@ -5,11 +5,13 @@ import type { ExperimentMetadata, Scenario } from './api';
 
 export function ScenarioEditor({
   value,
+  showRoad = true,
   metadata,
   onChange,
   onRoadValidityChange,
 }: {
   value: Scenario;
+  showRoad?: boolean;
   metadata: ExperimentMetadata;
   onChange: (scenario: Scenario) => void;
   onRoadValidityChange: (valid: boolean) => void;
@@ -27,12 +29,14 @@ export function ScenarioEditor({
         value={value.duration_s ?? 30}
         onChange={(duration_s) => onChange({ ...value, duration_s })}
       />
-      <RoadEditor
-        value={value.road}
-        metadata={metadata}
-        onChange={(road) => onChange({ ...value, road })}
-        onValidityChange={onRoadValidityChange}
-      />
+      {showRoad && (
+        <RoadEditor
+          value={value.road}
+          metadata={metadata}
+          onChange={(road) => onChange({ ...value, road })}
+          onValidityChange={onRoadValidityChange}
+        />
+      )}
       <Accordion variant="separated" multiple>
         <Accordion.Item value="initial">
           <Accordion.Control>Initial conditions</Accordion.Control>

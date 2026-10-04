@@ -25,13 +25,18 @@ def main() -> None:
     parser.add_argument(
         "--development-fixtures",
         action="store_true",
-        help="Also add two isolated passwordless local accounts and private setups (development only).",
+        help="Also add two isolated passwordless local accounts and public setups (development only).",
     )
     parser.add_argument(
         "--preset-path",
         type=Path,
         default=None,
         help="Optional baseline preset JSON used to seed the demo objects.",
+    )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Delete the selected local SQLite development database before creating a fresh public workspace.",
     )
     args = parser.parse_args()
 
@@ -40,6 +45,27 @@ def main() -> None:
         settings = replace(settings, database_url=args.database_url)
     if args.development_fixtures and settings.environment != "development":
         parser.error("Development fixtures are unavailable in production.")
+    if args.reset:
+        from sqlalchemy.engine import make_url
+
+        url = make_url(settings.database_url)
+        if (
+            settings.environment != "development"
+            or url.get_backend_name() != "sqlite"
+            or not url.database
+            or url.database == ":memory:"
+        ):
+            parser.error(
+                "--reset requires a file-backed SQLite database in development mode."
+            )
+        database = Path(url.database).resolve()
+        for path in (
+            database,
+            Path(str(database) + "-wal"),
+            Path(str(database) + "-shm"),
+        ):
+            path.unlink(missing_ok=True)
+        print(f"Reset local development database: {database}")
     create_and_seed_database(settings, preset_path=args.preset_path)
     if args.development_fixtures:
         from app.database.development_fixtures import seed_development_fixtures

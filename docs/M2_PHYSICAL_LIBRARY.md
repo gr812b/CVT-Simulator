@@ -1,5 +1,7 @@
 # M2 — Physical library and revisions
 
+> Current setup and visibility policy: [Public workspace refinements](PUBLIC_WORKSPACE_REFINEMENTS.md). This historical milestone document may describe superseded private-data or migration behavior.
+
 M2 adds private, reusable engines, belts, CVTs, and complete vehicle setups. It builds on [M1's application foundation and coding standards](M1_APPLICATION_FOUNDATION.md). CINDER 1.1.4 remains the authority for mechanics, document contracts, and engineering validation.
 
 ## Everyday workflow

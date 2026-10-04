@@ -77,6 +77,27 @@ const Publication = lazy(() =>
   ),
 );
 
+const LoadCases = lazy(() =>
+  import('../../features/experiments/LoadCaseLibrary').then(
+    ({ LoadCaseLibrary }) => ({ default: LoadCaseLibrary }),
+  ),
+);
+const PublicExperiment = lazy(() =>
+  import('../../features/publicLibrary/PublicExperiment').then(
+    ({ PublicExperiment }) => ({ default: PublicExperiment }),
+  ),
+);
+const PublicRun = lazy(() =>
+  import('../../features/publicLibrary/PublicRuns').then(({ PublicRun }) => ({
+    default: PublicRun,
+  })),
+);
+const PublicPlayback = lazy(() =>
+  import('../../features/publicLibrary/PublicRuns').then(
+    ({ PublicPlayback }) => ({ default: PublicPlayback }),
+  ),
+);
+
 /**
  * Keep the landing route light. Secondary pages load only after navigation, so
  * the Three.js/ECharts playback dependencies are excluded from the home bundle.
@@ -91,7 +112,18 @@ export const App = () => (
   >
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/demo" element={<Demo />} />
       <Route path="/catalog" element={<PublicLibrary />} />
+      <Route
+        path="/catalog/load-cases/:objectId"
+        element={<PublicExperiment />}
+      />
+      <Route path="/catalog/tunes/:objectId" element={<PublicExperiment />} />
+      <Route path="/catalog/runs/:runId" element={<PublicRun />} />
+      <Route
+        path="/catalog/runs/:runId/playback"
+        element={<PublicPlayback />}
+      />
       <Route path="/catalog/:publicationId" element={<Publication />} />
       <Route path="/login" element={<AuthPage key="login" mode="login" />} />
       <Route
@@ -112,7 +144,7 @@ export const App = () => (
         <Route path="/library" element={<Library />} />
         <Route path="/library/:kind" element={<Library />} />
         <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
-        <Route path="/demo" element={<Demo />} />
+        <Route path="/load-cases" element={<LoadCases />} />
         <Route path="/input" element={<Input />} />
         <Route path="/runs/:runId" element={<RunPage />} />
         <Route path="/runs" element={<RunHistory />} />

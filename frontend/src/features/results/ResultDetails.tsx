@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Accordion,
   Alert,
-  Button,
   Code,
   Group,
   Pagination,
@@ -14,6 +13,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { downloadBlob } from '@utils/download';
 import {
   exportRun,
@@ -103,8 +103,12 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
                 variant="default"
                 size="xs"
                 loading={busy === item.kind}
-                disabled={
-                  busy !== null || (item.full && !availability.full_result)
+                disabledReason={
+                  busy !== null
+                    ? 'Wait for the current download.'
+                    : item.full && !availability.full_result
+                      ? 'The full result is not available for this run.'
+                      : undefined
                 }
                 onClick={() => void download(item.kind)}
               >

@@ -1,5 +1,7 @@
 """Additive public scenario examples, never rewritten during repeat seeding."""
 
+import math
+
 from app.application.roads import default_scenario, feature_templates
 from app.database.base import utc_now
 from app.database.experiment_models import Experiment, ExperimentRevision
@@ -45,6 +47,32 @@ def seed_experiments(session):
             ],
         ),
     ]
+    for angle in (-15, -10, -5, 5, 10, 15):
+        length = 1000.0
+        examples.append(
+            (
+                f"grade:{angle}",
+                [
+                    ScenarioDocument(
+                        kind="scenarios",
+                        name=f"{abs(angle)}° {'uphill' if angle > 0 else 'downhill'} road",
+                        notes="Constant road angle, continuing beyond the displayed route. Distance is measured along the road surface.",
+                        road=SpatialRoad(
+                            features=[
+                                {
+                                    "kind": "slope",
+                                    "id": f"grade-{angle}",
+                                    "name": f"{angle:+}° road",
+                                    "length_m": length,
+                                    "rise_m": length * math.sin(math.radians(angle)),
+                                }
+                            ],
+                            endpoint="continue_grade",
+                        ),
+                    )
+                ],
+            )
+        )
     for key, documents in examples:
         object_id = sample_id(f"scenario:{key}")
         if session.get(Experiment, object_id):

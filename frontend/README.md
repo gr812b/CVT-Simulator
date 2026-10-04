@@ -41,6 +41,10 @@ Activity shows persisted notifications, status/cancellation and recent results;
 `/playback?run=<id>` reloads a saved result. Dashboard/demo shortcuts use the same
 durable queue through the legacy library selection adapter.
 
+Home's **View Demo** opens `/demo` without signing in. It loads a retained,
+completed baseline through the shared playback component; it never submits a job.
+See [demo and worker troubleshooting](../docs/DEMO_AND_WORKER_TROUBLESHOOTING.md).
+
 Runs & results (`/runs`) adds search, filters, stored metrics, full-data exports and
 new experiments from frozen configurations. `/catalog` is the anonymous public
 setup/CVT library. Publishing a saved revision requires explicit sharing consent;

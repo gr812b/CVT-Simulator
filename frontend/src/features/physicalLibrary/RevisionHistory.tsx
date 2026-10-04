@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Button,
   Group,
   Loader,
   Modal,
@@ -9,6 +8,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   comparePhysical,
   type PhysicalDetail,
@@ -109,17 +109,28 @@ export function RevisionHistory({
           <DifferenceList differences={changes} />
         )}
         <Group justify="end">
-          <Button variant="default" onClick={onClose} disabled={busy}>
+          <Button
+            variant="default"
+            onClick={onClose}
+            disabledReason={
+              busy ? 'Wait for the revision to finish restoring.' : undefined
+            }
+          >
             Close
           </Button>
           {detail.item.owned && (
             <Button
               loading={busy}
-              disabled={
-                loading ||
-                !!error ||
-                !selected ||
-                selected === detail.item.revision_id
+              disabledReason={
+                loading
+                  ? 'Wait for the revision comparison.'
+                  : error
+                    ? 'Resolve the comparison error before restoring.'
+                    : !selected
+                      ? 'Select a saved revision to restore.'
+                      : selected === detail.item.revision_id
+                        ? 'This revision is already current.'
+                        : undefined
               }
               onClick={() => selected && void onRestore(selected)}
             >

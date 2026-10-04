@@ -1,4 +1,4 @@
-"""Private, immutable experiment history and frozen input resolution."""
+"""Public, immutable experiment history and frozen input resolution."""
 
 from copy import deepcopy
 
@@ -32,9 +32,7 @@ DOCUMENT = TypeAdapter(ExperimentDocument)
 
 def get_item(session, principal, object_id, *, write=False):
     obj = session.get(Experiment, object_id)
-    if obj is None or (
-        obj.account_id != principal.account_id and (write or not obj.is_sample)
-    ):
+    if obj is None or (write and obj.account_id != principal.account_id):
         raise access.unavailable()
     if write:
         principal.require_write()
@@ -63,14 +61,14 @@ def item_response(session, principal, obj):
         owned=obj.account_id == principal.account_id,
         archived=obj.archived,
         setup_object_id=obj.setup_object_id,
+        sample=obj.is_sample,
+        description=revision.document.get("notes", ""),
     )
 
 
 def list_items(session, principal, kind, include_archived=False):
     stmt = select(Experiment).where(
         Experiment.kind == kind,
-        (Experiment.account_id == principal.account_id)
-        | Experiment.is_sample.is_(True),
     )
     if not include_archived:
         stmt = stmt.where(Experiment.archived.is_(False))
@@ -249,6 +247,8 @@ def resolve(session, principal, settings, selection):
         "primary": setup_document.data.engine.data.model_dump(),
         "secondary": vehicle_boundary(setup_document.data.vehicle),
     }
+    if selection.primary_boundary is not None:
+        case["shaft_boundaries"]["primary"] = selection.primary_boundary.model_dump()
     if selection.vehicle_mass_kg is not None:
         case["shaft_boundaries"]["secondary"]["vehicle"]["mass_kg"] = (
             selection.vehicle_mass_kg
@@ -261,6 +261,9 @@ def resolve(session, principal, settings, selection):
     except (ValueError, TypeError, KeyError) as exc:
         raise ApiProblem(422, "invalid_experiment", str(exc)) from exc
     provenance = {
+        "primary_boundary": selection.primary_boundary.model_dump()
+        if selection.primary_boundary
+        else None,
         "setup_revision_id": setup.id,
         "setup_revision_number": setup.version_number,
         "setup_name": setup_document.name,

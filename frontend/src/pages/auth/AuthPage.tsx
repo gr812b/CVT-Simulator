@@ -1,8 +1,8 @@
+import { Brand } from '@components/appShell/Brand';
 import { useEffect, useState } from 'react';
 import {
   Alert,
   Anchor,
-  Button,
   Container,
   Divider,
   Group,
@@ -13,6 +13,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { useForm } from '@mantine/form';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as auth from '@api/auth';
@@ -34,23 +35,33 @@ export function AuthPage({ mode }: { mode: Mode }) {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [token] = useState(() => {
-    const value = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
+    const value =
+      new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
     return value;
   });
   useEffect(() => {
     if (token) window.history.replaceState(null, '', window.location.pathname);
   }, [token]);
   const form = useForm({
-    initialValues: { email: '', password: '', display_name: '', confirm: '' },
+    initialValues: {
+      email: '',
+      password: '',
+      display_name: '',
+      school: '',
+      confirm: '',
+    },
     validate: {
       email: (value) =>
         mode === 'reset' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
           ? null
           : 'Enter a valid email address.',
       display_name: (value) =>
-        mode !== 'register' || value.trim().length > 0 ? null : 'Enter your name.',
+        mode !== 'register' || value.trim().length > 0
+          ? null
+          : 'Enter your name.',
       password: (value) =>
-        mode === 'forgot' || (mode === 'login' ? value.length > 0 : value.length >= 12)
+        mode === 'forgot' ||
+        (mode === 'login' ? value.length > 0 : value.length >= 12)
           ? null
           : 'Use at least 12 characters.',
       confirm: (value, values) =>
@@ -67,15 +78,21 @@ export function AuthPage({ mode }: { mode: Mode }) {
     !/^\/(login|register|reset-password|forgot-password)/.test(requested)
       ? requested
       : '/dashboard';
-  if (session && (mode === 'login' || mode === 'register')) return <Navigate to={next} replace />;
+  if (session && (mode === 'login' || mode === 'register'))
+    return <Navigate to={next} replace />;
   const submit = form.onSubmit(async (values) => {
     setBusy(true);
     setError(null);
     try {
       if (mode === 'forgot')
-        setMessage((await auth.forgotPassword({ email: values.email })).message);
+        setMessage(
+          (await auth.forgotPassword({ email: values.email })).message,
+        );
       else if (mode === 'reset')
-        setMessage((await auth.resetPassword({ token, password: values.password })).message);
+        setMessage(
+          (await auth.resetPassword({ token, password: values.password }))
+            .message,
+        );
       else {
         const result =
           mode === 'register'
@@ -83,22 +100,28 @@ export function AuthPage({ mode }: { mode: Mode }) {
                 email: values.email,
                 password: values.password,
                 display_name: values.display_name.trim(),
+                school: values.school.trim(),
               })
-            : await auth.login({ email: values.email, password: values.password });
+            : await auth.login({
+                email: values.email,
+                password: values.password,
+              });
         accept(result);
         navigate(next, { replace: true });
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to complete your request.');
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Unable to complete your request.',
+      );
     } finally {
       setBusy(false);
     }
   });
   return (
     <Container size={440} py={64}>
-      <Anchor component={Link} to="/" fw={800} c="red.4" size="xl">
-        CINDER
-      </Anchor>
+      <Brand />
       <Title mt="xl" order={1}>
         {headings[mode]}
       </Title>
@@ -143,6 +166,21 @@ export function AuthPage({ mode }: { mode: Mode }) {
                   {...form.getInputProps('display_name')}
                 />
               )}
+              {mode === 'register' && (
+                <>
+                  <TextInput
+                    label="School"
+                    description="Optional — leave blank if not affiliated with a school."
+                    maxLength={200}
+                    {...form.getInputProps('school')}
+                  />
+                  <Text size="sm" c="dimmed">
+                    Free accounts save configurations, load cases, tunes and
+                    runs publicly. Your email and account details remain
+                    private.
+                  </Text>
+                </>
+              )}
               {mode !== 'reset' && (
                 <TextInput
                   label="Email"
@@ -160,7 +198,9 @@ export function AuthPage({ mode }: { mode: Mode }) {
                       ? undefined
                       : 'At least 12 characters. Spaces and passphrases are welcome.'
                   }
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  autoComplete={
+                    mode === 'login' ? 'current-password' : 'new-password'
+                  }
                   maxLength={128}
                   required
                   {...form.getInputProps('password')}
@@ -174,7 +214,11 @@ export function AuthPage({ mode }: { mode: Mode }) {
                   {...form.getInputProps('confirm')}
                 />
               )}
-              <Button type="submit" loading={busy} disabled={mode === 'reset' && !token}>
+              <Button
+                type="submit"
+                loading={busy}
+                disabled={mode === 'reset' && !token}
+              >
                 {mode === 'register'
                   ? 'Create account'
                   : mode === 'forgot'
@@ -194,9 +238,15 @@ export function AuthPage({ mode }: { mode: Mode }) {
         <Divider my="lg" />
         <Group justify="center" gap="xs">
           <Text size="sm">
-            {mode === 'register' ? 'Already have an account?' : 'New to CINDER?'}
+            {mode === 'register'
+              ? 'Already have an account?'
+              : 'New to CINDER?'}
           </Text>
-          <Anchor component={Link} to={mode === 'register' ? '/login' : '/register'} size="sm">
+          <Anchor
+            component={Link}
+            to={mode === 'register' ? '/login' : '/register'}
+            size="sm"
+          >
             {mode === 'register' ? 'Sign in' : 'Create account'}
           </Anchor>
         </Group>

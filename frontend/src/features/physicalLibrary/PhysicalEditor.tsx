@@ -3,7 +3,6 @@ import {
   Accordion,
   Alert,
   Badge,
-  Button,
   Container,
   Group,
   Loader,
@@ -15,6 +14,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   IconArrowLeft,
   IconCheck,
@@ -347,8 +347,8 @@ function PhysicalEditor({
         </div>
         {!editable && (
           <Alert color="blue" title="Sample revision">
-            Explore these saved values, then copy them into your private library
-            to edit.
+            Explore these saved values, then copy them into your library to
+            edit.
           </Alert>
         )}
         {detail?.item.owned && (
@@ -391,14 +391,13 @@ function PhysicalEditor({
                     >
                       Check inputs
                     </Button>
-                    {detail?.item.owned &&
-                      (kind === 'setups' || kind === 'cvts') && (
-                        <PublishDialog
-                          kind={kind}
-                          objectId={objectId}
-                          disabled={busy || dirty || detail.item.archived}
-                        />
-                      )}
+                    {detail?.item.owned && (
+                      <PublishDialog
+                        kind={kind}
+                        objectId={objectId}
+                        disabled={busy || dirty || detail.item.archived}
+                      />
+                    )}
                     {detail && (
                       <Button
                         variant="default"
@@ -476,7 +475,15 @@ function PhysicalEditor({
                         <Button
                           size="xs"
                           variant="light"
-                          disabled={busy || dirty || !editable}
+                          disabledReason={
+                            busy
+                              ? 'Wait for the current action.'
+                              : dirty
+                                ? 'Save or discard your working changes first.'
+                                : !editable
+                                  ? 'Copy this item into your library before updating it.'
+                                  : undefined
+                          }
                           onClick={() =>
                             void perform(async () =>
                               setUpdate(
@@ -681,7 +688,7 @@ function PhysicalEditor({
                             }
                           />
                           <Textarea
-                            label="Private measurement notes"
+                            label="Source notes"
                             value={document.source_notes ?? ''}
                             autosize
                             minRows={3}
@@ -716,7 +723,13 @@ function PhysicalEditor({
                   <Button
                     variant="subtle"
                     color="gray"
-                    disabled={busy || dirty}
+                    disabledReason={
+                      busy
+                        ? 'Wait for the current action.'
+                        : dirty
+                          ? 'Save or discard your working changes first.'
+                          : undefined
+                    }
                     onClick={() => setArchiveOpen(true)}
                   >
                     {detail.item.archived ? 'Unarchive' : 'Archive'}
@@ -727,14 +740,19 @@ function PhysicalEditor({
                     component={Link}
                     to={`/input?setup=${detail.item.id}`}
                     leftSection={<IconPlayerPlay size={16} />}
-                    disabled={
-                      busy ||
-                      dirty ||
-                      detail.item.archived ||
-                      !detail.validation.is_valid
+                    disabledReason={
+                      busy
+                        ? 'Wait for the current action.'
+                        : dirty
+                          ? 'Save your changes before building a run.'
+                          : detail.item.archived
+                            ? 'Unarchive this setup first.'
+                            : !detail.validation.is_valid
+                              ? 'Correct this setup’s validation errors first.'
+                              : undefined
                     }
                   >
-                    Tune & run this setup
+                    Build a run with this setup
                   </Button>
                 )}
               </Group>
@@ -774,7 +792,9 @@ function PhysicalEditor({
               <Group justify="end">
                 <Button
                   variant="default"
-                  disabled={busy}
+                  disabledReason={
+                    busy ? 'Wait for the current action.' : undefined
+                  }
                   onClick={() => setUpdate(null)}
                 >
                   Keep current revision

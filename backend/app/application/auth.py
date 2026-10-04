@@ -68,6 +68,7 @@ class Principal:
                 id=self.user.id,
                 email=self.user.email,
                 display_name=self.user.display_name or "",
+                school=self.user.school,
             ),
             account=AuthAccountResponse(
                 id=self.account.id, name=self.account.name, role=self.membership.role

@@ -16,7 +16,7 @@ export function VehicleEditor({
   return (
     <Stack>
       <Text size="sm" c="dimmed">
-        Vehicle and locked final-drive properties. The scenario supplies the
+        Vehicle and locked final-drive properties. The load case supplies the
         road profile separately.
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 2 }}>

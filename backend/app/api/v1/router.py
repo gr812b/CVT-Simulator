@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 
 from . import (
     auth,
+    demo,
     experiments,
     library,
     metadata,
@@ -28,12 +29,15 @@ router = APIRouter(
     }
 )
 router.include_router(auth.router)
+router.include_router(demo.router)
 router.include_router(publications.router)
-router.include_router(results.router, dependencies=[Depends(get_current_principal)])
-router.include_router(experiments.router, dependencies=[Depends(get_current_principal)])
+router.include_router(results.router)
+router.include_router(experiments.router)
 router.include_router(metadata.router)
 router.include_router(library.router, dependencies=[Depends(get_current_principal)])
-router.include_router(physical_library.router, dependencies=[Depends(get_current_principal)])
+router.include_router(
+    physical_library.router, dependencies=[Depends(get_current_principal)]
+)
 router.include_router(presets.router)
 router.include_router(
     simulation_cases.router, dependencies=[Depends(get_current_principal)]
@@ -42,5 +46,5 @@ router.include_router(studies.router, dependencies=[Depends(get_current_principa
 router.include_router(
     primary_design.router, dependencies=[Depends(get_current_principal)]
 )
-router.include_router(runs.router, dependencies=[Depends(get_current_principal)])
+router.include_router(runs.router)
 router.include_router(validation.router, dependencies=[Depends(get_current_principal)])

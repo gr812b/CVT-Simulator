@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import {
   Accordion,
-  ActionIcon,
   Alert,
-  Button,
   FileButton,
   Group,
   Modal,
@@ -14,6 +12,7 @@ import {
   Textarea,
   useMantineTheme,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import { IconPlus, IconTrash, IconUpload } from '@tabler/icons-react';
 import ReactECharts from 'echarts-for-react';
 import { displayScale } from '@utils/units';
@@ -186,11 +185,17 @@ export function EngineEditor({
                   disabled={disabled}
                 />
               </SimpleGrid>
-              <ActionIcon
+              <Button
                 variant="subtle"
                 color="red"
                 aria-label={`Remove curve row ${index + 1}`}
-                disabled={disabled || value.points.length <= 2}
+                disabledReason={
+                  disabled
+                    ? 'This is a read-only configuration. Make your own copy to edit it.'
+                    : value.points.length <= 2
+                      ? 'The torque curve needs at least two points.'
+                      : undefined
+                }
                 onClick={() =>
                   patch({
                     points: value.points.filter((_, i) => i !== index),
@@ -198,7 +203,7 @@ export function EngineEditor({
                 }
               >
                 <IconTrash size={16} />
-              </ActionIcon>
+              </Button>
             </Group>
           ))}
         </Stack>
@@ -207,7 +212,11 @@ export function EngineEditor({
             variant="subtle"
             mt="sm"
             leftSection={<IconPlus size={16} />}
-            disabled={value.points.length >= 1000}
+            disabledReason={
+              value.points.length >= 1000
+                ? 'The curve has reached its 1,000-point limit.'
+                : undefined
+            }
             onClick={() =>
               patch({
                 points: [
@@ -343,7 +352,9 @@ export function EngineEditor({
             </FileButton>
             <Button
               loading={busy}
-              disabled={!text.trim()}
+              disabledReason={
+                !text.trim() ? 'Paste the torque-curve data first.' : undefined
+              }
               onClick={() => void importPoints()}
             >
               Replace curve

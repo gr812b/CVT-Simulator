@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Paper,
   ScrollArea,
@@ -12,6 +11,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -563,10 +563,14 @@ export function RoadEditor({
               variant="subtle"
               color="red"
               size="xs"
-              disabled={
-                !fresh ||
-                selection!.index === 0 ||
-                selectedSection.points.length <= 2
+              disabledReason={
+                !fresh
+                  ? 'Wait for the road preview to update.'
+                  : selection!.index === 0
+                    ? 'The start point of a section is fixed.'
+                    : selectedSection.points.length <= 2
+                      ? 'A road section needs at least two points.'
+                      : undefined
               }
               onClick={() => {
                 replacePoints(
@@ -595,7 +599,11 @@ export function RoadEditor({
           style={{ flex: 1, minWidth: 180 }}
         />
         <Button
-          disabled={value.features.length >= metadata.limits.max_features}
+          disabledReason={
+            value.features.length >= metadata.limits.max_features
+              ? 'This load case has reached its road-section limit.'
+              : undefined
+          }
           onClick={() => {
             const feature = {
               ...structuredClone(
@@ -646,11 +654,15 @@ export function RoadEditor({
                       ? 'Move section earlier'
                       : 'Move section later'
                   }
-                  disabled={
-                    direction === -1
-                      ? value.features.indexOf(activeFeature) === 0
-                      : value.features.indexOf(activeFeature) ===
-                        value.features.length - 1
+                  disabledReason={
+                    (
+                      direction === -1
+                        ? value.features.indexOf(activeFeature) === 0
+                        : value.features.indexOf(activeFeature) ===
+                          value.features.length - 1
+                    )
+                      ? 'This section is already at that end of the road.'
+                      : undefined
                   }
                   onClick={() => {
                     const features = [...value.features],
@@ -673,7 +685,11 @@ export function RoadEditor({
                 size="compact-sm"
                 variant="default"
                 aria-label="Duplicate section"
-                disabled={value.features.length >= metadata.limits.max_features}
+                disabledReason={
+                  value.features.length >= metadata.limits.max_features
+                    ? 'This load case has reached its road-section limit.'
+                    : undefined
+                }
                 onClick={() => {
                   const feature = {
                     ...structuredClone(activeFeature),
@@ -696,7 +712,11 @@ export function RoadEditor({
                 variant="subtle"
                 color="red"
                 aria-label="Delete section"
-                disabled={value.features.length <= 1}
+                disabledReason={
+                  value.features.length <= 1
+                    ? 'A load case needs at least one road section.'
+                    : undefined
+                }
                 onClick={() => {
                   onChange({
                     ...value,
@@ -714,11 +734,15 @@ export function RoadEditor({
           <FeatureInputs value={activeFeature} onChange={updateFeature} />
           <Button
             variant="light"
-            disabled={
-              !fresh ||
-              !activeSection ||
-              (resolution?.profile.segments.length ?? 0) >=
-                metadata.limits.max_segments
+            disabledReason={
+              !fresh
+                ? 'Wait for the road preview to update.'
+                : !activeSection
+                  ? 'Select a road section first.'
+                  : (resolution?.profile.segments.length ?? 0) >=
+                      metadata.limits.max_segments
+                    ? 'This road has reached its point limit.'
+                    : undefined
             }
             onClick={() => {
               if (!activeSection) return;
