@@ -32,6 +32,8 @@ const PrimaryDesign = lazy(() =>
     default: Page,
   })),
 );
+const Library = lazy(() => import('../../features/physicalLibrary/LibraryPage').then(({ LibraryPage }) => ({ default: LibraryPage })));
+const PhysicalEditor = lazy(() => import('../../features/physicalLibrary/PhysicalEditor').then(({ PhysicalEditorPage }) => ({ default: PhysicalEditorPage })));
 
 /**
  * Keep the landing route light. Secondary pages load only after navigation, so
@@ -54,6 +56,9 @@ export const App = () => (
       <Route element={<ApplicationShell />}>
         <Route path="/account" element={<AccountSettings />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/library/:kind" element={<Library />} />
+        <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
         <Route path="/demo" element={<Demo />} />
         <Route path="/input" element={<Input />} />
         <Route path="/playback" element={<Playback />} />

@@ -658,7 +658,7 @@ export async function createPersonalTune(setup: DefaultRunSetup): Promise<TuneSu
   );
 }
 
-export async function getDefaultRunSetup(): Promise<DefaultRunSetup> {
+export async function getDefaultRunSetup(preferredVehicleId?: string): Promise<DefaultRunSetup> {
   const [owned, shared] = await Promise.all([
     listVehicleAssemblies(),
     listVehicleAssemblies({ publicOnly: true }),
@@ -666,7 +666,9 @@ export async function getDefaultRunSetup(): Promise<DefaultRunSetup> {
   const vehicleAssemblies = [
     ...new Map([...owned, ...shared].map((item) => [item.id, item])).values(),
   ];
-  const selectedVehicleAssembly = pickPreferred(vehicleAssemblies);
+  const selectedVehicleAssembly = preferredVehicleId
+    ? vehicleAssemblies.find(item => item.id === preferredVehicleId) ?? null
+    : pickPreferred(vehicleAssemblies);
   if (selectedVehicleAssembly === null) {
     throw new ApiClientError(
       'No vehicle baseline is available yet. Your workspace is ready; an administrator can add the sample catalog.',

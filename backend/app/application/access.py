@@ -87,6 +87,8 @@ def library_version(
             library_version(
                 session, principal, kind, getattr(version, key), shared=shared
             )
+    if resource == "cvt-designs" and version.belt_version_id:
+        library_version(session, principal, "belts", version.belt_version_id, shared=shared)
     return version
 
 

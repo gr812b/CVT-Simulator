@@ -208,6 +208,10 @@ def _current_assembly_document(
 
 def _normalize_contact(assembly: JsonDict, stored_execution: JsonDict) -> None:
     contact = assembly.setdefault("contact", {})
+    if "static_friction_coefficient" in contact and "kinetic_friction_coefficient" in contact:
+        # Current library revisions own contact properties. An old execution
+        # preset must never replace a user's saved hardware coefficients.
+        return
     traction = stored_execution.get("traction_law", {})
     if not isinstance(traction, dict):
         traction = {}

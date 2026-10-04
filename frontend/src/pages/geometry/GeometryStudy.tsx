@@ -11,7 +11,7 @@ import {
 } from '@api/client';
 import { simulationCaseGeometry } from '@api/simulationCaseGeometry';
 import { useSimulationCase } from '@contexts/SimulationCaseContext';
-import { formatProjectedQuantity, formatQuantity, type QuantityDimension } from '@utils/units';
+import { defaultDisplayUnit, siToDisplay, formatProjectedQuantity, formatQuantity, type QuantityDimension } from '@utils/units';
 import styles from './GeometryStudy.module.scss';
 
 type EditableGeometryField = {
@@ -185,7 +185,7 @@ export const GeometryStudy = () => {
             </div>
           </div>
           <div className={styles.fieldGrid}>
-            {FIELDS.map((field) => <QuantityInput key={field.path} {...field} valueSi={fieldValues.get(field.path) ?? 0} onChangeSi={(value) => setValueAtPath(field.path, value)} />)}
+            {FIELDS.map((field) => <QuantityInput key={field.path} label={field.label} description={field.description} min={field.minSi} unit={defaultDisplayUnit(field.dimension)} scale={siToDisplay(1, defaultDisplayUnit(field.dimension))} value={fieldValues.get(field.path) ?? 0} onChange={(value) => setValueAtPath(field.path, value)} />)}
           </div>
         </section>
 

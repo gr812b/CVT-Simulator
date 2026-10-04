@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
@@ -103,6 +103,8 @@ function makeCustomLoadCaseRoadProfile(segments: CustomLoadCaseSegment[]) {
  */
 export const Input = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedSetupId = searchParams.get('setup') ?? undefined;
   const { isLoading, loadingMessage, setLoading } = useLoading();
   const { runLibrarySetup, runSimulationDocument } = useRunSimulation();
   const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
@@ -125,10 +127,10 @@ export const Input = () => {
   const [customVehicleMassUnit, setCustomVehicleMassUnit] = useState<'kg' | 'lb'>('kg');
 
   const refreshSetup = useCallback(async () => {
-    setLoading(true, 'Loading seeded Baja run setup...');
+    setLoading(true, 'Loading the selected vehicle setup...');
     setSetupError(null);
     try {
-      const next = await getDefaultRunSetup();
+      const next = await getDefaultRunSetup(requestedSetupId);
       setSetup(next);
       setSelectedVehicleAssemblyId(next.selectedVehicleAssembly.id);
       setSelectedTuneId(next.selectedTune?.id ?? null);
@@ -141,7 +143,7 @@ export const Input = () => {
     } finally {
       setLoading(false);
     }
-  }, [setLoading]);
+  }, [setLoading, requestedSetupId]);
 
   useEffect(() => { void refreshSetup(); }, [refreshSetup]);
 
@@ -307,10 +309,10 @@ export const Input = () => {
           <Button text="Library" icon={ArrowLeft} onClick={() => navigate('/dashboard')} />
         </div>
         <div className={styles.sessionInfo} title={selectedVehicleAssembly?.description ?? setup.selectedVehicleAssembly.description ?? ''}>
-          <span className={styles.selectedSetName}>Baja Run Setup</span>
+          <span className={styles.selectedSetName}>Vehicle run setup</span>
           <span className={styles.changesBadge}>
             <span className={styles.changeIndicator} />
-            <span>{hasUnsavedTuneChanges ? 'Unsaved tune changes' : 'Seeded Baja baseline'}</span>
+            <span>{hasUnsavedTuneChanges ? 'Unsaved tune changes' : 'Saved vehicle setup'}</span>
           </span>
         </div>
         <div className={styles.topBarSpacer} />
@@ -321,7 +323,7 @@ export const Input = () => {
           <section className={styles.setupCard}>
             <h2>Baseline and simulation load</h2>
             <label className={styles.selectField}>
-              <span>Vehicle baseline</span>
+              <span>Vehicle setup</span>
               <select value={selectedVehicleAssemblyId ?? ''} onChange={(event) => void chooseVehicleAssembly(event.target.value)} disabled={setup.vehicleAssemblies.length === 0}>
                 {setup.vehicleAssemblies.map((assembly) => <option key={assembly.id} value={assembly.id}>{assembly.name}{assembly.isDefault ? ' · Default' : ''}</option>)}
               </select>
@@ -415,7 +417,7 @@ export const Input = () => {
               </div>
             )}
 
-            <p className={styles.helperText}>Engine and CVT hardware stay shared by the seeded Baja baselines. The vehicle dropdown changes the pinned output-system mass; the boxes below update the selected CVT tune only.</p>
+            <p className={styles.helperText}>Choose a saved vehicle setup with its pinned engine and CVT revisions. The fields below edit the selected tune.</p>
           </section>
 
           {GROUPS.filter(group => fields.some(field => field.group === group)).map((group) => (
@@ -453,12 +455,12 @@ export const Input = () => {
         <div className={styles.parameterInformationContainer}>
           <ParameterDescription
             name={setupError ?? activeField?.label ?? 'No tune parameter selected'}
-            description={setupError ?? activeField?.description ?? 'Click a tune input to see what DB tune key it edits. Vehicle baseline, load case, and execution are selected above; engine/CVT hardware stay pinned by the seeded baseline.'}
+            description={setupError ?? activeField?.description ?? 'Click a tune input to see what it changes. Select the vehicle setup and experiment above; the setup keeps its saved engine and CVT revisions.'}
             img={activeField?.image}
           />
           {activeField?.kind === 'ramp' && <RampPreview config={rampToEditor(valueForTuneField(activeField, tuneValues))} />}
           <section className={styles.summaryCard}>
-            <h2>Current DB selection</h2>
+            <h2>Current selection</h2>
             <dl>
               <dt>Vehicle</dt><dd>{selectedVehicleAssembly?.name ?? setup.selectedVehicleAssembly.name}</dd>
               <dt>Tune</dt><dd>{selectedTune?.name ?? 'None'}</dd>

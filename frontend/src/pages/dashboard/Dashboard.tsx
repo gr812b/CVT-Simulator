@@ -66,6 +66,7 @@ export function Dashboard() {
             performs.
           </Text>
         </div>
+        <Paper withBorder p="lg"><Group justify="space-between"><div><Title order={2} size="h3">Your physical library</Title><Text size="sm" c="dimmed">Create a vehicle setup, reuse engines and belts, and keep a history of every saved change.</Text></div><Button component={Link} to="/library/setups">Open library</Button></Group></Paper>
         <Paper withBorder p="xl" radius="lg">
           <Stack>
             <Group justify="space-between">

@@ -18,6 +18,7 @@ import {
   IconFlask,
   IconGeometry,
   IconHome,
+  IconLibrary,
   IconSettings,
   IconTool,
 } from '@tabler/icons-react';
@@ -29,6 +30,7 @@ import { LoadingProvider } from '@contexts/LoadingContext';
 
 const navigation = [
   { to: '/dashboard', label: 'Workspace', icon: IconHome },
+  { to: '/library', label: 'Physical library', icon: IconLibrary },
   { to: '/input', label: 'Tune & run', icon: IconTool },
   { to: '/playback', label: 'Run playback', icon: IconChartLine },
   { to: '/geometry', label: 'Geometry study', icon: IconGeometry },

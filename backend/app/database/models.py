@@ -198,6 +198,58 @@ class VersionedDraftMixin(TimestampMixin, SoftDeleteMixin):
     )
 
 
+class Belt(StringUUIDPrimaryKeyMixin, VersionedDraftMixin, Base):
+    __tablename__ = "belts"
+
+    released_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    forked_from_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    versions: Mapped[list["BeltVersion"]] = relationship(
+        back_populates="belt", foreign_keys="BeltVersion.belt_id"
+    )
+    released_version: Mapped["BeltVersion | None"] = relationship(
+        foreign_keys=[released_version_id], post_update=True
+    )
+
+
+class BeltVersion(StringUUIDPrimaryKeyMixin, Base):
+    __tablename__ = "belt_versions"
+    __table_args__ = (UniqueConstraint("belt_id", "version_number"),)
+
+    belt_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("belts.id", ondelete="CASCADE"), index=True
+    )
+    version_number: Mapped[int] = mapped_column(Integer)
+    belt_payload: Mapped[JsonDict] = mapped_column(JsonPayload)
+    summary: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict)
+    payload_hash: Mapped[str] = mapped_column(String(64), index=True)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    payload_schema_name: Mapped[str] = mapped_column(String(120))
+    payload_schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    validation_status: Mapped[str] = mapped_column(String(32), default="valid")
+    validation_messages: Mapped[list[JsonDict]] = mapped_column(JSON, default=list)
+    created_by_user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
+    release_notes: Mapped[str | None] = mapped_column(Text)
+    visibility_at_release: Mapped[str] = mapped_column(String(20))
+    attribution_institution_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("institutions.id", ondelete="SET NULL")
+    )
+    attribution_label: Mapped[str | None] = mapped_column(String(200))
+    superseded_by_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    deprecated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    belt: Mapped[Belt] = relationship(back_populates="versions", foreign_keys=[belt_id])
+
+
 class Engine(StringUUIDPrimaryKeyMixin, VersionedDraftMixin, Base):
     __tablename__ = "engines"
     __table_args__ = (
@@ -301,6 +353,9 @@ class CVTDesignVersion(StringUUIDPrimaryKeyMixin, Base):
     )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     cinder_assembly: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    belt_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="RESTRICT"), nullable=True
+    )
     tuning_schema: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
     summary: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)

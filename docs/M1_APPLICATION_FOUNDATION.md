@@ -41,7 +41,7 @@ Open `http://localhost:5173` and create an account. Vite proxies `/api` to port 
 
 `npm run dev` and `npm run build` regenerate OpenAPI and CINDER types. The generator uses `backend/venv`, or `CINDER_BACKEND_PYTHON` when explicitly set. Generated files are build artifacts and must not be edited by hand.
 
-The existing seed adds public vehicle baselines and load cases plus a system execution preset. Personal tunes remain private. A newly registered account starts with baseline tuning and can create a personal tune from the published parameter paths; the physical library editors, expanded sample seed, and revision workflows belong to M2.
+The existing seed adds public vehicle baselines and load cases plus a system execution preset. Personal tunes remain private. A newly registered account starts with baseline tuning and can create a personal tune from the published parameter paths. [M2 now provides the physical library editors, expanded sample seed, and revision workflows](M2_PHYSICAL_LIBRARY.md).
 
 ### Local password-reset mail
 

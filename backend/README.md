@@ -34,6 +34,13 @@ password-reset mail, existing-user credential setup, ownership rules, deployment
 configuration, and coding standards. Private API routes require a session and CSRF
 header; old examples that submit account/user IDs must use the authenticated client.
 
+## M2 physical library
+
+See [M2_PHYSICAL_LIBRARY.md](../docs/M2_PHYSICAL_LIBRARY.md) for the engine, belt,
+CVT, and vehicle editors; immutable revisions and pinned updates; additive samples;
+optional development fixtures; measurement conventions; and verification record.
+Upgrade with `alembic upgrade head` before seeding an existing database.
+
 ## Local development
 
 From `backend/`:
@@ -94,14 +101,10 @@ The current public CINDER document supports both constant-grade and distance-ind
 `piecewise_constant_grade` road profiles. The "90 m flat into 30° hill" seed executes
 as a true staged route: level ground until 90 m vehicle distance, then a 30° grade.
 
-The frontend's local `.env.example` points at these explicit demo IDs:
-
-```text
-VITE_DEMO_USER_ID=00000000-0000-4000-8000-000000000001
-VITE_DEMO_ACCOUNT_ID=00000000-0000-4000-8000-000000000002
-```
-
-These IDs are seed/test data only. Real auth should replace that boundary later.
+M2 also adds reusable belts, two fixed-pivot CVT examples, complete vehicle setups,
+and immutable sample revision history. Seeding is additive: rerunning it preserves
+existing edits. The frontend derives identity from the signed-in session; demo IDs
+are seed data and are not authentication settings.
 
 Use a custom SQLite path if desired:
 

@@ -7,10 +7,13 @@ CINDER contracts and study requests, then returns JSON-safe public projections.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import best_match
 
 import cinder
 from cinder.contracts import (
@@ -31,6 +34,7 @@ from cinder.contracts import (
     public_conventions,
     simulation_case_document_json_schema,
     simulation_result_json_schema,
+    validate_assembly_document,
     validate_simulation_case_document,
 )
 from cinder.model.cvt.actuation import (
@@ -121,6 +125,39 @@ class CinderGateway:
 
     def assembly_json_schema(self) -> dict[str, Any]:
         return assembly_document_json_schema()
+
+    def inline_assembly_json_schema(self) -> dict[str, Any]:
+        """Embed the canonical schema in OpenAPI without copying its fields."""
+        schema = self.assembly_json_schema()
+
+        def expand(value):
+            if isinstance(value, list):
+                return [expand(item) for item in value]
+            if not isinstance(value, dict):
+                return value
+            if "$ref" in value:
+                return expand(schema["$defs"][value["$ref"].rsplit("/", 1)[-1]])
+            return {
+                key: expand(item)
+                for key, item in value.items()
+                if key not in {"$defs", "$id", "$schema"}
+            }
+
+        return expand(schema)
+
+    def validate_assembly(self, document: Mapping[str, Any]) -> dict[str, Any]:
+        return validate_assembly_document(document).as_dict()
+
+    def validate_assembly_shape(self, document: dict[str, Any]) -> dict[str, Any]:
+        """Enforce the exact schema exported to the editor before persistence."""
+        json.dumps(document, allow_nan=False)
+        error = best_match(
+            Draft202012Validator(self.assembly_json_schema()).iter_errors(document)
+        )
+        if error is not None:
+            path = "/" + "/".join(str(part) for part in error.absolute_path)
+            raise ValueError(f"{path}: {error.message}")
+        return document
 
     def simulation_case_json_schema(self) -> dict[str, Any]:
         return simulation_case_document_json_schema()

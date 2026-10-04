@@ -23,6 +23,11 @@ def main() -> None:
         help="SQLAlchemy database URL. Defaults to CVT_DATABASE_URL or local SQLite.",
     )
     parser.add_argument(
+        "--development-fixtures",
+        action="store_true",
+        help="Also add two isolated passwordless local accounts and private setups (development only).",
+    )
+    parser.add_argument(
         "--preset-path",
         type=Path,
         default=None,
@@ -33,7 +38,17 @@ def main() -> None:
     settings = Settings.from_environment()
     if args.database_url is not None:
         settings = replace(settings, database_url=args.database_url)
+    if args.development_fixtures and settings.environment != "development":
+        parser.error("Development fixtures are unavailable in production.")
     create_and_seed_database(settings, preset_path=args.preset_path)
+    if args.development_fixtures:
+        from app.database.development_fixtures import seed_development_fixtures
+        from app.database.session import make_engine, make_session_factory
+
+        factory = make_session_factory(make_engine(settings.database_url))
+        with factory() as session:
+            seed_development_fixtures(session)
+            session.commit()
     print(f"Database created and seeded: {settings.database_url}")
 
 
