@@ -62,6 +62,8 @@ import { DifferenceList, PhysicalStatus } from './PhysicalStatus';
 import { RevisionHistory } from './RevisionHistory';
 import { VehicleEditor } from './VehicleEditor';
 import styles from './PhysicalEditor.module.scss';
+import { PublishDialog } from '../publicLibrary/PublishDialog';
+import { CopyAttribution } from '../publicLibrary/CopyAttribution';
 
 export function PhysicalEditorPage() {
   const { kind, objectId } = useParams();
@@ -349,6 +351,9 @@ function PhysicalEditor({
             to edit.
           </Alert>
         )}
+        {detail?.item.owned && (
+          <CopyAttribution kind={kind} objectId={objectId} />
+        )}
         {isNew && (
           <Alert color="blue" variant="light">
             The form starts with project example values. Replace them with your
@@ -386,6 +391,14 @@ function PhysicalEditor({
                     >
                       Check inputs
                     </Button>
+                    {detail?.item.owned &&
+                      (kind === 'setups' || kind === 'cvts') && (
+                        <PublishDialog
+                          kind={kind}
+                          objectId={objectId}
+                          disabled={busy || dirty || detail.item.archived}
+                        />
+                      )}
                     {detail && (
                       <Button
                         variant="default"

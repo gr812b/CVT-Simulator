@@ -98,6 +98,13 @@ function LibraryList({ kind }: { kind: PhysicalKind }) {
           </Tabs.List>
         </Tabs>
         <Group justify="space-between">
+          <Button
+            component={Link}
+            to={`/catalog?kind=${kind === 'cvts' ? 'cvts' : 'setups'}`}
+            variant="subtle"
+          >
+            Browse public setups & CVTs
+          </Button>
           <SegmentedControl
             value={scope}
             onChange={(value) =>

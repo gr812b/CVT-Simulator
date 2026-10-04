@@ -105,4 +105,7 @@ def seed_development_fixtures(session: Session) -> None:
             setup_revision_id=setup_revision_id,
             label=label,
         )
+        from app.database.publication_seed import seed_publication_fixtures
+
+        seed_publication_fixtures(session, account_id=account_id, setup_revision_id=setup_revision_id, label=label)
     session.flush()

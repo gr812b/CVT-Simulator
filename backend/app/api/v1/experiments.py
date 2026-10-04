@@ -15,6 +15,7 @@ from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.application.experiment_tuning import tune_surface
 from app.application.physical_library import differences
+from app.database.models import Run
 from app.schemas.experiments import (
     ExperimentArchive,
     ExperimentCompare,
@@ -90,6 +91,8 @@ def submit(
     )
     if previous:
         return jobs.status(previous)
+    if request.parent_run_id:
+        access.owned(session.get(Run, request.parent_run_id), principal)
     resolved = service.resolve(session, principal, container.settings, request)
     return jobs.status(
         jobs.submit(
@@ -103,6 +106,7 @@ def submit(
             source="experiment",
             case=resolved.simulation_case,
             provenance=resolved.provenance,
+            parent_run_id=request.parent_run_id,
         )
     )
 

@@ -56,7 +56,7 @@ Results and lightweight previews are persisted with the existing artifact contra
 
 An app-wide Activity control shows active work, recent runs and unread completion/failure/cancellation updates. Updates are persisted per user, including separate read state for users sharing one workspace. Reading someone else's notice is denied. Polling refreshes the UI; closing a tab or restarting the API does not cancel execution. Returning users can open the saved run and reload `/playback?run=<id>` directly.
 
-`/runs/:runId` provides honest status, cancellation, a frozen-input/solver identity panel, a parent-run link and result playback or rerun. The broader searchable results/history/export workflow remains M4. Multi-run comparison, public tune/run discovery, email and browser-push delivery remain deferred.
+`/runs/:runId` provides honest status, cancellation, a frozen-input/solver identity panel, a parent-run link and result playback or rerun. [M4 adds the searchable results/history/export workflow](M4_RESULTS_AND_PUBLIC_LIBRARY.md). Multi-run comparison, public tune/run discovery, email and browser-push delivery remain deferred.
 
 ## Run locally and deploy
 
@@ -139,4 +139,4 @@ Focused disposable acceptance checks were run outside the repository; no test su
 - Fresh migration and M2 upgrade with original revision/tune/run/artifact fields preserved; repeated normal and opt-in fixture seeding preserving every existing row and local edit.
 - Desktop and 390 px browser walkthrough: tune history and generated ramp fields; whoops parameters; section duplicate/reorder/delete; undo/redo; mouse dragging; keyboard and numeric point edits; save/reopen; blank-input blocking and unsaved-navigation confirmation; all three run actions, including an unsaved run without overwriting its saved tune; exact mass-override persistence; queued cancellation; archive/unarchive and tune duplication; closing the tab; returning to a persistent completion notice; playback and playback reload.
 
-M1–M3 are implemented. M4 remains the wider results and public vehicle/CVT library workflow. M5 remains broad E2E coverage, CI integration, release-environment verification and hardening. This milestone does not publish images, push the branch, or deploy the application.
+M1–M3 are implemented. [M4 implements the wider results and public vehicle/CVT library workflow](M4_RESULTS_AND_PUBLIC_LIBRARY.md). M5 remains broad E2E coverage, CI integration, release-environment verification and hardening. This milestone does not publish images, push the branch, or deploy the application.

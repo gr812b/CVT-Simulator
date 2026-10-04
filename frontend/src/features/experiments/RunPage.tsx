@@ -11,39 +11,49 @@ import {
   Paper,
   Stack,
   Text,
+  TextInput,
   Title,
 } from '@mantine/core';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  cancelRun,
-  getRun,
-  isActive,
-  message,
-  rerun,
-  type RunStatus,
-} from './api';
+import { cancelRun, isActive, message, rerun, type RunStatus } from './api';
 import { useRunActivity } from './RunActivity';
+import {
+  copyRunExperiment,
+  inspectRun,
+  renameRun,
+  type RunInspection,
+} from '../results/api';
+import { ResultDetails } from '../results/ResultDetails';
 
 export function RunPage() {
   const { runId } = useParams();
   const navigate = useNavigate();
   const { refresh, activity } = useRunActivity();
   const [run, setRun] = useState<RunStatus | null>(null);
+  const [inspection, setInspection] = useState<RunInspection | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const retryKey = useRef(crypto.randomUUID());
+  const copyKey = useRef(crypto.randomUUID());
   useEffect(() => {
     let disposed = false;
     let timer: ReturnType<typeof setTimeout>;
     setRun(null);
+    setInspection(null);
+    setEditingName(false);
     setError(null);
     retryKey.current = crypto.randomUUID();
+    copyKey.current = crypto.randomUUID();
     const poll = async () => {
       if (!runId) return;
       try {
-        const next = await getRun(runId);
+        const detail = await inspectRun(runId);
+        const next = detail.run;
         if (!disposed) {
           setRun(next);
+          setInspection(detail);
           setError(null);
           if (isActive(next)) timer = setTimeout(poll, 1500);
         }
@@ -73,12 +83,12 @@ export function RunPage() {
     }
   };
   return (
-    <Container size="md">
+    <Container size="lg" py="lg">
       <Stack>
         <Group justify="space-between">
           <Title order={1}>Simulation run</Title>
-          <Button component={Link} to="/input" variant="default">
-            New experiment
+          <Button component={Link} to="/runs" variant="default">
+            All runs
           </Button>
         </Group>
         {error && (
@@ -87,7 +97,7 @@ export function RunPage() {
           </Alert>
         )}
         {!run ? (
-          <Loader aria-label="Loading run" />
+          !error && <Loader aria-label="Loading run" />
         ) : (
           <>
             <Paper withBorder p="lg">
@@ -106,6 +116,52 @@ export function RunPage() {
                     {run.status}
                   </Badge>
                 </Group>
+                {editingName ? (
+                  <Group align="end">
+                    <TextInput
+                      label="Run name"
+                      value={name}
+                      maxLength={240}
+                      onChange={(event) => setName(event.currentTarget.value)}
+                    />
+                    <Button
+                      loading={busy}
+                      disabled={!name.trim()}
+                      onClick={() =>
+                        void act(async () => {
+                          const next = await renameRun(run.id, {
+                            name,
+                            expected_name: run.name ?? 'Simulation',
+                          });
+                          setRun(next);
+                          if (inspection)
+                            setInspection({ ...inspection, run: next });
+                          setEditingName(false);
+                        })
+                      }
+                    >
+                      Save name
+                    </Button>
+                    <Button
+                      variant="subtle"
+                      onClick={() => setEditingName(false)}
+                    >
+                      Cancel rename
+                    </Button>
+                  </Group>
+                ) : (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    w="fit-content"
+                    onClick={() => {
+                      setName(run.name ?? 'Simulation');
+                      setEditingName(true);
+                    }}
+                  >
+                    Rename run
+                  </Button>
+                )}
                 <Text size="sm" c="dimmed">
                   Submitted {new Date(run.submitted_at).toLocaleString()} ·
                   CINDER {run.cinder_package_version}
@@ -134,7 +190,7 @@ export function RunPage() {
                   </Alert>
                 )}
                 <Group>
-                  {run.status === 'completed' && (
+                  {inspection?.availability.full_result && (
                     <Button component={Link} to={`/playback?run=${run.id}`}>
                       Open result playback
                     </Button>
@@ -175,7 +231,32 @@ export function RunPage() {
                       Original run
                     </Button>
                   )}
+                  <Button
+                    variant="default"
+                    loading={busy}
+                    disabled={
+                      !inspection ||
+                      !!inspection.experiment_copy_unavailable_reason
+                    }
+                    onClick={() =>
+                      void act(async () => {
+                        const copied = await copyRunExperiment(
+                          run.id,
+                          copyKey.current,
+                        );
+                        navigate(
+                          `/input?setup=${copied.item.id}&scenario=${copied.scenario_id}&source_run=${run.id}`,
+                        );
+                      })
+                    }
+                  >
+                    New experiment from this run
+                  </Button>
                 </Group>
+                <Text size="sm" c="dimmed">
+                  {inspection?.experiment_copy_unavailable_reason ??
+                    'Starting a new experiment makes a private copy of this run’s frozen hardware, tuning, mass and scenario. Review and edit it before submitting.'}
+                </Text>
                 {!isActive(run) && (
                   <Text size="sm" c="dimmed">
                     A rerun creates a new record using these frozen inputs and
@@ -185,6 +266,9 @@ export function RunPage() {
                 )}
               </Stack>
             </Paper>
+            {inspection && (
+              <ResultDetails key={run.id} inspection={inspection} />
+            )}
             <Accordion variant="separated">
               <Accordion.Item value="provenance">
                 <Accordion.Control>

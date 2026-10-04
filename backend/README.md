@@ -48,6 +48,13 @@ revisions, the road editor contract, queue/notification behavior, resource limit
 migration precautions and the verification record. Every simulation submission
 now requires an idempotency `request_key` and executes in a separate durable worker.
 
+## M4 results and public configurations
+
+See [M4_RESULTS_AND_PUBLIC_LIBRARY.md](../docs/M4_RESULTS_AND_PUBLIC_LIBRARY.md) for
+searchable run history, exact exports, frozen experiment copying, fixed publication
+bundles, explicit dependency consent and independent copies. Migration `20261004_0008`
+adds publication/copy history without modifying existing scientific records.
+
 ## Local development
 
 From `backend/`:
@@ -120,6 +127,10 @@ are seed data and are not authentication settings.
 M3 adds revisioned flat, hill and whoops scenarios plus an illustrative two-revision
 tune. Optional `--development-fixtures` also adds clearly labeled queued, failed
 and cancelled runs in the isolated fixture accounts. It never fabricates results.
+
+M4 adds four intentionally listed setup/CVT publication samples. Opt-in fixtures
+also exercise listed and unlisted sharing. Repeated seeding preserves their access
+settings and existing snapshots.
 
 Use a custom SQLite path if desired:
 

@@ -151,6 +151,20 @@ export function ExperimentPage() {
         setSetups(available);
         setTunes(savedTunes);
         setScenarios(savedScenarios);
+        if (params.get('scenario')) {
+          const saved = await getExperiment(params.get('scenario')!);
+          if (disposed) return;
+          if (saved.document.kind === 'scenarios') {
+            resetScenario(saved.document);
+            setScenarioDetail(saved);
+          }
+        }
+        if (params.get('source_run')) {
+          setRunName('New experiment from saved run');
+          setNotice(
+            'This private setup contains the original run’s frozen hardware, tuning and mass. Its copied scenario is selected. Changes here do not alter the original run.',
+          );
+        }
         const selected =
           available.find((item) => item.id === params.get('setup')) ??
           available[0];
@@ -250,6 +264,7 @@ export function ExperimentPage() {
         ...selection,
         tune_revision_id: saved?.item.revision_id,
         name: runName.trim() || 'Experiment',
+        parent_run_id: params.get('source_run'),
       };
       const fingerprint = JSON.stringify(body);
       if (request.current.fingerprint !== fingerprint)

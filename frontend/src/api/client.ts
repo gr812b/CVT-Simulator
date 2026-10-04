@@ -163,7 +163,6 @@ export interface DefaultRunSetup {
   selection: LibraryRunSelection;
 }
 
-export type RunPreview = Camel<Schema['RunPreview']>;
 
 type JsonObject = Record<string, unknown>;
 
@@ -744,21 +743,6 @@ export async function submitLibraryRun(selection: LibraryRunSelection, requestKe
     }),
   );
   return parseRunStatus(data);
-}
-
-export async function getRunPreview(runId: string): Promise<RunPreview> {
-  const data = dataOrThrow(
-    await client.GET('/api/v1/runs/{run_id}/preview', { params: { path: { run_id: runId } } }),
-  );
-  const envelope = object(data, 'run preview response');
-  const preview = object(envelope.preview, 'run preview');
-  return {
-    profileName: string(preview.profile_name, 'preview.profile_name'),
-    profileVersion: number(preview.profile_version, 'preview.profile_version'),
-    originalRowCount: number(preview.original_row_count, 'preview.original_row_count'),
-    rowCount: number(preview.row_count, 'preview.row_count'),
-    columns: object(preview.columns, 'preview.columns') as Record<string, Array<number | null>>,
-  };
 }
 
 export async function listPresets(): Promise<PresetSummary[]> {

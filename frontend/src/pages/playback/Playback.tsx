@@ -49,16 +49,16 @@ const PlaybackContent = ({
       <div className={styles.buttonsContainer}>
         <div className={styles.leftButtons}>
           <Button
-            text="Home"
+            text="Run details"
             icon={Home}
             className={styles.navigateButton}
-            onClick={() => pauseNavigate('/')}
+            onClick={() => pauseNavigate(`/runs/${run.run.id}`)}
           />
           <Button
-            text="Tune Setup"
+            text="Run history"
             icon={Edit}
             className={styles.navigateButton}
-            onClick={() => pauseNavigate('/input')}
+            onClick={() => pauseNavigate('/runs')}
           />
         </div>
         <div className={styles.rightButtons}>

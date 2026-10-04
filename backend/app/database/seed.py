@@ -140,6 +140,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
         from app.database.experiment_seed import seed_experiments
 
         seed_experiments(session)
+        from app.database.publication_seed import seed_publications
+
+        seed_publications(session)
         return
 
     user = User(
@@ -512,6 +515,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     from app.database.experiment_seed import seed_experiments
 
     seed_experiments(session)
+    from app.database.publication_seed import seed_publications
+
+    seed_publications(session)
 
 
 def _seed_validation_workspace(session: Session) -> None:

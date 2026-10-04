@@ -101,12 +101,24 @@ class TuningSchema(TypedDict):
 
 
 @with_config(ConfigDict(extra="allow"))
+class PreviewColumn(TypedDict):
+    key: str
+    label: str
+    canonical_unit: str
+    dimension: str
+    group: str
+    description: str
+    values: list[float | None]
+
+
+@with_config(ConfigDict(extra="allow"))
 class RunPreview(TypedDict):
     profile_name: str
     profile_version: int
     original_row_count: int
-    row_count: int
-    columns: dict[str, list[float | None]]
+    preview_row_count: int
+    axis_key: str | None
+    columns: list[PreviewColumn]
 
 
 @with_config(ConfigDict(extra="forbid"))

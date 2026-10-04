@@ -788,5 +788,6 @@ class FavoriteRun(Base):
 # Register authentication tables for Alembic and local create_all bootstrapping.
 from app.database.auth_models import AuthSession, PasswordResetToken, AuthRateLimit  # noqa: E402,F401
 from app.database.experiment_models import Experiment, ExperimentRevision, RunNotification  # noqa: E402,F401
+from app.database.publication_models import ConfigurationCopy, PhysicalPublication  # noqa: E402,F401
 
 Index("uq_users_email_normalized", func.lower(User.email), unique=True)

@@ -1,0 +1,6 @@
+.configuration input:disabled,
+.configuration textarea:disabled {
+  color: var(--mantine-color-text);
+  opacity: 1;
+  cursor: default;
+}

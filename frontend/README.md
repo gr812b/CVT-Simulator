@@ -2,7 +2,8 @@
 
 The frontend is a Vite/React application using authenticated, generated API contracts.
 See [M1 standards](../docs/M1_APPLICATION_FOUNDATION.md), [M2 physical editors](../docs/M2_PHYSICAL_LIBRARY.md),
-and [M3 experiments/jobs](../docs/M3_EXPERIMENTS_AND_JOBS.md) for the current baseline.
+[M3 experiments/jobs](../docs/M3_EXPERIMENTS_AND_JOBS.md), and
+[M4 results/public library](../docs/M4_RESULTS_AND_PUBLIC_LIBRARY.md) for the current baseline.
 
 ## Local development
 
@@ -39,6 +40,11 @@ undo/redo. Every normal run is frozen and queued through `/experiments/runs`.
 Activity shows persisted notifications, status/cancellation and recent results;
 `/playback?run=<id>` reloads a saved result. Dashboard/demo shortcuts use the same
 durable queue through the legacy library selection adapter.
+
+Runs & results (`/runs`) adds search, filters, stored metrics, full-data exports and
+new experiments from frozen configurations. `/catalog` is the anonymous public
+setup/CVT library. Publishing a saved revision requires explicit sharing consent;
+copying creates independent private items and retains source attribution.
 
 API types derive from generated OpenAPI/CINDER schemas. Use shared feature
 clients and `api/transport.ts`, Mantine controls, `QuantityInput`, and the central

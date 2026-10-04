@@ -208,7 +208,9 @@ def _lock_current(session, principal, kind, object_id, expected):
     return obj
 
 
-def _save_choice(session, principal, kind, choice, *, duplicate=False):
+def _save_choice(
+    session, principal, kind, choice, *, duplicate=False, tuning_schema=None
+):
     document = DOCUMENTS[kind](kind=kind, **choice.model_dump(exclude={"revision_id"}))
     parent = source = None
     if choice.revision_id:
@@ -233,6 +235,7 @@ def _save_choice(session, principal, kind, choice, *, duplicate=False):
         note="Saved with a physical setup.",
         duplicate=duplicate,
         forked_from=source.id if source and not own else None,
+        tuning_schema=tuning_schema,
     )
     return choice_for_revision(session, principal, kind, obj.released_version_id)
 
@@ -286,6 +289,7 @@ def save_document(
     note: str = "",
     duplicate: bool = False,
     forked_from: str | None = None,
+    tuning_schema: dict | None = None,
 ):
     principal.require_write()
     document = normalize_document(document)
@@ -324,7 +328,12 @@ def save_document(
             session, principal, "engines", document.data.engine, duplicate=duplicate
         )
         document.data.cvt = _save_choice(
-            session, principal, "cvts", document.data.cvt, duplicate=duplicate
+            session,
+            principal,
+            "cvts",
+            document.data.cvt,
+            duplicate=duplicate,
+            tuning_schema=tuning_schema,
         )
     document = normalize_document(document)
     validation, _ = validate_physical(document)
@@ -365,7 +374,11 @@ def save_document(
             source = _revision(session, principal, kind, forked_from)
         release["tuning_schema"] = readable_tuning_schema(
             document.data.assembly,
-            source.tuning_schema if source else _default_tuning_schema(),
+            tuning_schema
+            if tuning_schema is not None
+            else source.tuning_schema
+            if source
+            else _default_tuning_schema(),
         )
         obj.draft_payload = {
             "cinder_assembly": document.data.assembly,

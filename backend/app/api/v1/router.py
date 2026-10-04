@@ -14,6 +14,8 @@ from . import (
     physical_library,
     presets,
     primary_design,
+    publications,
+    results,
     runs,
     simulation_cases,
     studies,
@@ -26,6 +28,8 @@ router = APIRouter(
     }
 )
 router.include_router(auth.router)
+router.include_router(publications.router)
+router.include_router(results.router, dependencies=[Depends(get_current_principal)])
 router.include_router(experiments.router, dependencies=[Depends(get_current_principal)])
 router.include_router(metadata.router)
 router.include_router(library.router, dependencies=[Depends(get_current_principal)])

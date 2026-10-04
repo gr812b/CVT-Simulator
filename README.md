@@ -14,8 +14,9 @@ from Docker images; the application source repository does not need to be
 checked out on the server.
 
 Implementation references: [M1 foundation and coding standards](docs/M1_APPLICATION_FOUNDATION.md),
-[M2 physical library](docs/M2_PHYSICAL_LIBRARY.md), and
-[M3 experiments and durable jobs](docs/M3_EXPERIMENTS_AND_JOBS.md).
+[M2 physical library](docs/M2_PHYSICAL_LIBRARY.md),
+[M3 experiments and durable jobs](docs/M3_EXPERIMENTS_AND_JOBS.md), and
+[M4 results and public configurations](docs/M4_RESULTS_AND_PUBLIC_LIBRARY.md).
 M3 requires a separate worker process. Before the first M2→M3 deployment, back up
 the database and stop/drain the old API processes; do not migrate underneath
 an in-flight synchronous computation. Testing CI and broad E2E work remain M5.

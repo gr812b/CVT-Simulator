@@ -61,6 +61,21 @@ const RunPage = lazy(() =>
     default: Page,
   })),
 );
+const RunHistory = lazy(() =>
+  import('../../features/results/RunHistory').then(({ RunHistory }) => ({
+    default: RunHistory,
+  })),
+);
+const PublicLibrary = lazy(() =>
+  import('../../features/publicLibrary/PublicLibrary').then(
+    ({ PublicLibrary }) => ({ default: PublicLibrary }),
+  ),
+);
+const Publication = lazy(() =>
+  import('../../features/publicLibrary/PublicationPage').then(
+    ({ PublicationPage }) => ({ default: PublicationPage }),
+  ),
+);
 
 /**
  * Keep the landing route light. Secondary pages load only after navigation, so
@@ -76,6 +91,8 @@ export const App = () => (
   >
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/catalog" element={<PublicLibrary />} />
+      <Route path="/catalog/:publicationId" element={<Publication />} />
       <Route path="/login" element={<AuthPage key="login" mode="login" />} />
       <Route
         path="/register"
@@ -98,6 +115,7 @@ export const App = () => (
         <Route path="/demo" element={<Demo />} />
         <Route path="/input" element={<Input />} />
         <Route path="/runs/:runId" element={<RunPage />} />
+        <Route path="/runs" element={<RunHistory />} />
         <Route path="/playback" element={<Playback />} />
         <Route path="/geometry" element={<GeometryStudy />} />
         <Route path="/validation" element={<Validation />} />

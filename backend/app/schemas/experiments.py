@@ -302,3 +302,4 @@ class ExperimentPreview(ExperimentModel):
 class SubmitExperiment(ExperimentSelection):
     request_key: str = Field(min_length=16, max_length=64)
     name: Name = "Simulation"
+    parent_run_id: str | None = None

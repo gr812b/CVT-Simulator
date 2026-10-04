@@ -14,11 +14,20 @@ import {
   Title,
 } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { IconArrowRight, IconFlask, IconGeometry, IconPlayerPlay } from '@tabler/icons-react';
+import {
+  IconArrowRight,
+  IconFlask,
+  IconGeometry,
+  IconPlayerPlay,
+} from '@tabler/icons-react';
 import { useAuth } from '@contexts/AuthContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useRunSimulation } from '@hooks/useRunSimulation';
-import { buildRunSetupForVehicle, getDefaultRunSetup, type DefaultRunSetup } from '@api/client';
+import {
+  buildRunSetupForVehicle,
+  getDefaultRunSetup,
+  type DefaultRunSetup,
+} from '@api/client';
 
 export function Dashboard() {
   const { session } = useAuth();
@@ -33,7 +42,11 @@ export function Dashboard() {
     try {
       setSetup(await getDefaultRunSetup());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to load your workspace.');
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Unable to load your workspace.',
+      );
     } finally {
       setBusy(false);
     }
@@ -48,7 +61,11 @@ export function Dashboard() {
     try {
       setSetup(await buildRunSetupForVehicle(setup.vehicleAssemblies, id));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to load this vehicle.');
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Unable to load this vehicle.',
+      );
     } finally {
       setBusy(false);
     }
@@ -62,11 +79,47 @@ export function Dashboard() {
           </Badge>
           <Title order={1}>Welcome, {session?.user.display_name}.</Title>
           <Text c="dimmed" mt="sm">
-            A place to configure your drivetrain, explore its geometry, and understand how it
-            performs.
+            A place to configure your drivetrain, explore its geometry, and
+            understand how it performs.
           </Text>
         </div>
-        <Paper withBorder p="lg"><Group justify="space-between"><div><Title order={2} size="h3">Your physical library</Title><Text size="sm" c="dimmed">Create a vehicle setup, reuse engines and belts, and keep a history of every saved change.</Text></div><Button component={Link} to="/library/setups">Open library</Button></Group></Paper>
+        <Paper withBorder p="lg">
+          <Group justify="space-between">
+            <div>
+              <Title order={2} size="h3">
+                Your physical library
+              </Title>
+              <Text size="sm" c="dimmed">
+                Create a vehicle setup, reuse engines and belts, and keep a
+                history of every saved change.
+              </Text>
+            </div>
+            <Button component={Link} to="/library/setups">
+              Open library
+            </Button>
+          </Group>
+        </Paper>
+        <Paper withBorder p="lg">
+          <Group justify="space-between">
+            <div>
+              <Title order={2} size="h3">
+                Runs & public configurations
+              </Title>
+              <Text size="sm" c="dimmed">
+                Find past results or copy a published setup to begin your next
+                experiment.
+              </Text>
+            </div>
+            <Group>
+              <Button component={Link} to="/runs" variant="light">
+                Run history
+              </Button>
+              <Button component={Link} to="/catalog" variant="default">
+                Public library
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
         <Paper withBorder p="xl" radius="lg">
           <Stack>
             <Group justify="space-between">
@@ -76,13 +129,18 @@ export function Dashboard() {
               {busy && <Loader size="sm" aria-label="Loading baselines" />}
             </Group>
             <Text size="sm" c="dimmed">
-              Choose a released setup from your workspace or the sample catalog. Runs are saved to
-              your account.
+              Choose a released setup from your workspace or the sample catalog.
+              Runs are saved to your account.
             </Text>
             {error && (
               <Alert color="yellow" role="alert" title="Baseline unavailable">
                 {error}
-                <Button variant="subtle" size="xs" onClick={() => void load()} ml="sm">
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => void load()}
+                  ml="sm"
+                >
                   Try again
                 </Button>
               </Alert>
@@ -112,7 +170,11 @@ export function Dashboard() {
                   <Button
                     leftSection={<IconPlayerPlay size={18} />}
                     loading={isLoading}
-                    disabled={busy || !setup.selectedLoadCase || !setup.selectedExecutionPreset}
+                    disabled={
+                      busy ||
+                      !setup.selectedLoadCase ||
+                      !setup.selectedExecutionPreset
+                    }
                     onClick={() => void runLibrarySetup(setup.selection)}
                   >
                     Run simulation
@@ -157,7 +219,8 @@ export function Dashboard() {
                 Validate with measurements
               </Title>
               <Text size="sm" c="dimmed">
-                Bring in dyno data and compare measured signals with your simulation.
+                Bring in dyno data and compare measured signals with your
+                simulation.
               </Text>
               <Button component={Link} to="/validation" variant="light">
                 Open dyno validation
