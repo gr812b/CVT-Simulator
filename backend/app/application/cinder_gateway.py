@@ -126,7 +126,7 @@ class CinderGateway:
     def assembly_json_schema(self) -> dict[str, Any]:
         return assembly_document_json_schema()
 
-    def inline_assembly_json_schema(self) -> dict[str, Any]:
+    def inline_assembly_json_schema(self, definition: str | None = None) -> dict[str, Any]:
         """Embed the canonical schema in OpenAPI without copying its fields."""
         schema = self.assembly_json_schema()
 
@@ -143,7 +143,7 @@ class CinderGateway:
                 if key not in {"$defs", "$id", "$schema"}
             }
 
-        return expand(schema)
+        return expand(schema if definition is None else schema["$defs"][definition])
 
     def validate_assembly(self, document: Mapping[str, Any]) -> dict[str, Any]:
         return validate_assembly_document(document).as_dict()

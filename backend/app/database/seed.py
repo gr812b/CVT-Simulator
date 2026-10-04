@@ -137,6 +137,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
         from app.database.physical_seed import seed_physical_catalog
 
         seed_physical_catalog(session)
+        from app.database.experiment_seed import seed_experiments
+
+        seed_experiments(session)
         return
 
     user = User(
@@ -506,6 +509,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     from app.database.physical_seed import seed_physical_catalog
 
     seed_physical_catalog(session)
+    from app.database.experiment_seed import seed_experiments
+
+    seed_experiments(session)
 
 
 def _seed_validation_workspace(session: Session) -> None:

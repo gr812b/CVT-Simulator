@@ -12,7 +12,14 @@ from app.database.auth_models import AuthRateLimit
 
 
 def throttle(
-    request: Request, action: str, identifier: str, *, limit: int, seconds: int
+    request: Request,
+    action: str,
+    identifier: str,
+    *,
+    limit: int,
+    seconds: int,
+    error_code: str = "auth_rate_limited",
+    message: str = "Too many attempts. Please try again later.",
 ) -> None:
     now = time.time()
     window = int(now // seconds)
@@ -38,8 +45,8 @@ def throttle(
     if count > limit:
         raise ApiProblem(
             429,
-            "auth_rate_limited",
-            "Too many attempts. Please try again later.",
+            error_code,
+            message,
             {"retry_after_seconds": max(1, int(expires.timestamp() - now))},
         )
 

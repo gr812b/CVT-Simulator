@@ -86,7 +86,7 @@ def seed_development_fixtures(session: Session) -> None:
             "cvt-designs", "cvt:r1", refs={"belt_version_id": belt_id}
         )
         output_id = copy_component("output-systems", "vehicle:r2")
-        copy_component(
+        setup_revision_id = copy_component(
             "vehicle-assemblies",
             "setup:r2",
             refs={
@@ -95,5 +95,14 @@ def seed_development_fixtures(session: Session) -> None:
                 "output_system_version_id": output_id,
                 "assembly_payload": {},
             },
+        )
+        from app.database.experiment_seed import seed_experiment_fixtures
+
+        seed_experiment_fixtures(
+            session,
+            account_id=account_id,
+            user_id=user_id,
+            setup_revision_id=setup_revision_id,
+            label=label,
         )
     session.flush()

@@ -146,9 +146,8 @@ def resolve_simulation_case(
         },
     }
 
-    # Match backend.app.database.runs.executable_contract for the current V1
-    # database schema/cache implementation. The aliases above ensure engine and
-    # output-system differences remain part of the cache key.
+    # Compatibility fingerprint for older callers. Durable M3 jobs compute their
+    # own hash from canonical host/shaft boundaries, execution and solver identity.
     document["contract_hash"] = canonical_json_hash(
         {
             key: copy.deepcopy(document[key])

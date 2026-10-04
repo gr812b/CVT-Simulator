@@ -13,6 +13,13 @@ backend, and the CINDER simulation model. Published deployments run entirely
 from Docker images; the application source repository does not need to be
 checked out on the server.
 
+Implementation references: [M1 foundation and coding standards](docs/M1_APPLICATION_FOUNDATION.md),
+[M2 physical library](docs/M2_PHYSICAL_LIBRARY.md), and
+[M3 experiments and durable jobs](docs/M3_EXPERIMENTS_AND_JOBS.md).
+M3 requires a separate worker process. Before the first M2→M3 deployment, back up
+the database and stop/drain the old API processes; do not migrate underneath
+an in-flight synchronous computation. Testing CI and broad E2E work remain M5.
+
 ## Production Docker deployment
 
 The repository publishes two public images to GitHub Container Registry:
@@ -24,22 +31,17 @@ ghcr.io/gr812b/cvt-simulator-frontend
 
 The root `docker-compose.yaml` is the canonical production deployment. It runs:
 
-```text
-reverse proxy
-    |
-    v
-cvt-frontend
-    |
-    | /api/v1/*
-    v
-cvt-backend
-    |
-    v
-PostgreSQL 17
-    |
-    v
-Docker named volume
+```mermaid
+flowchart TD
+  Proxy[Reverse proxy] --> Frontend[cvt-frontend]
+  Frontend --> API[cvt-backend]
+  API <--> DB[PostgreSQL 17]
+  Worker[cvt-worker] <--> DB
+  Worker --> Child[Bounded CINDER process]
 ```
+
+PostgreSQL data lives in a Docker named volume. The API and worker use the same
+backend image; the worker starts after the API's migration/health check.
 
 PostgreSQL is fully containerized. You do **not** install PostgreSQL, Python,
 Node, Alembic, or the CVT-Simulator repository on the server.
@@ -348,7 +350,7 @@ the new backend image is deployed is recommended.
 Stop application traffic first:
 
 ```bash
-docker compose stop cvt-frontend cvt-backend
+docker compose stop cvt-frontend cvt-backend cvt-worker
 ```
 
 Recreate the database:
@@ -397,6 +399,12 @@ Follow frontend logs:
 docker compose logs -f cvt-frontend
 ```
 
+Follow simulation worker logs:
+
+```bash
+docker compose logs -f cvt-worker
+```
+
 Follow PostgreSQL logs:
 
 ```bash
@@ -406,7 +414,7 @@ docker compose logs -f postgres
 Restart only the application:
 
 ```bash
-docker compose restart cvt-backend cvt-frontend
+docker compose restart cvt-backend cvt-frontend cvt-worker
 ```
 
 See the current database migration revision:

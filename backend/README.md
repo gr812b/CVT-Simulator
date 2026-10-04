@@ -41,6 +41,13 @@ CVT, and vehicle editors; immutable revisions and pinned updates; additive sampl
 optional development fixtures; measurement conventions; and verification record.
 Upgrade with `alembic upgrade head` before seeding an existing database.
 
+## M3 experiments and durable jobs
+
+See [M3_EXPERIMENTS_AND_JOBS.md](../docs/M3_EXPERIMENTS_AND_JOBS.md) for named tune/scenario
+revisions, the road editor contract, queue/notification behavior, resource limits,
+migration precautions and the verification record. Every simulation submission
+now requires an idempotency `request_key` and executes in a separate durable worker.
+
 ## Local development
 
 From `backend/`:
@@ -55,6 +62,10 @@ alembic upgrade head
 python -m app.scripts.init_database
 uvicorn app.main:app --reload
 ```
+
+In another backend terminal with the same environment/database, start
+`python -m app.scripts.run_worker`. The worker requires POSIX; use the Linux
+backend container on Windows. Without a worker, accepted simulations stay queued.
 
 `requirements.txt` is the backend runtime dependency list. CINDER is installed
 from PyPI at the exact version pinned there, so local, CI, and production runs
@@ -72,12 +83,12 @@ The API is served at `http://localhost:8000/api/v1`; Swagger UI is at
 
 ## Database setup
 
-The database is wired into library/object-management endpoints and the
-resolver-backed run endpoint. `POST /api/v1/runs/from-library` accepts released
-database object IDs, freezes the resolved CINDER contract, executes the run,
-stores permanent summaries, a durable downsampled preview artifact, an evictable
-full-result artifact, and reuses cached results. The original `POST /api/v1/runs`
-direct-contract endpoint remains available for debugging and comparison.
+The database stores library objects, immutable experiment revisions and durable
+jobs. `POST /api/v1/experiments/runs` resolves the current experiment and freezes it;
+`POST /api/v1/runs/from-library` retains the legacy selection adapter. Both return
+202 after admission. A standalone worker persists summaries, previews and full
+results. Direct/debug and validation submissions use the same queue and limits.
+New jobs do not reuse the legacy global cache; existing artifacts stay readable.
 
 ### Option A: local SQLite database
 
@@ -105,6 +116,10 @@ M2 also adds reusable belts, two fixed-pivot CVT examples, complete vehicle setu
 and immutable sample revision history. Seeding is additive: rerunning it preserves
 existing edits. The frontend derives identity from the signed-in session; demo IDs
 are seed data and are not authentication settings.
+
+M3 adds revisioned flat, hill and whoops scenarios plus an illustrative two-revision
+tune. Optional `--development-fixtures` also adds clearly labeled queued, failed
+and cancelled runs in the isolated fixture accounts. It never fabricates results.
 
 Use a custom SQLite path if desired:
 
@@ -148,8 +163,11 @@ Alembic owns production migrations:
 
 ```bash
 alembic upgrade head
-alembic downgrade -1
 ```
+
+Back up first and stop/drain pre-M3 API processes for the first M3 upgrade. The M3
+downgrade refuses to delete history: restore the verified backup and compatible
+application instead. See the milestone document for the exact migration behavior.
 
 For unit tests and disposable SQLite files, `app.database.bootstrap.create_database`
 uses the ORM metadata directly. Production databases should always advance through
@@ -216,6 +234,11 @@ docker run --rm cvt-simulator-api python -c "from pathlib import Path; print((Pa
 
 ## Black-box API testing
 
+The scripts below predate M3's required request keys, authentication and durable
+worker contract. They are not current passing coverage. Per the implementation
+baseline, adaptation and committed E2E/CI integration are deferred to M5; see the
+M3 verification record for the focused checks performed during implementation.
+
 A manual end-to-end test plan is included in [`docs/BLACK_BOX_TESTING.md`](docs/BLACK_BOX_TESTING.md). It covers seeded library data, draft/release/fork/archive flows, library-resolved runs, direct-run comparison, cache reuse, preview artifacts, and full-result eviction/regeneration expectations.
 
 For the automated version of the same flow, run:
@@ -243,7 +266,11 @@ POST /api/v1/library/{resource}/{object_id}/release
 POST /api/v1/library/{resource}/versions/{version_id}/fork
 POST /api/v1/library/{resource}/versions/{version_id}/deprecate
 POST /api/v1/library/{resource}/{object_id}/archive
-GET/POST/PATCH /api/v1/library/tunes
+GET /api/v1/library/tunes                 legacy reads; POST/PATCH return 410
+GET/POST/PUT /api/v1/experiments/*         revisioned tunes and scenarios
+POST /api/v1/experiments/road/resolve
+POST /api/v1/experiments/preview
+POST /api/v1/experiments/runs             freeze and queue an experiment
 GET/POST/PATCH /api/v1/library/load-cases
 GET/POST/PATCH /api/v1/library/execution-presets
 POST /api/v1/simulation-cases/validate
@@ -258,17 +285,16 @@ GET  /api/v1/runs/{run_id}
 GET  /api/v1/runs/{run_id}/input
 GET  /api/v1/runs/{run_id}/preview
 GET  /api/v1/runs/{run_id}/result
+POST /api/v1/runs/{run_id}/cancel
+GET  /api/v1/runs/activity
+POST /api/v1/runs/notices/{notice_id}/read
 ```
 
-Static studies return synchronously. Direct-contract simulations are
-process-backed debug resources. Library-resolved runs are persisted in the
-database and currently execute inline inside the request in V1 so the frozen
-input contract, summaries, cache row, and full-result artifact can be verified
-end-to-end before introducing a background DB worker. Product reruns should use
-`POST /api/v1/runs/{run_id}/rerun`, which reuses the stored frozen input and
-persists the regenerated output. All paths report only honest lifecycle states:
-`queued`, `validating`, `running`, `completed`, `failed`, or `timed_out`; there
-is no invented percent progress.
+Static engineering studies still return synchronously. Simulations all use the
+durable queue, with one queued/running job per account. Reruns create new records
+from frozen input. States are `queued`, `running`, `completed`, `failed`,
+`timed_out` and `cancelled`; the legacy `validating` transport value remains
+readable. There is no invented percentage progress.
 
 ## Type generation
 

@@ -102,11 +102,11 @@ Production SMTP delivery and the real deployment database must be checked in the
 | --- | --- |
 | M1 | Accounts, ownership, application shell, shared theme/components, generated API contracts. |
 | M2 | Physical library editors, belts, immutable revisions, and a useful set of default sample records. |
-| M3 | Flexible scenarios and custom hills, approachable point/feature editing (including repeated whoops), durable jobs independent of HTTP requests, completion notifications, and a per-user limit on outstanding queued/running work. |
+| M3 | Revisioned tunes/scenarios and custom hills, approachable point/feature editing (including repeated whoops), durable jobs independent of HTTP requests, completion notifications, and one outstanding queued/running job per account/workspace. Implemented in [M3](M3_EXPERIMENTS_AND_JOBS.md). |
 | M4 | Results workflow and public vehicle/CVT library. Multi-run comparison is future work; public tunes/runs are lower priority. |
 | M5 | E2E coverage, CI integration, and release hardening. Unit tests are not the focus. |
 
-M1 deliberately retains the existing synchronous persisted-run execution and process-local engineering caches. Queue durability, completion notifications, and the one-outstanding-run policy are M3 work. Email verification, teams/invitations, billing, social login, and account deletion are outside this milestone.
+M1 originally retained synchronous persisted-run execution. [M3](M3_EXPERIMENTS_AND_JOBS.md) replaces it with a standalone durable worker, completion notices and the one-outstanding-run policy; local simulation development now requires that worker. Process-local engineering-study caches remain separate. Email verification, teams/invitations, billing, social login, and account deletion are outside these milestones.
 
 ## Verification record
 

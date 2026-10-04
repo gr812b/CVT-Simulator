@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './Playback.module.scss';
 import { Button } from '@components/button/Button';
 import { Graph2D } from '@components/graph2D/graph2D';
@@ -15,7 +15,6 @@ import { buildReportGraphs } from './reportGraphs';
 import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import Download from '@assets/icons/arrow_down_circle.svg?react';
-import PlayOutline from '@assets/icons/play_outline.svg?react';
 
 const PlaybackContent = ({
   run,
@@ -37,10 +36,13 @@ const PlaybackContent = ({
     return () => replayController.dispose();
   }, [replayController]);
 
-  const pauseNavigate = useCallback((path: string) => {
-    replayRef.current.pause();
-    navigate(path);
-  }, [navigate]);
+  const pauseNavigate = useCallback(
+    (path: string) => {
+      replayRef.current.pause();
+      navigate(path);
+    },
+    [navigate],
+  );
 
   return (
     <div className={styles.playback}>
@@ -102,50 +104,66 @@ const PlaybackContent = ({
 
 export const Playback = () => {
   const navigate = useNavigate();
-  const { completedRun, restoreCompletedRun, rerunCompletedRun } = useSimulationRun();
+  const { completedRun, restoreCompletedRun, activeRun } = useSimulationRun();
+  const [params] = useSearchParams();
+  const requestedId = params.get('run') ?? undefined;
+  const displayedRun =
+    completedRun && (!requestedId || completedRun.run.id === requestedId)
+      ? completedRun
+      : null;
   const { isLoading, loadingMessage, setLoading } = useLoading();
   const [restoreError, setRestoreError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (completedRun !== null) return;
+    if (displayedRun !== null) return;
+    let disposed = false;
+    setRestoreError(null);
     setLoading(true, 'Restoring completed simulation...');
-    void restoreCompletedRun()
+    void restoreCompletedRun(requestedId)
       .then((run) => {
-        if (run === null) {
-          setRestoreError('No completed database-backed run is available in this browser session.');
+        if (run === null && !disposed) {
+          setRestoreError(
+            'Choose a completed run from Activity to open its playback.',
+          );
         }
       })
-      .catch((error) => setRestoreError(error instanceof Error ? error.message : String(error)))
-      .finally(() => setLoading(false));
-  }, [completedRun, restoreCompletedRun, setLoading]);
-
-  const handleRegenerate = useCallback(async () => {
-    setLoading(true, 'Regenerating full result from frozen input...');
-    try {
-      await rerunCompletedRun();
-      setRestoreError(null);
-    } catch (error) {
-      setRestoreError(error instanceof Error ? error.message : String(error));
-    } finally {
+      .catch((error) => {
+        if (!disposed)
+          setRestoreError(
+            error instanceof Error ? error.message : String(error),
+          );
+      })
+      .finally(() => {
+        if (!disposed) setLoading(false);
+      });
+    return () => {
+      disposed = true;
       setLoading(false);
-    }
-  }, [rerunCompletedRun, setLoading]);
+    };
+  }, [displayedRun, restoreCompletedRun, setLoading, requestedId]);
 
-  if (completedRun === null) {
+  if (displayedRun === null) {
     return (
       <div className={styles.playback}>
         <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
         <div className={styles.emptyState}>
           <h1>Playback unavailable</h1>
           <p>{restoreError ?? 'Looking for a completed simulation run...'}</p>
-          <button type="button" onClick={() => navigate('/input')}>Back to run setup</button>
-          <button type="button" onClick={() => void handleRegenerate()}>
-            <PlayOutline /> Regenerate result
+          <button type="button" onClick={() => navigate('/input')}>
+            Back to run setup
           </button>
+          {(requestedId || activeRun?.id) && (
+            <button
+              type="button"
+              onClick={() => navigate(`/runs/${requestedId ?? activeRun!.id}`)}
+            >
+              View run status or rerun
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
-  return <PlaybackContent run={completedRun} />;
+  return <PlaybackContent run={displayedRun} />;
 };

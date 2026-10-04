@@ -27,6 +27,11 @@ import { useAuth } from '@contexts/AuthContext';
 import { SimulationCaseProvider } from '@contexts/SimulationCaseContext';
 import { SimulationRunProvider } from '@contexts/SimulationRunContext';
 import { LoadingProvider } from '@contexts/LoadingContext';
+import {
+  RunActivityBanner,
+  RunActivityButton,
+  RunActivityProvider,
+} from '../../features/experiments/RunActivity';
 
 const navigation = [
   { to: '/dashboard', label: 'Workspace', icon: IconHome },
@@ -79,75 +84,99 @@ export function ApplicationShell() {
     }
   };
   return (
-    <AppShell
-      header={{ height: 64 }}
-      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Group h="100%" px="lg" justify="space-between">
-          <Group>
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              hiddenFrom="sm"
-              size="sm"
-              aria-label="Toggle navigation"
-            />
-            <Text component={Link} to="/dashboard" fw={900} size="xl" c="red.4" td="none">
-              CINDER
-            </Text>
-            <Badge variant="light" visibleFrom="sm">
-              Workspace
-            </Badge>
+    <RunActivityProvider key={session.user.id}>
+      <AppShell
+        header={{ height: 64 }}
+        navbar={{
+          width: 240,
+          breakpoint: 'sm',
+          collapsed: { mobile: !opened },
+        }}
+        padding="md"
+      >
+        <AppShell.Header>
+          <Group h="100%" px="lg" justify="space-between">
+            <Group>
+              <Burger
+                opened={opened}
+                onClick={toggle}
+                hiddenFrom="sm"
+                size="sm"
+                aria-label="Toggle navigation"
+              />
+              <Text
+                component={Link}
+                to="/dashboard"
+                fw={900}
+                size="xl"
+                c="red.4"
+                td="none"
+              >
+                CINDER
+              </Text>
+              <Badge variant="light" visibleFrom="sm">
+                Workspace
+              </Badge>
+            </Group>
+            <Group gap="sm">
+              <RunActivityButton />
+              <Text size="sm" truncate maw={180} visibleFrom="sm">
+                {session.user.display_name}
+              </Text>
+            </Group>
           </Group>
-          <Text size="sm" truncate maw={180}>
-            {session.user.display_name}
-          </Text>
-        </Group>
-      </AppShell.Header>
-      <AppShell.Navbar p="md">
-        <AppShell.Section grow>
-          <Text size="xs" c="dimmed" mb="md" tt="uppercase" fw={700}>
-            Design & simulation
-          </Text>
-          {navigation.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              component={Link}
-              to={to}
-              label={label}
-              leftSection={<Icon size={18} />}
-              active={location.pathname === to || location.pathname.startsWith(`${to}/`)}
-              onClick={close}
-            />
-          ))}
-        </AppShell.Section>
-        <AppShell.Section>
-          <Stack gap="sm">
-            <Text size="xs" c="dimmed" truncate>
-              {session.account.name}
+        </AppShell.Header>
+        <AppShell.Navbar p="md">
+          <AppShell.Section grow>
+            <Text size="xs" c="dimmed" mb="md" tt="uppercase" fw={700}>
+              Design & simulation
             </Text>
-            {signOutError && (
-              <Alert color="red" role="alert">
-                {signOutError}
-              </Alert>
-            )}
-            <Button variant="default" loading={signingOut} onClick={() => void logout()}>
-              Sign out
-            </Button>
-          </Stack>
-        </AppShell.Section>
-      </AppShell.Navbar>
-      <AppShell.Main>
-        <SimulationCaseProvider key={session.user.id}>
-          <SimulationRunProvider>
-            <LoadingProvider>
-              <Outlet />
-            </LoadingProvider>
-          </SimulationRunProvider>
-        </SimulationCaseProvider>
-      </AppShell.Main>
-    </AppShell>
+            {navigation.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                component={Link}
+                to={to}
+                label={label}
+                leftSection={<Icon size={18} />}
+                active={
+                  location.pathname === to ||
+                  location.pathname.startsWith(`${to}/`)
+                }
+                onClick={close}
+              />
+            ))}
+          </AppShell.Section>
+          <AppShell.Section>
+            <Stack gap="sm">
+              <Text size="xs" c="dimmed" truncate>
+                {session.account.name}
+              </Text>
+              {signOutError && (
+                <Alert color="red" role="alert">
+                  {signOutError}
+                </Alert>
+              )}
+              <Button
+                variant="default"
+                loading={signingOut}
+                onClick={() => void logout()}
+              >
+                Sign out
+              </Button>
+            </Stack>
+          </AppShell.Section>
+        </AppShell.Navbar>
+        <AppShell.Main>
+          <RunActivityBanner />
+          <SimulationCaseProvider key={session.user.id}>
+            <SimulationRunProvider>
+              <LoadingProvider>
+                <Outlet />
+              </LoadingProvider>
+            </SimulationRunProvider>
+          </SimulationCaseProvider>
+        </AppShell.Main>
+      </AppShell>
+    </RunActivityProvider>
   );
 }

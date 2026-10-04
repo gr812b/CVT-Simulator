@@ -1,6 +1,8 @@
 # CVT Simulator frontend
 
-The frontend is a Vite/React single-page application using the database-backed CVT Simulator API. Normal runs resolve seeded/released library objects instead of posting raw CINDER documents from the UI.
+The frontend is a Vite/React application using authenticated, generated API contracts.
+See [M1 standards](../docs/M1_APPLICATION_FOUNDATION.md), [M2 physical editors](../docs/M2_PHYSICAL_LIBRARY.md),
+and [M3 experiments/jobs](../docs/M3_EXPERIMENTS_AND_JOBS.md) for the current baseline.
 
 ## Local development
 
@@ -12,33 +14,35 @@ npm ci
 npm run dev
 ```
 
-`.env` points the Vite development server directly at the backend:
+The default Vite development proxy sends `/api` to port 8000. Leave the API origin
+blank for same-origin cookies and CSRF handling:
 
 ```text
-VITE_API_BASE_URL=http://localhost:8000
-VITE_DEMO_USER_ID=00000000-0000-4000-8000-000000000001
-VITE_DEMO_ACCOUNT_ID=00000000-0000-4000-8000-000000000002
+VITE_API_BASE_URL=
 ```
 
-The demo IDs are the explicit local-development rows seeded by `python -m app.scripts.init_database`. They are test/demo defaults only; real auth should replace that configuration boundary later.
+Create/sign into an account; identity is derived from its server session. There
+are no configured demo user/account IDs. Start both the backend API and
+`python -m app.scripts.run_worker` with the same database. Simulations stay queued
+if the worker is absent; it requires POSIX or the Linux backend container.
 
 The API client already names routes such as `/api/v1/library/*` and `/api/v1/runs/from-library`; do **not** add `/api/v1` to `VITE_API_BASE_URL`.
 
 
 ## Current product flow
 
-The app intentionally exposes a narrow V1 run setup:
+The physical library owns reusable engine, belt, CVT and vehicle setup revisions.
+Tune & run selects an exact setup revision, edits a named tune and reusable road
+scenario, and explicitly runs unsaved values or saves a tune before running.
+The road editor supports feature sections, whoops, draggable/exact points and
+undo/redo. Every normal run is frozen and queued through `/experiments/runs`.
+Activity shows persisted notifications, status/cancellation and recent results;
+`/playback?run=<id>` reloads a saved result. Dashboard/demo shortcuts use the same
+durable queue through the legacy library selection adapter.
 
-```text
-seeded released Baja vehicle assembly (500 lb default or 400 lb lightweight)
-  -> selected tune
-  -> selected load case (flat, 20° hill, or 90 m flat into 30° hill)
-  -> selected execution preset
-  -> POST /api/v1/runs/from-library
-  -> GET /api/v1/runs/{run_id}/result for playback
-```
-
-Engine and CVT hardware editing are hidden until dedicated database object editors exist. The current vehicle dropdown switches between seeded output-system masses only. The legacy direct `POST /runs` contract path remains backend/debug-only and is not part of the normal frontend flow.
+API types derive from generated OpenAPI/CINDER schemas. Use shared feature
+clients and `api/transport.ts`, Mantine controls, `QuantityInput`, and the central
+`styles/theme.ts`; do not duplicate transport types or scatter theme values.
 
 Useful checks:
 
@@ -69,17 +73,10 @@ Build from the repository root:
 docker build -f frontend/Dockerfile -t cvt-simulator-frontend .
 ```
 
-The frontend and backend containers must share a Docker network, and the backend container/service must be named `cvt-backend`:
-
-```powershell
-docker network create cvt-simulator
-
-docker run -d --name cvt-backend --network cvt-simulator -p 8000:8000 cvt-simulator-backend
-
-docker run --rm --name cvt-frontend --network cvt-simulator -p 8080:80 cvt-simulator-frontend
-```
-
-Open `http://localhost:8080`. The frontend health endpoint is available at `/health`; backend documentation is proxied at `/docs`.
+Use the repository's Compose deployment: it supplies PostgreSQL, the migrated
+API, the durable worker, and the frontend on the correct networks. The nginx
+upstream remains `cvt-backend`. The frontend health endpoint is `/health`;
+backend documentation is proxied at `/docs`.
 
 ## Build-time API override
 

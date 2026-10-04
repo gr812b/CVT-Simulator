@@ -1,4 +1,3 @@
-import { getValueAtJsonPointer } from '@utils/jsonPointer';
 import { api as client, dataOrThrow, ApiClientError } from './transport';
 export { ApiClientError } from './transport';
 import type { components } from './generated/backend';
@@ -229,7 +228,7 @@ function parseProblem(raw: unknown): ApiProblem | null {
 function parseRunStatus(raw: unknown): RunStatus {
   const value = object(raw, 'run status');
   const status = string(value.status, 'run status.status') as RunLifecycleStatus;
-  if (!['queued', 'validating', 'running', 'completed', 'failed', 'timed_out'].includes(status)) {
+  if (!['queued', 'validating', 'running', 'completed', 'failed', 'timed_out', 'cancelled'].includes(status)) {
     throw new ApiClientError(`Unexpected run status '${status}'.`);
   }
   return {
@@ -620,44 +619,6 @@ export async function getCvtDesignVersion(versionId: string): Promise<CvtDesignV
     ),
   );
 }
-export async function updateTuneValues(
-  tuneId: string,
-  values: Schema['UpdateTuneRequest']['values'],
-): Promise<TuneSummary> {
-  return parseTune(
-    dataOrThrow(
-      await client.PATCH('/api/v1/library/tunes/{tune_id}', {
-        params: { path: { tune_id: tuneId } },
-        body: { values },
-      }),
-    ),
-  );
-}
-
-/** Copy baseline values through its published tuning paths into this user's workspace. */
-export async function createPersonalTune(setup: DefaultRunSetup): Promise<TuneSummary> {
-  const values = Object.fromEntries(
-    setup.tuningParameters.flatMap((parameter) => {
-      const value = parameter.path
-        ? getValueAtJsonPointer(setup.cvtDesignVersion.payload, parameter.path)
-        : parameter.defaultValue;
-      return value === undefined ? [] : [[parameter.key, value]];
-    }),
-  );
-  return parseTune(
-    dataOrThrow(
-      await client.POST('/api/v1/library/tunes', {
-        body: {
-          vehicle_assembly_id: setup.selectedVehicleAssembly.id,
-          cvt_design_id: setup.cvtDesignVersion.objectId,
-          name: 'My baseline tune',
-          values,
-        },
-      }),
-    ),
-  );
-}
-
 export async function getDefaultRunSetup(preferredVehicleId?: string): Promise<DefaultRunSetup> {
   const [owned, shared] = await Promise.all([
     listVehicleAssemblies(),
@@ -768,10 +729,11 @@ export function buildLibraryRunSelection(
   });
 }
 
-export async function submitLibraryRun(selection: LibraryRunSelection): Promise<RunStatus> {
+export async function submitLibraryRun(selection: LibraryRunSelection, requestKey: string = crypto.randomUUID()): Promise<RunStatus> {
   const data = dataOrThrow(
     await client.POST('/api/v1/runs/from-library', {
       body: {
+        request_key: requestKey,
         vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
         tune_id: selection.tuneId,
         load_case_id: selection.loadCaseId,
@@ -779,16 +741,6 @@ export async function submitLibraryRun(selection: LibraryRunSelection): Promise<
         include_raw_trace: false,
         include_reported_segments: false,
       },
-    }),
-  );
-  return parseRunStatus(data);
-}
-
-export async function rerunSimulationRun(runId: string): Promise<RunStatus> {
-  const data = dataOrThrow(
-    await client.POST('/api/v1/runs/{run_id}/rerun', {
-      params: { path: { run_id: runId } },
-      body: {},
     }),
   );
   return parseRunStatus(data);
@@ -872,10 +824,11 @@ export async function runEndpointRadiiGeometryStudy(
   return parseGeometryStudy(data.study);
 }
 
-export async function submitSimulationRun(document: SimulationCaseDocument): Promise<RunStatus> {
+export async function submitSimulationRun(document: SimulationCaseDocument, requestKey: string = crypto.randomUUID()): Promise<RunStatus> {
   const data = dataOrThrow(
     await client.POST('/api/v1/runs', {
       body: {
+        request_key: requestKey,
         simulation_case: wireDocument(document),
         include_raw_trace: false,
         include_reported_segments: false,
@@ -891,6 +844,7 @@ export async function submitValidationSimulationRun(
   const data = dataOrThrow(
     await client.POST('/api/v1/validation/simulation-runs', {
       body: {
+        request_key: crypto.randomUUID(),
         simulation_case: wireDocument(document),
         include_raw_trace: false,
         include_reported_segments: false,
@@ -946,7 +900,7 @@ export async function waitForSimulationRun(
   while (true) {
     const run = await getSimulationRun(runId);
     if (run.status === 'completed') return run;
-    if (run.status === 'failed' || run.status === 'timed_out') throw new SimulationRunError(run);
+    if (run.status === 'failed' || run.status === 'timed_out' || run.status === 'cancelled') throw new SimulationRunError(run);
     await sleep(pollIntervalMs, options.signal);
   }
 }

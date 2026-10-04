@@ -10,6 +10,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app.application.cinder_gateway import CinderGateway
+from app.application.input_validation import validate_assembly, validate_case
 from app.core.errors import ApiProblem
 from app.database.resolver import normalize_preset_case
 from app.schemas.physical_library import (
@@ -170,9 +171,7 @@ def validate_physical(document: PhysicalDocument) -> tuple[dict, dict | None]:
     if isinstance(document, BeltDocument):
         return {"is_valid": True, "findings": []}, None
     if isinstance(document, CvtDocument):
-        return copy.deepcopy(
-            _validate_assembly(json.dumps(document.data.assembly, sort_keys=True))
-        ), None
+        return validate_assembly(document.data.assembly), None
     case = baseline_case()
     if isinstance(document, EngineDocument):
         case["shaft_boundaries"]["primary"] = document.data.model_dump()
@@ -182,20 +181,10 @@ def validate_physical(document: PhysicalDocument) -> tuple[dict, dict | None]:
             "primary": document.data.engine.data.model_dump(),
             "secondary": vehicle_boundary(document.data.vehicle),
         }
-    report = copy.deepcopy(_validate_case(json.dumps(case, sort_keys=True)))
+    report = validate_case(case)
     return report, case if isinstance(document, SetupDocument) and report[
         "is_valid"
     ] else None
-
-
-@lru_cache(maxsize=64)
-def _validate_assembly(serialized: str):
-    return GATEWAY.validate_assembly(json.loads(serialized))
-
-
-@lru_cache(maxsize=64)
-def _validate_case(serialized: str):
-    return GATEWAY.validate_simulation_case(json.loads(serialized))
 
 
 def import_engine_curve(request: CurveImportRequest) -> list[EnginePoint]:

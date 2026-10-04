@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 
 from . import (
     auth,
+    experiments,
     library,
     metadata,
     physical_library,
@@ -25,6 +26,7 @@ router = APIRouter(
     }
 )
 router.include_router(auth.router)
+router.include_router(experiments.router, dependencies=[Depends(get_current_principal)])
 router.include_router(metadata.router)
 router.include_router(library.router, dependencies=[Depends(get_current_principal)])
 router.include_router(physical_library.router, dependencies=[Depends(get_current_principal)])

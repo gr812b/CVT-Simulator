@@ -1,0 +1,218 @@
+"""Additive public scenario examples, never rewritten during repeat seeding."""
+
+from app.application.roads import default_scenario, feature_templates
+from app.database.base import utc_now
+from app.database.experiment_models import Experiment, ExperimentRevision
+from app.database.hashing import canonical_json_hash
+from app.database.physical_seed import sample_id
+from app.database.seed import SEED_ACCOUNT_ID, SEED_USER_ID
+from app.schemas.experiments import ScenarioDocument, SpatialRoad
+
+
+def seed_experiments(session):
+    templates = feature_templates()
+    examples = [
+        ("flat", [default_scenario()]),
+        (
+            "hill",
+            [
+                ScenarioDocument(
+                    kind="scenarios",
+                    name="Sample climb and descent",
+                    road=SpatialRoad(features=templates[:3]),
+                )
+            ],
+        ),
+        (
+            "whoops",
+            [
+                ScenarioDocument(
+                    kind="scenarios",
+                    name="Sample whoops",
+                    road=SpatialRoad(features=[templates[0], templates[5]]),
+                ),
+                ScenarioDocument(
+                    kind="scenarios",
+                    name="Sample whoops",
+                    notes="Revision 2: gentler, wider whoops for editor/history practice.",
+                    road=SpatialRoad(
+                        features=[
+                            templates[0],
+                            {**templates[5], "height_m": 0.3, "spacing_m": 8},
+                        ]
+                    ),
+                ),
+            ],
+        ),
+    ]
+    for key, documents in examples:
+        object_id = sample_id(f"scenario:{key}")
+        if session.get(Experiment, object_id):
+            continue
+        obj = Experiment(
+            id=object_id,
+            account_id=SEED_ACCOUNT_ID,
+            kind="scenarios",
+            name=documents[-1].name,
+            is_sample=True,
+        )
+        session.add(obj)
+        session.flush()
+        for number, document in enumerate(documents, 1):
+            payload = document.model_dump(mode="json")
+            revision = ExperimentRevision(
+                id=sample_id(f"scenario:{key}:r{number}"),
+                experiment_id=obj.id,
+                number=number,
+                document=payload,
+                content_hash=canonical_json_hash(payload),
+                created_by_user_id=SEED_USER_ID,
+                change_note="Illustrative scenario; grade-only road load, not suspension dynamics.",
+                created_at=utc_now(),
+            )
+            session.add(revision)
+            session.flush()
+            obj.current_revision_id = revision.id
+        session.flush()
+    _seed_sample_tunes(session)
+
+
+def _seed_sample_tunes(session):
+    from copy import deepcopy
+
+    from app.application.experiment_tuning import parameters
+    from app.application.physical_contracts import baseline_case
+    from app.database.models import CVTDesignVersion
+    from app.database.resolver import _current_assembly_document
+    from app.schemas.experiments import TuneDocument
+
+    cvt = session.get(CVTDesignVersion, sample_id("cvt:r1"))
+    assembly = _current_assembly_document(
+        cvt.cinder_assembly, baseline_case()["execution"]
+    )
+    defaults = {
+        field["key"]: field["default"]
+        for field in parameters(assembly, cvt.tuning_schema)
+    }
+    key = "tune:starter"
+    if session.get(Experiment, sample_id(key)):
+        return
+    obj = Experiment(
+        id=sample_id(key),
+        account_id=SEED_ACCOUNT_ID,
+        kind="tunes",
+        name="Sample baseline tune",
+        setup_object_id=sample_id("setup"),
+        is_sample=True,
+    )
+    session.add(obj)
+    session.flush()
+    for number in (1, 2):
+        values = deepcopy(defaults)
+        if number == 2:
+            values["primary_flyweight_mass"] *= 1.02
+        document = TuneDocument(
+            kind="tunes",
+            name=obj.name,
+            setup_revision_id=sample_id("setup:r2"),
+            values=values,
+            notes="Illustrative tuning/history example, not a recommended or optimized tune. Revision 2 scales flyweight mass and all its moments by 2%.",
+        ).model_dump(mode="json")
+        revision = ExperimentRevision(
+            id=sample_id(f"{key}:r{number}"),
+            experiment_id=obj.id,
+            number=number,
+            document=document,
+            content_hash=canonical_json_hash(document),
+            created_by_user_id=SEED_USER_ID,
+            change_note="Baseline values."
+            if number == 1
+            else "Illustrative 2% mass increase at unchanged flyweight shape.",
+        )
+        session.add(revision)
+        session.flush()
+        obj.current_revision_id = revision.id
+    session.flush()
+
+
+def seed_experiment_fixtures(session, *, account_id, user_id, setup_revision_id, label):
+    """Opt-in, clearly labeled run states; never forge a completed result."""
+    from copy import deepcopy
+
+    from app.application.cinder_gateway import CinderGateway
+    from app.application.physical_contracts import baseline_case
+    from app.database.experiment_models import RunNotification
+    from app.database.models import (
+        CVTDesignVersion,
+        EngineVersion,
+        OutputSystemVersion,
+        Run,
+        VehicleAssemblyVersion,
+    )
+    from app.database.resolver import (
+        _current_assembly_document,
+        _current_primary_boundary,
+        _current_secondary_boundary,
+    )
+
+    setup = session.get(VehicleAssemblyVersion, setup_revision_id)
+    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id)
+    engine = session.get(EngineVersion, setup.engine_version_id)
+    output = session.get(OutputSystemVersion, setup.output_system_version_id)
+    case = baseline_case()
+    case["assembly"] = _current_assembly_document(
+        cvt.cinder_assembly, case["execution"]
+    )
+    case["shaft_boundaries"] = {
+        "primary": _current_primary_boundary(engine.input_boundary),
+        "secondary": _current_secondary_boundary(output.output_boundary_template),
+    }
+    case["scenario"]["time_span_s"] = [0, 0.1]
+    runtime = CinderGateway().runtime_identity()
+    options = {
+        "include_reported_segments": False,
+        "include_raw_trace": False,
+        "execution_profile": "default",
+    }
+    for state in ("queued", "failed", "cancelled"):
+        run_id = sample_id(f"fixture:{label}:run:{state}")
+        if session.get(Run, run_id):
+            continue
+        row = Run(
+            id=run_id,
+            account_id=account_id,
+            created_by_user_id=user_id,
+            name=f"Development fixture · {state}",
+            status=state,
+            source="library",
+            request_key=run_id,
+            request_hash=canonical_json_hash({"fixture": run_id}),
+            vehicle_assembly_version_id=setup.id,
+            engine_version_id=setup.engine_version_id,
+            cvt_design_version_id=setup.cvt_design_version_id,
+            output_system_version_id=setup.output_system_version_id,
+            input_contract=deepcopy(case),
+            contract_hash=canonical_json_hash(
+                {"input": case, "runtime": runtime, "options": options}
+            ),
+            cinder_model_version=runtime["package_version"],
+            input_schema_version=runtime["simulation_case_schema_version"],
+            result_contract_version=runtime["simulation_result_contract_version"],
+            runtime_identity=runtime,
+            execution_options=options,
+            provenance={"development_fixture": True, "setup_revision_id": setup.id},
+            completed_at=utc_now() if state != "queued" else None,
+            error={
+                "code": "development_fixture",
+                "message": "Deliberately failed development fixture; no simulation was executed.",
+            }
+            if state == "failed"
+            else None,
+        )
+        session.add(row)
+        session.flush()
+        if state != "queued":
+            session.add(
+                RunNotification(account_id=account_id, user_id=user_id, run_id=row.id)
+            )
+    session.flush()

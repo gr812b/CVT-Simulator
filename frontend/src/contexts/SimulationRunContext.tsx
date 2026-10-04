@@ -1,9 +1,14 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   getSimulationResult,
   getSimulationRun,
-  rerunSimulationRun,
-  waitForSimulationRun,
   type CompletedSimulationRun,
   type RunStatus,
 } from '@api/client';
@@ -13,15 +18,23 @@ interface SimulationRunContextValue {
   activeRun: RunStatus | null;
   setCompletedRun: (run: CompletedSimulationRun) => void;
   setActiveRun: (run: RunStatus | null) => void;
-  restoreCompletedRun: () => Promise<CompletedSimulationRun | null>;
-  rerunCompletedRun: (runId?: string) => Promise<CompletedSimulationRun>;
+  restoreCompletedRun: (
+    runId?: string,
+  ) => Promise<CompletedSimulationRun | null>;
   clearRun: () => void;
 }
 
-const SimulationRunContext = createContext<SimulationRunContextValue | undefined>(undefined);
+const SimulationRunContext = createContext<
+  SimulationRunContextValue | undefined
+>(undefined);
 
-export const SimulationRunProvider = ({ children }: { children: ReactNode }) => {
-  const [completedRun, setCompletedRunState] = useState<CompletedSimulationRun | null>(null);
+export const SimulationRunProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [completedRun, setCompletedRunState] =
+    useState<CompletedSimulationRun | null>(null);
   const [activeRun, setActiveRunState] = useState<RunStatus | null>(null);
 
   const setCompletedRun = useCallback((next: CompletedSimulationRun) => {
@@ -33,31 +46,23 @@ export const SimulationRunProvider = ({ children }: { children: ReactNode }) => 
     setActiveRunState(next);
   }, []);
 
-  const restoreCompletedRun = useCallback(async (): Promise<CompletedSimulationRun | null> => {
-    if (completedRun !== null) return completedRun;
-    const runId = activeRun?.id ?? null;
-    if (runId === null) return null;
-    const status = await getSimulationRun(runId);
-    setActiveRunState(status);
-    if (status.status !== 'completed') return null;
-    const restored = await getSimulationResult(runId);
-    setCompletedRunState(restored);
-    return restored;
-  }, [completedRun, activeRun?.id]);
-
-  const rerunCompletedRun = useCallback(
-    async (runId?: string): Promise<CompletedSimulationRun> => {
-      const sourceRunId = runId ?? activeRun?.id ?? completedRun?.run.id ?? null;
-      if (!sourceRunId) throw new Error('No completed library run is available to rerun.');
-      const submitted = await rerunSimulationRun(sourceRunId);
-      setActiveRunState(submitted);
-      const completedStatus = await waitForSimulationRun(submitted.id);
-      setActiveRunState(completedStatus);
-      const rerun = await getSimulationResult(submitted.id);
-      setCompletedRunState(rerun);
-      return rerun;
+  const restoreCompletedRun = useCallback(
+    async (requestedId?: string): Promise<CompletedSimulationRun | null> => {
+      if (
+        completedRun !== null &&
+        (!requestedId || requestedId === completedRun.run.id)
+      )
+        return completedRun;
+      const runId = requestedId ?? activeRun?.id ?? null;
+      if (runId === null) return null;
+      const status = await getSimulationRun(runId);
+      setActiveRunState(status);
+      if (status.status !== 'completed') return null;
+      const restored = await getSimulationResult(runId);
+      setCompletedRunState(restored);
+      return restored;
     },
-    [activeRun?.id, completedRun?.run.id],
+    [completedRun, activeRun?.id],
   );
 
   const clearRun = useCallback(() => {
@@ -72,7 +77,6 @@ export const SimulationRunProvider = ({ children }: { children: ReactNode }) => 
       setCompletedRun,
       setActiveRun,
       restoreCompletedRun,
-      rerunCompletedRun,
       clearRun,
     }),
     [
@@ -81,18 +85,23 @@ export const SimulationRunProvider = ({ children }: { children: ReactNode }) => 
       setCompletedRun,
       setActiveRun,
       restoreCompletedRun,
-      rerunCompletedRun,
       clearRun,
     ],
   );
 
-  return <SimulationRunContext.Provider value={value}>{children}</SimulationRunContext.Provider>;
+  return (
+    <SimulationRunContext.Provider value={value}>
+      {children}
+    </SimulationRunContext.Provider>
+  );
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useSimulationRun(): SimulationRunContextValue {
   const context = useContext(SimulationRunContext);
   if (context === undefined)
-    throw new Error('useSimulationRun must be used inside SimulationRunProvider.');
+    throw new Error(
+      'useSimulationRun must be used inside SimulationRunProvider.',
+    );
   return context;
 }

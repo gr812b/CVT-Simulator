@@ -1,108 +1,160 @@
-"""Simulation-run lifecycle endpoints."""
+"""Every simulation entry point uses the durable, account-limited queue."""
 
-from __future__ import annotations
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.orm import Session
 
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
     get_database_session,
 )
-from app.application import access
+from app.api.v1.run_admission import submission_attempt
+from app.application import access, jobs
 from app.application.auth import Principal
 from app.application.container import ApplicationContainer
-from app.core.errors import ApiProblem, RunNotFoundError
-from app.database import runs as db_runs
-from app.database.runs import LibraryRunError
+from app.core.errors import ApiProblem
+from app.database import runs as artifacts
+from app.database.base import utc_now
+from app.database.experiment_models import RunNotification
+from app.database.models import Run
+from app.database.resolver import resolve_simulation_case
 from app.schemas.runs import (
     CreateLibraryRunRequest,
     CreateRunRequest,
     RerunStoredRunRequest,
+    RunActivity,
     RunInputResponse,
     RunListResponse,
     RunPreviewResponse,
     RunResultResponse,
     RunStatusResponse,
 )
-from app.storage.run_store import RunRecord
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/runs", tags=["runs"])
+PrincipalDep = Depends(get_current_principal)
+SessionDep = Depends(get_database_session)
+ContainerDep = Depends(get_container)
 
 
-@router.post("", response_model=RunStatusResponse, status_code=status.HTTP_202_ACCEPTED)
+def submit_direct(
+    request, session, principal, container, http, execution_profile="default"
+):
+    previous = submission_attempt(
+        http,
+        session,
+        principal,
+        container.settings,
+        request.request_key,
+        {**request.model_dump(), "execution_profile": execution_profile},
+    )
+    if previous:
+        return jobs.status(previous)
+    return jobs.status(
+        jobs.submit(
+            session,
+            principal,
+            container.settings,
+            container.gateway,
+            request_key=request.request_key,
+            request_payload={
+                **request.model_dump(),
+                "execution_profile": execution_profile,
+            },
+            case=request.simulation_case,
+            options={
+                "include_reported_segments": request.include_reported_segments,
+                "include_raw_trace": request.include_raw_trace,
+                "execution_profile": execution_profile,
+            },
+        )
+    )
+
+
+@router.post("", response_model=RunStatusResponse, status_code=202)
 def create_run(
     request: CreateRunRequest,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-) -> RunStatusResponse:
-    """Submit a complete CINDER simulation-case document directly.
-
-    This remains the debug/contract endpoint. Database-backed product flows
-    should use ``POST /runs/from-library`` so the resolved input contract and
-    result artifacts are persisted.
-    """
-
-    principal.require_write()
-    record = container.runs.submit(
-        request.simulation_case,
-        account_id=principal.account_id,
-        include_reported_segments=request.include_reported_segments,
-        include_raw_trace=request.include_raw_trace,
-    )
-    return _direct_status(record)
+    http: Request,
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    return submit_direct(request, session, principal, container, http)
 
 
-@router.post(
-    "/from-library",
-    response_model=RunStatusResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-)
-def create_run_from_library(
+@router.post("/from-library", response_model=RunStatusResponse, status_code=202)
+def create_library_run(
     request: CreateLibraryRunRequest,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunStatusResponse:
-    """Resolve released database objects into a frozen CINDER case and run it."""
-
+    http: Request,
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
     principal.require_write()
+    previous = submission_attempt(
+        http,
+        session,
+        principal,
+        container.settings,
+        request.request_key,
+        request.model_dump(),
+    )
+    if previous:
+        return jobs.status(previous)
     access.run_selection(session, principal, request)
     try:
-        submitted = db_runs.submit_library_run(
+        case = resolve_simulation_case(
             session,
-            gateway=container.gateway,
-            account_id=principal.account_id,
-            vehicle_assembly_version_id=request.vehicle_assembly_version_id,
-            tune_id=request.tune_id,
-            load_case_id=request.load_case_id,
-            execution_preset_id=request.execution_preset_id,
-            created_by_user_id=principal.user_id,
-            include_reported_segments=request.include_reported_segments,
-            include_raw_trace=request.include_raw_trace,
+            **request.model_dump(
+                exclude={
+                    "request_key",
+                    "include_reported_segments",
+                    "include_raw_trace",
+                }
+            ),
         )
-    except LibraryRunError as exc:
-        raise ApiProblem(exc.status_code, exc.code, str(exc)) from exc
-    return _database_status(submitted.run, cache_hit=submitted.cache_hit)
+    except ValueError as exc:
+        raise ApiProblem(422, "library_run_resolution_failed", str(exc)) from exc
+    resolution = case["database_resolution"]
+    provenance = {
+        "setup_revision_id": resolution["vehicle_assembly_version_id"],
+        "engine_revision_id": resolution["engine_version_id"],
+        "cvt_revision_id": resolution["cvt_design_version_id"],
+        "output_revision_id": resolution["output_system_version_id"],
+        "legacy_selection": request.model_dump(),
+        "tune_values": resolution["tune_snapshot"],
+        "scenario": resolution["load_case_snapshot"],
+    }
+    return jobs.status(
+        jobs.submit(
+            session,
+            principal,
+            container.settings,
+            container.gateway,
+            request_key=request.request_key,
+            request_payload=request.model_dump(),
+            case=case,
+            provenance=provenance,
+            source="library",
+            options={
+                "include_reported_segments": request.include_reported_segments,
+                "include_raw_trace": request.include_raw_trace,
+                "execution_profile": "default",
+            },
+        )
+    )
 
 
 @router.get("", response_model=RunListResponse)
 def list_runs(
-    principal: Principal = Depends(get_current_principal),
-    vehicle_assembly_version_id: str | None = Query(default=None),
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    vehicle_assembly_version_id: str | None = None,
     limit: int = Query(default=50, ge=1, le=250),
-    session: Session = Depends(get_database_session),
-) -> RunListResponse:
-    """List persisted database-backed runs.
-
-    Direct in-memory debug runs are intentionally not listed because they are
-    process-local and not part of durable history.
-    """
-
+):
     return RunListResponse(
         items=[
-            _database_status(run)
-            for run in db_runs.list_database_runs(
+            jobs.status(run, include_provenance=False)
+            for run in artifacts.list_database_runs(
                 session,
                 account_id=principal.account_id,
                 vehicle_assembly_version_id=vehicle_assembly_version_id,
@@ -112,167 +164,117 @@ def list_runs(
     )
 
 
-@router.post(
-    "/{run_id}/rerun",
-    response_model=RunStatusResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-)
-def rerun_stored_run(
-    run_id: str,
-    request: RerunStoredRunRequest | None = None,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunStatusResponse:
-    """Rerun a persisted library run from its frozen stored input.
+@router.get("/activity", response_model=RunActivity)
+def activity(
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    return jobs.activity(session, principal, container.settings)
 
-    This is the product-facing path for old runs whose full-result artifact was
-    evicted. It does not re-resolve current library objects, so archived,
-    deprecated, or edited source objects cannot change the rerun semantics.
-    """
 
-    principal.require_write()
-    access.owned(db_runs.get_database_run(session, run_id), principal)
-    request = request or RerunStoredRunRequest()
-    try:
-        submitted = db_runs.submit_rerun_from_database_run(
-            session,
-            gateway=container.gateway,
-            source_run_id=run_id,
-            created_by_user_id=principal.user_id,
-            include_reported_segments=request.include_reported_segments,
-            include_raw_trace=request.include_raw_trace,
-        )
-    except RunNotFoundError:
-        raise
-    return _database_status(submitted.run, cache_hit=submitted.cache_hit)
+@router.post("/notices/{notice_id}/read", status_code=204)
+def read_notice(
+    notice_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+):
+    notice = access.owned(session.get(RunNotification, notice_id), principal)
+    if notice.user_id != principal.user_id:
+        raise access.unavailable()
+    notice.read_at = notice.read_at or utc_now()
 
 
 @router.get("/{run_id}", response_model=RunStatusResponse)
 def get_run(
     run_id: str,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunStatusResponse:
-    try:
-        return _direct_status(access.owned(container.runs.status(run_id), principal))
-    except RunNotFoundError:
-        return _database_status(
-            access.owned(db_runs.get_database_run(session, run_id), principal)
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    access.owned(session.get(Run, run_id), principal)
+    jobs.recover(session, container.settings, principal.account_id)
+    return jobs.status(session.get(Run, run_id))
+
+
+@router.post("/{run_id}/cancel", response_model=RunStatusResponse)
+def cancel(
+    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+):
+    return jobs.status(jobs.cancel(session, principal, run_id))
+
+
+@router.post("/{run_id}/rerun", response_model=RunStatusResponse, status_code=202)
+def rerun(
+    run_id: str,
+    request: RerunStoredRunRequest,
+    http: Request,
+    principal: Principal = PrincipalDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    source = access.owned(session.get(Run, run_id), principal)
+    previous = submission_attempt(
+        http,
+        session,
+        principal,
+        container.settings,
+        request.request_key,
+        {"parent_run_id": run_id, **request.model_dump()},
+    )
+    if previous:
+        return jobs.status(previous)
+    return jobs.status(
+        jobs.submit(
+            session,
+            principal,
+            container.settings,
+            container.gateway,
+            request_key=request.request_key,
+            request_payload={"parent_run_id": run_id, **request.model_dump()},
+            case=source.input_contract,
+            provenance=source.provenance,
+            name=f"{source.name[:230]} (rerun)",
+            source=source.source,
+            parent_run_id=source.id,
+            options={
+                **(source.execution_options or {}),
+                "include_reported_segments": request.include_reported_segments,
+                "include_raw_trace": request.include_raw_trace,
+                "execution_profile": (source.execution_options or {}).get(
+                    "execution_profile", "default"
+                ),
+            },
         )
+    )
 
 
 @router.get("/{run_id}/input", response_model=RunInputResponse)
-def get_run_input(
-    run_id: str,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunInputResponse:
-    """Return the frozen simulation input document for inspection/debugging.
-
-    This remains available even when a persisted library run's full-result
-    artifact has been evicted. Product reruns should use ``POST
-    /runs/{run_id}/rerun`` so the regenerated result is persisted.
-    """
-
-    try:
-        record = access.owned(container.runs.status(run_id), principal)
-    except RunNotFoundError:
-        run = access.owned(db_runs.get_database_run(session, run_id), principal)
-        return RunInputResponse(
-            run=_database_status(run),
-            input_document_snapshot=db_runs.get_database_run_input_contract(
-                session, run_id
-            ),
-        )
+def input_document(
+    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+):
+    run = access.owned(session.get(Run, run_id), principal)
     return RunInputResponse(
-        run=_direct_status(record),
-        input_document_snapshot=record.input_document_snapshot,
+        run=jobs.status(run), input_document_snapshot=run.input_contract
     )
 
 
 @router.get("/{run_id}/preview", response_model=RunPreviewResponse)
-def get_run_preview(
-    run_id: str,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunPreviewResponse:
-    """Return the durable lightweight preview for charts and run browsing."""
-
-    try:
-        access.owned(container.runs.status(run_id), principal)
-        record = container.runs.completed_result(run_id)
-    except RunNotFoundError:
-        run = access.owned(db_runs.get_database_run(session, run_id), principal)
-        return RunPreviewResponse(
-            run=_database_status(run),
-            preview=db_runs.get_database_run_preview(session, run_id),
-        )
-    assert record.result_snapshot is not None
+def preview(
+    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+):
+    run = access.owned(session.get(Run, run_id), principal)
     return RunPreviewResponse(
-        run=_direct_status(record),
-        preview=db_runs.build_preview_from_result(record.result_snapshot),
+        run=jobs.status(run),
+        preview=artifacts.get_database_run_preview(session, run_id),
     )
 
 
 @router.get("/{run_id}/result", response_model=RunResultResponse)
-def get_run_result(
-    run_id: str,
-    principal: Principal = Depends(get_current_principal),
-    container: ApplicationContainer = Depends(get_container),
-    session: Session = Depends(get_database_session),
-) -> RunResultResponse:
-    try:
-        access.owned(container.runs.status(run_id), principal)
-        record = container.runs.completed_result(run_id)
-    except RunNotFoundError:
-        run = access.owned(db_runs.get_database_run(session, run_id), principal)
-        return RunResultResponse(
-            run=_database_status(run),
-            input_document_snapshot=run.input_contract,
-            result=db_runs.get_database_run_result(session, run_id),
-        )
-    assert record.result_snapshot is not None
+def result(
+    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
+):
+    run = access.owned(session.get(Run, run_id), principal)
     return RunResultResponse(
-        run=_direct_status(record),
-        input_document_snapshot=record.input_document_snapshot,
-        result=record.result_snapshot,
-    )
-
-
-def _direct_status(record: RunRecord) -> RunStatusResponse:
-    return RunStatusResponse(
-        id=record.id,
-        status=record.status,
-        submitted_at=record.submitted_at,
-        started_at=record.started_at,
-        completed_at=record.completed_at,
-        error=record.error,
-        source="direct",
-        contract_hash=record.input_fingerprint,
-    )
-
-
-def _database_status(
-    run: object, *, cache_hit: bool | None = None
-) -> RunStatusResponse:
-    return RunStatusResponse(
-        id=run.id,
-        status=run.status,
-        submitted_at=run.submitted_at,
-        started_at=run.started_at,
-        completed_at=run.completed_at,
-        error=run.error,
-        source="library",
-        contract_hash=run.contract_hash,
-        cache_entry_id=run.cache_entry_id,
-        cache_hit=cache_hit,
-        vehicle_assembly_version_id=run.vehicle_assembly_version_id,
-        cinder_package_version=run.cinder_model_version,
-        input_schema_version=run.input_schema_version,
-        result_contract_version=run.result_contract_version,
-        summary_scalars=run.summary_scalars or {},
+        run=jobs.status(run),
+        input_document_snapshot=run.input_contract,
+        result=artifacts.get_database_run_result(session, run_id),
     )

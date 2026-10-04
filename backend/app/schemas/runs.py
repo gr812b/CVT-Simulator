@@ -11,12 +11,13 @@ from .common import ApiModel, ErrorBody, JsonObject
 from .projections import RunPreview
 
 RunStatus = Literal[
-    "queued", "validating", "running", "completed", "failed", "timed_out"
+    "queued", "validating", "running", "completed", "failed", "timed_out", "cancelled"
 ]
-RunSource = Literal["direct", "library"]
+RunSource = Literal["direct", "library", "experiment"]
 
 
 class CreateRunRequest(ApiModel):
+    request_key: str = Field(min_length=16, max_length=64)
     simulation_case: JsonObject
     include_reported_segments: bool = False
     include_raw_trace: bool = False
@@ -44,6 +45,7 @@ class CreateRunRequest(ApiModel):
 
         if "input_document_snapshot" in data:
             return {
+                "request_key": data.get("request_key"),
                 "simulation_case": data["input_document_snapshot"],
                 "include_reported_segments": include_reported_segments,
                 "include_raw_trace": include_raw_trace,
@@ -51,7 +53,8 @@ class CreateRunRequest(ApiModel):
 
         if data.get("document_type") == "cinder_simulation_case":
             return {
-                "simulation_case": data,
+                "request_key": data.get("request_key"),
+                "simulation_case": {key: value for key, value in data.items() if key != "request_key"},
                 "include_reported_segments": include_reported_segments,
                 "include_raw_trace": include_raw_trace,
             }
@@ -60,6 +63,7 @@ class CreateRunRequest(ApiModel):
 
 
 class CreateLibraryRunRequest(ApiModel):
+    request_key: str = Field(min_length=16, max_length=64)
     vehicle_assembly_version_id: str
     tune_id: str | None = None
     load_case_id: str | None = None
@@ -69,6 +73,7 @@ class CreateLibraryRunRequest(ApiModel):
 
 
 class RerunStoredRunRequest(ApiModel):
+    request_key: str = Field(min_length=16, max_length=64)
     include_reported_segments: bool = False
     include_raw_trace: bool = False
 
@@ -89,6 +94,12 @@ class RunStatusResponse(ApiModel):
     input_schema_version: int | None = None
     result_contract_version: int | None = None
     summary_scalars: JsonObject = Field(default_factory=dict)
+    name: str = "Simulation"
+    parent_run_id: str | None = None
+    cancel_requested_at: datetime | None = None
+    deadline_at: datetime | None = None
+    provenance: JsonObject = Field(default_factory=dict)
+    runtime_identity: JsonObject = Field(default_factory=dict)
 
 
 class RunListResponse(ApiModel):
@@ -109,3 +120,15 @@ class RunInputResponse(ApiModel):
 class RunPreviewResponse(ApiModel):
     run: RunStatusResponse
     preview: RunPreview
+
+
+class RunNotice(ApiModel):
+    id: str
+    created_at: datetime
+    run: RunStatusResponse
+
+
+class RunActivity(ApiModel):
+    active: RunStatusResponse | None = None
+    unread: list[RunNotice]
+    unread_count: int

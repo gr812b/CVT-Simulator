@@ -641,6 +641,10 @@ class RunCacheEntry(StringUUIDPrimaryKeyMixin, Base):
 
 class Run(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "runs"
+    __table_args__ = (
+        UniqueConstraint("account_id", "request_key", name="uq_runs_account_id_request_key"),
+        Index("ix_runs_queue", "status", "submitted_at"),
+    )
 
     account_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True
@@ -648,17 +652,17 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     created_by_user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    vehicle_assembly_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("vehicle_assembly_versions.id", ondelete="RESTRICT"), nullable=False
+    vehicle_assembly_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("vehicle_assembly_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    engine_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("engine_versions.id", ondelete="RESTRICT"), nullable=False
+    engine_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("engine_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    cvt_design_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("cvt_design_versions.id", ondelete="RESTRICT"), nullable=False
+    cvt_design_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cvt_design_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    output_system_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("output_system_versions.id", ondelete="RESTRICT"), nullable=False
+    output_system_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("output_system_versions.id", ondelete="RESTRICT"), nullable=True
     )
     tune_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("tunes.id", ondelete="SET NULL"), nullable=True
@@ -693,6 +697,18 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     cache_entry_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("run_cache_entries.id", ondelete="SET NULL"), nullable=True
     )
+    name: Mapped[str] = mapped_column(String(240), default="Simulation", server_default="Simulation")
+    source: Mapped[str] = mapped_column(String(20), default="library", server_default="library")
+    request_key: Mapped[str | None] = mapped_column(String(64))
+    request_hash: Mapped[str | None] = mapped_column(String(64))
+    parent_run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"))
+    provenance: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
+    runtime_identity: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
+    execution_options: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
+    worker_token: Mapped[str | None] = mapped_column(String(36))
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     cache_entry: Mapped[RunCacheEntry | None] = relationship(foreign_keys=[cache_entry_id])
     artifacts: Mapped[list["RunArtifact"]] = relationship(back_populates="run")
@@ -771,5 +787,6 @@ class FavoriteRun(Base):
 
 # Register authentication tables for Alembic and local create_all bootstrapping.
 from app.database.auth_models import AuthSession, PasswordResetToken, AuthRateLimit  # noqa: E402,F401
+from app.database.experiment_models import Experiment, ExperimentRevision, RunNotification  # noqa: E402,F401
 
 Index("uq_users_email_normalized", func.lower(User.email), unique=True)

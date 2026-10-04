@@ -21,7 +21,7 @@ services:
   cvt-backend:
     image: ghcr.io/gr812b/cvt-simulator-backend:${CVT_TAG:-latest}
     restart: unless-stopped
-    environment:
+    environment: &backend-environment
       CVT_DATABASE_URL: postgresql+psycopg://cvt:${POSTGRES_PASSWORD}@postgres:5432/cvt_simulator
       CVT_DATABASE_ECHO: "0"
       CVT_RUN_EXECUTOR_MODE: process
@@ -56,6 +56,18 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+    networks:
+      - cvt-network
+
+  cvt-worker:
+    image: ghcr.io/gr812b/cvt-simulator-backend:${CVT_TAG:-latest}
+    restart: unless-stopped
+    environment: *backend-environment
+    command: ["python", "-m", "app.scripts.run_worker"]
+    stop_grace_period: 135s
+    depends_on:
+      cvt-backend:
+        condition: service_healthy
     networks:
       - cvt-network
 

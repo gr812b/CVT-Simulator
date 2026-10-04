@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from fastapi import APIRouter, Depends, Request, status
+from sqlalchemy.orm import Session
+
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
     get_database_session,
 )
+from app.api.v1.runs import submit_direct
 from app.application import access
 from app.application.auth import Principal
 from app.application.cinder_gateway import (
@@ -14,7 +18,7 @@ from app.application.cinder_gateway import (
 )
 from app.application.container import ApplicationContainer
 from app.application.default_setup import initial_validation_case
-from app.core.errors import ApiProblem, RunNotFoundError
+from app.core.errors import ApiProblem
 from app.database.runs import get_database_run
 from app.database.validation import (
     create_validation_run,
@@ -32,8 +36,6 @@ from app.schemas.validation import (
     ValidationWorkspaceResponse,
     ValidationWorkspaceUpdate,
 )
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/validation", tags=["validation"])
 
@@ -139,28 +141,20 @@ def save_validation_workspace(
 )
 def create_validation_simulation_run(
     request: CreateRunRequest,
+    http: Request,
     container: ApplicationContainer = Depends(get_container),
     principal: Principal = Depends(get_current_principal),
+    session: Session = Depends(get_database_session),
 ) -> RunStatusResponse:
     """Run validation with the zero-clearance bilateral/slotted secondary helix."""
 
-    principal.require_write()
-    record = container.runs.submit(
-        request.simulation_case,
-        account_id=principal.account_id,
-        include_reported_segments=request.include_reported_segments,
-        include_raw_trace=request.include_raw_trace,
-        execution_profile=VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
-    )
-    return RunStatusResponse(
-        id=record.id,
-        status=record.status,
-        submitted_at=record.submitted_at,
-        started_at=record.started_at,
-        completed_at=record.completed_at,
-        error=record.error,
-        source="direct",
-        contract_hash=record.input_fingerprint,
+    return submit_direct(
+        request,
+        session,
+        principal,
+        container,
+        http,
+        VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
     )
 
 
@@ -193,10 +187,7 @@ def save_validation_run(
         )
     principal.require_write()
     if request.simulation_run_id:
-        try:
-            linked_run = container.runs.status(request.simulation_run_id)
-        except RunNotFoundError:
-            linked_run = get_database_run(session, request.simulation_run_id)
+        linked_run = get_database_run(session, request.simulation_run_id)
         access.owned(linked_run, principal)
     run = create_validation_run(
         session, account_id=principal.account_id, **request.model_dump()

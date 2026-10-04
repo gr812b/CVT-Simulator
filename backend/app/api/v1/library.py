@@ -90,14 +90,7 @@ def create_tune(
     principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
     principal.require_write()
-    access.library_object(
-        session, principal, "vehicle-assemblies", request.vehicle_assembly_id
-    )
-    access.library_object(session, principal, "cvt-designs", request.cvt_design_id)
-    tune = Tune(account_id=principal.account_id, **request.model_dump())
-    session.add(tune)
-    session.flush()
-    return _tune_response(tune)
+    raise ApiProblem(410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes.")
 
 
 @router.patch("/tunes/{tune_id}", response_model=TuneResponse)
@@ -107,13 +100,8 @@ def update_tune(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
-    tune = access.owned(session.get(Tune, tune_id), principal, write=True)
-    if tune is None:
-        raise ApiProblem(404, "tune_not_found", f"No tune exists with id {tune_id!r}.")
-    for key, value in request.model_dump(exclude_unset=True).items():
-        setattr(tune, key, value)
-    session.flush()
-    return _tune_response(tune)
+    access.owned(session.get(Tune, tune_id), principal, write=True)
+    raise ApiProblem(410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes.")
 
 
 @router.get("/load-cases", response_model=LoadCaseListResponse)
