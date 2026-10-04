@@ -5,11 +5,11 @@
     display: flex;
     flex-direction: column;
     background-color: var(--background);
-    height: 100vh;
-    width: 100vw;
+    min-height: calc(100dvh - 96px);
+    width: 100%;
     padding: 0.625rem;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: auto;
 
     .topBar {
         display: flex;

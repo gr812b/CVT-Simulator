@@ -8,6 +8,7 @@ Usage:
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from dataclasses import replace
 from pathlib import Path
 
 from app.core.settings import Settings
@@ -31,15 +32,7 @@ def main() -> None:
 
     settings = Settings.from_environment()
     if args.database_url is not None:
-        settings = Settings(
-            api_prefix=settings.api_prefix,
-            preset_directory=settings.preset_directory,
-            run_timeout_seconds=settings.run_timeout_seconds,
-            run_executor_mode=settings.run_executor_mode,
-            cors_origins=settings.cors_origins,
-            database_url=args.database_url,
-            database_echo=settings.database_echo,
-        )
+        settings = replace(settings, database_url=args.database_url)
     create_and_seed_database(settings, preset_path=args.preset_path)
     print(f"Database created and seeded: {settings.database_url}")
 

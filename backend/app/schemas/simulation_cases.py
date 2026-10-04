@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .common import ApiModel, JsonObject
+from .projections import CaseValidation
 
 
 class SimulationCaseDocumentRequest(ApiModel):
@@ -21,4 +22,4 @@ class ResolveLibrarySimulationCaseResponse(ApiModel):
 
 
 class SimulationCaseValidationResponse(ApiModel):
-    validation: JsonObject
+    validation: CaseValidation

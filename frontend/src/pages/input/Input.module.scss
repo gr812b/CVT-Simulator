@@ -7,8 +7,9 @@
     display: flex;
     flex-direction: column;
     background-color: var(--background);
-    height: 100vh;
-    width: 100vw;
+    height: calc(100dvh - 96px);
+    min-height: 600px;
+    width: 100%;
 
     .topBar {
         display: grid;
@@ -23,7 +24,7 @@
             gap: 0.75rem;
             max-width: 65vw;
             white-space: nowrap;
-            overflow: hidden;
+            overflow: auto;
             color: var(--text-color);
 
             .selectedSetName {
@@ -242,11 +243,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #111111;
+    color: var(--text-color);
 }
 
 .customLoadCaseCheckbox input {
-    accent-color: #111111;
+    accent-color: var(--primary);
 }
 
 .helperText {

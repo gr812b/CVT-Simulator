@@ -7,9 +7,12 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from .common import ApiModel, JsonObject
+from .common import ApiModel, ErrorBody, JsonObject
+from .projections import RunPreview
 
-RunStatus = Literal["queued", "validating", "running", "completed", "failed", "timed_out"]
+RunStatus = Literal[
+    "queued", "validating", "running", "completed", "failed", "timed_out"
+]
 RunSource = Literal["direct", "library"]
 
 
@@ -57,18 +60,15 @@ class CreateRunRequest(ApiModel):
 
 
 class CreateLibraryRunRequest(ApiModel):
-    account_id: str
     vehicle_assembly_version_id: str
     tune_id: str | None = None
     load_case_id: str | None = None
     execution_preset_id: str | None = None
-    created_by_user_id: str | None = None
     include_reported_segments: bool = False
     include_raw_trace: bool = False
 
 
 class RerunStoredRunRequest(ApiModel):
-    created_by_user_id: str | None = None
     include_reported_segments: bool = False
     include_raw_trace: bool = False
 
@@ -79,7 +79,7 @@ class RunStatusResponse(ApiModel):
     submitted_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None
-    error: JsonObject | None = None
+    error: ErrorBody | None = None
     source: RunSource = "direct"
     contract_hash: str | None = None
     cache_entry_id: str | None = None
@@ -108,4 +108,4 @@ class RunInputResponse(ApiModel):
 
 class RunPreviewResponse(ApiModel):
     run: RunStatusResponse
-    preview: JsonObject
+    preview: RunPreview

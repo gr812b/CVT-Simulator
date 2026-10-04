@@ -27,6 +27,13 @@ ExecutionPreset        → execution
 Run                    → frozen full cinder_simulation_case snapshot + stored result
 ```
 
+## M1 accounts and application foundation
+
+See [M1_APPLICATION_FOUNDATION.md](../docs/M1_APPLICATION_FOUNDATION.md) for local signup,
+password-reset mail, existing-user credential setup, ownership rules, deployment
+configuration, and coding standards. Private API routes require a session and CSRF
+header; old examples that submit account/user IDs must use the authenticated client.
+
 ## Local development
 
 From `backend/`:

@@ -1,11 +1,26 @@
+import '@mantine/core/styles.css';
 import '@styles/_base.scss';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
 import { App } from '@pages/app/App';
-import { LoadingProvider } from '@contexts/LoadingContext';
-import { SimulationCaseProvider } from '@contexts/SimulationCaseContext';
-import { SimulationRunProvider } from '@contexts/SimulationRunContext';
+import { AuthProvider } from '@contexts/AuthContext';
+import { theme, cssVariablesResolver } from '@styles/theme';
 const root = document.getElementById('root');
 if (root === null) throw new Error('Root element not found.');
-createRoot(root).render(<StrictMode><SimulationCaseProvider><SimulationRunProvider><LoadingProvider><BrowserRouter><App /></BrowserRouter></LoadingProvider></SimulationRunProvider></SimulationCaseProvider></StrictMode>);
+createRoot(root).render(
+  <StrictMode>
+    <MantineProvider
+      theme={theme}
+      cssVariablesResolver={cssVariablesResolver}
+      forceColorScheme="dark"
+    >
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </MantineProvider>
+  </StrictMode>,
+);

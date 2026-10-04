@@ -22,6 +22,7 @@ from app.database.models import (
     Tune,
     VehicleAssemblyVersion,
 )
+from app.database.tuning import readable_tuning_schema
 
 JsonDict = dict[str, Any]
 
@@ -53,11 +54,15 @@ def resolve_simulation_case(
 
     assembly_version = session.get(VehicleAssemblyVersion, vehicle_assembly_version_id)
     if assembly_version is None:
-        raise ValueError(f"Unknown vehicle assembly version {vehicle_assembly_version_id!r}.")
+        raise ValueError(
+            f"Unknown vehicle assembly version {vehicle_assembly_version_id!r}."
+        )
 
     engine_version = session.get(EngineVersion, assembly_version.engine_version_id)
     cvt_version = session.get(CVTDesignVersion, assembly_version.cvt_design_version_id)
-    output_version = session.get(OutputSystemVersion, assembly_version.output_system_version_id)
+    output_version = session.get(
+        OutputSystemVersion, assembly_version.output_system_version_id
+    )
     if engine_version is None or cvt_version is None or output_version is None:
         raise ValueError(
             "Vehicle assembly version references a missing released component version."
@@ -145,9 +150,34 @@ def resolve_simulation_case(
     # database schema/cache implementation. The aliases above ensure engine and
     # output-system differences remain part of the cache key.
     document["contract_hash"] = canonical_json_hash(
-        {key: copy.deepcopy(document[key]) for key in V1_EXECUTABLE_HASH_KEYS if key in document}
+        {
+            key: copy.deepcopy(document[key])
+            for key in V1_EXECUTABLE_HASH_KEYS
+            if key in document
+        }
     )
     return document
+
+
+def normalize_preset_case(document: JsonDict) -> JsonDict:
+    """Translate a bundled V1 preset through the same adapter as stored designs."""
+    if "shaft_boundaries" in document:
+        return copy.deepcopy(document)
+    host, scenario = _current_host_and_scenario(document["scenario"])
+    return {
+        "schema_version": 1,
+        "document_type": CURRENT_SIMULATION_DOCUMENT_TYPE,
+        "assembly": _current_assembly_document(
+            document["assembly"], document["execution"]
+        ),
+        "shaft_boundaries": {
+            "primary": _current_primary_boundary(document["input_boundary"]),
+            "secondary": _current_secondary_boundary(document["output_boundary"]),
+        },
+        "host": host,
+        "scenario": scenario,
+        "execution": _current_execution(document["execution"]),
+    }
 
 
 def _current_assembly_document(
@@ -167,7 +197,9 @@ def _current_assembly_document(
         pulleys["secondary"] = pulleys.pop("output")
 
     if "primary" not in pulleys or "secondary" not in pulleys:
-        raise ValueError("CVT design must define both primary and secondary pulley payloads.")
+        raise ValueError(
+            "CVT design must define both primary and secondary pulley payloads."
+        )
 
     _normalize_contact(assembly, stored_execution)
     _normalize_inertias(assembly)
@@ -183,7 +215,8 @@ def _normalize_contact(assembly: JsonDict, stored_execution: JsonDict) -> None:
     legacy_friction = contact.get("friction_coefficient")
     fallback = (
         float(legacy_friction)
-        if isinstance(legacy_friction, (int, float)) and not isinstance(legacy_friction, bool)
+        if isinstance(legacy_friction, (int, float))
+        and not isinstance(legacy_friction, bool)
         else None
     )
 
@@ -367,7 +400,8 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
     missing = [key for key in cvt_keys if key not in initial]
     if missing:
         raise ValueError(
-            "Scenario initial state is missing required CVT values: " + ", ".join(missing)
+            "Scenario initial state is missing required CVT values: "
+            + ", ".join(missing)
         )
 
     initial_cvt_state = {key: copy.deepcopy(initial[key]) for key in cvt_keys}
@@ -377,7 +411,8 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
         shaft_angle = legacy_host_source.get("secondary_shaft_angle_rad", 0.0)
 
     has_vehicle_state = isinstance(legacy_host_source, dict) and (
-        "vehicle_position_m" in legacy_host_source or "vehicle_speed_m_per_s" in legacy_host_source
+        "vehicle_position_m" in legacy_host_source
+        or "vehicle_speed_m_per_s" in legacy_host_source
     )
     if has_vehicle_state:
         host = {
@@ -385,7 +420,9 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
             "initial_state": {
                 "secondary_shaft_angle_rad": shaft_angle,
                 "vehicle_position_m": legacy_host_source.get("vehicle_position_m", 0.0),
-                "vehicle_speed_m_per_s": legacy_host_source.get("vehicle_speed_m_per_s", 0.0),
+                "vehicle_speed_m_per_s": legacy_host_source.get(
+                    "vehicle_speed_m_per_s", 0.0
+                ),
             },
         }
     else:
@@ -435,7 +472,9 @@ def _current_execution(stored_execution: JsonDict) -> JsonDict:
     )
     missing = [key for key in required if key not in current_integrator]
     if missing:
-        raise ValueError("Execution integrator is missing required values: " + ", ".join(missing))
+        raise ValueError(
+            "Execution integrator is missing required values: " + ", ".join(missing)
+        )
 
     # Only the current public execution contract is emitted. Legacy traction,
     # closure, operating-limit, and switching dictionaries were internal to the
@@ -487,10 +526,14 @@ def _collect_version_warnings(
     return warnings
 
 
-def apply_tune(cinder_assembly: JsonDict, tuning_schema: JsonDict, values: JsonDict) -> None:
+def apply_tune(
+    cinder_assembly: JsonDict, tuning_schema: JsonDict, values: JsonDict
+) -> None:
     """Apply tune values to the stored V1 assembly using its JSON-pointer schema."""
 
-    params = tuning_schema.get("parameters", [])
+    params = readable_tuning_schema(cinder_assembly, tuning_schema).get(
+        "parameters", []
+    )
     path_by_key = {
         str(param["key"]): str(param["path"])
         for param in params
@@ -527,7 +570,11 @@ def _deep_merge(target: JsonDict, overrides: JsonDict) -> JsonDict:
             # Discriminated sub-documents must be replaced when their kind
             # changes. Otherwise a constant-grade profile changed to a
             # piecewise route would keep stale legacy fields.
-            if "kind" in value and "kind" in existing and value["kind"] != existing["kind"]:
+            if (
+                "kind" in value
+                and "kind" in existing
+                and value["kind"] != existing["kind"]
+            ):
                 target[key] = copy.deepcopy(value)
             else:
                 _deep_merge(existing, value)

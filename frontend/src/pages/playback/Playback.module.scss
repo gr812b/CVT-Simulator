@@ -7,8 +7,8 @@
     display: flex;
     flex-direction: column;
     background-color: var(--background);
-    height: 100vh;
-    width: 100vw;
+    min-height: calc(100dvh - 96px);
+    width: 100%;
     @include mixins.scrollbar;
 
     .buttonsContainer {

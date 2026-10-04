@@ -26,10 +26,21 @@ services:
       CVT_DATABASE_ECHO: "0"
       CVT_RUN_EXECUTOR_MODE: process
       CVT_RUN_TIMEOUT_SECONDS: "120"
+      CVT_ENVIRONMENT: production
+      CVT_WEB_URL: ${CVT_WEB_URL:?Set the public HTTPS application URL}
+      CVT_CORS_ORIGINS: ${CVT_WEB_URL}
+      CVT_MAIL_MODE: smtp
+      CVT_SMTP_HOST: ${CVT_SMTP_HOST:?Set the SMTP host for password reset}
+      CVT_SMTP_PORT: ${CVT_SMTP_PORT:-587}
+      CVT_SMTP_SECURITY: ${CVT_SMTP_SECURITY:-starttls}
+      CVT_SMTP_USERNAME: ${CVT_SMTP_USERNAME:-}
+      CVT_SMTP_PASSWORD: ${CVT_SMTP_PASSWORD:-}
+      CVT_SMTP_FROM: ${CVT_SMTP_FROM:?Set the verified sender address}
     command:
       - sh
       - -c
       - |
+        set -e
         alembic upgrade head
         exec uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:

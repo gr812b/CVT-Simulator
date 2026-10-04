@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from app.api.v1.dependencies import get_container, get_database_session
+from app.api.v1.dependencies import (
+    get_container,
+    get_current_principal,
+    get_database_session,
+)
+from app.application import access
+from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem
 from app.database.resolver import resolve_simulation_case
@@ -15,6 +18,8 @@ from app.schemas.simulation_cases import (
     SimulationCaseDocumentRequest,
     SimulationCaseValidationResponse,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/simulation-cases", tags=["simulation cases"])
 
@@ -29,11 +34,15 @@ def validate_simulation_case(
     )
 
 
-@router.post("/resolve-from-library", response_model=ResolveLibrarySimulationCaseResponse)
+@router.post(
+    "/resolve-from-library", response_model=ResolveLibrarySimulationCaseResponse
+)
 def resolve_from_library_selection(
     request: ResolveLibrarySimulationCaseRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ResolveLibrarySimulationCaseResponse:
+    access.run_selection(session, principal, request)
     try:
         simulation_case = resolve_simulation_case(
             session,

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from threading import RLock
 from typing import Any, Literal, Protocol
-import copy
 
 from app.core.errors import RunNotFoundError
 
-RunStatus = Literal["queued", "validating", "running", "completed", "failed", "timed_out"]
+RunStatus = Literal[
+    "queued", "validating", "running", "completed", "failed", "timed_out"
+]
 
 
 def utc_now() -> datetime:
@@ -20,6 +22,7 @@ def utc_now() -> datetime:
 @dataclass(frozen=True, slots=True)
 class RunRecord:
     id: str
+    account_id: str
     status: RunStatus
     submitted_at: datetime
     input_document_snapshot: dict[str, Any]

@@ -1,26 +1,24 @@
-import styles from './Button.module.scss'
-import cx from 'classnames';
-import type {ButtonHTMLAttributes, ComponentType, SVGAttributes} from 'react';
-import React from 'react';
+import { memo, type ButtonHTMLAttributes, type ComponentType, type SVGAttributes } from 'react';
+import { Button as MantineButton } from '@mantine/core';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    text?: string
-    icon: ComponentType<SVGAttributes<SVGSVGElement>>
-    iconSide?: 'left' | 'right'
-    size?: 'default' | 'large'
-    className?: string
+  text?: string;
+  icon: ComponentType<SVGAttributes<SVGSVGElement>>;
+  iconSide?: 'left' | 'right';
+  size?: 'default' | 'large';
 }
 
-export const Button = React.memo(({ text, icon: Icon, iconSide = 'left', size = 'default', className, ...props }: ButtonProps) => {
-    const renderIcon = () => <Icon className={styles.icon} />
-    return (
-        <button
-            className={cx(styles.button, { [styles.noText]: !text, [styles.large]: size === 'large' }, className)}
-            {...props}
-        >
-            {iconSide === 'left' && renderIcon()}
-            {text && <span className={styles.text}>{text}</span>}
-            {iconSide === 'right' && renderIcon()}
-        </button>
-    )
-});
+/** Compatibility adapter for existing tool pages; Mantine owns button behavior. */
+export const Button = memo(
+  ({ text, icon: Icon, iconSide = 'left', size = 'default', ...props }: ButtonProps) => (
+    <MantineButton
+      size={size === 'large' ? 'lg' : 'sm'}
+      variant="light"
+      leftSection={iconSide === 'left' ? <Icon width={20} height={20} aria-hidden /> : undefined}
+      rightSection={iconSide === 'right' ? <Icon width={20} height={20} aria-hidden /> : undefined}
+      {...props}
+    >
+      {text}
+    </MantineButton>
+  ),
+);

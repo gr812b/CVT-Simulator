@@ -3,7 +3,7 @@
 # TypeScript client is generated before the Vite build. Generated contracts do
 # not need to be committed to the repository.
 
-FROM python:3.10-slim AS contracts
+FROM python:3.12-slim AS contracts
 
 WORKDIR /repo/backend
 COPY backend/requirements.txt ./requirements.txt

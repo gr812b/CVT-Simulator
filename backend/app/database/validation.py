@@ -90,7 +90,9 @@ def _default_workflow(resolved: JsonDict) -> JsonDict:
         },
         "manualInitialState": {
             "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
-            "secondaryAngularSpeedRadPerS": initial["secondary_angular_speed_rad_per_s"],
+            "secondaryAngularSpeedRadPerS": initial[
+                "secondary_angular_speed_rad_per_s"
+            ],
             "beltSpeedMPerS": initial["belt_speed_m_per_s"],
             "shiftPositionM": initial["shift_position_m"],
             "shiftSpeedMPerS": initial["shift_speed_m_per_s"],
@@ -148,7 +150,9 @@ def _upgrade_workflow(workflow: JsonDict | None, setup_document: JsonDict) -> Js
     rpm_defaults = rpm_defaults_raw if isinstance(rpm_defaults_raw, dict) else {}
     active_dataset_raw = raw.get("activeDataset")
     active_dataset = (
-        copy.deepcopy(active_dataset_raw) if isinstance(active_dataset_raw, dict) else None
+        copy.deepcopy(active_dataset_raw)
+        if isinstance(active_dataset_raw, dict)
+        else None
     )
 
     upgraded = {
@@ -207,7 +211,9 @@ def _upgrade_workspace(workspace: ValidationWorkspace) -> ValidationWorkspace:
     return workspace
 
 
-def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspace:
+def ensure_workspace(
+    session: Session, *, account_id: str, fallback_document: JsonDict | None = None
+) -> ValidationWorkspace:
     """Return the autosaved workspace, creating/upgrading it when necessary."""
 
     workspace = get_workspace(session, account_id=account_id)
@@ -215,6 +221,16 @@ def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspac
         _upgrade_workspace(workspace)
         session.flush()
         return workspace
+
+    if fallback_document is not None:
+        return upsert_workspace(
+            session,
+            account_id=account_id,
+            setup_document=fallback_document,
+            metrology={},
+            controller_templates=[],
+            workflow_defaults=_default_workflow(fallback_document),
+        )
 
     assembly = session.scalar(
         select(VehicleAssembly)
@@ -229,7 +245,9 @@ def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspac
         )
     )
     if assembly is None or assembly.released_version_id is None:
-        raise ValueError("No released vehicle assembly is available to initialize validation.")
+        raise ValueError(
+            "No released vehicle assembly is available to initialize validation."
+        )
 
     tune = session.scalar(
         select(Tune)
@@ -307,12 +325,16 @@ def upsert_workspace(
 def list_validation_runs(
     session: Session,
     *,
+    account_id: str,
     limit: int = 20,
 ) -> list[ValidationRun]:
     bounded_limit = max(1, min(int(limit), 100))
     return list(
         session.scalars(
-            select(ValidationRun).order_by(ValidationRun.created_at.desc()).limit(bounded_limit)
+            select(ValidationRun)
+            .where(ValidationRun.account_id == account_id)
+            .order_by(ValidationRun.created_at.desc())
+            .limit(bounded_limit)
         )
     )
 

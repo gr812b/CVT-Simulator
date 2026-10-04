@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from .common import ApiModel, ContractDocumentResponse
+from .projections import ComponentCatalog, EditorDocument
 
 
 class ConventionsResponse(ContractDocumentResponse):
     pass
 
 
-class ComponentCatalogResponse(ContractDocumentResponse):
-    pass
+class ComponentCatalogResponse(ApiModel):
+    document: ComponentCatalog
 
 
-class EditorSchemaResponse(ContractDocumentResponse):
-    pass
+class EditorSchemaResponse(ApiModel):
+    document: EditorDocument
 
 
 class SimulationCaseJsonSchemaResponse(ContractDocumentResponse):

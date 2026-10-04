@@ -6,7 +6,6 @@ import { SetupEditorModal } from '@components/validation/SetupEditorModal';
 import { ValidationTraceChart } from '@components/validation/ValidationTraceChart';
 import { useLoading } from '@contexts/LoadingContext';
 import {
-  DEMO_ACCOUNT_ID,
   getSimulationResult,
   getValidationWorkspace,
   listValidationRuns,
@@ -441,7 +440,7 @@ export const Validation = () => {
 
   useEffect(() => {
     setLoading(true, 'Loading validation setup…');
-    void getValidationWorkspace(DEMO_ACCOUNT_ID)
+    void getValidationWorkspace()
       .then((loaded) => {
         setWorkspace(loaded);
         setWorkspaceError(null);
@@ -646,7 +645,6 @@ export const Validation = () => {
       const resolvedInitialState = resolveInitialState(workspace, data, crop, channels);
       setLoading(true, 'Saving validation result…');
       const savedValidationRun = await saveValidationRun({
-        accountId: DEMO_ACCOUNT_ID,
         sourceFilename: data.filename,
         rawCsv: data.rawCsv,
         cropStartS: crop.startS,

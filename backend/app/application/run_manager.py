@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import replace
 import hashlib
 import json
 import multiprocessing
+import time
+from dataclasses import replace
 from queue import Empty
 from threading import Thread
-import time
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -48,6 +48,7 @@ class RunManager:
         self,
         document: dict[str, Any],
         *,
+        account_id: str,
         include_reported_segments: bool = False,
         include_raw_trace: bool = False,
         execution_profile: str = "default",
@@ -66,6 +67,7 @@ class RunManager:
 
         record = RunRecord(
             id=str(uuid4()),
+            account_id=account_id,
             status="queued",
             submitted_at=utc_now(),
             input_document_snapshot=snapshot,
@@ -223,5 +225,7 @@ class RunManager:
 
 
 def _fingerprint(document: dict[str, Any]) -> str:
-    canonical = json.dumps(document, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    canonical = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), allow_nan=False
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

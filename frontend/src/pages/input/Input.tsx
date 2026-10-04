@@ -12,6 +12,7 @@ import {
   buildLibraryRunSelection,
   buildRunSetupForVehicle,
   getDefaultRunSetup,
+  createPersonalTune,
   resolveSimulationCaseFromLibrarySelection,
   updateTuneValues,
   type DefaultRunSetup,
@@ -98,7 +99,7 @@ function makeCustomLoadCaseRoadProfile(segments: CustomLoadCaseSegment[]) {
 /**
  * Run setup edits DB tune values only. Engine/CVT hardware/output-system data
  * remain pinned by the released seeded Baja assembly, while load and execution
- * are explicit selectors below. Test/demo account IDs stay in the API boundary.
+ * are explicit selectors below. Ownership comes from the signed-in session.
  */
 export const Input = () => {
   const navigate = useNavigate();
@@ -164,8 +165,6 @@ export const Input = () => {
       const next = await buildRunSetupForVehicle(
         setup.vehicleAssemblies,
         nextId,
-        setup.accountId,
-        setup.createdByUserId,
       );
       setSetup(next);
       setSelectedVehicleAssemblyId(next.selectedVehicleAssembly.id);
@@ -187,6 +186,23 @@ export const Input = () => {
     setTuneValues(nextTune?.values ?? {});
     setSavedTuneValues(nextTune?.values ?? {});
   }, [setup?.tunes]);
+
+  const createTune = useCallback(async () => {
+    if (setup === null) return;
+    setLoading(true, 'Creating your personal tune...');
+    setSetupError(null);
+    try {
+      const tune = await createPersonalTune(setup);
+      setSetup(current => current === null ? current : { ...current, tunes: [...current.tunes, tune], selectedTune: tune });
+      setSelectedTuneId(tune.id);
+      setTuneValues(tune.values);
+      setSavedTuneValues(tune.values);
+    } catch (error) {
+      setSetupError(error instanceof Error ? error.message : 'Unable to create your tune.');
+    } finally {
+      setLoading(false);
+    }
+  }, [setup, setLoading]);
 
   const updateField = useCallback((field: ResolvedTuningField, next: unknown) => {
     setTuneValues((current) => setTuneFieldValue(current, field, next));
@@ -316,6 +332,7 @@ export const Input = () => {
                 {setup.tunes.map((tune) => <option key={tune.id} value={tune.id}>{tune.name}</option>)}
               </select>
             </label>
+            {setup.tunes.length === 0 && <Button text="Create personal tune" icon={Edit} disabled={isLoading} onClick={() => void createTune()} />}
             <label className={styles.selectField}>
               <span>Load case</span>
               <select value={selectedLoadCaseId ?? ''} onChange={(event) => setSelectedLoadCaseId(event.target.value || null)} disabled={setup.loadCases.length === 0}>
@@ -401,7 +418,7 @@ export const Input = () => {
             <p className={styles.helperText}>Engine and CVT hardware stay shared by the seeded Baja baselines. The vehicle dropdown changes the pinned output-system mass; the boxes below update the selected CVT tune only.</p>
           </section>
 
-          {GROUPS.map((group) => (
+          {GROUPS.filter(group => fields.some(field => field.group === group)).map((group) => (
             <ParameterAccordion key={group} title={GROUP_TITLES[group]} isExpanded={expanded[group]} onToggle={() => setExpanded((current) => ({ ...current, [group]: !current[group] }))}>
               {fields.filter((field) => field.group === group).map((field) => {
                 const value = valueForTuneField(field, tuneValues);

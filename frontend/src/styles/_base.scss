@@ -1,37 +1,7 @@
 @use "./fonts";
-
-// Universal box-sizing border-box
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-// default button styling
-button {
-    background-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: none;
-    transition: 0.3s ease-in-out;
-    padding: 0;
-
-    &:hover {
-        cursor: pointer;
-    }
-}
-
-// default font styling
-label,
-input,
-span {
-    @include fonts.text-medium;
-    color: var(--text-color);
-}
-
-h1, h2, h3, h4, h5, h6, p, span, label {
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--mantine-primary-color-filled); outline-offset: 3px; }

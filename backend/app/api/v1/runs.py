@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
-
-from app.api.v1.dependencies import get_container, get_database_session
+from app.api.v1.dependencies import (
+    get_container,
+    get_current_principal,
+    get_database_session,
+)
+from app.application import access
+from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem, RunNotFoundError
 from app.database import runs as db_runs
@@ -13,14 +16,16 @@ from app.database.runs import LibraryRunError
 from app.schemas.runs import (
     CreateLibraryRunRequest,
     CreateRunRequest,
+    RerunStoredRunRequest,
     RunInputResponse,
     RunListResponse,
     RunPreviewResponse,
     RunResultResponse,
     RunStatusResponse,
-    RerunStoredRunRequest,
 )
 from app.storage.run_store import RunRecord
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -28,6 +33,7 @@ router = APIRouter(prefix="/runs", tags=["runs"])
 @router.post("", response_model=RunStatusResponse, status_code=status.HTTP_202_ACCEPTED)
 def create_run(
     request: CreateRunRequest,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
 ) -> RunStatusResponse:
     """Submit a complete CINDER simulation-case document directly.
@@ -37,8 +43,10 @@ def create_run(
     result artifacts are persisted.
     """
 
+    principal.require_write()
     record = container.runs.submit(
         request.simulation_case,
+        account_id=principal.account_id,
         include_reported_segments=request.include_reported_segments,
         include_raw_trace=request.include_raw_trace,
     )
@@ -52,21 +60,24 @@ def create_run(
 )
 def create_run_from_library(
     request: CreateLibraryRunRequest,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunStatusResponse:
     """Resolve released database objects into a frozen CINDER case and run it."""
 
+    principal.require_write()
+    access.run_selection(session, principal, request)
     try:
         submitted = db_runs.submit_library_run(
             session,
             gateway=container.gateway,
-            account_id=request.account_id,
+            account_id=principal.account_id,
             vehicle_assembly_version_id=request.vehicle_assembly_version_id,
             tune_id=request.tune_id,
             load_case_id=request.load_case_id,
             execution_preset_id=request.execution_preset_id,
-            created_by_user_id=request.created_by_user_id,
+            created_by_user_id=principal.user_id,
             include_reported_segments=request.include_reported_segments,
             include_raw_trace=request.include_raw_trace,
         )
@@ -77,7 +88,7 @@ def create_run_from_library(
 
 @router.get("", response_model=RunListResponse)
 def list_runs(
-    account_id: str | None = Query(default=None),
+    principal: Principal = Depends(get_current_principal),
     vehicle_assembly_version_id: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=250),
     session: Session = Depends(get_database_session),
@@ -93,7 +104,7 @@ def list_runs(
             _database_status(run)
             for run in db_runs.list_database_runs(
                 session,
-                account_id=account_id,
+                account_id=principal.account_id,
                 vehicle_assembly_version_id=vehicle_assembly_version_id,
                 limit=limit,
             )
@@ -109,6 +120,7 @@ def list_runs(
 def rerun_stored_run(
     run_id: str,
     request: RerunStoredRunRequest | None = None,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunStatusResponse:
@@ -119,13 +131,15 @@ def rerun_stored_run(
     deprecated, or edited source objects cannot change the rerun semantics.
     """
 
+    principal.require_write()
+    access.owned(db_runs.get_database_run(session, run_id), principal)
     request = request or RerunStoredRunRequest()
     try:
         submitted = db_runs.submit_rerun_from_database_run(
             session,
             gateway=container.gateway,
             source_run_id=run_id,
-            created_by_user_id=request.created_by_user_id,
+            created_by_user_id=principal.user_id,
             include_reported_segments=request.include_reported_segments,
             include_raw_trace=request.include_raw_trace,
         )
@@ -137,18 +151,22 @@ def rerun_stored_run(
 @router.get("/{run_id}", response_model=RunStatusResponse)
 def get_run(
     run_id: str,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunStatusResponse:
     try:
-        return _direct_status(container.runs.status(run_id))
+        return _direct_status(access.owned(container.runs.status(run_id), principal))
     except RunNotFoundError:
-        return _database_status(db_runs.get_database_run(session, run_id))
+        return _database_status(
+            access.owned(db_runs.get_database_run(session, run_id), principal)
+        )
 
 
 @router.get("/{run_id}/input", response_model=RunInputResponse)
 def get_run_input(
     run_id: str,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunInputResponse:
@@ -160,12 +178,14 @@ def get_run_input(
     """
 
     try:
-        record = container.runs.status(run_id)
+        record = access.owned(container.runs.status(run_id), principal)
     except RunNotFoundError:
-        run = db_runs.get_database_run(session, run_id)
+        run = access.owned(db_runs.get_database_run(session, run_id), principal)
         return RunInputResponse(
             run=_database_status(run),
-            input_document_snapshot=db_runs.get_database_run_input_contract(session, run_id),
+            input_document_snapshot=db_runs.get_database_run_input_contract(
+                session, run_id
+            ),
         )
     return RunInputResponse(
         run=_direct_status(record),
@@ -176,15 +196,17 @@ def get_run_input(
 @router.get("/{run_id}/preview", response_model=RunPreviewResponse)
 def get_run_preview(
     run_id: str,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunPreviewResponse:
     """Return the durable lightweight preview for charts and run browsing."""
 
     try:
+        access.owned(container.runs.status(run_id), principal)
         record = container.runs.completed_result(run_id)
     except RunNotFoundError:
-        run = db_runs.get_database_run(session, run_id)
+        run = access.owned(db_runs.get_database_run(session, run_id), principal)
         return RunPreviewResponse(
             run=_database_status(run),
             preview=db_runs.get_database_run_preview(session, run_id),
@@ -199,13 +221,15 @@ def get_run_preview(
 @router.get("/{run_id}/result", response_model=RunResultResponse)
 def get_run_result(
     run_id: str,
+    principal: Principal = Depends(get_current_principal),
     container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
 ) -> RunResultResponse:
     try:
+        access.owned(container.runs.status(run_id), principal)
         record = container.runs.completed_result(run_id)
     except RunNotFoundError:
-        run = db_runs.get_database_run(session, run_id)
+        run = access.owned(db_runs.get_database_run(session, run_id), principal)
         return RunResultResponse(
             run=_database_status(run),
             input_document_snapshot=run.input_contract,
@@ -232,7 +256,9 @@ def _direct_status(record: RunRecord) -> RunStatusResponse:
     )
 
 
-def _database_status(run: object, *, cache_hit: bool | None = None) -> RunStatusResponse:
+def _database_status(
+    run: object, *, cache_hit: bool | None = None
+) -> RunStatusResponse:
     return RunStatusResponse(
         id=run.id,
         status=run.status,

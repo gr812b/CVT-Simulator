@@ -30,6 +30,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -69,6 +70,8 @@ class User(StringUUIDPrimaryKeyMixin, Base):
 
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
@@ -709,3 +712,9 @@ class FavoriteRun(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
+
+
+# Register authentication tables for Alembic and local create_all bootstrapping.
+from app.database.auth_models import AuthSession, PasswordResetToken, AuthRateLimit  # noqa: E402,F401
+
+Index("uq_users_email_normalized", func.lower(User.email), unique=True)

@@ -1,84 +1,170 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './Dashboard.module.scss';
-import { Button } from '@components/button/Button';
-import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { SimulationsTable } from '@components/simulationsTable/SimulationsTable';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  Alert,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Loader,
+  Paper,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { Link } from 'react-router-dom';
+import { IconArrowRight, IconFlask, IconGeometry, IconPlayerPlay } from '@tabler/icons-react';
+import { useAuth } from '@contexts/AuthContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useRunSimulation } from '@hooks/useRunSimulation';
-import {
-  buildLibraryRunSelection,
-  getDefaultRunSetup,
-  type DefaultRunSetup,
-} from '@api/client';
-import PlayOutline from '@assets/icons/play_outline.svg?react';
-import Edit from '@assets/icons/edit.svg?react';
-import Home from '@assets/icons/home.svg?react';
+import { buildRunSetupForVehicle, getDefaultRunSetup, type DefaultRunSetup } from '@api/client';
 
-/**
- * Product dashboard: pick a released vehicle baseline and run it through the
- * database-backed library endpoint. The old raw CINDER preset workflow is
- * intentionally not part of the normal UI anymore.
- */
-export const Dashboard = () => {
-  const navigate = useNavigate();
+export function Dashboard() {
+  const { session } = useAuth();
   const { isLoading, loadingMessage } = useLoading();
   const { runLibrarySetup } = useRunSimulation();
   const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
-  const [selectedVehicleAssemblyId, setSelectedVehicleAssemblyId] = useState<string | null>(null);
-  const [listError, setListError] = useState<string | null>(null);
-  const [isLoadingSetup, setIsLoadingSetup] = useState(true);
-
-  const selectedVehicleAssembly = useMemo(
-    () => setup?.vehicleAssemblies.find((assembly) => assembly.id === selectedVehicleAssemblyId) ?? setup?.selectedVehicleAssembly ?? null,
-    [selectedVehicleAssemblyId, setup],
-  );
-
-  const refreshSetup = useCallback(async () => {
-    setIsLoadingSetup(true);
-    setListError(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    setBusy(true);
+    setError(null);
     try {
-      const next = await getDefaultRunSetup();
-      setSetup(next);
-      setSelectedVehicleAssemblyId((current) => current && next.vehicleAssemblies.some((assembly) => assembly.id === current)
-        ? current
-        : next.selectedVehicleAssembly.id);
-    } catch (error) {
-      setListError(error instanceof Error ? error.message : String(error));
+      setSetup(await getDefaultRunSetup());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to load your workspace.');
     } finally {
-      setIsLoadingSetup(false);
+      setBusy(false);
     }
   }, []);
-
-  useEffect(() => { void refreshSetup(); }, [refreshSetup]);
-
-  const handleRun = useCallback(async () => {
-    if (setup === null || selectedVehicleAssembly === null) return;
-    const selection = buildLibraryRunSelection(setup, { vehicleAssemblyId: selectedVehicleAssembly.id });
-    await runLibrarySetup(selection);
-  }, [runLibrarySetup, selectedVehicleAssembly, setup]);
-
+  useEffect(() => {
+    void load();
+  }, [load]);
+  const selectVehicle = async (id: string | null) => {
+    if (!setup || !id) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setSetup(await buildRunSetupForVehicle(setup.vehicleAssemblies, id));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to load this vehicle.');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <div className={styles.dashboard}>
-      <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-      <div className={styles.topBar}>
-        <Button text="Home" icon={Home} className={styles.navButton} onClick={() => navigate('/')} />
-        <div className={styles.headerCopy}>
-          <h1>CVT Run Library</h1>
-          <p>Run the seeded Baja baseline with the current default tune, load case, and execution preset.</p>
+    <Container size="lg" py="xl">
+      <Stack gap="xl">
+        <div>
+          <Badge variant="light" mb="sm">
+            Your workspace
+          </Badge>
+          <Title order={1}>Welcome, {session?.user.display_name}.</Title>
+          <Text c="dimmed" mt="sm">
+            A place to configure your drivetrain, explore its geometry, and understand how it
+            performs.
+          </Text>
         </div>
-      </div>
-      <SimulationsTable
-        vehicleAssemblies={setup?.vehicleAssemblies ?? []}
-        selectedId={selectedVehicleAssembly?.id ?? null}
-        onSelect={setSelectedVehicleAssemblyId}
-        isLoading={isLoadingSetup}
-        error={listError}
-      />
-      <div className={styles.buttonsContainer}>
-        <Button text="Run" icon={PlayOutline} className={styles.button} disabled={selectedVehicleAssembly === null} onClick={() => void handleRun()} />
-        <Button text="Tune / Load Setup" icon={Edit} className={styles.button} onClick={() => navigate('/input')} />
-      </div>
-    </div>
+        <Paper withBorder p="xl" radius="lg">
+          <Stack>
+            <Group justify="space-between">
+              <Title order={2} size="h3">
+                Start with a vehicle baseline
+              </Title>
+              {busy && <Loader size="sm" aria-label="Loading baselines" />}
+            </Group>
+            <Text size="sm" c="dimmed">
+              Choose a released setup from your workspace or the sample catalog. Runs are saved to
+              your account.
+            </Text>
+            {error && (
+              <Alert color="yellow" role="alert" title="Baseline unavailable">
+                {error}
+                <Button variant="subtle" size="xs" onClick={() => void load()} ml="sm">
+                  Try again
+                </Button>
+              </Alert>
+            )}
+            {setup && (
+              <>
+                <Select
+                  label="Vehicle setup"
+                  value={setup.selectedVehicleAssembly.id}
+                  data={setup.vehicleAssemblies.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                  onChange={(id) => void selectVehicle(id)}
+                  disabled={busy || isLoading}
+                  allowDeselect={false}
+                />
+                <Group gap="xs">
+                  <Badge variant="outline" color="gray">
+                    {setup.selectedLoadCase?.name ?? 'No load case'}
+                  </Badge>
+                  <Badge variant="outline" color="gray">
+                    {setup.selectedTune?.name ?? 'Baseline tuning'}
+                  </Badge>
+                </Group>
+                <Group mt="sm">
+                  <Button
+                    leftSection={<IconPlayerPlay size={18} />}
+                    loading={isLoading}
+                    disabled={busy || !setup.selectedLoadCase || !setup.selectedExecutionPreset}
+                    onClick={() => void runLibrarySetup(setup.selection)}
+                  >
+                    Run simulation
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/input"
+                    variant="default"
+                    rightSection={<IconArrowRight size={18} />}
+                  >
+                    Tune & configure
+                  </Button>
+                </Group>
+              </>
+            )}
+            {isLoading && (
+              <Text role="status" size="sm" c="dimmed">
+                {loadingMessage}
+              </Text>
+            )}
+          </Stack>
+        </Paper>
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <Paper withBorder p="xl">
+            <Stack>
+              <IconGeometry size={28} color="var(--mantine-color-red-4)" />
+              <Title order={2} size="h3">
+                Explore geometry
+              </Title>
+              <Text size="sm" c="dimmed">
+                Study the primary architecture, ramp shape, and force response.
+              </Text>
+              <Button component={Link} to="/primary-design" variant="light">
+                Open primary design
+              </Button>
+            </Stack>
+          </Paper>
+          <Paper withBorder p="xl">
+            <Stack>
+              <IconFlask size={28} color="var(--mantine-color-red-4)" />
+              <Title order={2} size="h3">
+                Validate with measurements
+              </Title>
+              <Text size="sm" c="dimmed">
+                Bring in dyno data and compare measured signals with your simulation.
+              </Text>
+              <Button component={Link} to="/validation" variant="light">
+                Open dyno validation
+              </Button>
+            </Stack>
+          </Paper>
+        </SimpleGrid>
+      </Stack>
+    </Container>
   );
-};
+}

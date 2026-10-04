@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
+import { resolve } from 'path';
 
 const root = resolve(__dirname, 'src');
 
 export default defineConfig({
+  server: { proxy: { '/api': 'http://127.0.0.1:8000' } },
   plugins: [react(), svgr()],
   resolve: {
     alias: {
@@ -25,5 +26,5 @@ export default defineConfig({
         api: 'modern',
       },
     },
-  }
-})
+  },
+});
