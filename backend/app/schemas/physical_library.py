@@ -227,9 +227,12 @@ class PhysicalListResponse(PhysicalModel):
     items: list[PhysicalItem]
 
 
-class PhysicalDetail(PhysicalModel):
+class PhysicalSelection(PhysicalModel):
     item: PhysicalItem
     document: PhysicalDocument
+
+
+class PhysicalDetail(PhysicalSelection):
     history: list[PhysicalRevision]
     updates: list[ComponentUpdate]
     validation: CaseValidation

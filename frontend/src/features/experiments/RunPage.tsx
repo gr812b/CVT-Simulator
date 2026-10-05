@@ -18,7 +18,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cancelRun, isActive, message, rerun, type RunStatus } from './api';
 import { useRunActivity } from './RunActivity';
 import {
-  copyRunExperiment,
   inspectRun,
   renameRun,
   type RunInspection,
@@ -47,7 +46,6 @@ export function RunPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const retryKey = useRef(crypto.randomUUID());
-  const copyKey = useRef(crypto.randomUUID());
   useEffect(() => {
     let disposed = false;
     let timer: ReturnType<typeof setTimeout>;
@@ -56,7 +54,6 @@ export function RunPage() {
     setEditingName(false);
     setError(null);
     retryKey.current = crypto.randomUUID();
-    copyKey.current = crypto.randomUUID();
     const poll = async () => {
       if (!runId) return;
       try {
@@ -267,27 +264,18 @@ export function RunPage() {
                     disabledReason={
                       !inspection
                         ? 'Wait for the run details to load.'
-                        : (inspection.experiment_copy_unavailable_reason ??
+                        : (inspection.experiment_unavailable_reason ??
                           undefined)
                     }
-                    onClick={() =>
-                      void act(async () => {
-                        const copied = await copyRunExperiment(
-                          run.id,
-                          copyKey.current,
-                        );
-                        navigate(
-                          `/input?setup=${copied.item.id}&scenario=${copied.scenario_id}&source_run=${run.id}`,
-                        );
-                      })
-                    }
+                    component={Link}
+                    to={`/input?source_run=${run.id}`}
                   >
                     New experiment from this run
                   </Button>
                 </Group>
                 <Text size="sm" c="dimmed">
-                  {inspection?.experiment_copy_unavailable_reason ??
-                    'Starting a new experiment makes an independent public copy of this run’s frozen hardware, tuning, mass and scenario. Review and edit it before submitting.'}
+                  {inspection?.experiment_unavailable_reason ??
+                    'Opens the same saved vehicle, CVT, engine, tune and load-case versions, including this run’s overrides. Nothing is copied into your library.'}
                 </Text>
                 {!isActive(run) && (
                   <Text size="sm" c="dimmed">

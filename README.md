@@ -42,6 +42,10 @@ It uses one McMaster 2025 CVT, one Kohler CH440 (Baja Restricted) engine and fiv
 paper-derived sample tunes. Reset the development database for these seed and
 scenario changes; update any explicit 120-second timeout overrides to 300.
 
+The [run-reference follow-up](docs/RUN_REFERENCE_REUSE.md) makes **New experiment
+from this run** reopen the original saved versions and run-only overrides without
+creating copies. It requires an API/frontend restart, with no database reset.
+
 ## Production Docker deployment
 
 The repository publishes two public images to GitHub Container Registry:

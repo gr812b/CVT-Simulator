@@ -46,11 +46,10 @@ export const renameRun = async (id: string, body: Schema['RenameRun']) =>
       body,
     }),
   );
-export const copyRunExperiment = async (id: string, key: string) =>
+export const getRunExperiment = async (id: string) =>
   dataOrThrow(
-    await api.POST('/api/v1/runs/{run_id}/experiment-copy', {
+    await api.GET('/api/v1/runs/{run_id}/experiment', {
       params: { path: { run_id: id } },
-      body: { request_key: key },
     }),
   );
 export const exportRun = async (id: string, kind: ExportKind) =>

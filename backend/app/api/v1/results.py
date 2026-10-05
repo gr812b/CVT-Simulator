@@ -12,9 +12,8 @@ from app.application import run_results as service
 from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.schemas.results import (
-    ConfigurationCopyResult,
-    CopyConfiguration,
     RenameRun,
+    RunExperimentDraft,
     RunHistoryPage,
     RunInspection,
     RunSeries,
@@ -91,21 +90,14 @@ def rename(
     return service.rename(session, principal, run_id, request)
 
 
-@router.post(
-    "/runs/{run_id}/experiment-copy",
-    response_model=ConfigurationCopyResult,
-    status_code=201,
-)
-def copy(
+@router.get("/runs/{run_id}/experiment", response_model=RunExperimentDraft)
+def experiment(
     run_id: str,
-    request: CopyConfiguration,
     session: Session = SessionDep,
     principal: Principal = PrincipalDep,
     container: ApplicationContainer = ContainerDep,
 ):
-    return service.copy_experiment(
-        session, principal, container.settings, run_id, request
-    )
+    return service.experiment_draft(session, principal, container.settings, run_id)
 
 
 @router.get(

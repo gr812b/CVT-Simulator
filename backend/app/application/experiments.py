@@ -50,8 +50,8 @@ def get_revision(session, principal, revision_id, kind=None):
     return revision
 
 
-def item_response(session, principal, obj):
-    revision = session.get(ExperimentRevision, obj.current_revision_id)
+def item_response(session, principal, obj, revision=None):
+    revision = revision or session.get(ExperimentRevision, obj.current_revision_id)
     setup = (
         session.get(VehicleAssemblyVersion, revision.document["setup_revision_id"])
         if obj.kind == "tunes"
@@ -66,13 +66,13 @@ def item_response(session, principal, obj):
         cvt_revision_id=cvt.id if cvt else None,
         id=obj.id,
         kind=obj.kind,
-        name=obj.name,
+        name=revision.document["name"],
         revision_id=revision.id,
         revision_number=revision.number,
         updated_at=aware(obj.updated_at),
         owned=obj.account_id == principal.account_id,
         archived=obj.archived,
-        setup_object_id=obj.setup_object_id,
+        setup_object_id=setup.vehicle_assembly_id if setup else None,
         sample=obj.is_sample,
         description=revision.document.get("notes", ""),
     )
@@ -108,7 +108,7 @@ def detail(session, principal, object_id, revision_id=None):
         .order_by(ExperimentRevision.number.desc())
     )
     return ExperimentDetail(
-        item=item_response(session, principal, obj),
+        item=item_response(session, principal, obj, revision),
         document=DOCUMENT.validate_python(revision.document),
         history=[
             {
@@ -223,7 +223,8 @@ def archive(session, principal, object_id, expected, archived):
     return item_response(session, principal, obj)
 
 
-def resolve(session, principal, settings, selection):
+def configuration(session, principal, settings, selection):
+    """Rebuild editor intent without invoking mechanics validation or writing data."""
     setup, assembly, params = setup_tuning(
         session, principal, selection.setup_revision_id
     )
@@ -277,12 +278,6 @@ def resolve(session, principal, settings, selection):
             selection.vehicle_mass_kg
         )
     road = apply_scenario(case, scenario, settings)
-    gateway = CinderGateway()
-    try:
-        gateway.validate_assembly_shape(assembly)
-        validation = validate_case(case)
-    except (ValueError, TypeError, KeyError) as exc:
-        raise ApiProblem(422, "invalid_experiment", str(exc)) from exc
     provenance = {
         "primary_boundary": selection.primary_boundary.model_dump()
         if selection.primary_boundary
@@ -308,6 +303,17 @@ def resolve(session, principal, settings, selection):
         or scenario.model_dump(mode="json") != scenario_revision.document,
         "vehicle_mass_override_kg": selection.vehicle_mass_kg,
     }
+    return case, road, provenance
+
+
+def resolve(session, principal, settings, selection):
+    case, road, provenance = configuration(session, principal, settings, selection)
+    gateway = CinderGateway()
+    try:
+        gateway.validate_assembly_shape(case["assembly"])
+        validation = validate_case(case)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise ApiProblem(422, "invalid_experiment", str(exc)) from exc
     return ExperimentPreview(
         validation=validation, road=road, simulation_case=case, provenance=provenance
     )

@@ -26,6 +26,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import { ActionButton as Button } from '@components/button/ActionButton';
+import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import { ComponentPicker } from '../physicalLibrary/ComponentPicker';
 import { CvtEditor } from '../physicalLibrary/CvtEditor';
@@ -39,7 +40,7 @@ import {
   physicalTemplate,
   savePhysical,
   validatePhysical,
-  type PhysicalDetail,
+  type PhysicalSelection,
   type PhysicalDocument,
   type PhysicalField,
   type PhysicalItem,
@@ -62,7 +63,7 @@ import {
   type Tune,
   type TuneSurface,
 } from './api';
-import { getFrozenInput } from '../results/api';
+import { getRunExperiment } from '../results/api';
 import { LoadCaseEditor } from './LoadCaseEditor';
 import {
   PrimaryBoundaryEditor,
@@ -94,7 +95,7 @@ export function ExperimentPage() {
   const [fields, setFields] = useState<PhysicalField[]>([]);
   const [catalog, setCatalog] = useState<PhysicalItem[]>([]);
   const [setup, setSetup] = useState<Setup | null>(null);
-  const [setupDetail, setSetupDetail] = useState<PhysicalDetail | null>(null);
+  const [setupDetail, setSetupDetail] = useState<PhysicalSelection | null>(null);
   const [surface, setSurface] = useState<TuneSurface | null>(null);
   const [tune, setTune] = useState<Tune | null>(null);
   const [tuneDetail, setTuneDetail] = useState<ExperimentDetail | null>(null);
@@ -103,6 +104,7 @@ export function ExperimentPage() {
   const [loadCase, setLoadCase] = useState<ExperimentDetail | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [primary, setPrimary] = useState<PrimaryBoundary>(null);
+  const [vehicleMassOverride, setVehicleMassOverride] = useState<number | null>(null);
   const [loadEditor, setLoadEditor] = useState<{ id: string | null } | null>(
     null,
   );
@@ -128,7 +130,7 @@ export function ExperimentPage() {
     !!scenario &&
     JSON.stringify(scenario) !== JSON.stringify(loadCase?.document);
   const dirty =
-    setupDirty || tuneDirty || scenarioDirty || !!primary || invalid.size > 0;
+    setupDirty || tuneDirty || scenarioDirty || !!primary || vehicleMassOverride !== null || invalid.size > 0;
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       !leaving.current &&
@@ -175,9 +177,54 @@ export function ExperimentPage() {
       ),
       listExperiments('scenarios'),
       listExperiments('tunes'),
+      params.get('source_run') ? getRunExperiment(params.get('source_run')!) : null,
     ])
-      .then(async ([meta, physical, groups, roads, savedTunes]) => {
+      .then(async ([meta, physical, groups, roads, savedTunes, source]) => {
+        if (disposed) return;
         const items = groups.flat();
+        setMetadata(meta);
+        setFields(physical.cvt_fields);
+        setCatalog(items);
+        setLoadCases(roads);
+        setTunes(savedTunes);
+        if (source) {
+          if (source.setup.document.kind !== 'setups')
+            throw new Error('This run has no vehicle setup for the builder.');
+          setSetupDetail(source.setup);
+          setSetup(source.setup.document);
+          setCatalog([
+            ...items.filter(item => item.id !== source.setup.item.id),
+            source.setup.item,
+          ]);
+          setSurface(source.surface);
+          setTuneDetail(source.tune);
+          if (source.tune) {
+            const selectedTune = source.tune;
+            setTunes([
+              ...savedTunes.filter(item => item.id !== selectedTune.item.id),
+              selectedTune.item,
+            ]);
+          }
+          const savedTune = source.tune?.document.kind === 'tunes'
+            ? source.tune.document : source.surface.template;
+          setTune({
+            ...savedTune,
+            values: source.selection.tune_values ?? savedTune.values,
+          });
+          setLoadCase(source.load_case);
+          setScenario(source.selection.scenario ?? null);
+          setPrimary(source.selection.primary_boundary ?? null);
+          setVehicleMassOverride(source.selection.vehicle_mass_kg ?? null);
+          if (source.load_case) {
+            const selectedRoad = source.load_case;
+            setLoadCases([
+              ...roads.filter(item => item.id !== selectedRoad.item.id),
+              selectedRoad.item,
+            ]);
+          }
+          return;
+        }
+        setVehicleMassOverride(null);
         const selected =
           groups[0].find((item) => item.id === params.get('setup'));
         const road =
@@ -195,11 +242,6 @@ export function ExperimentPage() {
           ? await getTuneSurface(current.item.revision_id)
           : null;
         if (disposed) return;
-        setMetadata(meta);
-        setFields(physical.cvt_fields);
-        setCatalog(items);
-        setLoadCases(roads);
-        setTunes(savedTunes);
         if (current?.document.kind === 'setups') {
           setSetupDetail(current);
           setSetup(current.document);
@@ -237,13 +279,7 @@ export function ExperimentPage() {
             setTune(selectedTune.document);
           }
         }
-        if (params.get('source_run')) {
-          const source = await getFrozenInput(params.get('source_run')!);
-          if (disposed) return;
-          // The backend validates which run inputs are representable by this editor.
-          const override = source.run.provenance?.primary_boundary;
-          if (override) setPrimary(override as PrimaryBoundary);
-        }
+
       })
       .catch((cause) => {
         if (!disposed) setError(message(cause));
@@ -264,7 +300,8 @@ export function ExperimentPage() {
         )
       )
         return;
-      const next = await getPhysical('setups', id);
+      const selected = catalog.find(item => item.kind === 'setups' && item.id === id);
+      const next = await getPhysical('setups', id, selected?.revision_id);
       if (next.document.kind !== 'setups') return;
       const nextSurface = await getTuneSurface(next.item.revision_id);
       setSetupDetail(next);
@@ -273,6 +310,7 @@ export function ExperimentPage() {
       setTune(nextSurface.template);
       setTuneDetail(null);
       setPrimary(null);
+      setVehicleMassOverride(null);
       setPreview(null);
     });
   const newSetup = () =>
@@ -292,6 +330,7 @@ export function ExperimentPage() {
       setTune(null);
       setTuneDetail(null);
       setPrimary(null);
+      setVehicleMassOverride(null);
       setPreview(null);
       setStep(0);
     });
@@ -348,6 +387,7 @@ export function ExperimentPage() {
         scenario_revision_id: loadCase?.item.revision_id ?? null,
         scenario,
         primary_boundary: primary ?? null,
+        vehicle_mass_kg: vehicleMassOverride,
       }
       : null;
   const selectionKey = JSON.stringify(selection);
@@ -362,7 +402,7 @@ export function ExperimentPage() {
       if (next >= 2) {
         const prepared = await prepareSetup();
         if (next === 5) {
-          if (!scenario || !loadCase)
+          if (!scenario || (!loadCase && !params.get('source_run')))
             throw new Error('Choose or create a saved load case.');
           const body: ExperimentSelection = {
             setup_revision_id: prepared.detail.item.revision_id,
@@ -371,9 +411,10 @@ export function ExperimentPage() {
                 ? (tuneDetail?.item.revision_id ?? null)
                 : null,
             tune_values: prepared.tune.values,
-            scenario_revision_id: loadCase.item.revision_id,
+            scenario_revision_id: loadCase?.item.revision_id ?? null,
             scenario,
             primary_boundary: primary ?? null,
+            vehicle_mass_kg: vehicleMassOverride,
           };
           setPreview(await previewExperiment(body));
           setPreviewKey(JSON.stringify(body));
@@ -495,7 +536,7 @@ export function ExperimentPage() {
                             {setup && (
                               <>
                                 <EditorDisclosure key={setupDetail?.item.id ?? 'new'} title="Vehicle" initiallyOpen={!setupDetail}
-                                  summary={`${setup.name || 'New vehicle'} · ${setup.data.vehicle.mass_kg.toFixed(1)} kg`}>
+                                  summary={`${setup.name || 'New vehicle'} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`}>
                                   <TextInput
                                     label="Vehicle setup name"
                                     required
@@ -516,6 +557,22 @@ export function ExperimentPage() {
                                   />
 
                                 </EditorDisclosure>
+                                {vehicleMassOverride !== null && (
+                                  <Paper withBorder p="md">
+                                    <Stack gap="sm">
+                                      <QuantityInput
+                                        label="Run-only vehicle mass" unit="kg" scale={1} min={0.001}
+                                        value={vehicleMassOverride} onChange={setVehicleMassOverride}
+                                      />
+                                      <Text size="sm" c="dimmed">
+                                        This run used a mass override. The saved vehicle stays unchanged.
+                                      </Text>
+                                      <Button variant="subtle" onClick={() => setVehicleMassOverride(null)}>
+                                        Use saved vehicle mass
+                                      </Button>
+                                    </Stack>
+                                  </Paper>
+                                )}
                               </>
                             )}
                           </>
@@ -551,11 +608,11 @@ export function ExperimentPage() {
                           <Select label="CVT tune" searchable allowDeselect={false}
                             value={tuneDetail?.item.id ?? 'default'}
                             data={[{ group: 'Selected CVT', items: [{ value: 'default', label: 'Use CVT default settings' }] },
-                            ...libraryOptions(tunes.filter(item => item.cvt_revision_id === surface.cvt_revision_id && !item.archived), item => item.id)]}
+                            ...libraryOptions(tunes.filter(item => item.cvt_revision_id === surface.cvt_revision_id && (!item.archived || item.id === tuneDetail?.item.id)), item => item.id)]}
                             onChange={id => void task(async () => {
                               if (id === 'default') { setTune(surface.template); setTuneDetail(null); return; }
                               if (!id) return;
-                              const next = await getExperiment(id);
+                              const next = await getExperiment(id, tunes.find(item => item.id === id)?.revision_id);
                               if (next.document.kind === 'tunes') { setTune(next.document); setTuneDetail(next); }
                             })} />
                           <Paper withBorder p="md"><Stack gap="xs">
@@ -602,13 +659,13 @@ export function ExperimentPage() {
                                 value={loadCase?.item.id ?? null}
                                 placeholder="Choose a road or load case"
                                 data={libraryOptions(
-                                  loadCases.filter((item) => !item.archived),
+                                  loadCases.filter((item) => !item.archived || item.id === loadCase?.item.id),
                                   (item) => item.id,
                                 )}
                                 onChange={(id) =>
                                   id &&
                                   void task(async () =>
-                                    acceptLoadCase(await getExperiment(id)),
+                                    acceptLoadCase(await getExperiment(id, loadCases.find(item => item.id === id)?.revision_id)),
                                   )
                                 }
                               />
@@ -619,6 +676,15 @@ export function ExperimentPage() {
                                 New load case
                               </Button>
                             </Group>
+                            {!loadCase && scenario && params.get('source_run') && (
+                              <Stack gap="sm">
+                                <Text fw={600}>{scenario.name} · run-only load case</Text>
+                                <Text size="sm" c="dimmed">
+                                  These road settings will be reused for this run without creating a library item.
+                                </Text>
+                                <RoadPreview road={scenario.road} />
+                              </Stack>
+                            )}
                             {loadCase && scenario && (
                               <>
                                 <Group justify="space-between">
@@ -764,7 +830,7 @@ export function ExperimentPage() {
                       {
                         label: 'Vehicle',
                         value: setup
-                          ? `${setup.name} · ${setup.data.vehicle.mass_kg.toFixed(1)} kg`
+                          ? `${setup.name} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`
                           : 'Choose a vehicle',
                         step: 0,
                       },
@@ -779,7 +845,7 @@ export function ExperimentPage() {
                       { label: 'Primary', value: primaryLabel, step: 3 },
                       {
                         label: 'Load case',
-                        value: loadCase?.item.name ?? 'Choose a load case',
+                        value: loadCase?.item.name ?? scenario?.name ?? 'Choose a load case',
                         step: 4,
                       },
                     ].map((item) => (
@@ -857,7 +923,7 @@ export function ExperimentPage() {
                     }}
                     onLoad={(id) =>
                       void task(async () => {
-                        const next = await getExperiment(id);
+                        const next = await getExperiment(id, tunes.find(item => item.id === id)?.revision_id);
                         if (
                           next.document.kind !== 'tunes' ||
                           !next.item.setup_object_id

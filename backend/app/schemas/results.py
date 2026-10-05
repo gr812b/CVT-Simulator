@@ -6,7 +6,8 @@ from typing import Literal
 from pydantic import Field
 
 from app.schemas.common import ApiModel, JsonObject
-from app.schemas.physical_library import Name, PhysicalItem
+from app.schemas.experiments import ExperimentDetail, ExperimentSelection, TuneSurface
+from app.schemas.physical_library import Name, PhysicalItem, PhysicalSelection
 from app.schemas.runs import RunStatusResponse
 
 
@@ -58,7 +59,7 @@ class RunInspection(RunHistoryItem):
     warnings: list[str]
     transitions: list[ResultTransition]
     termination_reason: str | None
-    experiment_copy_unavailable_reason: str | None
+    experiment_unavailable_reason: str | None
 
 
 class ReportSeriesColumn(ApiModel):
@@ -107,3 +108,12 @@ class RunSummaryExport(ApiModel):
     references: list[RunReference]
     availability: ResultAvailability
     summary: JsonObject
+
+
+class RunExperimentDraft(ApiModel):
+    source_run_id: str
+    selection: ExperimentSelection
+    setup: PhysicalSelection
+    surface: TuneSurface
+    tune: ExperimentDetail | None
+    load_case: ExperimentDetail | None

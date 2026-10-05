@@ -3,34 +3,24 @@
 import csv
 import io
 import json
-from copy import deepcopy
 
-from pydantic import TypeAdapter
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import defer
 
 from app.application import (
     access,
-    configuration_copies,
     experiments,
     jobs,
     physical_library,
 )
-from app.application.physical_contracts import (
-    baseline_case,
-    belt_from_assembly,
-    vehicle_boundary,
-    vehicle_from_boundary,
-)
-from app.application.roads import apply_scenario
+from app.application.experiment_tuning import tune_surface
 from app.core.errors import ApiProblem
 from app.database import runs as artifacts
 from app.database.models import Run, RunArtifact, RunCacheEntry
-from app.database.publication_models import ConfigurationCopy
-from app.schemas.experiments import PrimaryOverride, ScenarioDocument
-from app.schemas.physical_library import SetupDocument
+from app.schemas.experiments import ExperimentSelection
 from app.schemas.results import (
     ResultAvailability,
+    RunExperimentDraft,
     RunHistoryItem,
     RunHistoryPage,
     RunInspection,
@@ -234,86 +224,82 @@ def availability(session, run):
     )
 
 
-def _experiment_configuration(run, settings):
-    """Only offer an editable copy when the editor reproduces all executable fields."""
-    case = run.input_contract
+def _run_selection(run):
+    """Keep saved identities and run-only overrides distinct."""
     p = run.provenance or {}
     if (run.execution_options or {}).get("execution_profile", "default") != "default":
         raise ValueError(
             "This run uses a specialized execution profile. Use its original workspace or rerun the frozen input."
         )
-    if (
-        not isinstance(p.get("scenario"), dict)
-        or p["scenario"].get("kind") != "scenarios"
-    ):
+    if not p.get("setup_revision_id") or not isinstance(p.get("scenario"), dict):
         raise ValueError(
-            "This older or specialized run has no editable scenario definition. Its canonical input can still be exported or rerun."
+            "This run has no saved setup/scenario references for the builder. Its exact input can still be exported or rerun."
         )
-    scenario = ScenarioDocument.model_validate(p["scenario"])
-    primary = case["shaft_boundaries"]["primary"]
-    override = None
-    if primary["kind"] != "full_throttle_engine":
-        override = TypeAdapter(PrimaryOverride).validate_python(
-            p.get("primary_boundary")
-        )
-    engine = baseline_case()["shaft_boundaries"]["primary"] if override else primary
-    document = SetupDocument.model_validate(
+    return ExperimentSelection.model_validate(
         {
-            "kind": "setups",
-            "name": f"{run.name[:210]} setup",
-            "source_label": f"Simulation {run.id}",
-            "data": {
-                "engine": {
-                    "name": "Baseline engine (inactive)"
-                    if override
-                    else "Engine from run",
-                    "data": engine,
-                },
-                "cvt": {
-                    "name": "CVT from run",
-                    "data": {
-                        "assembly": deepcopy(case["assembly"]),
-                        "belt": {
-                            "name": "Belt from run",
-                            "data": belt_from_assembly(case["assembly"]).model_dump(),
-                        },
-                    },
-                },
-                "vehicle": vehicle_from_boundary(
-                    case["shaft_boundaries"]["secondary"]
-                ).model_dump(),
-            },
+            "setup_revision_id": p["setup_revision_id"],
+            "tune_revision_id": p.get("tune_revision_id"),
+            "tune_values": p.get("tune_values"),
+            "scenario_revision_id": p.get("scenario_revision_id"),
+            "scenario": p["scenario"],
+            "primary_boundary": p.get("primary_boundary"),
+            "vehicle_mass_kg": p.get("vehicle_mass_override_kg"),
         }
     )
-    candidate = baseline_case()
-    candidate["assembly"] = document.data.cvt.data.assembly
-    candidate["shaft_boundaries"] = {
-        "primary": override.model_dump()
-        if override
-        else document.data.engine.data.model_dump(),
-        "secondary": vehicle_boundary(document.data.vehicle),
-    }
-    apply_scenario(candidate, scenario, settings)
-    if any(
-        candidate[key] != case[key]
-        for key in ("assembly", "shaft_boundaries", "host", "scenario", "execution")
-    ):
-        raise ValueError(
-            "This run contains settings outside the current experiment editor. Export or rerun its exact frozen input."
-        )
-    return document, scenario
 
 
-def copy_unavailable_reason(run, settings):
+def experiment_unavailable_reason(run):
     try:
-        _experiment_configuration(run, settings)
-    except (ValueError, KeyError, TypeError, ApiProblem) as exc:
+        _run_selection(run)
+    except (ValueError, KeyError, TypeError):
         return (
-            str(exc)
-            if isinstance(exc, ValueError) and len(str(exc)) < 500
-            else "The frozen configuration cannot be represented by the current experiment editor. Export or rerun its exact input."
+            "This run cannot be opened in the experiment builder. "
+            "Export or rerun its exact frozen input instead."
         )
     return None
+
+
+def experiment_draft(session, principal, settings, run_id):
+    """Read the original revisions into an unsaved builder session; create nothing."""
+    run = access.public_run(session, run_id)
+    reason = experiment_unavailable_reason(run)
+    if reason:
+        raise ApiProblem(422, "experiment_unavailable", reason)
+    selection = _run_selection(run)
+    # Comparing reconstructed JSON is cheap and catches unsupported historical
+    # settings. Full CINDER validation remains at review/submission, not navigation.
+    candidate, _, _ = experiments.configuration(session, principal, settings, selection)
+    if any(
+        candidate[key] != run.input_contract[key]
+        for key in ("assembly", "shaft_boundaries", "host", "scenario", "execution")
+    ):
+        raise ApiProblem(
+            422,
+            "experiment_unavailable",
+            "The saved references no longer reproduce this run's inputs. Export or rerun its exact input instead.",
+        )
+    version = access.library_version(
+        session, principal, "vehicle-assemblies", selection.setup_revision_id
+    )
+
+    def selected_experiment(revision_id, kind):
+        if revision_id is None:
+            return None
+        revision = experiments.get_revision(session, principal, revision_id, kind)
+        return experiments.detail(
+            session, principal, revision.experiment_id, revision.id
+        )
+
+    return RunExperimentDraft(
+        source_run_id=run.id,
+        selection=selection,
+        setup=physical_library.selection_for_revision(
+            session, principal, "setups", version.id
+        ),
+        surface=tune_surface(session, principal, version.id),
+        tune=selected_experiment(selection.tune_revision_id, "tunes"),
+        load_case=selected_experiment(selection.scenario_revision_id, "scenarios"),
+    )
 
 
 def inspect_run(session, principal, settings, run_id):
@@ -340,7 +326,7 @@ def inspect_run(session, principal, settings, run_id):
             for value in summary.get("transitions", [])
         ],
         termination_reason=summary.get("metrics", {}).get("termination_reason"),
-        experiment_copy_unavailable_reason=copy_unavailable_reason(run, settings),
+        experiment_unavailable_reason=experiment_unavailable_reason(run),
     )
 
 
@@ -431,43 +417,3 @@ def export(session, principal, run_id, kind):
         "application/json",
         "json",
     )
-
-
-def copy_experiment(session, principal, settings, run_id, request):
-    run = access.public_run(session, run_id)
-    existing, fingerprint = configuration_copies.begin_copy(
-        session, principal, request, {"run": run.id}
-    )
-    if existing:
-        return configuration_copies.copy_result(session, principal, existing)
-    reason = copy_unavailable_reason(run, settings)
-    if reason:
-        raise ApiProblem(422, "experiment_copy_unavailable", reason)
-    document, scenario = _experiment_configuration(run, settings)
-    document.name = request.name or document.name
-    obj, _ = physical_library.save_document(
-        session,
-        principal,
-        document,
-        duplicate=True,
-        note=f"Frozen physical values from run {run.id}; includes its tune and mass override.",
-    )
-    scenario_obj, _ = experiments.save(
-        session,
-        principal,
-        settings,
-        scenario,
-        note=f"Copied the frozen scenario from run {run.id}.",
-    )
-    record = ConfigurationCopy(
-        account_id=principal.account_id,
-        request_key=request.request_key,
-        request_hash=fingerprint,
-        kind="setups",
-        object_id=obj.id,
-        run_id=run.id,
-        scenario_id=scenario_obj.id,
-    )
-    session.add(record)
-    session.flush()
-    return configuration_copies.copy_result(session, principal, record)

@@ -5,6 +5,7 @@ type Schema = components['schemas'];
 export type PhysicalKind = Schema['PhysicalItem']['kind'];
 export type PhysicalDocument = Schema['PhysicalDetail']['document'];
 export type PhysicalDetail = Schema['PhysicalDetail'];
+export type PhysicalSelection = Schema['PhysicalSelection'];
 export type PhysicalItem = Schema['PhysicalItem'];
 export type PhysicalField = Schema['PhysicalField'];
 export type PhysicalValidation = Schema['CaseValidation'];

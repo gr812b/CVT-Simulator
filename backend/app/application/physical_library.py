@@ -48,6 +48,7 @@ from app.schemas.physical_library import (
     PhysicalItem,
     PhysicalMetadata,
     PhysicalRevision,
+    PhysicalSelection,
     SetupData,
     SetupDocument,
 )
@@ -493,6 +494,26 @@ def available_updates(session, principal, document):
     return updates
 
 
+def selection_for_revision(session, principal, kind, revision_id):
+    """A lightweight selection with metadata from the requested saved version."""
+    version = _revision(session, principal, kind, revision_id)
+    document = document_for_revision(session, principal, kind, revision_id)
+    item = item_response(_parent(session, kind, version), kind, principal)
+    return PhysicalSelection(
+        item=item.model_copy(
+            update={
+                "revision_id": version.id,
+                "revision_number": version.version_number,
+                "name": document.name,
+                "description": document.description,
+                "source_label": document.source_label,
+                "validation_status": version.validation_status,
+            }
+        ),
+        document=document,
+    )
+
+
 def detail(session, principal, kind, object_id, revision_id=None):
     obj = access.library_object(session, principal, RESOURCES[kind], object_id)
     selected = revision_id or obj.released_version_id
@@ -505,7 +526,8 @@ def detail(session, principal, kind, object_id, revision_id=None):
     version = _revision(session, principal, kind, selected)
     if _parent(session, kind, version).id != obj.id:
         raise access.unavailable()
-    document = document_for_revision(session, principal, kind, selected)
+    selection = selection_for_revision(session, principal, kind, selected)
+    document = selection.document
     history = []
     for item in sorted(
         obj.versions, key=lambda entry: entry.version_number, reverse=True
@@ -526,7 +548,7 @@ def detail(session, principal, kind, object_id, revision_id=None):
         )
     validation, _ = validate_physical(document)
     return PhysicalDetail(
-        item=item_response(obj, kind, principal),
+        item=selection.item,
         document=document,
         history=history,
         updates=available_updates(session, principal, document),
