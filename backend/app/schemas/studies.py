@@ -11,6 +11,8 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from .common import ApiModel, JsonObject
+from .projections import GeometryStudy
+from .scene import ScenePreview
 
 
 class BeltSectionRequest(ApiModel):
@@ -129,9 +131,6 @@ class StaticStudyResponse(ApiModel):
     study: JsonObject
 
 
-from .projections import GeometryStudy
-
-
 class GeometryStudyResponse(ApiModel):
     study: GeometryStudy
 
@@ -159,4 +158,5 @@ class SimpleGeometryRequest(ApiModel):
 
 
 class SimpleGeometryResponse(GeometryStudyResponse):
+    scene: ScenePreview
     resolved_context: GeometryDesignContextRequest

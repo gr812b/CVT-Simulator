@@ -8,7 +8,9 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from .common import ApiModel, ErrorBody, JsonObject
+from .course import CourseProfile
 from .projections import RunPreview
+from .scene import SceneGeometry
 
 RunStatus = Literal[
     "queued", "validating", "running", "completed", "failed", "timed_out", "cancelled"
@@ -54,7 +56,9 @@ class CreateRunRequest(ApiModel):
         if data.get("document_type") == "cinder_simulation_case":
             return {
                 "request_key": data.get("request_key"),
-                "simulation_case": {key: value for key, value in data.items() if key != "request_key"},
+                "simulation_case": {
+                    key: value for key, value in data.items() if key != "request_key"
+                },
                 "include_reported_segments": include_reported_segments,
                 "include_raw_trace": include_raw_trace,
             }
@@ -79,6 +83,7 @@ class RerunStoredRunRequest(ApiModel):
 
 
 class RunStatusResponse(ApiModel):
+    author: str
     id: str
     status: RunStatus
     submitted_at: datetime
@@ -94,6 +99,8 @@ class RunStatusResponse(ApiModel):
     input_schema_version: int | None = None
     result_contract_version: int | None = None
     summary_scalars: JsonObject = Field(default_factory=dict)
+    has_result: bool = False
+    queue_position: int | None = None
     name: str = "Simulation"
     parent_run_id: str | None = None
     cancel_requested_at: datetime | None = None
@@ -107,6 +114,8 @@ class RunListResponse(ApiModel):
 
 
 class RunResultResponse(ApiModel):
+    scene_geometry: SceneGeometry
+    course: CourseProfile | None
     run: RunStatusResponse
     input_document_snapshot: JsonObject
     result: JsonObject

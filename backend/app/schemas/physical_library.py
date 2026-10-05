@@ -4,6 +4,7 @@ The assembly schema comes directly from CINDER. The small engine/vehicle
 projections describe this product's supported boundary inputs, not new physics.
 """
 
+import math
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -64,24 +65,51 @@ class EngineData(PhysicalModel):
         return self
 
 
-class BeltData(PhysicalModel):
-    recommended_sheave_half_angle_rad: float | None = Field(
-        default=None, gt=0, lt=1.5707963267948966
-    )
-    length_reference: Literal["outer"] = "outer"
-    outer_length_m: Positive
+class BeltSection(PhysicalModel):
     height_m: Positive
     outer_width_m: Positive
     inner_width_m: Positive
+    half_angle_rad: float = Field(gt=0, lt=math.pi / 2)
+
+    @model_validator(mode="after")
+    def consistent_section(self):
+        if self.inner_width_m >= self.outer_width_m:
+            raise ValueError("Bottom width must be smaller than top width.")
+        expected = math.atan(
+            (self.outer_width_m - self.inner_width_m) / (2 * self.height_m)
+        )
+        if not math.isclose(self.half_angle_rad, expected, rel_tol=1e-8, abs_tol=1e-10):
+            raise ValueError(
+                "Belt widths, height and half-angle must describe the same section."
+            )
+        return self
+
+
+class BeltSectionSolveRequest(PhysicalModel):
+    height_m: Positive | None = None
+    outer_width_m: Positive | None = None
+    inner_width_m: Positive | None = None
+    half_angle_rad: float | None = Field(default=None, gt=0, lt=math.pi / 2)
+
+    @model_validator(mode="after")
+    def three_dimensions(self):
+        if sum(value is not None for value in self.model_dump().values()) != 3:
+            raise ValueError(
+                "Supply exactly three of top width, bottom width, height and half-angle."
+            )
+        return self
+
+
+class BeltData(BeltSection):
+    length_reference: Literal["outer"] = "outer"
+    outer_length_m: Positive
     cord_depth_from_outer_m: Nonnegative
     density_kg_per_m3: Positive
 
     @model_validator(mode="after")
-    def section_dimensions(self):
+    def cord_inside_section(self):
         if self.cord_depth_from_outer_m > self.height_m:
             raise ValueError("Cord depth must lie inside the belt height.")
-        if self.inner_width_m > self.outer_width_m:
-            raise ValueError("Inner width cannot exceed outer width.")
         return self
 
 
@@ -179,6 +207,9 @@ class ComponentUpdate(PhysicalModel):
 
 
 class PhysicalItem(PhysicalModel):
+    author: str
+    sample: bool
+    is_default: bool
     id: str
     kind: PhysicalKind
     name: str

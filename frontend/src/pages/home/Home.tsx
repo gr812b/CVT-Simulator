@@ -1,232 +1,252 @@
+import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Anchor,
+  Badge,
+  Button,
+  Center,
+  Container,
+  Group,
+  Loader,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import {
+  IconArrowRight,
+  IconBrandGithub,
+  IconFileText,
+  IconPlayerPlay,
+} from '@tabler/icons-react';
 import { Brand } from '@components/appShell/Brand';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button as AccountButton, Group } from '@mantine/core';
 import { useAuth } from '@contexts/AuthContext';
 import styles from './Home.module.scss';
-import { Button } from '@components/button/Button';
-import cvt_model from '@assets/images/cvt_model.png';
-import Plus from '@assets/icons/plus.svg?react';
-import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
-import PlayOutline from '@assets/icons/play_outline.svg?react';
-import ChevronDown from '@assets/icons/chevron_down.svg?react';
 
+const HomeCvtPreview = lazy(() => import('./HomeCvtPreview'));
 const GITHUB_URL = 'https://github.com/gr812b/CVT-Simulator';
-const PAPER_URL =
-  'https://github.com/gr812b/CVT-Simulator/blob/develop/docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf';
-const CURRENT_YEAR = new Date().getFullYear();
+const PAPER_URL = `${GITHUB_URL}/blob/develop/docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf`;
+const external = { target: '_blank', rel: 'noopener noreferrer' } as const;
+
+const steps = [
+  {
+    number: '01',
+    title: 'Build your setup',
+    text: 'Bring together a vehicle, CVT, belt and engine. Start with public examples, then make them your own.',
+  },
+  {
+    number: '02',
+    title: 'Give it a road',
+    text: 'Choose a road grade or create a reusable load case with hills and whoops. Review the complete setup before you run.',
+  },
+  {
+    number: '03',
+    title: 'Follow the motion',
+    text: 'Replay the CVT alongside plots of speed, ratio, torque and belt behaviour. Keep the inputs with the result, and export the data.',
+  },
+];
 
 export const Home = () => {
-  const navigate = useNavigate();
   const { session } = useAuth();
-
   return (
     <div className={styles.home}>
-      <Group
-        component="nav"
-        justify="space-between"
-        p="lg"
-        aria-label="Main navigation"
-      >
-        <Brand />
-        <Group>
-          {session ? (
-            <AccountButton component={Link} to="/dashboard">
-              Open workspace
-            </AccountButton>
-          ) : (
-            <>
-              <AccountButton component={Link} to="/login" variant="subtle">
+      <Container size="xl">
+        <Group
+          component="nav"
+          justify="space-between"
+          className={styles.navigation}
+          aria-label="Main navigation"
+        >
+          <Brand />
+          <Group gap="xs">
+            <Anchor
+              href={GITHUB_URL}
+              {...external}
+              className={styles.sourceLink}
+            >
+              GitHub
+            </Anchor>
+            {session ? (
+              <Button component={Link} to="/dashboard" variant="light">
+                Open workspace
+              </Button>
+            ) : (
+              <Button component={Link} to="/login" variant="default">
                 Sign in
-              </AccountButton>
-              <AccountButton component={Link} to="/register">
-                Create account
-              </AccountButton>
-            </>
-          )}
+              </Button>
+            )}
+          </Group>
         </Group>
-      </Group>
-      <section className={styles.hero}>
-        <div className={styles.heroTop}>
-          <div className={styles.heroContent}>
-            <h1 className={styles.title}>
-              <b>CVT</b>
-              <b className={styles.titleAccent}>Launch</b>
-              <b>Simulator</b>
-            </h1>
-            <p className={styles.description}>
-              A dynamic drivetrain simulator for Baja SAE vehicles equipped with
-              a CVT, gear reduction box, and wheels. Models a CH440 Kohler
-              engine, external forces, torque transmission,
-              slip&nbsp;vs.&nbsp;stick behaviour, and shifting dynamics. Based
-              on an{' '}
-              <a
-                href={PAPER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.inlineLink}
-              >
-                ongoing research paper
-              </a>{' '}
-              (WIP).
-            </p>
-          </div>
-
-          <div className={styles.heroVisual}>
-            <div className={styles.imageCard}>
-              <img
-                src={cvt_model}
-                alt="Secondary CVT assembly — flyweights, spring, and ramps"
-                className={styles.cvtImage}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.actions}>
-          <Button
-            text="View Demo"
-            icon={PlayOutline}
-            size="large"
-            onClick={() => navigate('/demo')}
-          />
-          <Button
-            text="New Simulation"
-            icon={Plus}
-            size="large"
-            onClick={() => navigate('/input')}
-          />
-          <Button
-            text="Load Simulation"
-            icon={ArrowDownCircle}
-            size="large"
-            onClick={() => navigate('/dashboard')}
-          />
-          <Button
-            text="Dyno Validation"
-            icon={PlayOutline}
-            size="large"
-            onClick={() => navigate('/validation')}
-          />
-        </div>
-
-        <div className={styles.scrollIndicator}>
-          <ChevronDown className={styles.scrollChevron} />
-        </div>
-      </section>
-
-      <section className={styles.gettingStarted}>
-        <h2 className={styles.sectionTitle}>Getting Started</h2>
-        <div className={styles.steps}>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>01</span>
-            <h3 className={styles.stepTitle}>Configure Parameters</h3>
-            <p className={styles.stepText}>
-              Click <strong>New Simulation</strong> to define your CVT
-              parameters from scratch — spring rates, helix angle, flyweight
-              mass, and throttle ramp profile. Or click{' '}
-              <strong>Load Simulation</strong> to start from a previously saved
-              or default parameter set.
-            </p>
-          </div>
-
-          <div className={styles.stepDivider} />
-
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>02</span>
-            <h3 className={styles.stepTitle}>Run the Simulation</h3>
-            <p className={styles.stepText}>
-              Hit <strong>Run</strong> on the input page. The solver resolves
-              torque transmission, slip&nbsp;vs.&nbsp;stick conditions, and CVT
-              ratio shifting across the full launch event.
-            </p>
-          </div>
-
-          <div className={styles.stepDivider} />
-
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>03</span>
-            <h3 className={styles.stepTitle}>Explore Results</h3>
-            <p className={styles.stepText}>
-              The playback view animates the 3D CVT model in real time alongside
-              time-series graphs for vehicle speed, gear ratio, torque, and
-              more. Export the full dataset to CSV for further analysis.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.pitfalls}>
-        <h2 className={styles.sectionTitle}>Known Issues &amp; Disclaimers</h2>
-        <p className={styles.pitfallsIntro}>
-          This tool is a work in progress — many features are still planned and
-          some rough edges remain. Read below before diving in.
-        </p>
-        <ul className={styles.pitfallList}>
-          <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Slow model loading</span>
-            <span className={styles.pitfallText}>
-              The 3D CVT model on the Playback page can take a moment to load.
-              Be patient — it will appear.
-            </span>
-          </li>
-          <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Background simulations</span>
-            <span className={styles.pitfallText}>
-              Runs continue in the background. Follow their status in Activity
-              and open the notification when they finish. Each account can have
-              one queued or running simulation at a time.
-            </span>
-          </li>
-          <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Reusable road loads</span>
-            <span className={styles.pitfallText}>
-              Choose a default road grade or build a named load case with hills,
-              points and repeated whoops. Reuse it with different vehicle and
-              CVT configurations.
-            </span>
-          </li>
-          <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Public configurations</span>
-            <span className={styles.pitfallText}>
-              Edit vehicles, engines, CVTs and belts in your library. Free
-              accounts share saved configurations, load cases, tunes and runs
-              publicly. Every run retains the input values used to compute it.
-            </span>
-          </li>
-          <li className={styles.pitfallItem}>
-            <span className={styles.pitfallLabel}>Questions or bugs?</span>
-            <span className={styles.pitfallText}>
-              Reach out to Kai Arseneau — Discord: gr812b. Good luck!
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <footer className={styles.footer}>
-        <span className={styles.footerText}>
-          &copy; {CURRENT_YEAR} McMaster Baja SAE &mdash; CVT Simulator. All
-          rights reserved.
-        </span>
-        <div className={styles.footerLinks}>
-          <a
-            href={PAPER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.footerLink}
-          >
-            Paper
-          </a>
-          <span className={styles.footerDot}>·</span>
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.footerLink}
-          >
-            GitHub
-          </a>
-        </div>
-      </footer>
+        <main>
+          <section className={styles.hero} aria-labelledby="home-title">
+            <Stack gap="xl" className={styles.heroCopy}>
+              <Text className={styles.eyebrow}>CVT dynamics, made visible</Text>
+              <Title id="home-title" className={styles.title}>
+                Understand
+                <br />
+                every <span>shift.</span>
+              </Title>
+              <Text size="lg" c="dimmed" maw={490}>
+                Explore how a belt CVT responds to the vehicle, the engine and
+                the road. Build a setup, run the model, and see the motion
+                behind the numbers.
+              </Text>
+              <Group gap="sm">
+                <Button
+                  component={Link}
+                  to="/demo"
+                  size="md"
+                  leftSection={<IconPlayerPlay size={18} />}
+                >
+                  Explore the demo
+                </Button>
+                <Button
+                  component={Link}
+                  to={session ? '/input' : '/register'}
+                  size="md"
+                  variant="default"
+                  rightSection={<IconArrowRight size={18} />}
+                >
+                  {session ? 'Build a setup' : 'Create a free account'}
+                </Button>
+              </Group>
+              <Text size="sm" c="dimmed">
+                The recorded demo is ready to explore. No account needed.
+              </Text>
+            </Stack>
+            <figure className={styles.modelFigure}>
+              <div className={styles.model}>
+                <Suspense
+                  fallback={
+                    <Center h="100%">
+                      <Loader size="sm" aria-label="Loading 3D preview" />
+                    </Center>
+                  }
+                >
+                  <HomeCvtPreview />
+                </Suspense>
+              </div>
+              <figcaption>
+                <span className={styles.modelLabel}>
+                  A belt. Two pulleys. A changing ratio.
+                </span>
+                <span>Default CVT · drag or use arrow keys to rotate</span>
+              </figcaption>
+            </figure>
+          </section>
+          <section className={styles.workflow} aria-labelledby="workflow-title">
+            <Group justify="space-between" align="end" mb="xl">
+              <div>
+                <Text className={styles.eyebrow} mb="sm">
+                  From setup to insight
+                </Text>
+                <Title id="workflow-title" order={2}>
+                  Make the whole drivetrain part of the question.
+                </Title>
+              </div>
+              <Anchor component={Link} to="/catalog">
+                Explore the public library →
+              </Anchor>
+            </Group>
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+              {steps.map((step) => (
+                <Paper
+                  key={step.number}
+                  withBorder
+                  p="xl"
+                  className={styles.step}
+                >
+                  <Text className={styles.stepNumber}>{step.number}</Text>
+                  <Title order={3} size="h4" mt="lg" mb="sm">
+                    {step.title}
+                  </Title>
+                  <Text c="dimmed">{step.text}</Text>
+                </Paper>
+              ))}
+            </SimpleGrid>
+            <Text c="dimmed" size="sm" mt="lg">
+              Saved configurations and runs are public on free accounts, so
+              examples are easy to explore and reuse.
+            </Text>
+          </section>
+          <section className={styles.research} aria-labelledby="research-title">
+            <Stack gap="md">
+              <Text className={styles.eyebrow}>Built around the model</Text>
+              <Title id="research-title" order={2}>
+                Read the reasoning.
+                <br />
+                Explore the implementation.
+              </Title>
+              <Text c="dimmed" maw={570}>
+                CINDER brings belt CVT geometry, actuation and drivetrain
+                dynamics into one simulation workflow. The accompanying
+                formulation paper explains the model and its assumptions; the
+                repository lets you follow the implementation.
+              </Text>
+              <Group mt="sm">
+                <Button
+                  component="a"
+                  href={PAPER_URL}
+                  {...external}
+                  variant="default"
+                  leftSection={<IconFileText size={18} />}
+                >
+                  Read the paper
+                </Button>
+                <Button
+                  component="a"
+                  href={GITHUB_URL}
+                  {...external}
+                  variant="subtle"
+                  leftSection={<IconBrandGithub size={18} />}
+                >
+                  View on GitHub
+                </Button>
+              </Group>
+            </Stack>
+            <Stack gap="lg" className={styles.author}>
+              <Badge variant="light" w="fit-content">
+                An evolving engineering tool
+              </Badge>
+              <Text size="xl" fw={600}>
+                Created by Kai Arseneau
+              </Text>
+              <Text c="dimmed">
+                Rooted in Baja SAE drivetrain design. Built to make CVT
+                behaviour easier to investigate, discuss and understand.
+              </Text>
+              <Text size="sm" c="dimmed">
+                Use the model with its documented assumptions. Questions, ideas
+                and bug reports are welcome on GitHub.
+              </Text>
+            </Stack>
+          </section>
+        </main>
+        <Group
+          component="footer"
+          justify="space-between"
+          className={styles.footer}
+        >
+          <Group gap="md">
+            <Brand />
+            <Text size="sm" c="dimmed">
+              By Kai Arseneau
+            </Text>
+          </Group>
+          <Group gap="lg">
+            <Anchor href={PAPER_URL} {...external} size="sm">
+              Paper
+            </Anchor>
+            <Anchor href={GITHUB_URL} {...external} size="sm">
+              GitHub
+            </Anchor>
+            <Anchor component={Link} to="/demo" size="sm">
+              Try the demo
+            </Anchor>
+          </Group>
+        </Group>
+      </Container>
     </div>
   );
 };

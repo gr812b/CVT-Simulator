@@ -1,3 +1,4 @@
+import { ProfileChart } from '@components/form/ProfileChart';
 import type { ReactNode } from 'react';
 import { Alert, Group, Select, SimpleGrid, Stack, Text } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
@@ -22,7 +23,7 @@ export function PrimaryBoundaryEditor({
         value={value?.kind ?? 'engine'}
         allowDeselect={false}
         data={[
-          { value: 'engine', label: 'Engine torque curve' },
+          { value: 'engine', label: 'Engine · full-open-throttle (FOT)' },
           { value: 'fixed_shaft', label: 'Applied torque and inertia' },
           {
             value: 'speed_replay_shaft',
@@ -35,15 +36,15 @@ export function PrimaryBoundaryEditor({
               ? { kind, external_torque_Nm: 20, equivalent_inertia_kg_m2: 0.3 }
               : kind === 'speed_replay_shaft'
                 ? {
-                    kind,
-                    tracking_gain_Nm_s_per_rad: 400,
-                    speed_reference: {
-                      points: [
-                        { time_s: 0, value: (1800 * Math.PI) / 30 },
-                        { time_s: 10, value: (3600 * Math.PI) / 30 },
-                      ],
-                    },
-                  }
+                  kind,
+                  tracking_gain_Nm_s_per_rad: 400,
+                  speed_reference: {
+                    points: [
+                      { time_s: 0, value: (1800 * Math.PI) / 30 },
+                      { time_s: 10, value: (3600 * Math.PI) / 30 },
+                    ],
+                  },
+                }
                 : null,
           )
         }
@@ -80,6 +81,8 @@ export function PrimaryBoundaryEditor({
             speed remains a simulated result; this is not a physical motor
             model. Use the default tight integration settings.
           </Alert>
+          <ProfileChart xLabel="Time (s)" yLabel="Speed (RPM)"
+            points={value.speed_reference.points.map(point => [point.time_s, point.value * 30 / Math.PI])} />
           {value.speed_reference.points.map((point, index) => (
             <Group key={index} align="end" wrap="wrap">
               <QuantityInput

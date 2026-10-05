@@ -1,5 +1,7 @@
 # Public workspace and manual-review refinements
 
+> Follow-up: [Workspace, belts and course playback](WORKSPACE_LIBRARY_REFINEMENTS.md) supersedes the belt-angle, navigation, tune-discovery and source-entry details below. Its fresh-database setup is current.
+
 This scope supersedes M1–M4's private-by-default and explicit publication policies. Development uses a fresh database; no historical-data migration or compatibility layer is required.
 
 - Accounts use the free tier. Saved physical configurations, tunes, load cases and run inputs/results are public. Authentication and ownership still control edits, submissions, cancellation and account information. Email, password data and session data are never public content.

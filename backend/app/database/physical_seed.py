@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.application.physical_contracts import (
     template_document,
     vehicle_boundary,
-    with_belt,
 )
 from app.database import library
 from app.database.seed import SEED_ACCOUNT_ID, SEED_USER_ID, _baseline_tuning_schema
@@ -20,7 +19,22 @@ from app.database.tuning import readable_tuning_schema
 
 
 def sample_id(key: str) -> str:
-    return str(uuid5(NAMESPACE_URL, f"cinder-web:physical-samples:v1:{key}"))
+    from app.database.seed import (
+        SEED_CVT_ID,
+        SEED_CVT_VERSION_ID,
+        SEED_ENGINE_ID,
+        SEED_ENGINE_VERSION_ID,
+    )
+
+    aliases = {
+        "cvt": SEED_CVT_ID,
+        "cvt:r1": SEED_CVT_VERSION_ID,
+        "engine": SEED_ENGINE_ID,
+        "engine:r1": SEED_ENGINE_VERSION_ID,
+    }
+    return aliases.get(
+        key, str(uuid5(NAMESPACE_URL, f"cinder-web:physical-samples:v1:{key}"))
+    )
 
 
 def seed_physical_catalog(session: Session) -> None:
@@ -80,39 +94,24 @@ def seed_physical_catalog(session: Session) -> None:
         return obj
 
     belt = template.data.cvt.data.belt.data.model_dump()
-    revised_belt = {**belt, "density_kg_per_m3": belt["density_kg_per_m3"] * 1.02}
     insert(
         "belts",
         "belt",
-        "Project baseline rubber belt",
+        "Gaged Enduro 100",
         [
-            (belt, "Original project belt dimensions and density.", {}),
             (
-                revised_belt,
-                "Illustrative revision: density increased 2%; existing CVTs remain on revision 1.",
+                belt,
+                "11.5° half-angle confirmed by Kai; top width derived from measured bottom width and height.",
                 {},
-            ),
+            )
         ],
         default=True,
-    )
-    other_belt = {**belt, "density_kg_per_m3": belt["density_kg_per_m3"] * 1.1}
-    insert(
-        "belts",
-        "belt-dense",
-        "Illustrative denser rubber belt",
-        [
-            (
-                other_belt,
-                "Illustrative 10% density variation; same section and outer length.",
-                {},
-            ),
-        ],
     )
     engine = template.data.engine.data.model_dump()
     insert(
         "engines",
         "engine",
-        "Project baseline engine curve",
+        "Kohler CH440 (Baja Restricted)",
         [
             (
                 engine,
@@ -128,7 +127,7 @@ def seed_physical_catalog(session: Session) -> None:
     insert(
         "cvt-designs",
         "cvt",
-        "Project fixed-pivot CVT",
+        "McMaster 2025",
         [
             (
                 cvt.assembly,
@@ -138,23 +137,11 @@ def seed_physical_catalog(session: Session) -> None:
         ],
         default=True,
     )
-    cvt.belt.data.density_kg_per_m3 = other_belt["density_kg_per_m3"]
-    cvt = with_belt(cvt)
-    cvt.assembly["contact"]["kinetic_friction_coefficient"] = 0.5
-    insert(
-        "cvt-designs",
-        "cvt-alternative",
-        "Illustrative lower-traction CVT",
-        [
-            (
-                cvt.assembly,
-                "Illustrative kinetic coefficient 0.50 and denser belt; geometry unchanged.",
-                {
-                    "tuning_schema": readable_tuning_schema(cvt.assembly, tuning),
-                    "belt_version_id": sample_id("belt-dense:r1"),
-                },
-            ),
-        ],
+    # The legacy bootstrap and physical catalog reference the same hardware.
+    from app.database.models import CVTDesignVersion
+
+    session.get(CVTDesignVersion, sample_id("cvt:r1")).belt_version_id = sample_id(
+        "belt:r1"
     )
 
     vehicle = template.data.vehicle.model_copy(deep=True)
@@ -163,7 +150,7 @@ def seed_physical_catalog(session: Session) -> None:
     insert(
         "output-systems",
         "vehicle",
-        "Project vehicle properties",
+        "CINDER Default · vehicle properties",
         [
             (original_vehicle, "Original 300 kg project vehicle.", {}),
             (
@@ -178,7 +165,7 @@ def seed_physical_catalog(session: Session) -> None:
     insert(
         "output-systems",
         "vehicle-light",
-        "Illustrative 400 lb vehicle properties",
+        "CINDER Default · 400 lb vehicle properties",
         [
             (vehicle_boundary(vehicle), "Illustrative mass sensitivity example.", {}),
         ],
@@ -191,7 +178,7 @@ def seed_physical_catalog(session: Session) -> None:
     insert(
         "vehicle-assemblies",
         "setup",
-        "Baja baseline · 500 lb",
+        "CINDER Default · McMaster Baja · 500 lb",
         [
             (
                 {},
@@ -209,14 +196,14 @@ def seed_physical_catalog(session: Session) -> None:
     insert(
         "vehicle-assemblies",
         "setup-light",
-        "Baja alternative · 400 lb",
+        "CINDER Default · Baja · 400 lb",
         [
             (
                 {},
-                "Illustrative lighter setup with the lower-traction CVT and denser belt.",
+                "Lighter vehicle using the same McMaster 2025 CVT and Enduro belt.",
                 {
                     **refs,
-                    "cvt_design_version_id": sample_id("cvt-alternative:r1"),
+                    "cvt_design_version_id": sample_id("cvt:r1"),
                     "output_system_version_id": sample_id("vehicle-light:r1"),
                 },
             ),

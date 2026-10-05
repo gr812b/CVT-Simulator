@@ -18,6 +18,7 @@ from app.application.physical_contracts import (
     baseline_case,
     belt_from_assembly,
     normalize_document,
+    template_document,
     validate_physical,
     vehicle_boundary,
     vehicle_from_boundary,
@@ -136,9 +137,33 @@ def choice_for_revision(session, principal, kind, revision_id):
     )
 
 
+def template_for_library(session, principal, kind):
+    """New containers select the existing defaults instead of cloning hardware."""
+    from app.database.physical_seed import sample_id
+
+    document = template_document(kind)
+    if kind == "setups":
+        document.data.cvt = choice_for_revision(
+            session, principal, "cvts", sample_id("cvt:r1")
+        )
+        document.data.engine = choice_for_revision(
+            session, principal, "engines", sample_id("engine:r1")
+        )
+    elif kind == "cvts":
+        document.data.belt = choice_for_revision(
+            session, principal, "belts", sample_id("belt:r1")
+        )
+    return document
+
+
 def item_response(obj, kind, principal) -> PhysicalItem:
+    from sqlalchemy.orm import object_session
+
+    from app.application.authorship import author_name
+
     version = obj.released_version
     return PhysicalItem(
+        author=author_name(object_session(obj), version.created_by_user_id),
         id=obj.id,
         kind=kind,
         name=obj.name,
@@ -149,6 +174,8 @@ def item_response(obj, kind, principal) -> PhysicalItem:
         updated_at=aware(obj.updated_at),
         owned=obj.account_id == principal.account_id,
         archived=obj.lifecycle_status == "archived",
+        sample=obj.catalog_status in ("seeded_example", "official", "admin_curated"),
+        is_default=obj.is_default,
         validation_status=version.validation_status,
     )
 

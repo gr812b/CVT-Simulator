@@ -107,6 +107,8 @@ export function RunPage() {
             {error}
           </Alert>
         )}
+        {run?.queue_position && <Alert title={`Position ${run.queue_position} in the queue`}>Waiting for a worker. This position may change as workers claim jobs.</Alert>}
+        {run?.has_result && run.status !== 'completed' && <Alert color="yellow" title="Progress saved">The latest saved portion is available for playback and CSV export.</Alert>}
         {!run ? (
           !error && <Loader aria-label="Loading run" />
         ) : (

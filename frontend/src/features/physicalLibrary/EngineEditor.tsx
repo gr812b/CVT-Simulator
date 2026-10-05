@@ -85,7 +85,7 @@ export function EngineEditor({
       <div>
         <Group justify="space-between" mb="sm">
           <div>
-            <Text fw={600}>Full-throttle torque curve</Text>
+            <Text fw={600}>Full-open-throttle (FOT) torque curve</Text>
             <Text size="sm" c="dimmed">
               Enter speed and shaft torque in ascending speed order.
             </Text>
@@ -291,7 +291,7 @@ export function EngineEditor({
       <Modal
         opened={opened}
         onClose={() => !busy && setOpened(false)}
-        title="Import engine torque curve"
+        title="Import FOT torque curve"
         size="lg"
       >
         <Stack>

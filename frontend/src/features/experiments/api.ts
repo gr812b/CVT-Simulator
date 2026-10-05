@@ -33,10 +33,16 @@ export const resolveRoad = async (body: Road, signal?: AbortSignal) =>
   dataOrThrow(
     await api.POST('/api/v1/experiments/road/resolve', { body, signal }),
   );
-export const listExperiments = async (kind: ExperimentKind) =>
+export const listExperiments = async (
+  kind: ExperimentKind,
+  cvtObjectId?: string,
+) =>
   dataOrThrow(
     await api.GET('/api/v1/experiments/items/{kind}', {
-      params: { path: { kind }, query: { include_archived: true } },
+      params: {
+        path: { kind },
+        query: { include_archived: true, cvt_object_id: cvtObjectId },
+      },
     }),
   ).items;
 export const getExperiment = async (id: string, revision?: string) =>

@@ -20,6 +20,7 @@ from app.core.errors import ApiProblem
 from app.database.base import utc_now
 from app.database.experiment_models import Experiment, ExperimentRevision
 from app.database.hashing import canonical_json_hash
+from app.database.models import CVTDesignVersion, VehicleAssemblyVersion
 from app.schemas.experiments import (
     ExperimentDetail,
     ExperimentDocument,
@@ -51,7 +52,18 @@ def get_revision(session, principal, revision_id, kind=None):
 
 def item_response(session, principal, obj):
     revision = session.get(ExperimentRevision, obj.current_revision_id)
+    setup = (
+        session.get(VehicleAssemblyVersion, revision.document["setup_revision_id"])
+        if obj.kind == "tunes"
+        else None
+    )
+    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id) if setup else None
+    from app.application.authorship import author_name
+
     return ExperimentItem(
+        author=author_name(session, revision.created_by_user_id),
+        cvt_object_id=cvt.cvt_design_id if cvt else None,
+        cvt_revision_id=cvt.id if cvt else None,
         id=obj.id,
         kind=obj.kind,
         name=obj.name,
@@ -66,17 +78,22 @@ def item_response(session, principal, obj):
     )
 
 
-def list_items(session, principal, kind, include_archived=False):
+def list_items(session, principal, kind, include_archived=False, cvt_object_id=None):
     stmt = select(Experiment).where(
         Experiment.kind == kind,
     )
     if not include_archived:
         stmt = stmt.where(Experiment.archived.is_(False))
-    return [
+    items = [
         item_response(session, principal, obj)
         for obj in session.scalars(
             stmt.order_by(Experiment.updated_at.desc(), Experiment.id)
         )
+    ]
+    return [
+        item
+        for item in items
+        if cvt_object_id is None or item.cvt_object_id == cvt_object_id
     ]
 
 
@@ -222,11 +239,17 @@ def resolve(session, principal, settings, selection):
         else None
     )
     tune = DOCUMENT.validate_python(tune_revision.document) if tune_revision else None
-    if tune and tune.setup_revision_id != setup.id:
+    tune_setup = (
+        session.get(VehicleAssemblyVersion, tune.setup_revision_id) if tune else None
+    )
+    if tune and (
+        tune_setup is None
+        or tune_setup.cvt_design_version_id != setup.cvt_design_version_id
+    ):
         raise ApiProblem(
             422,
-            "tune_setup_mismatch",
-            "This tune is pinned to a different setup revision. Select its pinned revision or save a new tune for this setup.",
+            "tune_cvt_mismatch",
+            "This tune belongs to a different CVT version. Select its CVT or start a new tune for the selected CVT.",
         )
     values = (
         selection.tune_values

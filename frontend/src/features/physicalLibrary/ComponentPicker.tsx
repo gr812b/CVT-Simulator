@@ -1,5 +1,7 @@
+import { FormError } from '@components/form/FormError';
+import { libraryOptions } from './libraryOptions';
 import { useState } from 'react';
-import { Alert, Group, Select, Stack, Text, TextInput } from '@mantine/core';
+import { Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   getPhysical,
@@ -30,17 +32,14 @@ export function ComponentPicker<K extends keyof Choices>({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const options = items.map((item) => ({
-    value: item.revision_id,
-    label: `${item.name} · r${item.revision_number}${item.owned ? ' · mine' : ' · public'}`,
-  }));
+  const options = libraryOptions(items, (item) => item.revision_id);
   if (
     value.revision_id &&
-    !options.some((item) => item.value === value.revision_id)
+    !items.some((item) => item.revision_id === value.revision_id)
   ) {
     options.unshift({
-      value: value.revision_id,
-      label: `${value.name} · pinned revision`,
+      group: 'Current selection',
+      items: [{ value: value.revision_id, label: value.name }],
     });
   }
   const select = async (revision: string | null) => {
@@ -78,7 +77,7 @@ export function ComponentPicker<K extends keyof Choices>({
       void documentKind;
       onChange({
         ...document,
-        name: `My ${singularLabels[kind]}`,
+        name: '',
         revision_id: null,
       } as Choices[K]);
     } catch (reason) {
@@ -117,7 +116,7 @@ export function ComponentPicker<K extends keyof Choices>({
           </Button>
         )}
       </Group>
-      <TextInput
+      {!value.revision_id && <TextInput
         label={`${kind === 'cvts' ? 'CVT' : singularLabels[kind][0].toUpperCase() + singularLabels[kind].slice(1)} name`}
         value={value.name}
         disabled={disabled || busy}
@@ -126,18 +125,17 @@ export function ComponentPicker<K extends keyof Choices>({
         onChange={(event) =>
           onChange({ ...value, name: event.currentTarget.value })
         }
-      />
-      {!disabled && (
+      />}
+      {!disabled && !value.revision_id && (
         <Text size="xs" c="dimmed">
-          Editing an owned component saves a new revision with this setup.
-          Editing a sample creates a independent public copy. Other setups keep
-          their selected revisions.
+          Changes are saved with this setup. Customizing a default creates your
+          own copy.
         </Text>
       )}
       {error && (
-        <Alert color="red" role="alert">
+        <FormError color="red" role="alert">
           {error}
-        </Alert>
+        </FormError>
       )}
     </Stack>
   );

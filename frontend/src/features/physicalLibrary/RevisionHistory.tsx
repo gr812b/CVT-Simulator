@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Alert,
   Group,
@@ -22,12 +22,14 @@ export function RevisionHistory({
   onClose,
   onRestore,
   busy,
+  children,
 }: {
   detail: PhysicalDetail;
   opened: boolean;
   onClose: () => void;
   onRestore: (revision: string) => Promise<void>;
   busy: boolean;
+  children?: ReactNode;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [changes, setChanges] = useState<PhysicalDifference[]>([]);
@@ -71,8 +73,9 @@ export function RevisionHistory({
   }, [opened, selected, detail.item]);
   const revision = detail.history.find((item) => item.id === selected);
   return (
-    <Modal opened={opened} onClose={onClose} title="Revision history" size="lg">
+    <Modal opened={opened} onClose={onClose} title="Version history" size="lg">
       <Stack>
+        {children}
         <Text size="sm">
           Saved values are immutable. Restoring old values creates a new current
           revision and keeps the intervening history.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Accordion,
   Alert,
   Badge,
   Code,
@@ -23,12 +24,14 @@ import {
 import { RoadPreview } from '../experiments/RoadPreview';
 import { CatalogFrame } from './CatalogFrame';
 
-export function PublicTuneList() {
+export function PublicTuneList({ cvtObjectId }: { cvtObjectId: string }) {
   const [items, setItems] = useState<ExperimentItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let stopped = false;
-    void listExperiments('tunes')
+    setItems(null);
+    setError(null);
+    void listExperiments('tunes', cvtObjectId)
       .then((next) => {
         if (!stopped) setItems(next.filter((x) => !x.archived));
       })
@@ -38,12 +41,13 @@ export function PublicTuneList() {
     return () => {
       stopped = true;
     };
-  }, []);
+  }, [cvtObjectId]);
   return (
     <Stack>
-      <Title order={2}>Tunes</Title>
+      <Title order={2}>Tunes for this CVT</Title>
       <Text c="dimmed">
-        Saved tuning values with their pinned vehicle setup.
+        Saved tunes for this CVT. A tune can be used with any vehicle using its
+        CVT version.
       </Text>
       {error && <Alert color="red">{error}</Alert>}
       {!items && !error && <Loader />}
@@ -52,8 +56,9 @@ export function PublicTuneList() {
           <Group justify="space-between">
             <div>
               <Text fw={600}>{item.name}</Text>
+              <Text size="sm">By {item.author}</Text>
               <Text size="sm" c="dimmed">
-                Revision {item.revision_number} · {item.description}
+                {item.description}
               </Text>
             </div>
             <Button
@@ -96,7 +101,7 @@ export function PublicExperiment() {
     <CatalogFrame>
       <Button
         component={Link}
-        to={`/catalog?kind=${detail?.item.kind === 'tunes' ? 'tunes' : 'load-cases'}`}
+        to={`/catalog?kind=${detail?.item.kind === 'tunes' ? 'cvts' : 'load-cases'}`}
         variant="subtle"
         w="fit-content"
       >
@@ -116,7 +121,7 @@ export function PublicExperiment() {
         <>
           <Group>
             <Title order={1}>{detail.document.name}</Title>
-            <Badge>Public · revision {detail.item.revision_number}</Badge>
+            <Badge>Public</Badge>
           </Group>
           <Text style={{ whiteSpace: 'pre-wrap' }}>
             {detail.document.notes}
@@ -160,10 +165,28 @@ export function PublicExperiment() {
               Use this tune
             </Button>
           )}
-          <Title order={2} size="h3">
-            Saved values
-          </Title>
-          <Code block>{JSON.stringify(detail.document, null, 2)}</Code>
+          <Accordion variant="separated">
+            <Accordion.Item value="history">
+              <Accordion.Control>
+                Version history & saved values
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Stack>
+                  <Text size="sm">
+                    Current version {detail.item.revision_number}
+                  </Text>
+                  {detail.history.map((item) => (
+                    <Text size="sm" key={item.id}>
+                      Version {item.number} ·{' '}
+                      {new Date(item.created_at).toLocaleDateString()}
+                      {item.change_note ? ` · ${item.change_note}` : ''}
+                    </Text>
+                  ))}
+                  <Code block>{JSON.stringify(detail.document, null, 2)}</Code>
+                </Stack>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
           <Text size="sm" c="dimmed">
             Public content can be inspected without an account. Sign in to make
             your own copy or submit a simulation.

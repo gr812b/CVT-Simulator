@@ -127,6 +127,7 @@ export function RunActivityButton() {
             <Alert title="Active simulation">
               <Text>
                 {activity.active.name} · {activity.active.status}
+                {activity.active.queue_position ? ` · queue position ${activity.active.queue_position}` : ''}
               </Text>
               <Button
                 component={Link}
@@ -194,7 +195,7 @@ export function RunActivityButton() {
               onClick={() => setOpened(false)}
               rightSection={
                 <Badge size="xs" variant="light">
-                  {run.status}
+                  {run.status}{run.queue_position ? ` · queue position ${run.queue_position}` : ''}
                 </Badge>
               }
             >
@@ -226,6 +227,8 @@ export function RunActivityBanner() {
           {notice.run.status === 'completed'
             ? 'Your result is ready.'
             : (notice.run.error?.message ?? 'Your simulation has stopped.')}
+          {notice.run.has_result && notice.run.status !== 'completed' &&
+            ' Saved progress is available for playback.'}
         </Text>
         <Group gap="xs">
           <Button

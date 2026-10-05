@@ -25,7 +25,7 @@ services:
       CVT_DATABASE_URL: postgresql+psycopg://cvt:${POSTGRES_PASSWORD}@postgres:5432/cvt_simulator
       CVT_DATABASE_ECHO: "0"
       CVT_RUN_EXECUTOR_MODE: process
-      CVT_RUN_TIMEOUT_SECONDS: "120"
+      CVT_RUN_TIMEOUT_SECONDS: "300"
       CVT_ENVIRONMENT: production
       CVT_WEB_URL: ${CVT_WEB_URL:?Set the public HTTPS application URL}
       CVT_CORS_ORIGINS: ${CVT_WEB_URL}

@@ -4,9 +4,12 @@ from datetime import datetime
 from typing import Literal
 
 from app.schemas.common import ApiModel, JsonObject
+from app.schemas.course import CourseProfile
+
+from .scene import SceneGeometry
 
 
-class DemoPlaybackResponse(ApiModel):
+class DemoArtifact(ApiModel):
     id: Literal["baja-launch"] = "baja-launch"
     name: str
     description: str
@@ -16,3 +19,8 @@ class DemoPlaybackResponse(ApiModel):
     result_hash: str
     input_document_snapshot: JsonObject
     result: JsonObject
+
+
+class DemoPlaybackResponse(DemoArtifact):
+    scene_geometry: SceneGeometry
+    course: CourseProfile | None

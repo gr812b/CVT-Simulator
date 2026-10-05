@@ -7,6 +7,7 @@ import {
   SimpleGrid,
   Stack,
   Text,
+  Tooltip,
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
@@ -16,8 +17,7 @@ import {
   setValueAtJsonPointer,
   type JsonValue,
 } from '@utils/jsonPointer';
-import { BeltEditor } from './BeltEditor';
-import { ComponentPicker } from './ComponentPicker';
+import { BeltPicker } from './BeltPicker';
 import type { CvtData, PhysicalField, PhysicalItem } from './api';
 
 function fieldLabel(field: PhysicalField, path: string) {
@@ -129,7 +129,8 @@ export function CvtEditor({
             (advanced || !field.advanced) &&
             field.path.startsWith(prefix.replace(/\/\d+\//g, '/*/')) &&
             !field.path.startsWith('/geometry/belt') &&
-            field.path !== '/inertias/belt_density_kg_per_m3',
+            field.path !== '/inertias/belt_density_kg_per_m3' &&
+            field.path !== '/geometry/sheave_half_angle_rad',
         )
         .flatMap((field) =>
           expandJsonPointerTemplate(assembly, field.path)
@@ -170,27 +171,52 @@ export function CvtEditor({
           <Accordion.Control>Reusable belt</Accordion.Control>
           <Accordion.Panel>
             <Stack>
-              <ComponentPicker
-                kind="belts"
+              <BeltPicker
                 value={value.belt}
-                onChange={(belt) => onChange({ ...value, belt })}
+                onChange={(belt) =>
+                  onChange({
+                    ...value,
+                    belt,
+                    assembly: {
+                      ...value.assembly,
+                      geometry: {
+                        ...value.assembly.geometry,
+                        sheave_half_angle_rad: belt.data.half_angle_rad,
+                      },
+                    },
+                  })
+                }
                 items={belts}
                 disabled={disabled}
                 onLoadingChange={onLoadingChange}
-              />
-              <BeltEditor
-                value={value.belt.data}
-                onChange={(data) =>
-                  onChange({ ...value, belt: { ...value.belt, data } })
-                }
-                disabled={disabled}
               />
             </Stack>
           </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item value="geometry">
           <Accordion.Control>Pulley geometry & travel</Accordion.Control>
-          <Accordion.Panel>{numericFields('/geometry/')}</Accordion.Panel>
+          <Accordion.Panel>
+            <Stack>
+              <Tooltip
+                label="CINDER requires the sheave half-angle to match the selected belt’s half-angle."
+                multiline
+                w={300}
+                withArrow
+                events={{ hover: true, focus: true, touch: true }}
+              >
+                <div tabIndex={0}>
+                  <QuantityInput
+                    label="Sheave half-angle · set by belt"
+                    value={value.belt.data.half_angle_rad}
+                    unit="deg"
+                    disabled
+                    onChange={() => undefined}
+                  />
+                </div>
+              </Tooltip>
+              {numericFields('/geometry/')}
+            </Stack>
+          </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item value="inertias">
           <Accordion.Control>CVT masses & inertias</Accordion.Control>

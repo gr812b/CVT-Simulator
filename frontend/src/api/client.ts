@@ -19,8 +19,8 @@ export type Camel<T> = { [K in keyof T as K extends string ? CamelKey<K> : K]: T
 type DeepCamel<T> = T extends readonly (infer E)[]
   ? DeepCamel<E>[]
   : T extends object
-    ? { [K in keyof T as K extends string ? CamelKey<K> : K]: DeepCamel<T[K]> }
-    : T;
+  ? { [K in keyof T as K extends string ? CamelKey<K> : K]: DeepCamel<T[K]> }
+  : T;
 export type PresetSummary = components['schemas']['PresetSummary'];
 
 export type RunLifecycleStatus = Schema['RunStatusResponse']['status'];
@@ -29,7 +29,7 @@ export type RunStatus = Camel<
   Required<
     Pick<
       Schema['RunStatusResponse'],
-      'id' | 'status' | 'submitted_at' | 'started_at' | 'completed_at' | 'error'
+      'id' | 'status' | 'submitted_at' | 'started_at' | 'completed_at' | 'error' | 'has_result'
     >
   >
 >;
@@ -70,6 +70,8 @@ export type ReportColumn = ReportTable['columns'][number];
 export type SimulationTransition = SimulationResult['transitions'][number];
 
 export interface CompletedSimulationRun {
+  course: Schema['RunResultResponse']['course'];
+  sceneGeometry: Schema['SceneGeometry'];
   run: RunStatus;
   inputDocumentSnapshot: SimulationCaseDocument;
   result: SimulationResult;
@@ -248,6 +250,7 @@ function parseRunStatus(raw: unknown): RunStatus {
   return {
     id: string(value.id, 'run status.id'),
     status,
+    hasResult: value.has_result === true,
     submittedAt: string(value.submitted_at, 'run status.submitted_at'),
     startedAt: value.started_at === null ? null : string(value.started_at, 'run status.started_at'),
     completedAt:
@@ -727,14 +730,14 @@ export function buildLibraryRunSelection(
     overrides.loadCaseId === null
       ? null
       : setup.loadCases.find(
-          (item) => item.id === (overrides.loadCaseId ?? setup.selectedLoadCase?.id),
-        );
+        (item) => item.id === (overrides.loadCaseId ?? setup.selectedLoadCase?.id),
+      );
   const executionPreset =
     overrides.executionPresetId === null
       ? null
       : setup.executionPresets.find(
-          (item) => item.id === (overrides.executionPresetId ?? setup.selectedExecutionPreset?.id),
-        );
+        (item) => item.id === (overrides.executionPresetId ?? setup.selectedExecutionPreset?.id),
+      );
   return buildDefaultSelection({
     vehicleAssembly,
     tune: tune ?? null,
@@ -871,6 +874,8 @@ export async function getSimulationResult(runId: string): Promise<CompletedSimul
   );
   return {
     run: parseRunStatus(data.run),
+    sceneGeometry: data.scene_geometry,
+    course: data.course,
     inputDocumentSnapshot: data.input_document_snapshot as unknown as SimulationCaseDocument,
     result: parseSimulationResult(data.result),
   };

@@ -68,6 +68,8 @@ export function Demo() {
         <SimulationPlayback
           result={demo.result}
           document={demo.inputDocumentSnapshot}
+          sceneGeometry={demo.scene_geometry}
+          course={demo.course}
           navigation={[
             { label: 'Home', to: '/' },
             { label: 'Public library', to: '/catalog' },

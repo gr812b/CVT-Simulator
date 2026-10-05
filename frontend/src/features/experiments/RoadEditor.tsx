@@ -60,13 +60,15 @@ function FeatureInputs({
             onChange={(length_m) => onChange({ ...value, length_m })}
           />
         )}
-        {'rise_m' in value && (
+        {'angle_rad' in value && (
           <QuantityInput
-            label="Elevation change"
-            unit="m"
-            scale={1}
-            value={value.rise_m}
-            onChange={(rise_m) => onChange({ ...value, rise_m })}
+            label="Incline angle"
+            unit="deg"
+            description="Positive climbs; negative descends. Changing length keeps this angle."
+            min={-Math.PI / 2 + Number.EPSILON}
+            max={Math.PI / 2 - Number.EPSILON}
+            value={value.angle_rad}
+            onChange={(angle_rad) => onChange({ ...value, angle_rad })}
           />
         )}
         {'height_m' in value && (
@@ -250,7 +252,7 @@ export function RoadEditor({
       section.points[index - 1].distance_m + 0.01,
       Math.min(
         section.points[index + 1]?.distance_m - 0.01 ||
-          metadata.limits.max_distance_m,
+        metadata.limits.max_distance_m,
         point.distance_m,
       ),
     ),
@@ -395,7 +397,7 @@ export function RoadEditor({
                     const selected = { featureId: section.feature_id, index };
                     const moving =
                       drag?.selection.featureId === selected.featureId &&
-                      drag.selection.index === index
+                        drag.selection.index === index
                         ? drag.point
                         : point;
                     return (
@@ -405,7 +407,7 @@ export function RoadEditor({
                         cy={y(section.start_elevation_m + moving.elevation_m)}
                         r={
                           selection?.featureId === selected.featureId &&
-                          selection.index === index
+                            selection.index === index
                             ? 8
                             : 5
                         }
@@ -659,7 +661,7 @@ export function RoadEditor({
                       direction === -1
                         ? value.features.indexOf(activeFeature) === 0
                         : value.features.indexOf(activeFeature) ===
-                          value.features.length - 1
+                        value.features.length - 1
                     )
                       ? 'This section is already at that end of the road.'
                       : undefined
@@ -740,7 +742,7 @@ export function RoadEditor({
                 : !activeSection
                   ? 'Select a road section first.'
                   : (resolution?.profile.segments.length ?? 0) >=
-                      metadata.limits.max_segments
+                    metadata.limits.max_segments
                     ? 'This road has reached its point limit.'
                     : undefined
             }
@@ -778,6 +780,10 @@ export function RoadEditor({
           })
         }
       />
+      <Text size="sm" c="dimmed">
+        Maximum course length: {(metadata.limits.max_distance_m / 1000).toLocaleString()} km.
+        Road continuation applies only when running for a specified simulation time.
+      </Text>
       {resolution && (
         <Text size="sm" c="dimmed">
           {resolution.length_m.toFixed(1)} m ·{' '}

@@ -1,3 +1,4 @@
+import { CourseChart } from '@components/course/CourseChart';
 import { useEffect, useState } from 'react';
 import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
 import { resolveRoad, message, type Road, type RoadResolution } from './api';
@@ -21,47 +22,9 @@ export function RoadPreview({ road }: { road: Road }) {
   }, [key]);
   if (error) return <Alert color="red">{error}</Alert>;
   if (!data) return <Loader size="sm" aria-label="Loading road preview" />;
-  const span = Math.max(data.maximum_elevation_m - data.minimum_elevation_m, 1);
-  const points = data.points
-    .map(
-      (p) =>
-        `${40 + (620 * p.distance_m) / Math.max(data.length_m, 1)},${160 - (120 * (p.elevation_m - data.minimum_elevation_m)) / span}`,
-    )
-    .join(' ');
   return (
     <Stack gap="xs">
-      <svg
-        viewBox="0 0 700 200"
-        role="img"
-        aria-label="Road elevation preview"
-        style={{ width: '100%', maxHeight: 230 }}
-      >
-        <line
-          x1="40"
-          y1="170"
-          x2="660"
-          y2="170"
-          stroke="var(--mantine-color-dimmed)"
-        />
-        <polyline
-          points={points}
-          fill="none"
-          stroke="var(--mantine-primary-color-filled)"
-          strokeWidth="3"
-        />
-        <text x="40" y="192" fill="currentColor" fontSize="12">
-          0 m
-        </text>
-        <text
-          x="660"
-          y="192"
-          textAnchor="end"
-          fill="currentColor"
-          fontSize="12"
-        >
-          {data.length_m.toFixed(0)} m along road
-        </text>
-      </svg>
+      <CourseChart points={data.points} />
       <Group justify="space-between">
         <Text size="sm">
           {road.features.length} road section

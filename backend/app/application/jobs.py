@@ -10,7 +10,8 @@ import math
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.orm import object_session
 
 from app.application import access
 from app.application.auth import aware
@@ -20,7 +21,7 @@ from app.database import runs as artifacts
 from app.database.base import utc_now
 from app.database.experiment_models import RunNotification
 from app.database.hashing import canonical_json_hash
-from app.database.models import Account, AccountUser, Run
+from app.database.models import Account, AccountUser, Run, RunArtifact
 from app.schemas.runs import RunActivity, RunStatusResponse
 
 ACTIVE = ("queued", "running")
@@ -35,7 +36,24 @@ def database_now(session):
 
 
 def status(run, *, include_provenance=True):
+    session = object_session(run)
+    position = None
+    if run.status == "queued" and session is not None:
+        position = 1 + session.scalar(
+            select(func.count())
+            .select_from(Run)
+            .where(
+                Run.status == "queued",
+                (Run.submitted_at < run.submitted_at)
+                | ((Run.submitted_at == run.submitted_at) & (Run.id < run.id)),
+            )
+        )
+    from app.application.authorship import author_name
+
     return RunStatusResponse(
+        author=author_name(session, run.created_by_user_id),
+        queue_position=position,
+        has_result=bool(run.summary_series),
         id=run.id,
         name=run.name,
         source=run.source,
@@ -323,6 +341,13 @@ def recover(session, settings, account_id=None):
             .values(**values)
             .execution_options(synchronize_session=False)
         ).rowcount:
+            session.refresh(run)
+            if run.summary_series:
+                saved = artifacts.get_database_run_result(session, run.id)
+                saved["metrics"].update(
+                    completed=False, termination_reason=run.error["code"]
+                )
+                _save_result(session, run, saved)
             _notify(session, run)
     session.flush()
     session.expire_all()
@@ -383,6 +408,44 @@ def cancel(session, principal, run_id):
     return run
 
 
+def _save_result(session, run, result):
+    """Replace the durable full result and preview in the caller's transaction."""
+    artifacts.verify_result_contract(
+        result, expected_version=run.result_contract_version
+    )
+    preview = artifacts.build_preview_from_result(result)
+    session.execute(delete(RunArtifact).where(RunArtifact.run_id == run.id))
+    session.add(
+        artifacts.create_result_artifact(
+            run_id=run.id, cache_entry_id=None, result=result
+        )
+    )
+    session.add(
+        artifacts.create_preview_artifact(
+            run_id=run.id, cache_entry_id=None, preview=preview
+        )
+    )
+    run.summary_scalars = artifacts.summary_scalars(result)
+    run.summary_series = preview
+
+
+def checkpoint(session, run_id, token, result):
+    if not session.execute(
+        update(Run)
+        .where(
+            Run.id == run_id,
+            Run.status == "running",
+            Run.worker_token == token,
+        )
+        .values(heartbeat_at=utc_now())
+    ).rowcount:
+        return False
+    run = session.get(Run, run_id, populate_existing=True)
+    _save_result(session, run, result)
+    session.flush()
+    return True
+
+
 def finish(session, run_id, token, *, result=None, error=None, terminal="failed"):
     # A write CAS also serializes completion with cancellation before reading it.
     if not session.execute(
@@ -393,25 +456,16 @@ def finish(session, run_id, token, *, result=None, error=None, terminal="failed"
         return False
     run = session.get(Run, run_id, populate_existing=True)
     if run.cancel_requested_at:
-        result, error, terminal = None, None, "cancelled"
+        error, terminal = None, "cancelled"
     if result is not None:
-        artifacts.verify_result_contract(
-            result, expected_version=run.result_contract_version
-        )
-        preview = artifacts.build_preview_from_result(result)
-        session.add(
-            artifacts.create_result_artifact(
-                run_id=run.id, cache_entry_id=None, result=result
+        if error or terminal == "cancelled":
+            result = copy.deepcopy(result)
+            result["metrics"].update(
+                completed=False, termination_reason=(error or {}).get("code", terminal)
             )
-        )
-        session.add(
-            artifacts.create_preview_artifact(
-                run_id=run.id, cache_entry_id=None, preview=preview
-            )
-        )
-        run.summary_scalars = artifacts.summary_scalars(result)
-        run.summary_series = preview
-        terminal = "completed"
+        _save_result(session, run, result)
+        if error is None and terminal != "cancelled":
+            terminal = "completed"
     run.status, run.error, run.completed_at, run.worker_token = (
         terminal,
         error,

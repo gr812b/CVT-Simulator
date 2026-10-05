@@ -2,18 +2,27 @@
 
 from typing import Literal
 
-from app.api.v1.dependencies import get_current_principal, get_database_session
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+
+from app.api.v1.dependencies import (
+    get_current_principal,
+    get_database_session,
+    get_public_reader,
+)
 from app.application import access
 from app.application import physical_library as service
 from app.application.auth import Principal
 from app.application.physical_contracts import (
     cvt_fields,
     import_engine_curve,
-    template_document,
+    resolve_belt_section,
     validate_physical,
 )
 from app.core.errors import ApiProblem
 from app.schemas.physical_library import (
+    BeltSection,
+    BeltSectionSolveRequest,
     CurveImportRequest,
     CurveImportResponse,
     PhysicalArchiveRequest,
@@ -32,8 +41,6 @@ from app.schemas.physical_library import (
     PhysicalValidateRequest,
     PhysicalValidationResponse,
 )
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/physical-library", tags=["physical library"])
 
@@ -44,13 +51,24 @@ def metadata():
 
 
 @router.get("/templates/{kind}", response_model=PhysicalTemplateResponse)
-def template(kind: PhysicalKind):
-    return PhysicalTemplateResponse(document=template_document(kind))
+def template(
+    kind: PhysicalKind,
+    principal=Depends(get_public_reader),
+    session: Session = Depends(get_database_session),
+):
+    return PhysicalTemplateResponse(
+        document=service.template_for_library(session, principal, kind)
+    )
 
 
 @router.post("/engine-curve/import", response_model=CurveImportResponse)
 def import_curve(request: CurveImportRequest):
     return CurveImportResponse(points=import_engine_curve(request))
+
+
+@router.post("/belt-section/resolve", response_model=BeltSection)
+def belt_section(request: BeltSectionSolveRequest):
+    return resolve_belt_section(request)
 
 
 @router.post("/validate", response_model=PhysicalValidationResponse)

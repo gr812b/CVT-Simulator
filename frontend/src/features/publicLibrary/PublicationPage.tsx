@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  Accordion,
   Alert,
   Anchor,
   Badge,
@@ -18,6 +19,7 @@ import {
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
+import { PublicTuneList } from './PublicExperiment';
 import { CatalogFrame } from './CatalogFrame';
 import { ConfigurationView } from './ConfigurationView';
 import {
@@ -169,16 +171,19 @@ function PublicPublication({ id }: { id: string }) {
             {detail.item.description ||
               'A saved configuration with its required component values included.'}
           </Text>
+          {detail.item.kind === 'cvts' && (
+            <Paper withBorder p="lg" id="tunes">
+              <PublicTuneList cvtObjectId={detail.item.source_object_id} />
+            </Paper>
+          )}
           <Paper withBorder p="lg">
             <Stack>
               <Title order={2} size="h3">
-                A fixed published revision
+                Configuration summary
               </Title>
               <Text size="sm">
-                Publication {detail.item.publication_number} · source revision{' '}
-                {detail.item.revision_number}. Copying creates your own public
-                item and its required components. Later source edits or
-                publications do not update your copy.
+                Copying creates your own item and its required components. Later
+                edits to the source do not change your copy.
               </Text>
               <SimpleGrid cols={{ base: 2, sm: 4 }}>
                 {detail.item.properties.map((property) => (
@@ -203,9 +208,6 @@ function PublicPublication({ id }: { id: string }) {
                   Source reference
                 </Anchor>
               )}
-              <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>
-                Snapshot {detail.snapshot_hash}
-              </Text>
             </Stack>
           </Paper>
           {latest && (
@@ -253,9 +255,6 @@ function PublicPublication({ id }: { id: string }) {
                 {detail.dependencies.map((dependency, index) => (
                   <Text key={index} size="sm">
                     {dependency.name} · {dependency.kind}
-                    {dependency.revision_number
-                      ? ` · revision ${dependency.revision_number}`
-                      : ''}
                   </Text>
                 ))}
                 <Text size="xs" c="dimmed">
@@ -266,39 +265,34 @@ function PublicPublication({ id }: { id: string }) {
               </Stack>
             </Paper>
           )}
-          {detail.document.source_notes && (
-            <Paper withBorder p="lg">
-              <Title order={2} size="h3">
-                Sources & assumptions
-              </Title>
-              <Text size="sm" mt="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                {detail.document.source_notes}
-              </Text>
-            </Paper>
-          )}
           <ConfigurationView document={detail.document} fields={fields} />
-          {detail.history.length > 1 && (
-            <Paper withBorder p="lg">
-              <Stack>
-                <Title order={2} size="h3">
-                  Listed publication history
-                </Title>
-                <Group>
-                  {detail.history.map((item) => (
-                    <Button
-                      key={item.id}
-                      component={Link}
-                      to={`/catalog/${item.id}`}
-                      variant={item.id === id ? 'filled' : 'light'}
-                    >
-                      Publication {item.publication_number} · r
-                      {item.revision_number}
-                    </Button>
-                  ))}
-                </Group>
-              </Stack>
-            </Paper>
-          )}
+          <Accordion variant="separated">
+            <Accordion.Item value="history">
+              <Accordion.Control>Version history</Accordion.Control>
+              <Accordion.Panel>
+                <Paper withBorder p="lg">
+                  <Stack>
+                    <Title order={2} size="h3">
+                      Saved versions
+                    </Title>
+                    <Group>
+                      {detail.history.map((item) => (
+                        <Button
+                          key={item.id}
+                          component={Link}
+                          to={`/catalog/${item.id}`}
+                          variant={item.id === id ? 'filled' : 'light'}
+                        >
+                          Publication {item.publication_number} · r
+                          {item.revision_number}
+                        </Button>
+                      ))}
+                    </Group>
+                  </Stack>
+                </Paper>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
           <Modal
             opened={copying}
             onClose={() => !busy && setCopying(false)}

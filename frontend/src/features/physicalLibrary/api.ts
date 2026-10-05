@@ -18,6 +18,18 @@ export type PhysicalDifference = Schema['PhysicalDifference'];
 export type PhysicalUpdatePreview = Schema['PhysicalUpdatePreview'];
 export type EngineData = Schema['EngineData'];
 export type BeltData = Schema['BeltData'];
+export type BeltSection = Schema['BeltSection'];
+export async function resolveBeltSection(
+  body: Schema['BeltSectionSolveRequest'],
+  signal?: AbortSignal,
+) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/belt-section/resolve', {
+      body,
+      signal,
+    }),
+  );
+}
 export type CvtData = Schema['CvtData'];
 export type VehicleData = Schema['VehicleData'];
 export type EngineChoice = Schema['EngineChoice'];

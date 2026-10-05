@@ -28,4 +28,7 @@ export interface Scene3DConfig {
   backgroundColor?: string | number;
   antialias?: boolean;
   pixelRatio?: number;
+  transparentBackground?: boolean;
+  orbitOnly?: boolean;
+  renderOnDemand?: boolean;
 }

@@ -1,5 +1,6 @@
+import { FormError } from '@components/form/FormError';
 import { useEffect, useState } from 'react';
-import { Alert, Group, Loader, Modal, Stack, Text } from '@mantine/core';
+import { Group, Loader, Modal, Stack, Text, TextInput } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import {
@@ -48,7 +49,7 @@ export function LoadCaseEditor({
         if (cancelled) return;
         const document = current?.document ?? {
           ...meta.scenario_template,
-          name: 'New load case',
+          name: '',
         };
         if (document.kind !== 'scenarios')
           throw new Error('This item is not a load case.');
@@ -108,14 +109,14 @@ export function LoadCaseEditor({
     >
       <Stack>
         {error && (
-          <Alert color="red" role="alert">
+          <FormError color="red" role="alert">
             {error}
             {!metadata && (
               <Button variant="subtle" onClick={() => setRetry((x) => x + 1)}>
                 Try again
               </Button>
             )}
-          </Alert>
+          </FormError>
         )}
         {!metadata || !history.value ? (
           busy && <Loader aria-label="Loading load case" />
@@ -131,29 +132,8 @@ export function LoadCaseEditor({
               style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
             >
               <Stack>
-                <RevisionToolbar
-                  label="Load case"
-                  showPicker={false}
-                  document={history.value}
-                  detail={detail}
-                  items={[]}
-                  busy={busy}
-                  invalid={Boolean(invalid.size) || !roadValid}
-                  onChange={(next) =>
-                    next.kind === 'scenarios' && history.change(next)
-                  }
-                  onLoad={() => {}}
-                  onNew={() => {}}
-                  onSave={(asNew) => void save(asNew)}
-                  onRefresh={() => setRetry((x) => x + 1)}
-                  onRestored={(next) => {
-                    setDetail(next);
-                    if (next.document.kind === 'scenarios') {
-                      reset(next.document);
-                      setSaved(JSON.stringify(next.document));
-                    }
-                  }}
-                />
+                <TextInput label="Load case name" required placeholder="Give this course a name"
+                  value={history.value.name} onChange={e => history.change({ ...history.value!, name: e.currentTarget.value })} />
                 <Group>
                   <Button
                     size="xs"
@@ -186,6 +166,31 @@ export function LoadCaseEditor({
                   onChange={history.change}
                   onRoadValidityChange={setRoadValid}
                 />
+                <RevisionToolbar
+                  label="Load case"
+                  showPicker={false}
+                  showFields={false}
+                  document={history.value}
+                  detail={detail}
+                  items={[]}
+                  busy={busy}
+                  invalid={Boolean(invalid.size) || !roadValid}
+                  onChange={(next) =>
+                    next.kind === 'scenarios' && history.change(next)
+                  }
+                  onLoad={() => { }}
+                  onNew={() => { }}
+                  onSave={(asNew) => void save(asNew)}
+                  onRefresh={() => setRetry((x) => x + 1)}
+                  onRestored={(next) => {
+                    setDetail(next);
+                    if (next.document.kind === 'scenarios') {
+                      reset(next.document);
+                      setSaved(JSON.stringify(next.document));
+                    }
+                  }}
+                />
+
               </Stack>
             </fieldset>
           </QuantityValidationContext.Provider>

@@ -66,11 +66,16 @@ export function PublicRunList() {
       {!data && !error && <Loader />}
       {data?.items.map((item) => (
         <Paper withBorder p="lg" key={item.run.id}>
-          <Group justify="space-between">
-            <div>
-              <Text fw={600}>{item.run.name}</Text>
+          <div className="public-run-row">
+            <div style={{ minWidth: 0 }}>
+              <Text fw={600} style={{ overflowWrap: 'anywhere' }}>
+                {item.run.name}
+              </Text>
               <Text size="sm" c="dimmed">
-                {new Date(item.run.submitted_at).toLocaleString()}
+                By {item.run.author} · {new Date(item.run.submitted_at).toLocaleDateString()}
+              </Text>
+              <Text size="xs" c="dimmed" lineClamp={1}>
+                {item.references.map(ref => ref.name).slice(0, 2).join(' · ')}
               </Text>
             </div>
             <Badge>{item.run.status}</Badge>
@@ -81,18 +86,18 @@ export function PublicRunList() {
             >
               View run
             </Button>
-          </Group>
+          </div>
         </Paper>
       ))}
       {data?.total === 0 && <Text>No matching runs yet.</Text>}
       {!!data && data.total > 24 && (
-        <Pagination
+        <Group justify="center" py="xl"><Pagination
           total={Math.ceil(data.total / 24)}
           value={page}
           onChange={(next) =>
             setParams({ kind: 'runs', q: search, page: String(next) })
           }
-        />
+        /></Group>
       )}
     </Stack>
   );
@@ -192,6 +197,8 @@ export function PublicPlayback() {
         <SimulationPlayback
           result={run.result}
           document={run.inputDocumentSnapshot}
+          sceneGeometry={run.sceneGeometry}
+          course={run.course}
           navigation={[{ label: 'Run details', to: `/catalog/runs/${runId}` }]}
         />
       )}

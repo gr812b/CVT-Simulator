@@ -114,11 +114,14 @@ def submit(
 def list_items(
     kind: ExperimentKind,
     include_archived: bool = False,
+    cvt_object_id: str | None = None,
     session: Session = SessionDep,
     principal=Depends(get_public_reader),
 ):
     return ExperimentList(
-        items=service.list_items(session, principal, kind, include_archived)
+        items=service.list_items(
+            session, principal, kind, include_archived, cvt_object_id
+        )
     )
 
 

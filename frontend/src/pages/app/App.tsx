@@ -1,8 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthPage } from '@pages/auth/AuthPage';
 import { AccountSettings } from '@pages/auth/AccountSettings';
-import { ApplicationShell } from '@components/appShell/ApplicationShell';
+import {
+  ApplicationShell,
+  RequireAccount,
+} from '@components/appShell/ApplicationShell';
 import { Center, Loader } from '@mantine/core';
 import { Home } from '@pages/home/Home';
 
@@ -77,11 +80,6 @@ const Publication = lazy(() =>
   ),
 );
 
-const LoadCases = lazy(() =>
-  import('../../features/experiments/LoadCaseLibrary').then(
-    ({ LoadCaseLibrary }) => ({ default: LoadCaseLibrary }),
-  ),
-);
 const PublicExperiment = lazy(() =>
   import('../../features/publicLibrary/PublicExperiment').then(
     ({ PublicExperiment }) => ({ default: PublicExperiment }),
@@ -113,18 +111,6 @@ export const App = () => (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/demo" element={<Demo />} />
-      <Route path="/catalog" element={<PublicLibrary />} />
-      <Route
-        path="/catalog/load-cases/:objectId"
-        element={<PublicExperiment />}
-      />
-      <Route path="/catalog/tunes/:objectId" element={<PublicExperiment />} />
-      <Route path="/catalog/runs/:runId" element={<PublicRun />} />
-      <Route
-        path="/catalog/runs/:runId/playback"
-        element={<PublicPlayback />}
-      />
-      <Route path="/catalog/:publicationId" element={<Publication />} />
       <Route path="/login" element={<AuthPage key="login" mode="login" />} />
       <Route
         path="/register"
@@ -139,20 +125,40 @@ export const App = () => (
         element={<AuthPage key="reset" mode="reset" />}
       />
       <Route element={<ApplicationShell />}>
-        <Route path="/account" element={<AccountSettings />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/library" element={<Library />} />
-        <Route path="/library/:kind" element={<Library />} />
-        <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
-        <Route path="/load-cases" element={<LoadCases />} />
-        <Route path="/input" element={<Input />} />
-        <Route path="/runs/:runId" element={<RunPage />} />
-        <Route path="/runs" element={<RunHistory />} />
-        <Route path="/playback" element={<Playback />} />
-        <Route path="/geometry" element={<GeometryStudy />} />
-        <Route path="/validation" element={<Validation />} />
-        <Route path="/validation/runs/:runId" element={<ValidationResults />} />
-        <Route path="/primary-design" element={<PrimaryDesign />} />
+        <Route path="/catalog" element={<PublicLibrary />} />
+        <Route
+          path="/catalog/load-cases/:objectId"
+          element={<PublicExperiment />}
+        />
+        <Route path="/catalog/tunes/:objectId" element={<PublicExperiment />} />
+        <Route path="/catalog/runs/:runId" element={<PublicRun />} />
+        <Route
+          path="/catalog/runs/:runId/playback"
+          element={<PublicPlayback />}
+        />
+        <Route path="/catalog/:publicationId" element={<Publication />} />
+        <Route element={<RequireAccount />}>
+          <Route path="/account" element={<AccountSettings />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/library/:kind" element={<Library />} />
+          <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
+          <Route
+            path="/load-cases"
+            element={<Navigate to="/library/load-cases" replace />}
+          />
+          <Route path="/input" element={<Input />} />
+          <Route path="/runs/:runId" element={<RunPage />} />
+          <Route path="/runs" element={<RunHistory />} />
+          <Route path="/playback" element={<Playback />} />
+          <Route path="/geometry" element={<GeometryStudy />} />
+          <Route path="/validation" element={<Validation />} />
+          <Route
+            path="/validation/runs/:runId"
+            element={<ValidationResults />}
+          />
+          <Route path="/primary-design" element={<PrimaryDesign />} />
+        </Route>
       </Route>
       <Route path="*" element={<div>404 - Not found</div>} />
     </Routes>

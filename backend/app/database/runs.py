@@ -26,19 +26,12 @@ def get_database_run(session: Session, run_id: str) -> Run:
 
 def get_database_run_result(session: Session, run_id: str) -> JsonDict:
     run = get_database_run(session, run_id)
-    if run.status != "completed":
-        raise ApiProblem(
-            409,
-            "run_result_not_available",
-            f"Run {run_id!r} is {run.status}; a result is not available yet.",
-            {"status": run.status},
-        )
     artifact = _result_artifact_for_run(session, run)
     if artifact is None or artifact.inline_payload is None:
         raise ApiProblem(
-            410,
+            409 if run.status in {"queued", "running"} else 410,
             "run_result_artifact_missing",
-            f"Run {run_id!r} completed but its full result artifact is unavailable.",
+            f"Run {run_id!r} has no saved result available yet.",
             {"run_id": run_id, "cache_entry_id": run.cache_entry_id},
         )
     return copy.deepcopy(artifact.inline_payload)
@@ -52,25 +45,18 @@ def get_database_run_input_contract(session: Session, run_id: str) -> JsonDict:
 
 
 def get_database_run_preview(session: Session, run_id: str) -> JsonDict:
-    """Return the durable preview payload for a completed persisted run."""
+    """Return the latest durable preview, including saved partial runs."""
 
     run = get_database_run(session, run_id)
-    if run.status != "completed":
-        raise ApiProblem(
-            409,
-            "run_preview_not_available",
-            f"Run {run_id!r} is {run.status}; a preview is not available yet.",
-            {"status": run.status},
-        )
     artifact = _preview_artifact_for_run(session, run)
     if artifact is not None and artifact.inline_payload is not None:
         return copy.deepcopy(artifact.inline_payload)
     if run.summary_series:
         return copy.deepcopy(run.summary_series)
     raise ApiProblem(
-        410,
+        409 if run.status in {"queued", "running"} else 410,
         "run_preview_missing",
-        f"Run {run_id!r} completed but its preview payload is unavailable.",
+        f"Run {run_id!r} has no saved preview available yet.",
         {"run_id": run_id, "cache_entry_id": run.cache_entry_id},
     )
 

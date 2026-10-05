@@ -1,11 +1,10 @@
+import { LibraryCard } from '../physicalLibrary/LibraryCard';
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Badge,
   Container,
   Group,
   Loader,
-  Paper,
   SegmentedControl,
   SimpleGrid,
   Stack,
@@ -21,13 +20,15 @@ import { LoadCaseEditor } from './LoadCaseEditor';
 
 export function LoadCaseLibrary({
   publicView = false,
+  embedded = false,
 }: {
   publicView?: boolean;
+  embedded?: boolean;
 }) {
   const { session } = useAuth();
   const [items, setItems] = useState<ExperimentItem[]>([]);
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState('all');
+  const [scope, setScope] = useState(publicView ? 'all' : 'own');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
@@ -60,11 +61,17 @@ export function LoadCaseLibrary({
         .includes(query.toLowerCase()),
   );
   return (
-    <Container size="xl" px={publicView ? 0 : undefined} py="lg">
+    <Container
+      size="xl"
+      px={publicView || embedded ? 0 : undefined}
+      py={embedded ? 0 : 'lg'}
+      w="100%"
+      mih={480}
+    >
       <Stack>
-        <Group justify="space-between">
+        {!embedded && <Group justify="space-between">
           <div>
-            <Title order={publicView ? 2 : 1}>Load cases</Title>
+            <Title order={publicView || embedded ? 2 : 1}>Load cases</Title>
             <Text c="dimmed">
               Reusable roads, hills and whoops. Choose a saved case for any
               vehicle.
@@ -75,15 +82,15 @@ export function LoadCaseLibrary({
               New load case
             </Button>
           )}
-        </Group>
+        </Group>}
         <Group justify="space-between">
           <SegmentedControl
             value={scope}
             onChange={setScope}
             data={[
-              { value: 'all', label: 'All public' },
-              { value: 'samples', label: 'Defaults' },
-              ...(session ? [{ value: 'own', label: 'Mine' }] : []),
+              ...(publicView ? [{ value: 'all', label: 'All public' }] : []),
+              { value: 'samples', label: 'Samples' },
+              ...(session ? [{ value: 'own', label: 'My library' }] : []),
             ]}
           />
           <TextInput
@@ -109,55 +116,15 @@ export function LoadCaseLibrary({
             )}
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
               {visible.map((item) => (
-                <Paper key={item.id} withBorder p="lg">
-                  <Stack h="100%" justify="space-between">
-                    <Stack gap="xs">
-                      <Group>
-                        <Badge variant="light">
-                          {item.sample
-                            ? 'Default'
-                            : item.owned
-                              ? 'Mine · public'
-                              : 'Public'}
-                        </Badge>
-                        <Text size="xs">Revision {item.revision_number}</Text>
-                      </Group>
-                      <Title order={3} size="h4">
-                        {item.name}
-                      </Title>
-                      <Text size="sm" c="dimmed" lineClamp={3}>
-                        {item.description ||
-                          'A saved road profile with initial conditions and run settings.'}
-                      </Text>
-                    </Stack>
-                    <Group>
-                      <Button
-                        component={Link}
-                        to={`/catalog/load-cases/${item.id}`}
-                        variant="light"
-                      >
-                        View load case
-                      </Button>
-                      {session && (
-                        <>
-                          <Button
-                            variant="default"
-                            onClick={() => setEditor({ id: item.id })}
-                          >
-                            {item.owned ? 'Edit' : 'Customize'}
-                          </Button>
-                          <Button
-                            component={Link}
-                            to={`/input?scenario=${item.id}`}
-                            variant="subtle"
-                          >
-                            Use in a run
-                          </Button>
-                        </>
-                      )}
-                    </Group>
-                  </Stack>
-                </Paper>
+                <LibraryCard key={item.id} name={item.name} description={item.description} author={item.author}
+                  badge={item.sample ? 'CINDER default' : item.owned ? 'My library' : 'Public'}
+                  actions={<>
+                    <Button component={Link} to={`/catalog/load-cases/${item.id}`} variant="light" fullWidth>View load case</Button>
+                    {session && <Group grow>
+                      <Button variant="default" onClick={() => setEditor({ id: item.id })}>{item.owned ? 'Edit' : 'Customize'}</Button>
+                      <Button component={Link} to={`/input?scenario=${item.id}`} variant="subtle">Use in a run</Button>
+                    </Group>}
+                  </>} />
               ))}
             </SimpleGrid>
           </>

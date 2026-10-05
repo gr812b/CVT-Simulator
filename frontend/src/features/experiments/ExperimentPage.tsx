@@ -1,3 +1,6 @@
+import { EditorDisclosure } from '@components/form/EditorDisclosure';
+import { FormError } from '@components/form/FormError';
+import { libraryOptions } from '../physicalLibrary/libraryOptions';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -76,6 +79,7 @@ type Setup = Extract<PhysicalDocument, { kind: 'setups' }>;
 const steps = [
   'Vehicle',
   'CVT & belt',
+  'Tune',
   'Primary boundary',
   'Load case',
   'Review & run',
@@ -109,7 +113,7 @@ export function ExperimentPage() {
   const [preview, setPreview] = useState<ExperimentPreview | null>(null);
   const [previewKey, setPreviewKey] = useState('');
   const [invalid, setInvalid] = useState(new Set<string>());
-  const [runName, setRunName] = useState('New simulation');
+  const [runName, setRunName] = useState('');
   const [retry, setRetry] = useState(0);
   const request = useRef({ fingerprint: '', key: crypto.randomUUID() });
   const leaving = useRef(false);
@@ -119,7 +123,7 @@ export function ExperimentPage() {
   const tuneDirty =
     !!tune &&
     JSON.stringify(tune) !==
-      JSON.stringify(tuneDetail?.document ?? surface?.template);
+    JSON.stringify(tuneDetail?.document ?? surface?.template);
   const scenarioDirty =
     !!scenario &&
     JSON.stringify(scenario) !== JSON.stringify(loadCase?.document);
@@ -175,11 +179,13 @@ export function ExperimentPage() {
       .then(async ([meta, physical, groups, roads, savedTunes]) => {
         const items = groups.flat();
         const selected =
-          groups[0].find((item) => item.id === params.get('setup')) ??
-          groups[0][0];
+          groups[0].find((item) => item.id === params.get('setup'));
         const road =
           roads.find((item) => item.id === params.get('scenario')) ??
-          roads.find((item) => item.name === 'Flat road') ??
+          roads.find(
+            (item) =>
+              item.sample && item.name.toLowerCase().includes('flat road'),
+          ) ??
           roads[0];
         const [current, selectedRoad] = await Promise.all([
           selected ? getPhysical('setups', selected.id) : null,
@@ -280,7 +286,7 @@ export function ExperimentPage() {
         return;
       const template = await physicalTemplate('setups');
       if (template.kind !== 'setups') return;
-      setSetup({ ...template, name: 'My vehicle setup' });
+      setSetup({ ...template, name: '' });
       setSetupDetail(null);
       setSurface(null);
       setTune(null);
@@ -321,11 +327,14 @@ export function ExperimentPage() {
       !nextSurface ||
       nextSurface.template.setup_revision_id !== current.item.revision_id
     ) {
+      const previousSurface = nextSurface;
       nextSurface = await getTuneSurface(current.item.revision_id);
-      nextTune = nextSurface.template;
+      if (previousSurface?.cvt_revision_id !== nextSurface.cvt_revision_id) {
+        nextTune = nextSurface.template;
+        setTuneDetail(null);
+      }
       setSurface(nextSurface);
       setTune(nextTune);
-      setTuneDetail(null);
     }
     if (!nextTune) throw new Error('The tuning surface is unavailable.');
     return { detail: current, tune: nextTune };
@@ -333,13 +342,13 @@ export function ExperimentPage() {
   const selection: ExperimentSelection | null =
     setupDetail && tune && scenario
       ? {
-          setup_revision_id: setupDetail.item.revision_id,
-          tune_revision_id: tuneDetail?.item.revision_id ?? null,
-          tune_values: tune.values,
-          scenario_revision_id: loadCase?.item.revision_id ?? null,
-          scenario,
-          primary_boundary: primary ?? null,
-        }
+        setup_revision_id: setupDetail.item.revision_id,
+        tune_revision_id: tuneDetail?.item.revision_id ?? null,
+        tune_values: tune.values,
+        scenario_revision_id: loadCase?.item.revision_id ?? null,
+        scenario,
+        primary_boundary: primary ?? null,
+      }
       : null;
   const selectionKey = JSON.stringify(selection);
   const go = (next: number) =>
@@ -350,9 +359,9 @@ export function ExperimentPage() {
         );
       if (!setup?.name.trim())
         throw new Error('Give this vehicle setup a name.');
-      if (next >= 3) {
+      if (next >= 2) {
         const prepared = await prepareSetup();
-        if (next === 4) {
+        if (next === 5) {
           if (!scenario || !loadCase)
             throw new Error('Choose or create a saved load case.');
           const body: ExperimentSelection = {
@@ -426,14 +435,14 @@ export function ExperimentPage() {
           <Badge variant="light">Free · public saves and runs</Badge>
         </Group>
         {error && (
-          <Alert color="red" title="Needs attention" role="alert">
+          <FormError title="Needs attention">
             {error}
             {!metadata && (
               <Button variant="subtle" onClick={() => setRetry((x) => x + 1)}>
                 Try again
               </Button>
             )}
-          </Alert>
+          </FormError>
         )}
         {!metadata ? (
           busy && <Loader aria-label="Loading run builder" />
@@ -471,12 +480,12 @@ export function ExperimentPage() {
                                 allowDeselect={false}
                                 value={setupDetail?.item.id ?? null}
                                 placeholder="Choose a saved setup"
-                                data={catalog
-                                  .filter((item) => item.kind === 'setups')
-                                  .map((item) => ({
-                                    value: item.id,
-                                    label: `${item.name} · r${item.revision_number}${item.owned ? ' · mine' : ''}`,
-                                  }))}
+                                data={libraryOptions(
+                                  catalog.filter(
+                                    (item) => item.kind === 'setups',
+                                  ),
+                                  (item) => item.id,
+                                )}
                                 onChange={(id) => id && chooseSetup(id)}
                               />
                               <Button variant="default" onClick={newSetup}>
@@ -485,29 +494,28 @@ export function ExperimentPage() {
                             </Group>
                             {setup && (
                               <>
-                                <TextInput
-                                  label="Vehicle setup name"
-                                  required
-                                  maxLength={240}
-                                  value={setup.name}
-                                  onChange={(e) =>
-                                    setSetup({
-                                      ...setup,
-                                      name: e.currentTarget.value,
-                                    })
-                                  }
-                                />
-                                <VehicleEditor
-                                  value={setup.data.vehicle}
-                                  onChange={(vehicle) =>
-                                    patchSetup({ vehicle })
-                                  }
-                                />
-                                <Text size="sm" c="dimmed">
-                                  Changing another author's setup saves a copy
-                                  in your library. Your own setups receive a new
-                                  revision.
-                                </Text>
+                                <EditorDisclosure key={setupDetail?.item.id ?? 'new'} title="Vehicle" initiallyOpen={!setupDetail}
+                                  summary={`${setup.name || 'New vehicle'} · ${setup.data.vehicle.mass_kg.toFixed(1)} kg`}>
+                                  <TextInput
+                                    label="Vehicle setup name"
+                                    required
+                                    maxLength={240}
+                                    value={setup.name}
+                                    onChange={(e) =>
+                                      setSetup({
+                                        ...setup,
+                                        name: e.currentTarget.value,
+                                      })
+                                    }
+                                  />
+                                  <VehicleEditor
+                                    value={setup.data.vehicle}
+                                    onChange={(vehicle) =>
+                                      patchSetup({ vehicle })
+                                    }
+                                  />
+
+                                </EditorDisclosure>
                               </>
                             )}
                           </>
@@ -523,31 +531,40 @@ export function ExperimentPage() {
                               onChange={(cvt) => patchSetup({ cvt })}
                               onLoadingChange={setComponentBusy}
                             />
-                            <CvtEditor
-                              value={setup.data.cvt.data}
-                              fields={fields}
-                              belts={catalog.filter(
-                                (item) => item.kind === 'belts',
-                              )}
-                              onChange={(data) =>
-                                patchSetup({ cvt: { ...setup.data.cvt, data } })
-                              }
-                              onLoadingChange={setComponentBusy}
-                            />
-                            <Button
-                              variant="light"
-                              onClick={() =>
-                                void task(async () => {
-                                  await prepareSetup();
-                                  setTuneOpen(true);
-                                })
-                              }
-                            >
-                              Adjust CVT tune
-                            </Button>
+                            <EditorDisclosure key={setup.data.cvt.revision_id ?? 'new'} title="CVT" initiallyOpen={!setup.data.cvt.revision_id}
+                              summary={`${setup.data.cvt.name} · ${setup.data.cvt.data.belt.name}`}>
+                              <CvtEditor
+                                value={setup.data.cvt.data}
+                                fields={fields}
+                                belts={catalog.filter(
+                                  (item) => item.kind === 'belts',
+                                )}
+                                onChange={(data) =>
+                                  patchSetup({ cvt: { ...setup.data.cvt, data } })
+                                }
+                                onLoadingChange={setComponentBusy}
+                              />
+                            </EditorDisclosure>
                           </>
                         )}
-                        {setup && step === 2 && (
+                        {setup && step === 2 && surface && tune && <Stack>
+                          <Select label="CVT tune" searchable allowDeselect={false}
+                            value={tuneDetail?.item.id ?? 'default'}
+                            data={[{ group: 'Selected CVT', items: [{ value: 'default', label: 'Use CVT default settings' }] },
+                            ...libraryOptions(tunes.filter(item => item.cvt_revision_id === surface.cvt_revision_id && !item.archived), item => item.id)]}
+                            onChange={id => void task(async () => {
+                              if (id === 'default') { setTune(surface.template); setTuneDetail(null); return; }
+                              if (!id) return;
+                              const next = await getExperiment(id);
+                              if (next.document.kind === 'tunes') { setTune(next.document); setTuneDetail(next); }
+                            })} />
+                          <Paper withBorder p="md"><Stack gap="xs">
+                            <Text fw={600}>{tuneDetail?.item.name ?? 'CVT default settings'}</Text>
+                            <Text size="sm" c="dimmed">{tuneDetail?.item.description || 'The saved CVT’s weights, springs and ramp settings.'}</Text>
+                            <Button variant="light" onClick={() => { if (!tuneDetail) setTune({ ...tune, name: '' }); setTuneOpen(true); }}>Adjust tune</Button>
+                          </Stack></Paper>
+                        </Stack>}
+                        {setup && step === 3 && (
                           <PrimaryBoundaryEditor
                             value={primary}
                             onChange={setPrimary}
@@ -561,17 +578,20 @@ export function ExperimentPage() {
                               onChange={(engine) => patchSetup({ engine })}
                               onLoadingChange={setComponentBusy}
                             />
-                            <EngineEditor
-                              value={setup.data.engine.data}
-                              onChange={(data) =>
-                                patchSetup({
-                                  engine: { ...setup.data.engine, data },
-                                })
-                              }
-                            />
+                            <EditorDisclosure key={setup.data.engine.revision_id ?? 'new'} title="Engine" initiallyOpen={!setup.data.engine.revision_id}
+                              summary={`${setup.data.engine.name} · full-open-throttle torque curve`}>
+                              <EngineEditor
+                                value={setup.data.engine.data}
+                                onChange={(data) =>
+                                  patchSetup({
+                                    engine: { ...setup.data.engine, data },
+                                  })
+                                }
+                              />
+                            </EditorDisclosure>
                           </PrimaryBoundaryEditor>
                         )}
-                        {step === 3 && (
+                        {step === 4 && (
                           <>
                             <Group align="end">
                               <Select
@@ -581,12 +601,10 @@ export function ExperimentPage() {
                                 allowDeselect={false}
                                 value={loadCase?.item.id ?? null}
                                 placeholder="Choose a road or load case"
-                                data={loadCases
-                                  .filter((item) => !item.archived)
-                                  .map((item) => ({
-                                    value: item.id,
-                                    label: `${item.name} · r${item.revision_number}${item.sample ? ' · default' : item.owned ? ' · mine' : ''}`,
-                                  }))}
+                                data={libraryOptions(
+                                  loadCases.filter((item) => !item.archived),
+                                  (item) => item.id,
+                                )}
                                 onChange={(id) =>
                                   id &&
                                   void task(async () =>
@@ -635,7 +653,7 @@ export function ExperimentPage() {
                             )}
                           </>
                         )}
-                        {step === 4 && scenario && (
+                        {step === 5 && scenario && (
                           <>
                             <TextInput
                               label="Run name"
@@ -651,16 +669,16 @@ export function ExperimentPage() {
                               value={scenario}
                               metadata={metadata}
                               onChange={setScenario}
-                              onRoadValidityChange={() => {}}
+                              onRoadValidityChange={() => { }}
                             />
                             {scenarioDirty && (
                               <Text size="sm" c="dimmed">
                                 These run settings override the selected load
-                                case for this run. Its saved revision remains
-                                unchanged.
+                                case for this run. Its saved configuration
+                                remains unchanged.
                               </Text>
                             )}
-                            <Button variant="default" onClick={() => go(4)}>
+                            <Button variant="default" onClick={() => go(5)}>
                               Refresh input check
                             </Button>
                             <PhysicalStatus
@@ -708,7 +726,7 @@ export function ExperimentPage() {
                       >
                         Back
                       </Button>
-                      {step < 4 && (
+                      {step < 5 && (
                         <Button
                           loading={busy}
                           disabledReason={
@@ -722,9 +740,9 @@ export function ExperimentPage() {
                           }
                           onClick={() => go(step + 1)}
                         >
-                          {step === 2 && setupDirty
+                          {step === 3 && setupDirty
                             ? 'Save setup & choose load case'
-                            : step === 3
+                            : step === 4
                               ? 'Review simulation'
                               : 'Next'}
                         </Button>
@@ -757,11 +775,12 @@ export function ExperimentPage() {
                           : 'Choose a CVT',
                         step: 1,
                       },
-                      { label: 'Primary', value: primaryLabel, step: 2 },
+                      { label: 'Tune', value: tuneDetail?.item.name ?? (tuneDirty ? 'Custom tune' : 'CVT default'), step: 2 },
+                      { label: 'Primary', value: primaryLabel, step: 3 },
                       {
                         label: 'Load case',
                         value: loadCase?.item.name ?? 'Choose a load case',
-                        step: 3,
+                        step: 4,
                       },
                     ].map((item) => (
                       <div key={item.label}>
@@ -775,7 +794,7 @@ export function ExperimentPage() {
                             disabled={working}
                             onClick={() => go(item.step)}
                           >
-                            Edit {item.label.toLowerCase()}
+                            Change {item.label.toLowerCase()}
                           </Button>
                         </Group>
                         <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
@@ -785,14 +804,14 @@ export function ExperimentPage() {
                     ))}
                     <Divider />
                     <Text size="sm">
-                      {scenario?.duration_s ?? '—'} s simulation ·{' '}
+                      {scenario?.stops?.mode === 'timed' ? 'Timed run' : 'Run to course finish'} · up to {scenario?.duration_s ?? '—'} s ·{' '}
                       {tuneDetail?.item.name ??
                         (tuneDirty ? 'Custom tune values' : 'Setup tuning')}
                     </Text>
                     <Text size="xs" c="dimmed">
                       The secondary load is always the vehicle and selected
                       road. Saved configurations and run results are public.
-                      Each run keeps its exact input revisions.
+                      Each run keeps a snapshot of its inputs.
                     </Text>
                   </Stack>
                 </Paper>
@@ -825,12 +844,15 @@ export function ExperimentPage() {
                     label="Tune"
                     document={tune}
                     detail={tuneDetail}
-                    items={tunes}
+                    items={tunes.filter(
+                      (item) =>
+                        item.cvt_revision_id === surface.cvt_revision_id,
+                    )}
                     busy={busy}
                     invalid={Boolean(invalid.size)}
                     onChange={(next) => next.kind === 'tunes' && setTune(next)}
                     onNew={() => {
-                      setTune(surface.template);
+                      setTune({ ...surface.template, name: '' });
                       setTuneDetail(null);
                     }}
                     onLoad={(id) =>
@@ -842,28 +864,11 @@ export function ExperimentPage() {
                         )
                           return;
                         if (
-                          !window.confirm(
-                            'Load this tune and its pinned vehicle setup?',
-                          )
+                          next.item.cvt_revision_id !== surface.cvt_revision_id
                         )
-                          return;
-                        const current = await getPhysical(
-                          'setups',
-                          next.item.setup_object_id,
-                          next.document.setup_revision_id,
-                        );
-                        if (current.document.kind !== 'setups') return;
-                        setSetupDetail({
-                          ...current,
-                          item: {
-                            ...current.item,
-                            revision_id: next.document.setup_revision_id,
-                          },
-                        });
-                        setSetup(current.document);
-                        setSurface(
-                          await getTuneSurface(next.document.setup_revision_id),
-                        );
+                          throw new Error(
+                            'Choose a tune for this CVT version.',
+                          );
                         setTune(next.document);
                         setTuneDetail(next);
                       })

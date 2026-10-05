@@ -75,7 +75,7 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
       <Paper withBorder p="lg">
         <Stack>
           <Title order={2} size="h3">
-            Frozen configuration
+            Run configuration
           </Title>
           {references.map((ref) => (
             <div key={ref.kind}>
@@ -85,7 +85,7 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
               <Text>
                 {ref.name}
                 {ref.revision_number
-                  ? ` · revision ${ref.revision_number}`
+                  ? ` · v${ref.revision_number}`
                   : ''}
                 {ref.unsaved ? ' · temporary values included' : ''}
               </Text>

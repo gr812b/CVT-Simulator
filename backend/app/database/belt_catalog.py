@@ -19,6 +19,9 @@ def seed_belt_catalog(session):
         if not row:
             continue
         manufacturer, series, part = row[:3]
+        if series == "Enduro 100":
+            # One canonical belt, seeded with the confirmed 11.5° section.
+            continue
         key = f"catalog-belt:{manufacturer}:{series}:{part}"
         binding = library.binding_for("belts")
         if session.get(binding.object_model, sample_id(key)):
@@ -43,11 +46,14 @@ def seed_belt_catalog(session):
             notes.append(
                 "Angle and pitch-depth status are unspecified in the source. The supplied values are retained; no certification is implied."
             )
+        notes.append(
+            "Section half-angle is derived from the supplied top width, bottom width and height; the independently listed catalog angle is not used as a fourth constraint."
+        )
         data = BeltData(
             outer_length_m=row[3] * 0.0254,
             outer_width_m=row[5] * 0.0254,
             height_m=row[6] * 0.0254,
-            recommended_sheave_half_angle_rad=math.radians(row[7]),
+            half_angle_rad=math.atan((row[5] - row[9]) / (2 * row[6])),
             cord_depth_from_outer_m=row[8] * 0.0254,
             inner_width_m=row[9] * 0.0254,
             density_kg_per_m3=density,

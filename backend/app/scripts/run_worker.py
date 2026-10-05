@@ -13,14 +13,13 @@ import time
 from pathlib import Path
 
 import psutil
-from sqlalchemy import update
-
 from app.application import jobs
 from app.application.auth import aware
 from app.core.settings import Settings
 from app.database.base import utc_now
 from app.database.models import Run
 from app.database.session import make_engine, make_session_factory
+from sqlalchemy import update
 
 LOG = logging.getLogger("cinder.worker")
 
@@ -54,6 +53,15 @@ def stopped_error(returncode):
 
 def execute(factory, settings, run):
     token = run.worker_token
+    scenario = (run.provenance or {}).get("scenario", {})
+    stops = scenario.get("stops", {})
+    policy = {}
+    if stops.get("mode") == "course":
+        policy = {
+            "finish_m": run.provenance["resolved_road"]["length_m"],
+            "rollback_m": stops.get("rollback_m"),
+            "no_progress_s": stops.get("no_progress_s"),
+        }
     error, result, terminal = None, None, "failed"
     # Start the local budget before the DB round trip, so delay cannot extend it.
     reference = time.monotonic()
@@ -71,6 +79,7 @@ def execute(factory, settings, run):
             json.dumps(
                 {
                     "input": run.input_contract,
+                    "course_policy": policy,
                     "options": run.execution_options,
                     "runtime_identity": run.runtime_identity,
                     "deadline_monotonic": deadline_monotonic,
@@ -86,6 +95,23 @@ def execute(factory, settings, run):
             "OMP_NUM_THREADS": "1",
             "MKL_NUM_THREADS": "1",
         }
+        checkpoint_path = Path(directory) / "checkpoint.json"
+        checkpoint_stamp = None
+
+        def retain_checkpoint():
+            nonlocal checkpoint_stamp, result
+            if not checkpoint_path.exists():
+                return
+            stamp = checkpoint_path.stat().st_mtime_ns
+            if stamp == checkpoint_stamp:
+                return
+            if checkpoint_path.stat().st_size > settings.run_max_result_bytes:
+                return
+            latest = json.loads(checkpoint_path.read_text())
+            with factory.begin() as session:
+                jobs.checkpoint(session, run.id, token, latest)
+            checkpoint_stamp, result = stamp, latest
+
         child = None
         stopped_by_supervisor = False
         stderr_thread = None
@@ -113,6 +139,7 @@ def execute(factory, settings, run):
             except psutil.NoSuchProcess:
                 monitored = None
             while child.poll() is None:
+                retain_checkpoint()
                 with factory.begin() as session:
                     current = session.get(Run, run.id)
                     stop = (
@@ -152,6 +179,7 @@ def execute(factory, settings, run):
                     }
                     break
                 time.sleep(min(settings.worker_poll_seconds, 0.5))
+            retain_checkpoint()
             # The deadline may interrupt output serialization. Classify the exit
             # before attempting to parse any partial output file.
             if stopped_by_supervisor:
@@ -171,7 +199,7 @@ def execute(factory, settings, run):
                 and output_path.stat().st_size <= settings.run_max_result_bytes
             ):
                 payload = json.loads(output_path.read_text())
-                result, error = payload.get("result"), payload.get("error")
+                result, error = payload.get("result", result), payload.get("error")
             if result is None and error is None and not stopped_by_supervisor:
                 error = stopped_error(child.returncode)
         except Exception:

@@ -20,13 +20,19 @@ from app.schemas.experiments import (
 def feature_templates():
     return [
         {"id": "flat", "kind": "flat", "length_m": 20},
-        {"id": "climb", "kind": "slope", "name": "Climb", "length_m": 20, "rise_m": 3},
+        {
+            "id": "climb",
+            "kind": "slope",
+            "name": "Climb",
+            "length_m": 20,
+            "angle_rad": math.radians(10),
+        },
         {
             "id": "descent",
             "kind": "slope",
             "name": "Descent",
             "length_m": 20,
-            "rise_m": -3,
+            "angle_rad": math.radians(-10),
         },
         {"id": "crest", "kind": "crest", "length_m": 20, "height_m": 2},
         {"id": "dip", "kind": "dip", "length_m": 20, "height_m": 2},
@@ -77,7 +83,15 @@ def _local_points(feature):
     if feature.kind == "points":
         return [(p.distance_m, p.elevation_m) for p in feature.points]
     if feature.kind in {"flat", "slope"}:
-        return [(0, 0), (feature.length_m, getattr(feature, "rise_m", 0))]
+        return [
+            (0, 0),
+            (
+                feature.length_m,
+                feature.length_m * math.sin(feature.angle_rad)
+                if feature.kind == "slope"
+                else 0,
+            ),
+        ]
     count = feature.count if feature.kind == "whoops" else 1
     length = feature.spacing_m if feature.kind == "whoops" else feature.length_m
     height = feature.height_m * (-1 if feature.kind == "dip" else 1)
@@ -157,7 +171,17 @@ def validate_scenario(scenario: ScenarioDocument, settings: Settings):
         raise ApiProblem(
             422, "report_limit", "Increase the reporting step or shorten the duration."
         )
-    return resolve_road(scenario.road, settings)
+    road = resolve_road(scenario.road, settings)
+    if (
+        scenario.stops.mode == "course"
+        and scenario.initial.vehicle_distance_m >= road.length_m
+    ):
+        raise ApiProblem(
+            422,
+            "course_start",
+            "Initial road distance must be before the course finish.",
+        )
+    return road
 
 
 def apply_scenario(case, scenario: ScenarioDocument, settings: Settings):

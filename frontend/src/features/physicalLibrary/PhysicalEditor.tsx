@@ -1,3 +1,4 @@
+import { FormError } from '@components/form/FormError';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Accordion,
@@ -62,6 +63,7 @@ import { DifferenceList, PhysicalStatus } from './PhysicalStatus';
 import { RevisionHistory } from './RevisionHistory';
 import { VehicleEditor } from './VehicleEditor';
 import styles from './PhysicalEditor.module.scss';
+import { PublicTuneList } from '../publicLibrary/PublicExperiment';
 import { PublishDialog } from '../publicLibrary/PublishDialog';
 import { CopyAttribution } from '../publicLibrary/CopyAttribution';
 
@@ -154,8 +156,9 @@ function PhysicalEditor({
         if (controller.signal.aborted) return;
         if ('document' in loaded) accept(loaded);
         else {
-          setDocument(loaded);
-          setSaved(JSON.stringify(loaded));
+          const blank = { ...loaded, name: '' };
+          setDocument(blank);
+          setSaved(JSON.stringify(blank));
           setValidated('');
           setValidation(null);
         }
@@ -202,11 +205,7 @@ function PhysicalEditor({
         note,
       );
       accept(result.detail);
-      setMessage(
-        result.changed
-          ? `Saved revision ${result.detail.item.revision_number}.`
-          : 'Already saved. No duplicate revision was created.',
-      );
+      setMessage(result.changed ? 'Saved.' : 'Already saved.');
       if (isNew) {
         permitNavigation.current = true;
         navigate(`/library/${kind}/${result.detail.item.id}`, {
@@ -298,7 +297,7 @@ function PhysicalEditor({
   if (!document)
     return (
       <Container py="xl">
-        <Alert color="red" title="Item unavailable" role="alert">
+        <FormError color="red" title="Item unavailable" role="alert">
           {error}
           <Button
             variant="subtle"
@@ -306,7 +305,7 @@ function PhysicalEditor({
           >
             Try again
           </Button>
-        </Alert>
+        </FormError>
       </Container>
     );
   const disabled = !editable || busy;
@@ -326,11 +325,7 @@ function PhysicalEditor({
           </Button>
           <Group>
             <Badge variant="outline" color={dirty ? 'yellow' : 'teal'}>
-              {dirty
-                ? 'Unsaved changes'
-                : isNew
-                  ? 'New working copy'
-                  : `Saved · revision ${detail?.item.revision_number}`}
+              {dirty ? 'Unsaved changes' : isNew ? 'New working copy' : 'Saved'}
             </Badge>
             {detail?.item.archived && <Badge color="gray">Archived</Badge>}
           </Group>
@@ -341,12 +336,15 @@ function PhysicalEditor({
           </Title>
           <Text c="dimmed" mt="xs">
             {kind === 'setups'
-              ? 'One place for your vehicle, engine, belt and CVT. Save creates the necessary component revisions together.'
-              : 'Reusable physical inputs with an immutable history.'}
+              ? 'Your vehicle, engine, belt and CVT, saved together.'
+              : 'Reusable physical inputs for your simulations.'}
           </Text>
         </div>
         {!editable && (
-          <Alert color="blue" title="Sample revision">
+          <Alert
+            color="blue"
+            title={detail?.item.sample ? 'CINDER default' : 'Community item'}
+          >
             Explore these saved values, then copy them into your library to
             edit.
           </Alert>
@@ -357,8 +355,7 @@ function PhysicalEditor({
         {isNew && (
           <Alert color="blue" variant="light">
             The form starts with project example values. Replace them with your
-            measurements and record their source before treating them as your
-            hardware.
+            measurements for your hardware.
           </Alert>
         )}
         <QuantityValidationContext.Provider value={setInvalid}>
@@ -416,7 +413,7 @@ function PhysicalEditor({
                       disabled={busy || dirty}
                       onClick={() => setHistoryOpen(true)}
                     >
-                      History ({detail.history.length})
+                      Version history
                     </Button>
                   )}
                 </Group>
@@ -427,7 +424,7 @@ function PhysicalEditor({
                 </Text>
               )}
               {error && (
-                <Alert
+                <FormError
                   color="red"
                   title="Action could not be completed"
                   role="alert"
@@ -439,10 +436,10 @@ function PhysicalEditor({
                       size="xs"
                       onClick={() => setReloadOpen(true)}
                     >
-                      Reload saved revision
+                      Reload saved item
                     </Button>
                   )}
-                </Alert>
+                </FormError>
               )}
               {message && (
                 <Alert color="teal" role="status">
@@ -460,44 +457,52 @@ function PhysicalEditor({
                 </Button>
               )}
               {!!detail?.updates.length && (
-                <Alert color="blue" title="Component updates available">
-                  <Stack gap="sm">
-                    <Text size="sm">
-                      This configuration still uses its saved revisions. Review
-                      the differences before applying an update.
-                    </Text>
-                    {detail.updates.map((item) => (
-                      <Group key={item.component} justify="space-between">
+                <Accordion variant="separated">
+                  <Accordion.Item value="updates">
+                    <Accordion.Control>Component updates</Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="sm">
                         <Text size="sm">
-                          {item.name}: r{item.current_number} → r
-                          {item.available_number}
+                          This configuration still uses its saved revisions.
+                          Review the differences before applying an update.
                         </Text>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          disabledReason={
-                            busy
-                              ? 'Wait for the current action.'
-                              : dirty
-                                ? 'Save or discard your working changes first.'
-                                : !editable
-                                  ? 'Copy this item into your library before updating it.'
-                                  : undefined
-                          }
-                          onClick={() =>
-                            void perform(async () =>
-                              setUpdate(
-                                await previewUpdate(kind, objectId, item),
-                              ),
-                            )
-                          }
-                        >
-                          Review {item.component} update
-                        </Button>
-                      </Group>
-                    ))}
-                  </Stack>
-                </Alert>
+                        {detail.updates.map((item) => (
+                          <Group key={item.component} justify="space-between">
+                            <Text size="sm">
+                              {item.name}: r{item.current_number} → r
+                              {item.available_number}
+                            </Text>
+                            <Button
+                              size="xs"
+                              variant="light"
+                              disabledReason={
+                                busy
+                                  ? 'Wait for the current action.'
+                                  : dirty
+                                    ? 'Save or discard your working changes first.'
+                                    : !editable
+                                      ? 'Copy this item into your library before updating it.'
+                                      : undefined
+                              }
+                              onClick={() =>
+                                void perform(async () =>
+                                  setUpdate(
+                                    await previewUpdate(kind, objectId, item),
+                                  ),
+                                )
+                              }
+                            >
+                              Review {item.component} update
+                            </Button>
+                          </Group>
+                        ))}
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                </Accordion>
+              )}
+              {kind === 'cvts' && detail && (
+                <Paper withBorder p="lg" id="tunes"><PublicTuneList cvtObjectId={detail.item.id} /></Paper>
               )}
               <fieldset className={styles.working} disabled={busy}>
                 <Stack gap="lg">
@@ -656,68 +661,8 @@ function PhysicalEditor({
                       </Accordion>
                     )}
                   </Paper>
-                  <Accordion variant="separated">
-                    <Accordion.Item value="source">
-                      <Accordion.Control>
-                        Source & measurement notes
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        <Stack>
-                          <TextInput
-                            label="Source or manufacturer"
-                            value={document.source_label ?? ''}
-                            maxLength={240}
-                            disabled={disabled}
-                            onChange={(event) =>
-                              setDocument({
-                                ...document,
-                                source_label: event.currentTarget.value,
-                              })
-                            }
-                          />
-                          <TextInput
-                            label="Source URL"
-                            value={document.source_url ?? ''}
-                            maxLength={500}
-                            disabled={disabled}
-                            onChange={(event) =>
-                              setDocument({
-                                ...document,
-                                source_url: event.currentTarget.value,
-                              })
-                            }
-                          />
-                          <Textarea
-                            label="Source notes"
-                            value={document.source_notes ?? ''}
-                            autosize
-                            minRows={3}
-                            maxLength={4000}
-                            disabled={disabled}
-                            description="Record measurement method, dimensions or uncertainty, and any illustrative assumptions."
-                            onChange={(event) =>
-                              setDocument({
-                                ...document,
-                                source_notes: event.currentTarget.value,
-                              })
-                            }
-                          />
-                        </Stack>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  </Accordion>
                 </Stack>
               </fieldset>
-              {editable && (
-                <Textarea
-                  label="Note for this revision"
-                  placeholder="What changed and why?"
-                  value={note}
-                  disabled={busy}
-                  maxLength={2000}
-                  onChange={(event) => setNote(event.currentTarget.value)}
-                />
-              )}
               <Group justify="space-between">
                 {detail?.item.owned && (
                   <Button
@@ -766,7 +711,16 @@ function PhysicalEditor({
             onClose={() => !busy && setHistoryOpen(false)}
             onRestore={restore}
             busy={busy}
-          />
+          >
+            {editable && (
+              <Textarea
+                label="Note for the next save"
+                value={note}
+                maxLength={2000}
+                onChange={(event) => setNote(event.currentTarget.value)}
+              />
+            )}
+          </RevisionHistory>
         )}
         <Modal
           opened={!!update}

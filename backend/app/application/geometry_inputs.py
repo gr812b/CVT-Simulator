@@ -1,6 +1,6 @@
 """Resolve the small geometry form into the canonical CINDER study request."""
 
-from math import tan
+from math import atan, tan
 
 from app.application.physical_contracts import baseline_case
 from app.core.errors import ApiProblem
@@ -35,11 +35,11 @@ def resolve(request):
         inner = request.belt_outer_width_m - 2 * request.belt_height_m * tan(
             request.sheave_half_angle_rad
         )
-    if inner is None or not 0 < inner <= request.belt_outer_width_m:
+    if inner is None or not 0 < inner < request.belt_outer_width_m:
         raise ApiProblem(
             422,
             "belt_section",
-            "These dimensions must give a positive bottom width no greater than the top width.",
+            "These dimensions must give a positive bottom width smaller than the top width.",
         )
     active = (
         request.active_travel_limit_m
@@ -61,7 +61,9 @@ def resolve(request):
                 "cord_depth_from_outer_m": request.cord_depth_from_outer_m,
             },
             "belt_outer_length_m": request.belt_outer_length_m,
-            "sheave_half_angle_rad": request.sheave_half_angle_rad,
+            "sheave_half_angle_rad": atan(
+                (request.belt_outer_width_m - inner) / (2 * request.belt_height_m)
+            ),
             "deadzone_shift_m": request.deadzone_shift_m,
             "max_shift_m": request.deadzone_shift_m + active,
         },

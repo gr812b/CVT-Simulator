@@ -1,14 +1,19 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { Scene3DConfig, Model3DConfig, ModelTransform } from '@utils/sceneTypes';
+import type {
+  Scene3DConfig,
+  Model3DConfig,
+  ModelTransform,
+} from '@utils/sceneTypes';
 import { Model3D } from './Model3D';
+import { sceneAppearance } from '../styles/theme';
 
 const SHUTTER_EXPOSURE_SECONDS = 1 / 120; // 180° shutter at a 60 Hz virtual camera.
 const BLUR_MIN_TRAVEL_RAD = THREE.MathUtils.degToRad(5);
-const BLUR_MAX_SAMPLES = 72;
-const BLUR_MIN_ADAPTIVE_CAP = 18;
-const BLUR_INITIAL_ADAPTIVE_CAP = 48;
-const BLUR_TARGET_STEP_RAD = THREE.MathUtils.degToRad(3.5);
+const BLUR_MAX_SAMPLES = 6;
+const BLUR_MIN_ADAPTIVE_CAP = 2;
+const BLUR_INITIAL_ADAPTIVE_CAP = 6;
+const BLUR_TARGET_STEP_RAD = THREE.MathUtils.degToRad(15);
 
 // Numerical budget only: the virtual camera exposure remains 1/120 s.
 // The controller reduces this cap if a device cannot sustain the work and
@@ -60,16 +65,50 @@ export class Scene3DController {
   private adaptiveBlurSampleCap = BLUR_INITIAL_ADAPTIVE_CAP;
   private fastBlurFrameCount = 0;
   private perspectiveFov = 75;
+  private resizeObserver: ResizeObserver;
+  private visibilityObserver: IntersectionObserver;
+  private visible = true;
+  private dirty = true;
+  private orbitOnly: boolean;
+  private renderOnDemand: boolean;
+  private fittedBounds: THREE.Box3 | null = null;
+  private invalidate = () => {
+    this.dirty = true;
+  };
+  private keyboardOrbit = (event: KeyboardEvent) => {
+    if (
+      !this.controls ||
+      !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
+    )
+      return;
+    event.preventDefault();
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    if (event.key === 'ArrowLeft') spherical.theta -= 0.1;
+    if (event.key === 'ArrowRight') spherical.theta += 0.1;
+    if (event.key === 'ArrowUp') spherical.phi -= 0.1;
+    if (event.key === 'ArrowDown') spherical.phi += 0.1;
+    spherical.makeSafe();
+    this.camera.position
+      .copy(this.controls.target)
+      .add(offset.setFromSpherical(spherical));
+    this.controls.update();
+    this.invalidate();
+  };
 
   constructor(config: Scene3DConfig) {
     this.container = config.container;
+    this.orbitOnly = config.orbitOnly ?? false;
+    this.renderOnDemand = config.renderOnDemand ?? false;
     this.scene = new THREE.Scene();
 
     if (config.backgroundColor !== undefined) {
       this.scene.background = new THREE.Color(config.backgroundColor);
     }
 
-    const aspect = this.container.clientWidth / this.container.clientHeight;
+    const aspect =
+      Math.max(1, this.container.clientWidth) /
+      Math.max(1, this.container.clientHeight);
     if (config.camera.type === 'perspective') {
       this.camera = new THREE.PerspectiveCamera(
         config.camera.fov ?? 75,
@@ -89,33 +128,118 @@ export class Scene3DController {
       );
     }
 
+    this.perspectiveFov = config.camera.fov ?? 75;
     this.camera.position.set(...config.camera.position);
     this.camera.lookAt(...config.camera.lookAt);
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: config.antialias ?? true,
+      alpha: config.transparentBackground ?? true,
     });
-    this.renderer.setPixelRatio(config.pixelRatio ?? window.devicePixelRatio);
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.setPixelRatio(
+      config.pixelRatio ??
+      Math.min(window.devicePixelRatio, sceneAppearance.maxPixelRatio),
+    );
+    this.renderer.setSize(
+      this.container.clientWidth,
+      this.container.clientHeight,
+    );
+    this.renderer.domElement.tabIndex = 0;
+    this.renderer.domElement.setAttribute('role', 'img');
+    this.renderer.domElement.setAttribute(
+      'aria-label',
+      'Interactive CVT model. Drag or use arrow keys to rotate.',
+    );
+    this.renderer.domElement.addEventListener('keydown', this.keyboardOrbit);
     this.container.appendChild(this.renderer.domElement);
 
     if (config.enableControls) {
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
       this.controls.enableDamping = true;
       this.controls.dampingFactor = 0.05;
+      this.controls.target.set(...config.camera.lookAt);
+      this.configureControls();
     }
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    this.scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 10, 10);
-    this.scene.add(directionalLight);
+    const lighting = sceneAppearance.light;
+    this.scene.add(
+      new THREE.HemisphereLight(
+        lighting.sky,
+        lighting.ground,
+        lighting.intensity,
+      ),
+    );
+    const key = new THREE.DirectionalLight(lighting.sky, 3);
+    key.position.set(5, 9, 12);
+    this.scene.add(key);
+    const rim = new THREE.DirectionalLight(lighting.sky, 2);
+    rim.position.set(-8, 3, -6);
+    this.scene.add(rim);
 
     this.handleResize = this.handleResize.bind(this);
-    window.addEventListener('resize', this.handleResize);
+    this.resizeObserver = new ResizeObserver(this.handleResize);
+    this.resizeObserver.observe(this.container);
+    this.visibilityObserver = new IntersectionObserver(([entry]) => {
+      this.visible = entry.isIntersecting;
+      this.invalidate();
+    });
+    this.visibilityObserver.observe(this.container);
 
     this.startRenderLoop();
+  }
+
+  private configureControls(): void {
+    if (!this.controls) return;
+    this.controls.enablePan = !this.orbitOnly;
+    this.controls.enableZoom = !this.orbitOnly;
+    this.controls.addEventListener('change', this.invalidate);
+  }
+
+  /** Fit the actual resolved envelope, preserving the chosen view direction. */
+  public fitBounds(bounds: THREE.Box3): void {
+    this.fittedBounds = bounds.clone();
+    const target = bounds.getCenter(new THREE.Vector3());
+    const direction = this.camera.position
+      .clone()
+      .sub(this.controls?.target ?? new THREE.Vector3())
+      .normalize();
+    this.camera.position.copy(target).add(direction);
+    this.camera.lookAt(target);
+    const inverseRotation = this.camera.quaternion.clone().invert();
+    const aspect =
+      Math.max(1, this.container.clientWidth) /
+      Math.max(1, this.container.clientHeight);
+    const tanV = Math.tan(THREE.MathUtils.degToRad(this.perspectiveFov) / 2);
+    let distance = 0;
+    for (const x of [bounds.min.x, bounds.max.x])
+      for (const y of [bounds.min.y, bounds.max.y])
+        for (const z of [bounds.min.z, bounds.max.z]) {
+          const p = new THREE.Vector3(x, y, z)
+            .sub(target)
+            .applyQuaternion(inverseRotation);
+          distance = Math.max(
+            distance,
+            Math.abs(p.x) / (tanV * aspect) + p.z,
+            Math.abs(p.y) / tanV + p.z,
+          );
+        }
+    distance *= 1.12;
+    this.camera.position.copy(target).addScaledVector(direction, distance);
+    if (this.camera instanceof THREE.OrthographicCamera) {
+      this.camera.top = distance * tanV;
+      this.camera.bottom = -this.camera.top;
+      this.camera.right = this.camera.top * aspect;
+      this.camera.left = -this.camera.right;
+      this.camera.zoom = 1;
+    }
+    this.camera.updateProjectionMatrix();
+    this.controls?.target.copy(target);
+    if (this.controls) {
+      this.controls.minDistance = distance * 0.25;
+      this.controls.maxDistance = distance * 5;
+      this.controls.update();
+    }
+    this.invalidate();
   }
 
   public addModel(config: Model3DConfig): Model3D {
@@ -127,13 +251,16 @@ export class Scene3DController {
       if (parent) {
         model.setParent(parent);
       } else {
-        alert(`Parent model "${config.parentId}" not found for model "${config.id}"`);
+        alert(
+          `Parent model "${config.parentId}" not found for model "${config.id}"`,
+        );
         this.scene.add(model.object3D);
       }
     } else {
       this.scene.add(model.object3D);
     }
 
+    this.invalidate();
     return model;
   }
 
@@ -144,13 +271,14 @@ export class Scene3DController {
   public removeModel(id: string): void {
     const model = this.models.get(id);
     if (model) {
-      this.scene.remove(model.object3D);
+      model.object3D.removeFromParent();
       model.dispose();
       this.models.delete(id);
     }
   }
 
   public updateModels(transforms: Record<string, ModelTransform>): void {
+    this.invalidate();
     for (const [modelId, transform] of Object.entries(transforms)) {
       const model = this.models.get(modelId);
       if (model) model.updateTransform(transform);
@@ -174,7 +302,9 @@ export class Scene3DController {
   }
 
   public getCameraProjection(): 'perspective' | 'orthographic' {
-    return this.camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
+    return this.camera instanceof THREE.OrthographicCamera
+      ? 'orthographic'
+      : 'perspective';
   }
 
   /**
@@ -193,8 +323,11 @@ export class Scene3DController {
     const aspect = width / height;
     const oldCamera = this.camera;
 
-    const target = this.controls?.target.clone()
-      ?? oldCamera.position.clone().add(oldCamera.getWorldDirection(new THREE.Vector3()));
+    const target =
+      this.controls?.target.clone() ??
+      oldCamera.position
+        .clone()
+        .add(oldCamera.getWorldDirection(new THREE.Vector3()));
 
     const viewDirection = oldCamera.position.clone().sub(target);
     const targetDistance = Math.max(viewDirection.length(), 1e-6);
@@ -206,7 +339,9 @@ export class Scene3DController {
       const perspective = oldCamera as THREE.PerspectiveCamera;
       this.perspectiveFov = perspective.fov;
 
-      const effectiveFov = THREE.MathUtils.degToRad(perspective.getEffectiveFOV());
+      const effectiveFov = THREE.MathUtils.degToRad(
+        perspective.getEffectiveFOV(),
+      );
       const visibleHeight = Math.max(
         1e-6,
         2 * targetDistance * Math.tan(effectiveFov / 2),
@@ -238,7 +373,9 @@ export class Scene3DController {
         orthographic.near,
         orthographic.far,
       );
-      nextCamera.position.copy(target).addScaledVector(viewDirection, matchedDistance);
+      nextCamera.position
+        .copy(target)
+        .addScaledVector(viewDirection, matchedDistance);
       nextCamera.quaternion.copy(orthographic.quaternion);
       nextCamera.up.copy(orthographic.up);
     }
@@ -257,6 +394,7 @@ export class Scene3DController {
       this.controls.target.copy(target);
       this.controls.enableDamping = enableDamping;
       this.controls.dampingFactor = dampingFactor;
+      this.configureControls();
       this.controls.update();
     }
   }
@@ -272,7 +410,9 @@ export class Scene3DController {
    * center pose at a wall-clock offset within the exposure. Full revolutions
    * therefore remain visible to the shutter integrator.
    */
-  public setTemporalRotationProvider(provider: TemporalRotationProvider | null): void {
+  public setTemporalRotationProvider(
+    provider: TemporalRotationProvider | null,
+  ): void {
     this.temporalRotationProvider = provider;
   }
 
@@ -280,7 +420,16 @@ export class Scene3DController {
     const animate = (now: number) => {
       this.animationFrameId = requestAnimationFrame(animate);
 
+      if (
+        !this.visible ||
+        document.hidden ||
+        this.container.clientWidth === 0 ||
+        this.container.clientHeight === 0
+      )
+        return;
       if (this.controls) this.controls.update();
+      if (this.renderOnDemand && !this.dirty && !this.frameUpdate) return;
+      this.dirty = false;
       if (this.frameUpdate) this.frameUpdate(now);
 
       const targets = this.temporalRotationProvider?.() ?? [];
@@ -294,21 +443,26 @@ export class Scene3DController {
     this.animationFrameId = requestAnimationFrame(animate);
   }
 
-  private shouldUseShutterBlur(targets: readonly TemporalRotationTarget[]): boolean {
+  private shouldUseShutterBlur(
+    targets: readonly TemporalRotationTarget[],
+  ): boolean {
     if (!this.supportsLinearHdrBlur() || targets.length === 0) return false;
 
-    return targets.some((target) => (
-      Number.isFinite(target.angularSpeedRadPerSecond)
-      && Math.abs(target.angularSpeedRadPerSecond) * SHUTTER_EXPOSURE_SECONDS
-        >= BLUR_MIN_TRAVEL_RAD
-    ));
+    return targets.some(
+      (target) =>
+        Number.isFinite(target.angularSpeedRadPerSecond) &&
+        Math.abs(target.angularSpeedRadPerSecond) * SHUTTER_EXPOSURE_SECONDS >=
+        BLUR_MIN_TRAVEL_RAD,
+    );
   }
 
   private supportsLinearHdrBlur(): boolean {
     if (this.blurSupported === null) {
       // Linear HDR accumulation needs a floating-point color attachment.
       // WebGLRenderer is WebGL2-only in the Three.js version used by this app.
-      this.blurSupported = this.renderer.extensions.has('EXT_color_buffer_float');
+      this.blurSupported = this.renderer.extensions.has(
+        'EXT_color_buffer_float',
+      );
       if (!this.blurSupported) {
         console.warn(
           'Finite-shutter motion blur disabled: EXT_color_buffer_float is unavailable.',
@@ -320,17 +474,18 @@ export class Scene3DController {
 
   private blurSampleCount(targets: readonly TemporalRotationTarget[]): number {
     const maximumTravel = targets.reduce(
-      (maximum, target) => Math.max(
-        maximum,
-        Math.abs(target.angularSpeedRadPerSecond) * SHUTTER_EXPOSURE_SECONDS,
-      ),
+      (maximum, target) =>
+        Math.max(
+          maximum,
+          Math.abs(target.angularSpeedRadPerSecond) * SHUTTER_EXPOSURE_SECONDS,
+        ),
       0,
     );
 
     if (maximumTravel < BLUR_MIN_TRAVEL_RAD) return 1;
 
     // Temporal supersampling is the actual camera-exposure integrator. Aim for
-    // about 3.5 degrees of shaft travel between samples so sharp radial CAD
+    // about 15 degrees of shaft travel between samples so sharp radial CAD
     // features do not resolve into visible copies. The adaptive cap is purely a
     // performance ceiling and never changes the physical shutter duration.
     const desired = Math.max(
@@ -338,11 +493,7 @@ export class Scene3DController {
       Math.ceil(maximumTravel / BLUR_TARGET_STEP_RAD) + 1,
     );
 
-    return Math.min(
-      BLUR_MAX_SAMPLES,
-      this.adaptiveBlurSampleCap,
-      desired,
-    );
+    return Math.min(BLUR_MAX_SAMPLES, this.adaptiveBlurSampleCap, desired);
   }
 
   private updateAdaptiveBlurBudget(renderMilliseconds: number): void {
@@ -374,8 +525,8 @@ export class Scene3DController {
     if (renderMilliseconds < BLUR_FAST_FRAME_MS) {
       this.fastBlurFrameCount += 1;
       if (
-        this.fastBlurFrameCount >= BLUR_FAST_FRAMES_TO_RAISE_QUALITY
-        && this.adaptiveBlurSampleCap < BLUR_MAX_SAMPLES
+        this.fastBlurFrameCount >= BLUR_FAST_FRAMES_TO_RAISE_QUALITY &&
+        this.adaptiveBlurSampleCap < BLUR_MAX_SAMPLES
       ) {
         this.adaptiveBlurSampleCap = Math.min(
           BLUR_MAX_SAMPLES,
@@ -402,17 +553,19 @@ export class Scene3DController {
    *
    * independently of RPM/sample count.
    */
-  private renderFiniteShutter(targets: readonly TemporalRotationTarget[]): void {
+  private renderFiniteShutter(
+    targets: readonly TemporalRotationTarget[],
+  ): void {
     this.ensureBlurResources();
 
     if (
-      this.blurSampleTarget === null
-      || this.blurAccumulationTarget === null
-      || this.blurAccumulateScene === null
-      || this.blurCopyScene === null
-      || this.blurQuadCamera === null
-      || this.blurAccumulateMaterial === null
-      || this.blurCopyMaterial === null
+      this.blurSampleTarget === null ||
+      this.blurAccumulationTarget === null ||
+      this.blurAccumulateScene === null ||
+      this.blurCopyScene === null ||
+      this.blurQuadCamera === null ||
+      this.blurAccumulateMaterial === null ||
+      this.blurCopyMaterial === null
     ) {
       this.renderer.render(this.scene, this.camera);
       return;
@@ -442,9 +595,8 @@ export class Scene3DController {
       // Midpoint stratification keeps the finite-shutter estimate clean and
       // low-noise at ordinary 1x playback, while the sample-count schedule and
       // physical shutter duration control the remaining approximation quality.
-      const wallOffset = (
-        (sampleIndex + 0.5) / sampleCount - 0.5
-      ) * SHUTTER_EXPOSURE_SECONDS;
+      const wallOffset =
+        ((sampleIndex + 0.5) / sampleCount - 0.5) * SHUTTER_EXPOSURE_SECONDS;
 
       targets.forEach((target, targetIndex) => {
         const axis = target.axisLocal;
@@ -465,7 +617,8 @@ export class Scene3DController {
       this.renderer.render(this.scene, this.camera);
 
       // Add exactly (1/N) of that linear sample into the HDR accumulator.
-      this.blurAccumulateMaterial.uniforms.sampleTexture.value = this.blurSampleTarget.texture;
+      this.blurAccumulateMaterial.uniforms.sampleTexture.value =
+        this.blurSampleTarget.texture;
       this.renderer.setRenderTarget(this.blurAccumulationTarget);
       this.renderer.render(this.blurAccumulateScene, this.blurQuadCamera);
     }
@@ -475,7 +628,8 @@ export class Scene3DController {
       target.object.quaternion.copy(bases[index]);
     });
 
-    // Full-opacity final copy. MeshBasicMaterial handles the single
+    // Preserve the averaged alpha for theme/transparent backgrounds.
+    // MeshBasicMaterial handles the single
     // Linear-sRGB -> renderer.outputColorSpace conversion for display.
     this.blurCopyMaterial.map = this.blurAccumulationTarget.texture;
     this.blurCopyMaterial.needsUpdate = true;
@@ -492,13 +646,13 @@ export class Scene3DController {
 
   private ensureBlurResources(): void {
     const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
-    const width = Math.max(1, Math.floor(size.x));
-    const height = Math.max(1, Math.floor(size.y));
+    const width = Math.max(1, Math.floor(size.x * 0.65));
+    const height = Math.max(1, Math.floor(size.y * 0.65));
 
     if (
-      this.blurSampleTarget !== null
-      && this.blurSampleTarget.width === width
-      && this.blurSampleTarget.height === height
+      this.blurSampleTarget !== null &&
+      this.blurSampleTarget.width === width &&
+      this.blurSampleTarget.height === height
     ) {
       return;
     }
@@ -562,7 +716,8 @@ export class Scene3DController {
 
     this.blurCopyMaterial = new THREE.MeshBasicMaterial({
       map: this.blurAccumulationTarget.texture,
-      transparent: false,
+      transparent: true,
+      blending: THREE.NoBlending,
       opacity: 1,
       depthTest: false,
       depthWrite: false,
@@ -609,8 +764,8 @@ export class Scene3DController {
   }
 
   private handleResize(): void {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+    const width = Math.max(1, this.container.clientWidth);
+    const height = Math.max(1, this.container.clientHeight);
 
     if (this.camera instanceof THREE.PerspectiveCamera) {
       this.camera.aspect = width / height;
@@ -627,16 +782,20 @@ export class Scene3DController {
       this.camera.updateProjectionMatrix();
     }
 
+    if (this.fittedBounds) this.fitBounds(this.fittedBounds);
+    this.invalidate();
     this.renderer.setSize(width, height);
     this.disposeBlurResources();
   }
 
   public addObject(object: THREE.Object3D): void {
+    this.invalidate();
     this.scene.add(object);
     this.sceneObjects.push(object);
   }
 
   public removeObject(object: THREE.Object3D): void {
+    this.invalidate();
     this.scene.remove(object);
     const index = this.sceneObjects.indexOf(object);
     if (index > -1) this.sceneObjects.splice(index, 1);
@@ -648,7 +807,9 @@ export class Scene3DController {
       this.animationFrameId = null;
     }
 
-    window.removeEventListener('resize', this.handleResize);
+    this.resizeObserver.disconnect();
+    this.visibilityObserver.disconnect();
+    this.renderer.domElement.removeEventListener('keydown', this.keyboardOrbit);
 
     if (this.controls) {
       this.controls.dispose();
@@ -665,10 +826,13 @@ export class Scene3DController {
     this.sceneObjects.forEach((object) => this.scene.remove(object));
     this.sceneObjects = [];
 
+    this.renderer.forceContextLoss();
     this.renderer.dispose();
 
     if (this.renderer.domElement.parentElement) {
-      this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
+      this.renderer.domElement.parentElement.removeChild(
+        this.renderer.domElement,
+      );
     }
 
     this.scene.clear();

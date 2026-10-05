@@ -1,11 +1,10 @@
-import { Brand } from './Brand';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import {
   Alert,
   AppShell,
-  Badge,
   Burger,
   Center,
+  Divider,
   Group,
   Loader,
   NavLink,
@@ -19,6 +18,7 @@ import {
   IconGeometry,
   IconHome,
   IconLibrary,
+  IconPlayerPlay,
   IconSettings,
   IconTool,
 } from '@tabler/icons-react';
@@ -32,17 +32,53 @@ import {
   RunActivityButton,
   RunActivityProvider,
 } from '../../features/experiments/RunActivity';
+import { Brand } from './Brand';
 
-const navigation = [
-  { to: '/dashboard', label: 'Workspace', icon: IconHome },
-  { to: '/library', label: 'Physical library', icon: IconLibrary },
-  { to: '/input', label: 'Build a run', icon: IconTool },
-  { to: '/load-cases', label: 'Load cases', icon: IconTool },
-  { to: '/runs', label: 'Runs & results', icon: IconChartLine },
-  { to: '/catalog', label: 'Public library', icon: IconLibrary },
-  { to: '/geometry', label: 'Geometry study', icon: IconGeometry },
-  { to: '/account', label: 'Account settings', icon: IconSettings },
+const sections = [
+  {
+    label: 'Design & simulation',
+    links: [
+      { to: '/dashboard', label: 'Workspace', icon: IconHome },
+      { to: '/library', label: 'Physical library', icon: IconLibrary },
+      { to: '/input', label: 'Build a run', icon: IconTool },
+      { to: '/runs', label: 'Runs & results', icon: IconChartLine },
+      { to: '/geometry', label: 'Geometry study', icon: IconGeometry },
+    ],
+  },
+  {
+    label: 'Explore',
+    links: [
+      { to: '/catalog', label: 'Public library', icon: IconLibrary },
+      { to: '/demo', label: 'Playback demo', icon: IconPlayerPlay },
+    ],
+  },
+  {
+    label: 'Account',
+    links: [{ to: '/account', label: 'Account settings', icon: IconSettings }],
+  },
 ];
+
+/** Authentication and workspace-only providers are independent of the shared frame. */
+export function RequireAccount() {
+  const { session } = useAuth();
+  const location = useLocation();
+  if (!session)
+    return (
+      <Navigate
+        to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
+  return (
+    <SimulationCaseProvider key={session.user.id}>
+      <SimulationRunProvider>
+        <LoadingProvider>
+          <Outlet />
+        </LoadingProvider>
+      </SimulationRunProvider>
+    </SimulationCaseProvider>
+  );
+}
 
 export function ApplicationShell() {
   const { session, loading, error, refresh, signOut } = useAuth();
@@ -65,13 +101,6 @@ export function ApplicationShell() {
         </Stack>
       </Center>
     );
-  if (!session)
-    return (
-      <Navigate
-        to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`}
-        replace
-      />
-    );
   const logout = async () => {
     setSigningOut(true);
     setSignOutError(null);
@@ -83,61 +112,67 @@ export function ApplicationShell() {
       setSigningOut(false);
     }
   };
-  return (
-    <RunActivityProvider key={session.user.id}>
-      <AppShell
-        header={{ height: 64 }}
-        navbar={{
-          width: 240,
-          breakpoint: 'sm',
-          collapsed: { mobile: !opened },
-        }}
-        padding="md"
-      >
-        <AppShell.Header>
-          <Group h="100%" px="lg" justify="space-between">
-            <Group>
-              <Burger
-                opened={opened}
-                onClick={toggle}
-                hiddenFrom="sm"
-                size="sm"
-                aria-label="Toggle navigation"
-              />
-              <Brand />
-              <Badge variant="light" visibleFrom="sm">
-                Workspace
-              </Badge>
-            </Group>
-            <Group gap="sm">
-              <RunActivityButton />
-              <Text size="sm" truncate maw={180} visibleFrom="sm">
-                {session.user.display_name}
-              </Text>
-            </Group>
+  const shell = (
+    <AppShell
+      header={{ height: 64 }}
+      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Group h="100%" px="lg" justify="space-between">
+          <Group>
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+              aria-label="Toggle navigation"
+            />
+            <Brand />
           </Group>
-        </AppShell.Header>
-        <AppShell.Navbar p="md">
-          <AppShell.Section grow>
-            <Text size="xs" c="dimmed" mb="md" tt="uppercase" fw={700}>
-              Design & simulation
-            </Text>
-            {navigation.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                component={Link}
-                to={to}
-                label={label}
-                leftSection={<Icon size={18} />}
-                active={
-                  location.pathname === to ||
-                  location.pathname.startsWith(`${to}/`)
-                }
-                onClick={close}
-              />
-            ))}
-          </AppShell.Section>
-          <AppShell.Section>
+          <Group gap="sm">
+            {session ? (
+              <>
+                <RunActivityButton />
+                <Text size="sm" truncate maw={180} visibleFrom="sm">
+                  {session.user.display_name}
+                </Text>
+              </>
+            ) : (
+              <Button component={Link} to="/login" variant="default">
+                Sign in
+              </Button>
+            )}
+          </Group>
+        </Group>
+      </AppShell.Header>
+      <AppShell.Navbar p="md">
+        <AppShell.Section grow style={{ overflowY: 'auto' }}>
+          {sections.map((section, index) => (
+            <div key={section.label}>
+              {index > 0 && <Divider my="lg" />}
+              <Text size="xs" c="dimmed" mb="xs" tt="uppercase" fw={700}>
+                {section.label}
+              </Text>
+              {section.links.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  component={Link}
+                  to={to}
+                  label={label}
+                  leftSection={<Icon size={18} />}
+                  active={
+                    location.pathname === to ||
+                    location.pathname.startsWith(`${to}/`)
+                  }
+                  onClick={close}
+                />
+              ))}
+            </div>
+          ))}
+        </AppShell.Section>
+        {session && (
+          <AppShell.Section pt="md">
             <Stack gap="sm">
               <Text size="xs" c="dimmed" truncate>
                 {session.account.name}
@@ -156,18 +191,25 @@ export function ApplicationShell() {
               </Button>
             </Stack>
           </AppShell.Section>
-        </AppShell.Navbar>
-        <AppShell.Main>
-          <RunActivityBanner />
-          <SimulationCaseProvider key={session.user.id}>
-            <SimulationRunProvider>
-              <LoadingProvider>
-                <Outlet />
-              </LoadingProvider>
-            </SimulationRunProvider>
-          </SimulationCaseProvider>
-        </AppShell.Main>
-      </AppShell>
-    </RunActivityProvider>
+        )}
+      </AppShell.Navbar>
+      <AppShell.Main>
+        {session && <RunActivityBanner />}
+        <Suspense
+          fallback={
+            <Center mih="60vh">
+              <Loader aria-label="Loading page" />
+            </Center>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </AppShell.Main>
+    </AppShell>
+  );
+  return session ? (
+    <RunActivityProvider key={session.user.id}>{shell}</RunActivityProvider>
+  ) : (
+    shell
   );
 }

@@ -47,7 +47,7 @@ class FlatFeature(RoadFeatureBase):
 class SlopeFeature(RoadFeatureBase):
     kind: Literal["slope"]
     length_m: Positive
-    rise_m: float
+    angle_rad: float = Field(gt=-1.5707963267948966, lt=1.5707963267948966)
 
 
 class BumpFeature(RoadFeatureBase):
@@ -119,12 +119,19 @@ class ExecutionControls(ExperimentModel):
     maximum_transitions: int = Field(default=200, ge=1, le=2000)
 
 
+class CourseStops(ExperimentModel):
+    mode: Literal["course", "timed"] = "course"
+    rollback_m: Positive | None = 5
+    no_progress_s: Positive | None = 5
+
+
 class ScenarioDocument(ExperimentModel):
     kind: Literal["scenarios"]
     name: Name
     notes: str = Field(default="", max_length=4000)
     road: SpatialRoad
-    duration_s: Positive = 30
+    duration_s: Positive = 180
+    stops: CourseStops = Field(default_factory=CourseStops)
     initial: InitialConditions = Field(default_factory=InitialConditions)
     execution: ExecutionControls = Field(default_factory=ExecutionControls)
 
@@ -179,6 +186,7 @@ class ExperimentRevisionInfo(ExperimentModel):
 
 
 class ExperimentItem(ExperimentModel):
+    author: str
     sample: bool = False
     description: str = ""
     id: str
@@ -190,6 +198,8 @@ class ExperimentItem(ExperimentModel):
     owned: bool
     archived: bool
     setup_object_id: str | None = None
+    cvt_object_id: str | None = None
+    cvt_revision_id: str | None = None
 
 
 class ExperimentList(ExperimentModel):
@@ -260,6 +270,8 @@ TuneField = Annotated[ScalarTuneField | ProfileTuneField, Field(discriminator="k
 
 
 class TuneSurface(ExperimentModel):
+    cvt_object_id: str
+    cvt_revision_id: str
     template: TuneDocument
     setup_name: str
     setup_revision_number: int

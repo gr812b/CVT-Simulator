@@ -6,7 +6,7 @@ import { VehicleEditor } from '../physicalLibrary/VehicleEditor';
 import type { PhysicalDocument, PhysicalField } from '../physicalLibrary/api';
 import styles from './ConfigurationView.module.css';
 
-/** The same measurement labels and units used by the private editor. */
+/** The same measurement labels and units used by the physical editor. */
 export function ConfigurationView({
   document,
   fields,

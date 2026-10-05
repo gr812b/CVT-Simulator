@@ -15,15 +15,15 @@ class Settings:
 
     api_prefix: str = "/api/v1"
     preset_directory: Path | None = None
-    run_timeout_seconds: float = 120.0
+    run_timeout_seconds: float = 300.0
     # Compatibility constructor option for old callers; execution is always durable.
     run_executor_mode: Literal["process", "inline"] = "process"
     run_queue_timeout_seconds: float = 3600.0
     run_recovery_grace_seconds: float = 15.0
     run_submission_limit: int = 6
     run_submission_window_seconds: int = 60
-    run_max_duration_seconds: float = 120.0
-    run_max_report_samples: int = 20000
+    run_max_duration_seconds: float = 300.0
+    run_max_report_samples: int = 40000
     run_max_input_bytes: int = 2_000_000
     run_max_result_bytes: int = 64_000_000
     run_memory_limit_mb: int = 4096
@@ -73,11 +73,21 @@ class Settings:
         if self.session_lifetime_seconds <= 0 or self.reset_lifetime_seconds <= 0:
             raise ValueError("Authentication lifetimes must be positive.")
         for field in (
-            "run_timeout_seconds", "run_queue_timeout_seconds", "run_recovery_grace_seconds",
-            "run_submission_limit", "run_submission_window_seconds", "run_max_duration_seconds",
-            "run_max_report_samples", "run_max_input_bytes", "run_max_result_bytes",
-            "run_memory_limit_mb", "road_max_features", "road_max_segments",
-            "road_max_distance_m", "road_max_grade_degrees", "worker_poll_seconds",
+            "run_timeout_seconds",
+            "run_queue_timeout_seconds",
+            "run_recovery_grace_seconds",
+            "run_submission_limit",
+            "run_submission_window_seconds",
+            "run_max_duration_seconds",
+            "run_max_report_samples",
+            "run_max_input_bytes",
+            "run_max_result_bytes",
+            "run_memory_limit_mb",
+            "road_max_features",
+            "road_max_segments",
+            "road_max_distance_m",
+            "road_max_grade_degrees",
+            "worker_poll_seconds",
         ):
             value = getattr(self, field)
             if not isfinite(value) or value <= 0:
@@ -93,12 +103,12 @@ class Settings:
                 raise ValueError("Production CORS origins must be explicit.")
 
     @classmethod
-    def from_environment(cls) -> "Settings":
+    def from_environment(cls) -> Settings:
         root = Path(__file__).resolve().parents[2]
         requested_mode = getenv("CVT_RUN_EXECUTOR_MODE", "process").strip().lower()
         if requested_mode not in {"process", "inline"}:
             raise ValueError("CVT_RUN_EXECUTOR_MODE must be 'process' or 'inline'.")
-        timeout = float(getenv("CVT_RUN_TIMEOUT_SECONDS", "120"))
+        timeout = float(getenv("CVT_RUN_TIMEOUT_SECONDS", "300"))
         if timeout <= 0.0:
             raise ValueError("CVT_RUN_TIMEOUT_SECONDS must be positive.")
         database_url = getenv("CVT_DATABASE_URL", "sqlite:///./cvt_simulator_dev.db")
@@ -116,12 +126,20 @@ class Settings:
             preset_directory=root / "presets",
             run_timeout_seconds=timeout,
             run_executor_mode=requested_mode,  # type: ignore[arg-type]
-            run_queue_timeout_seconds=float(getenv("CVT_RUN_QUEUE_TIMEOUT_SECONDS", "3600")),
-            run_recovery_grace_seconds=float(getenv("CVT_RUN_RECOVERY_GRACE_SECONDS", "15")),
+            run_queue_timeout_seconds=float(
+                getenv("CVT_RUN_QUEUE_TIMEOUT_SECONDS", "3600")
+            ),
+            run_recovery_grace_seconds=float(
+                getenv("CVT_RUN_RECOVERY_GRACE_SECONDS", "15")
+            ),
             run_submission_limit=int(getenv("CVT_RUN_SUBMISSION_LIMIT", "6")),
-            run_submission_window_seconds=int(getenv("CVT_RUN_SUBMISSION_WINDOW_SECONDS", "60")),
-            run_max_duration_seconds=float(getenv("CVT_RUN_MAX_DURATION_SECONDS", "120")),
-            run_max_report_samples=int(getenv("CVT_RUN_MAX_REPORT_SAMPLES", "20000")),
+            run_submission_window_seconds=int(
+                getenv("CVT_RUN_SUBMISSION_WINDOW_SECONDS", "60")
+            ),
+            run_max_duration_seconds=float(
+                getenv("CVT_RUN_MAX_DURATION_SECONDS", "300")
+            ),
+            run_max_report_samples=int(getenv("CVT_RUN_MAX_REPORT_SAMPLES", "40000")),
             run_max_input_bytes=int(getenv("CVT_RUN_MAX_INPUT_BYTES", "2000000")),
             run_max_result_bytes=int(getenv("CVT_RUN_MAX_RESULT_BYTES", "64000000")),
             run_memory_limit_mb=int(getenv("CVT_RUN_MEMORY_LIMIT_MB", "4096")),

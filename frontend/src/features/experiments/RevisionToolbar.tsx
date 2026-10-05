@@ -1,3 +1,5 @@
+import { FormError } from '@components/form/FormError';
+import { libraryOptions } from '../physicalLibrary/libraryOptions';
 import { useState } from 'react';
 import {
   Alert,
@@ -25,6 +27,7 @@ import {
 export function RevisionToolbar({
   label,
   showPicker = true,
+  showFields = true,
   document,
   detail,
   items,
@@ -39,6 +42,7 @@ export function RevisionToolbar({
 }: {
   label: string;
   showPicker?: boolean;
+  showFields?: boolean;
   document: ExperimentDocument;
   detail: ExperimentDetail | null;
   items: ExperimentItem[];
@@ -78,9 +82,7 @@ export function RevisionToolbar({
           {label}
         </Text>
         <Badge variant="light" color={dirty ? 'yellow' : 'teal'}>
-          {dirty
-            ? 'Unsaved values'
-            : `Saved · revision ${detail!.item.revision_number}`}
+          {dirty ? 'Unsaved values' : 'Saved'}
         </Badge>
       </Group>
       {showPicker && (
@@ -90,38 +92,37 @@ export function RevisionToolbar({
           searchable
           clearable
           value={detail?.item.id ?? null}
-          data={items.map((item) => ({
-            value: item.id,
-            label: `${item.name} · r${item.revision_number}${item.owned ? ' · mine' : item.sample ? ' · default' : ' · public'}${item.archived ? ' · archived' : ''}`,
-          }))}
+          data={libraryOptions(items, (item) => item.id)}
           disabled={busy || working}
           onChange={(id) => (id ? onLoad(id) : onNew())}
         />
       )}
-      <TextInput
-        label={`${label} name`}
-        value={document.name}
-        maxLength={240}
-        required
-        onChange={(event) =>
-          onChange({ ...document, name: event.currentTarget.value })
-        }
-      />
-      <Textarea
-        label={`${label} notes`}
-        value={document.notes ?? ''}
-        maxLength={4000}
-        autosize
-        minRows={1}
-        maxRows={4}
-        onChange={(event) =>
-          onChange({ ...document, notes: event.currentTarget.value })
-        }
-      />
+      {showFields && <>
+        <TextInput
+          label={`${label} name`}
+          value={document.name}
+          maxLength={240}
+          required
+          onChange={(event) =>
+            onChange({ ...document, name: event.currentTarget.value })
+          }
+        />
+        <Textarea
+          label={`${label} notes`}
+          value={document.notes ?? ''}
+          maxLength={4000}
+          autosize
+          minRows={1}
+          maxRows={4}
+          onChange={(event) =>
+            onChange({ ...document, notes: event.currentTarget.value })
+          }
+        />
+      </>}
       <Group gap="xs">
         <Button
-          size="xs"
-          variant="light"
+          size="md"
+          variant="filled"
           disabledReason={
             busy || working
               ? 'Please wait for the current action.'
@@ -135,7 +136,7 @@ export function RevisionToolbar({
           }
           onClick={() => onSave(false)}
         >
-          {detail?.item.owned ? `Save ${label.toLowerCase()}` : 'Save as new'}
+          {detail?.item.owned ? `Save ${label.toLowerCase()}` : `Save new ${label.toLowerCase()}`}
         </Button>
         <Button
           size="xs"
@@ -170,7 +171,7 @@ export function RevisionToolbar({
             setError(null);
           }}
         >
-          History
+          Version history
         </Button>
         {detail?.item.owned && (
           <Button
@@ -209,14 +210,14 @@ export function RevisionToolbar({
         </Alert>
       )}
       {error && !historyOpen && (
-        <Alert color="red" role="alert">
+        <FormError color="red" role="alert">
           {error}
-        </Alert>
+        </FormError>
       )}
       <Modal
         opened={historyOpen}
         onClose={() => setHistoryOpen(false)}
-        title={`${label} revision history`}
+        title={`${label} version history`}
         size="lg"
       >
         <Stack>
@@ -245,9 +246,9 @@ export function RevisionToolbar({
             }}
           />
           {error && (
-            <Alert color="red" role="alert">
+            <FormError color="red" role="alert">
               {error}
-            </Alert>
+            </FormError>
           )}
           {differences && <DifferenceList differences={differences} />}
           <Button

@@ -14,13 +14,20 @@ from app.schemas.experiments import ScenarioDocument, SpatialRoad
 def seed_experiments(session):
     templates = feature_templates()
     examples = [
-        ("flat", [default_scenario()]),
+        (
+            "flat",
+            [
+                default_scenario().model_copy(
+                    update={"name": "CINDER Default · flat road"}
+                )
+            ],
+        ),
         (
             "hill",
             [
                 ScenarioDocument(
                     kind="scenarios",
-                    name="Sample climb and descent",
+                    name="CINDER Default · climb and descent",
                     road=SpatialRoad(features=templates[:3]),
                 )
             ],
@@ -30,12 +37,12 @@ def seed_experiments(session):
             [
                 ScenarioDocument(
                     kind="scenarios",
-                    name="Sample whoops",
+                    name="CINDER Default · whoops",
                     road=SpatialRoad(features=[templates[0], templates[5]]),
                 ),
                 ScenarioDocument(
                     kind="scenarios",
-                    name="Sample whoops",
+                    name="CINDER Default · whoops",
                     notes="Revision 2: gentler, wider whoops for editor/history practice.",
                     road=SpatialRoad(
                         features=[
@@ -55,8 +62,8 @@ def seed_experiments(session):
                 [
                     ScenarioDocument(
                         kind="scenarios",
-                        name=f"{abs(angle)}° {'uphill' if angle > 0 else 'downhill'} road",
-                        notes="Constant road angle, continuing beyond the displayed route. Distance is measured along the road surface.",
+                        name=f"CINDER Default · {abs(angle)}° {'uphill' if angle > 0 else 'downhill'} road",
+                        notes="Constant road angle. Course mode stops at the finish; timed mode can continue beyond it. Distance is measured along the road surface.",
                         road=SpatialRoad(
                             features=[
                                 {
@@ -64,7 +71,7 @@ def seed_experiments(session):
                                     "id": f"grade-{angle}",
                                     "name": f"{angle:+}° road",
                                     "length_m": length,
-                                    "rise_m": length * math.sin(math.radians(angle)),
+                                    "angle_rad": math.radians(angle),
                                 }
                             ],
                             endpoint="continue_grade",
@@ -122,40 +129,73 @@ def _seed_sample_tunes(session):
         field["key"]: field["default"]
         for field in parameters(assembly, cvt.tuning_schema)
     }
-    key = "tune:starter"
-    if session.get(Experiment, sample_id(key)):
-        return
-    obj = Experiment(
-        id=sample_id(key),
-        account_id=SEED_ACCOUNT_ID,
-        kind="tunes",
-        name="Sample baseline tune",
-        setup_object_id=sample_id("setup"),
-        is_sample=True,
-    )
-    session.add(obj)
-    session.flush()
-    for number in (1, 2):
-        values = deepcopy(defaults)
-        if number == 2:
-            values["primary_flyweight_mass"] *= 1.02
+    # Section 4.5 / appendix table: exact tip-mass and spring changes from R00.
+    cases = [
+        ("R00", "Reference", {}, "Reference McMaster configuration."),
+        (
+            "W85",
+            "Lighter weights",
+            {"primary_tip_mass": 0.2125},
+            "85% of the reference 250 g replaceable tip; body unchanged.",
+        ),
+        (
+            "P300",
+            "Stiffer primary spring",
+            {
+                "primary_spring_stiffness_N_per_m": 38352.0,
+                "primary_spring_initial_compression_m": (
+                    0.09409049026972177 + assembly["geometry"]["deadzone_shift_m"]
+                )
+                / 3
+                - assembly["geometry"]["deadzone_shift_m"],
+            },
+            "Three times the primary spring rate, with matched force at engagement.",
+        ),
+        (
+            "U55",
+            "Light weights",
+            {"primary_tip_mass": 0.1375},
+            "55% tip mass; an illustrative demanding case, not an optimized tune.",
+        ),
+        (
+            "D02",
+            "Light weights + preload",
+            {
+                "primary_tip_mass": 0.1625,
+                "primary_spring_initial_compression_m": 0.09409049026972177 * 1.15,
+            },
+            "65% tip mass and 115% primary spring compression.",
+        ),
+    ]
+    for code, label, changes, description in cases:
+        key = f"tune:paper:{code}"
+        if session.get(Experiment, sample_id(key)):
+            continue
+        obj = Experiment(
+            id=sample_id(key),
+            account_id=SEED_ACCOUNT_ID,
+            kind="tunes",
+            name=f"{code} · {label}",
+            setup_object_id=sample_id("setup"),
+            is_sample=True,
+        )
+        session.add(obj)
+        session.flush()
         document = TuneDocument(
             kind="tunes",
             name=obj.name,
             setup_revision_id=sample_id("setup:r2"),
-            values=values,
-            notes="Illustrative tuning/history example, not a recommended or optimized tune. Revision 2 scales flyweight mass and all its moments by 2%.",
+            values={**deepcopy(defaults), **changes},
+            notes=f"Section 4.5 tuning example. {description} Uses the application's corrected Enduro section; does not reproduce the frozen paper results.",
         ).model_dump(mode="json")
         revision = ExperimentRevision(
-            id=sample_id(f"{key}:r{number}"),
+            id=sample_id(f"{key}:r1"),
             experiment_id=obj.id,
-            number=number,
+            number=1,
             document=document,
             content_hash=canonical_json_hash(document),
             created_by_user_id=SEED_USER_ID,
-            change_note="Baseline values."
-            if number == 1
-            else "Illustrative 2% mass increase at unchanged flyweight shape.",
+            change_note="Section 4.5 sample tune.",
         )
         session.add(revision)
         session.flush()

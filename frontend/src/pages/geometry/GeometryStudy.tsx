@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { libraryOptions } from '../../features/physicalLibrary/libraryOptions';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   Accordion,
   Alert,
@@ -9,6 +10,7 @@ import {
   Loader,
   Paper,
   Select,
+  Slider,
   SimpleGrid,
   Stack,
   Table,
@@ -22,11 +24,16 @@ import { api, dataOrThrow } from '@api/transport';
 import type { components } from '@api/generated/backend';
 import {
   getPhysical,
+  resolveBeltSection,
   listPhysical,
   type PhysicalItem,
 } from '../../features/physicalLibrary/api';
 import { message } from '../../features/experiments/api';
 import { formatProjectedQuantity } from '@utils/units';
+
+const GeometryScene = lazy(
+  () => import('@components/scene3DViewer/GeometryScene'),
+);
 
 type Inputs = components['schemas']['SimpleGeometryRequest'];
 type Result = components['schemas']['SimpleGeometryResponse'];
@@ -36,11 +43,59 @@ export function GeometryStudy() {
   const [belts, setBelts] = useState<PhysicalItem[]>([]);
   const [beltId, setBeltId] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [frameIndex, setFrameIndex] = useState(0);
   const [resultKey, setResultKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invalid, setInvalid] = useState(new Set<string>());
   const [retry, setRetry] = useState(0);
+  const [sectionError, setSectionError] = useState<string | null>(null);
+  const measuredSection =
+    value?.section_mode === 'measured'
+      ? JSON.stringify({
+          outer_width_m: value.belt_outer_width_m,
+          inner_width_m: value.measured_inner_width_m,
+          height_m: value.belt_height_m,
+        })
+      : null;
+  useEffect(() => {
+    const key = 'geometry-belt-section';
+    const clear = () =>
+      setInvalid((previous) => {
+        const next = new Set(previous);
+        next.delete(key);
+        return next;
+      });
+    setSectionError(null);
+    if (!measuredSection) {
+      clear();
+      return;
+    }
+    const controller = new AbortController();
+    setInvalid((previous) => new Set(previous).add(key));
+    const timer = window.setTimeout(() => {
+      void resolveBeltSection(JSON.parse(measuredSection), controller.signal)
+        .then((section) => {
+          if (controller.signal.aborted) return;
+          setValue(
+            (previous) =>
+              previous && {
+                ...previous,
+                sheave_half_angle_rad: section.half_angle_rad,
+              },
+          );
+          clear();
+        })
+        .catch((cause: unknown) => {
+          if (!controller.signal.aborted) setSectionError(message(cause));
+        });
+    }, 180);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+      clear();
+    };
+  }, [measuredSection]);
   useEffect(() => {
     let disposed = false;
     setBusy(true);
@@ -68,7 +123,17 @@ export function GeometryStudy() {
   const patch = (next: Partial<Inputs>) => {
     if (value) {
       setValue({ ...value, ...next });
-      setBeltId(null);
+      if (
+        Object.keys(next).some(
+          (key) =>
+            key.startsWith('belt_') ||
+            key === 'measured_inner_width_m' ||
+            key === 'sheave_half_angle_rad' ||
+            key === 'section_mode' ||
+            key === 'cord_depth_from_outer_m',
+        )
+      )
+        setBeltId(null);
     }
   };
   const chooseBelt = async (id: string) => {
@@ -87,8 +152,7 @@ export function GeometryStudy() {
         belt_outer_length_m: b.outer_length_m,
         measured_inner_width_m: b.inner_width_m,
         cord_depth_from_outer_m: b.cord_depth_from_outer_m,
-        sheave_half_angle_rad:
-          b.recommended_sheave_half_angle_rad ?? value.sheave_half_angle_rad,
+        sheave_half_angle_rad: b.half_angle_rad,
         active_travel_limit_m: null,
       });
       setBeltId(id);
@@ -107,6 +171,7 @@ export function GeometryStudy() {
         await api.POST('/api/v1/studies/geometry/simple', { body: value }),
       );
       setResult(next);
+      setFrameIndex(0);
       setResultKey(JSON.stringify(value));
     } catch (cause) {
       setError(message(cause));
@@ -126,6 +191,24 @@ export function GeometryStudy() {
       unit={unit}
       min={minimum}
       value={typeof value?.[key] === 'number' ? (value[key] as number) : 0}
+      disabled={
+        (key === 'sheave_half_angle_rad' &&
+          value?.section_mode === 'measured') ||
+        (Boolean(beltId) &&
+          [
+            'belt_outer_length_m',
+            'belt_outer_width_m',
+            'belt_height_m',
+            'sheave_half_angle_rad',
+            'measured_inner_width_m',
+            'cord_depth_from_outer_m',
+          ].includes(key))
+      }
+      description={
+        beltId && key === 'sheave_half_angle_rad'
+          ? 'CINDER matches the selected belt’s half-angle.'
+          : undefined
+      }
       onChange={(next) => patch({ [key]: next })}
     />
   );
@@ -137,6 +220,11 @@ export function GeometryStudy() {
           Choose a belt and starting pulley radii. CINDER resolves the centre
           distance, ratio range and geometry through the shift.
         </Text>
+        {sectionError && (
+          <Alert color="red" title="Check the belt section">
+            {sectionError}
+          </Alert>
+        )}
         {error && (
           <Alert color="red" title="Check the geometry inputs">
             {error}
@@ -156,10 +244,7 @@ export function GeometryStudy() {
                   searchable
                   clearable
                   value={beltId}
-                  data={belts.map((item) => ({
-                    value: item.id,
-                    label: item.name,
-                  }))}
+                  data={libraryOptions(belts, (item) => item.id)}
                   onChange={(id) =>
                     id ? void chooseBelt(id) : setBeltId(null)
                   }
@@ -174,6 +259,7 @@ export function GeometryStudy() {
                       label="Belt section"
                       allowDeselect={false}
                       value={value.section_mode ?? 'matching_angle'}
+                      disabled={Boolean(beltId)}
                       data={[
                         {
                           value: 'matching_angle',
@@ -194,7 +280,7 @@ export function GeometryStudy() {
                     />
                     <Text size="sm" c="dimmed">
                       {value.section_mode === 'measured'
-                        ? 'Catalog and measured widths are preserved. The belt and sheave angles may differ.'
+                        ? 'The sheave angle is calculated from the measured belt section.'
                         : 'Bottom width is derived from top width, height and sheave half-angle; there is no fourth independent dimension.'}
                     </Text>
                     <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -289,6 +375,45 @@ export function GeometryStudy() {
                     </Badge>
                   )}
                 </Group>
+                <Paper withBorder p="lg">
+                  <Stack>
+                    <Title order={3}>Geometry preview</Title>
+                    <Text size="sm" c="dimmed">
+                      Resolved belt and sheave geometry. Hubs and shafts are
+                      illustrative. Drag to rotate; move through the sampled
+                      shift range below.
+                    </Text>
+                    <div style={{ height: 400 }}>
+                      <Suspense fallback={<Loader />}>
+                        <GeometryScene
+                          preview={result.scene}
+                          frameIndex={frameIndex}
+                        />
+                      </Suspense>
+                    </div>
+                    <Text size="sm">
+                      Shift:{' '}
+                      {(
+                        (result.scene.frames[frameIndex]?.shift_m ?? 0) * 1000
+                      ).toFixed(2)}{' '}
+                      mm
+                    </Text>
+                    <Slider
+                      thumbLabel="Geometry preview shift"
+                      thumbValueText={(i) =>
+                        `${((result.scene.frames[i]?.shift_m ?? 0) * 1000).toFixed(2)} mm`
+                      }
+                      min={0}
+                      max={result.scene.frames.length - 1}
+                      step={1}
+                      value={frameIndex}
+                      onChange={setFrameIndex}
+                      label={(i) =>
+                        `${((result.scene.frames[i]?.shift_m ?? 0) * 1000).toFixed(2)} mm`
+                      }
+                    />
+                  </Stack>
+                </Paper>
                 <Paper withBorder p="lg">
                   <SimpleGrid cols={{ base: 2, sm: 3 }}>
                     <div>

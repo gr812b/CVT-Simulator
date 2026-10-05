@@ -1,6 +1,7 @@
 .playback {
   width: 100%;
   min-width: 0;
+  padding-inline: clamp(1rem, 2vw, 2rem);
   padding-bottom: calc(var(--playbar-height, 100px) + 1rem);
 }
 .buttonsContainer {

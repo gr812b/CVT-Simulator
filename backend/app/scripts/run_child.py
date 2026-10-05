@@ -65,9 +65,22 @@ def main():
                 }
             }
         else:
+
+            def checkpoint(result):
+                encoded = json.dumps(result, allow_nan=False).encode("utf-8")
+                if len(encoded) > envelope["result_bytes"]:
+                    raise ValueError("Checkpoint exceeds the result storage limit.")
+                target = output_path.with_name("checkpoint.json")
+                temporary = target.with_suffix(".tmp")
+                temporary.write_bytes(encoded)
+                temporary.replace(target)
+
             payload = {
-                "result": gateway.run_simulation(
-                    envelope["input"], **envelope["options"]
+                "result": gateway.run_checkpointed(
+                    envelope["input"],
+                    checkpoint=checkpoint,
+                    course_policy=envelope.get("course_policy"),
+                    **envelope["options"],
                 )
             }
     except MemoryError:

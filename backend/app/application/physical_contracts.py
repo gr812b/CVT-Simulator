@@ -17,6 +17,8 @@ from app.schemas.physical_library import (
     BeltChoice,
     BeltData,
     BeltDocument,
+    BeltSection,
+    BeltSectionSolveRequest,
     CurveImportRequest,
     CvtChoice,
     CvtData,
@@ -45,12 +47,41 @@ def baseline_case():
     return copy.deepcopy(_baseline())
 
 
+def resolve_belt_section(request: BeltSectionSolveRequest) -> BeltSection:
+    values = request.model_dump(exclude_none=True)
+    missing = next(key for key in BeltSection.model_fields if key not in values)
+    top, bottom, height, angle = (
+        values.get(key)
+        for key in ("outer_width_m", "inner_width_m", "height_m", "half_angle_rad")
+    )
+    if missing == "half_angle_rad":
+        values[missing] = math.atan((top - bottom) / (2 * height))
+    elif missing == "height_m":
+        values[missing] = (top - bottom) / (2 * math.tan(angle))
+    elif missing == "outer_width_m":
+        values[missing] = bottom + 2 * height * math.tan(angle)
+    else:
+        values[missing] = top - 2 * height * math.tan(angle)
+    try:
+        return BeltSection.model_validate(values)
+    except ValueError as exc:
+        raise ApiProblem(
+            422,
+            "invalid_belt_section",
+            "These measurements do not form a valid belt section. Top width must exceed bottom width, and all dimensions must be positive.",
+        ) from exc
+
+
 def belt_from_assembly(assembly: dict) -> BeltData:
     geometry = assembly["geometry"]
     return BeltData(
         outer_length_m=geometry["belt_outer_length_m"],
         density_kg_per_m3=assembly["inertias"]["belt_density_kg_per_m3"],
         **geometry["belt"],
+        half_angle_rad=math.atan(
+            (geometry["belt"]["outer_width_m"] - geometry["belt"]["inner_width_m"])
+            / (2 * geometry["belt"]["height_m"])
+        ),
     )
 
 
@@ -61,12 +92,13 @@ def with_belt(data: CvtData) -> CvtData:
     result.assembly.setdefault("geometry", {}).update(
         {
             "belt_outer_length_m": belt.outer_length_m,
+            "sheave_half_angle_rad": belt.half_angle_rad,
             "belt": belt.model_dump(
                 exclude={
                     "outer_length_m",
                     "density_kg_per_m3",
                     "length_reference",
-                    "recommended_sheave_half_angle_rad",
+                    "half_angle_rad",
                 }
             ),
         }
@@ -131,26 +163,42 @@ def vehicle_boundary(data: VehicleData) -> dict:
     return boundary
 
 
+def assembly_with_matching_belt(assembly: dict) -> dict:
+    """Close the section from bottom width, height and the hardware half-angle.
+
+    Enduro 100 uses the confirmed 11.5 degrees. Its top width is derived;
+    the research preset and recorded demo remain untouched.
+    """
+    assembly = copy.deepcopy(assembly)
+    geometry = assembly["geometry"]
+    belt = geometry["belt"]
+    belt["outer_width_m"] = belt["inner_width_m"] + 2 * belt["height_m"] * math.tan(
+        geometry["sheave_half_angle_rad"]
+    )
+    return assembly
+
+
 def template_document(kind: str) -> PhysicalDocument:
     case = baseline_case()
+    case["assembly"] = assembly_with_matching_belt(case["assembly"])
     metadata = {
         "description": "Starting values from the project baseline; enter your own measurements.",
         "source_label": "CINDER project example",
         "source_notes": "Illustrative model inputs, not certified manufacturer specifications.",
     }
     engine = EngineChoice(
-        name="Baseline engine",
+        name="CINDER Default · McMaster engine",
         data=EngineData.model_validate(case["shaft_boundaries"]["primary"]),
         **metadata,
     )
     belt = BeltChoice(
-        name="Baseline rubber belt",
+        name="CINDER Default · rubber belt",
         data=belt_from_assembly(case["assembly"]),
         **metadata,
     )
     cvt = CvtChoice(
-        name="Baseline fixed-pivot CVT",
-        data=CvtData(assembly=case["assembly"], belt=belt),
+        name="CINDER Default · McMaster CVT",
+        data=with_belt(CvtData(assembly=case["assembly"], belt=belt)),
         **metadata,
     )
     if kind == "engines":

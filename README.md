@@ -25,6 +25,22 @@ and an expanded belt catalog. This update uses a fresh database; follow that
 document's reset and startup steps. Earlier milestone documents are historical
 where their visibility or migration policies differ. A separate worker process
 is required for simulations. Testing CI and broad E2E work remain M5.
+The latest [workspace and belt update](docs/WORKSPACE_LIBRARY_REFINEMENTS.md)
+puts load cases in Physical library, adds three-of-four belt geometry, locks CVT
+angles to their belts, groups library selectors, places tunes under CVTs and
+adds synchronized course playback. Reset and reseed the development database
+for its updated belt and incline contracts.
+
+The [landing and procedural scene update](docs/PROCEDURAL_CVT_SCENES.md) adds a
+lightweight default CVT, shared scene appearance and geometry-driven previews.
+That increment needs no additional database reset.
+
+The newest [run workflow and mechanism update](docs/COMMON_CASE_RUN_WORKFLOW.md)
+adds selection-first setup, a separate tune step, course finish/rollback/stall
+stopping, durable partial playback, queue position and procedural moving details.
+It uses one McMaster 2025 CVT, one Kohler CH440 (Baja Restricted) engine and five
+paper-derived sample tunes. Reset the development database for these seed and
+scenario changes; update any explicit 120-second timeout overrides to 300.
 
 ## Production Docker deployment
 

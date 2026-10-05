@@ -1,7 +1,10 @@
+import type { components } from '@api/generated/backend';
+import { CoursePlayback } from './CoursePlayback';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { ResolvedSceneGeometry } from '@components/scene3DViewer/sceneSpec';
 import type { SimulationCaseDocument, SimulationResult } from '@api/client';
-import { Group, Paper, SimpleGrid, Stack, Title } from '@mantine/core';
+import { Alert, Group, Paper, SimpleGrid, Stack, Title } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { Graph2D } from '@components/graph2D/graph2D';
 import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
@@ -16,10 +19,14 @@ import styles from './Playback.module.scss';
 export function SimulationPlayback({
   result,
   document,
+  sceneGeometry,
+  course,
   navigation,
 }: {
   result: SimulationResult;
   document: SimulationCaseDocument;
+  sceneGeometry: ResolvedSceneGeometry;
+  course: components['schemas']['RunResultResponse']['course'];
   navigation: { label: string; to: string }[];
 }) {
   const navigate = useNavigate();
@@ -58,6 +65,10 @@ export function SimulationPlayback({
   );
   return (
     <div ref={rootRef} className={styles.playback}>
+      {result.metrics.completed === false && <Alert color="yellow" title="Partial run" mx="lg" mt="md">
+        Saved through {result.metrics.duration_s.toFixed(2)} simulated seconds. Stop: {result.metrics.termination_reason.replace(/_/g, ' ')}.
+        Playback and CSV contain the saved portion.
+      </Alert>}
       <Group justify="space-between" className={styles.buttonsContainer}>
         <Group gap="sm">
           {navigation.map((item) => (
@@ -83,8 +94,16 @@ export function SimulationPlayback({
             replayController={replayController}
             result={result}
             document={document}
+            resolvedGeometry={sceneGeometry}
           />
         </Paper>
+        {course && (
+          <CoursePlayback
+            course={course}
+            table={table}
+            replayController={replayController}
+          />
+        )}
         {categories.map((category) => (
           <Paper
             key={category.title}

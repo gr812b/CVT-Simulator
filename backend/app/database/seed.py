@@ -17,7 +17,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.hashing import canonical_json_hash
-from app.database.resolver import resolve_simulation_case
 from app.database.models import (
     Account,
     AccountInstitutionAffiliation,
@@ -37,6 +36,7 @@ from app.database.models import (
     VehicleAssembly,
     VehicleAssemblyVersion,
 )
+from app.database.resolver import resolve_simulation_case
 
 JsonDict = dict[str, Any]
 
@@ -155,11 +155,17 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     )
     account = Account(id=SEED_ACCOUNT_ID, name="Demo Baja Workspace", tier="free")
     session.add_all(
-        [user, account, AccountUser(account_id=account.id, user_id=user.id, role="owner")]
+        [
+            user,
+            account,
+            AccountUser(account_id=account.id, user_id=user.id, role="owner"),
+        ]
     )
     session.flush()
 
-    mcmaster = session.scalar(select(Institution).where(Institution.slug == "mcmaster-university"))
+    mcmaster = session.scalar(
+        select(Institution).where(Institution.slug == "mcmaster-university")
+    )
     if mcmaster is not None:
         session.add(
             AccountInstitutionAffiliation(
@@ -175,8 +181,8 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     engine = Engine(
         id=SEED_ENGINE_ID,
         account_id=account.id,
-        name="Demo Briggs & Stratton 10 hp",
-        slug="demo-briggs-10hp",
+        name="Kohler CH440 (Baja Restricted)",
+        slug="kohler-ch440-baja",
         description="Seeded full-throttle Baja engine boundary with input inertia.",
         visibility="public",
         gallery_listed=True,
@@ -210,10 +216,14 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     session.flush()
     engine.released_version_id = engine_version.id
 
+    from app.application.physical_contracts import assembly_with_matching_belt
+
+    split["cinder_assembly"] = assembly_with_matching_belt(split["cinder_assembly"])
+
     cvt_design = CVTDesign(
         id=SEED_CVT_ID,
         account_id=account.id,
-        name="Demo Baja Rubber V-Belt CVT",
+        name="McMaster 2025",
         slug="demo-baja-rubber-v-belt-cvt",
         description="Seeded CVT hardware assembly with CVT-owned inertias only.",
         visibility="public",
@@ -259,7 +269,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     output_system = OutputSystem(
         id=SEED_OUTPUT_ID,
         account_id=account.id,
-        name="Demo Baja 500 lb Locked Final Drive Vehicle",
+        name="CINDER Default · Baja 500 lb Locked Final Drive Vehicle",
         slug="demo-baja-500lb-locked-final-drive-vehicle",
         description="Seeded 500 lb Baja vehicle/output boundary with drivetrain inertia at secondary shaft.",
         visibility="public",
@@ -297,7 +307,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     vehicle_assembly = VehicleAssembly(
         id=SEED_ASSEMBLY_ID,
         account_id=account.id,
-        name="Demo Baja 500 lb Vehicle Assembly",
+        name="CINDER Default · Baja 500 lb Vehicle Assembly",
         slug="demo-baja-500lb-vehicle-assembly",
         description="Seeded 500 lb Baja assembly pinning engine, CVT, and output system versions.",
         visibility="public",
@@ -329,7 +339,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
         assembly_payload=assembly_payload,
         summary={
             "kind": "baja_baseline",
-            "name": "Demo Baja 500 lb Vehicle Assembly",
+            "name": "CINDER Default · Baja 500 lb Vehicle Assembly",
             "vehicle_mass_kg": SEED_HEAVY_VEHICLE_MASS_KG,
             "vehicle_mass_lb": 500.0,
         },
@@ -352,7 +362,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     light_output_system = OutputSystem(
         id=SEED_OUTPUT_LIGHT_ID,
         account_id=account.id,
-        name="Demo Baja 400 lb Locked Final Drive Vehicle",
+        name="CINDER Default · Baja 400 lb Locked Final Drive Vehicle",
         slug="demo-baja-400lb-locked-final-drive-vehicle",
         description="Seeded 400 lb Baja vehicle/output boundary using the same engine and CVT hardware.",
         visibility="public",
@@ -390,7 +400,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     light_vehicle_assembly = VehicleAssembly(
         id=SEED_ASSEMBLY_LIGHT_ID,
         account_id=account.id,
-        name="Demo Baja 400 lb Vehicle Assembly",
+        name="CINDER Default · Baja 400 lb Vehicle Assembly",
         slug="demo-baja-400lb-vehicle-assembly",
         description="Seeded 400 lb Baja assembly using the same engine and CVT with a lighter vehicle boundary.",
         visibility="public",
@@ -422,7 +432,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
         assembly_payload=light_assembly_payload,
         summary={
             "kind": "baja_baseline",
-            "name": "Demo Baja 400 lb Vehicle Assembly",
+            "name": "CINDER Default · Baja 400 lb Vehicle Assembly",
             "vehicle_mass_kg": SEED_LIGHT_VEHICLE_MASS_KG,
             "vehicle_mass_lb": 400.0,
         },
@@ -539,7 +549,9 @@ def _seed_validation_workspace(session: Session) -> None:
     )
 
     existing = session.scalar(
-        select(ValidationWorkspace).where(ValidationWorkspace.account_id == SEED_ACCOUNT_ID)
+        select(ValidationWorkspace).where(
+            ValidationWorkspace.account_id == SEED_ACCOUNT_ID
+        )
     )
     if existing is not None:
         _upgrade_workspace(existing)
@@ -584,12 +596,16 @@ def split_simulation_case_for_database(simulation_case: JsonDict) -> JsonDict:
             "cvt_rotational_inertia_kg_m2"
         )
 
-    gearbox_inertia = secondary_inertias.pop("gearbox_input_rotational_inertia_kg_m2", None)
+    gearbox_inertia = secondary_inertias.pop(
+        "gearbox_input_rotational_inertia_kg_m2", None
+    )
     if gearbox_inertia is not None:
-        output_boundary.setdefault("direct_secondary_shaft_inertia_kg_m2", gearbox_inertia)
+        output_boundary.setdefault(
+            "direct_secondary_shaft_inertia_kg_m2", gearbox_inertia
+        )
     if "fixed_rotational_inertia_kg_m2" in secondary_inertias:
-        secondary_inertias["fixed_rotating_hardware_inertia_kg_m2"] = secondary_inertias.pop(
-            "fixed_rotational_inertia_kg_m2"
+        secondary_inertias["fixed_rotating_hardware_inertia_kg_m2"] = (
+            secondary_inertias.pop("fixed_rotational_inertia_kg_m2")
         )
     output_boundary.setdefault("drivetrain_loss_model", {"kind": "none"})
 
@@ -653,12 +669,15 @@ def _flat_then_hill_road_profile() -> JsonDict:
 def _seed_institutions(session: Session) -> None:
     for payload in INSTITUTION_SEEDS:
         if session.get(Institution, payload["id"]) is None:
-            session.add(Institution(institution_type="university", is_verified=False, **payload))
+            session.add(
+                Institution(institution_type="university", is_verified=False, **payload)
+            )
 
 
 def _load_baseline_preset(preset_path: Path | None) -> JsonDict:
     path = (
-        preset_path or Path(__file__).resolve().parents[2] / "presets" / "baja-launch-baseline.json"
+        preset_path
+        or Path(__file__).resolve().parents[2] / "presets" / "baja-launch-baseline.json"
     )
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -673,6 +692,7 @@ def _baseline_tuning_schema() -> JsonDict:
     """
 
     return {
+        "flyweight_tip_body_mass_kg": 0.013646,
         "parameters": [
             {
                 "key": "flyweight_mass_kg",
@@ -782,11 +802,13 @@ def _baseline_tuning_schema() -> JsonDict:
                 "unit": "1",
                 "path": "/pulleys/output/helical_coupling/profile/circumferential_profile",
             },
-        ]
+        ],
     }
 
 
-def _component_by_kind(cinder_assembly: JsonDict, mount: str, kind: str) -> JsonDict | None:
+def _component_by_kind(
+    cinder_assembly: JsonDict, mount: str, kind: str
+) -> JsonDict | None:
     components = cinder_assembly.get("pulleys", {}).get(mount, {}).get("components", [])
     if not isinstance(components, list):
         return None
@@ -801,7 +823,9 @@ def _extract_baseline_tune(cinder_assembly: JsonDict) -> JsonDict:
     input_ramp = _component_by_kind(cinder_assembly, "input", "centrifugal_ramp")
     input_spring = _component_by_kind(cinder_assembly, "input", "axial_spring")
     output_spring = _component_by_kind(cinder_assembly, "output", "axial_spring")
-    output_helix = _component_by_kind(cinder_assembly, "output", "helical_torque_reaction")
+    output_helix = _component_by_kind(
+        cinder_assembly, "output", "helical_torque_reaction"
+    )
 
     if input_ramp is not None:
         for source_key, tune_key in (
@@ -829,7 +853,10 @@ def _extract_baseline_tune(cinder_assembly: JsonDict) -> JsonDict:
 
     if output_helix is not None:
         for source_key, tune_key in (
-            ("torsional_stiffness_Nm_per_rad", "secondary_torsional_stiffness_Nm_per_rad"),
+            (
+                "torsional_stiffness_Nm_per_rad",
+                "secondary_torsional_stiffness_Nm_per_rad",
+            ),
             ("initial_twist_rad", "secondary_initial_twist_rad"),
         ):
             if source_key in output_helix:
@@ -851,7 +878,10 @@ def _engine_summary(input_boundary: JsonDict) -> JsonDict:
     points = input_boundary.get("points", [])
     peak_torque = max((float(point["torque_Nm"]) for point in points), default=0.0)
     peak_power = max(
-        (float(point["torque_Nm"]) * float(point["angular_speed_rad_per_s"]) for point in points),
+        (
+            float(point["torque_Nm"]) * float(point["angular_speed_rad_per_s"])
+            for point in points
+        ),
         default=0.0,
     )
     return {"peak_torque_Nm": peak_torque, "peak_power_W": peak_power}

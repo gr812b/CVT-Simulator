@@ -25,18 +25,37 @@ def parameters(assembly, schema):
         if component["kind"] != "fixed_pivot_roller_flyweight":
             continue
         prefix = f"/pulleys/primary/components/{i}"
+        mass = component["mass_geometry"]
+        body = schema.get("flyweight_tip_body_mass_kg")
+        length = component["geometry"]["arm_length_m"]
+        tip = mass["mass_per_flyweight_kg"] - body if body else None
+        tip_model = (
+            body is not None
+            and tip > 0
+            and all(
+                math.isclose(mass[key], expected, rel_tol=1e-8, abs_tol=1e-12)
+                for key, expected in (
+                    ("first_moment_u_kg_m", body * length / 2 + tip * length),
+                    ("second_moment_u_kg_m2", body * length**2 / 3 + tip * length**2),
+                )
+            )
+        )
         result += [
             {
-                "key": "primary_flyweight_mass",
+                "key": "primary_tip_mass" if tip_model else "primary_flyweight_mass",
                 "kind": "number",
-                "label": "Mass per flyweight",
-                "description": "Scales all mass moments by the same ratio, preserving this flyweight's shape and density distribution.",
+                "label": "Replaceable tip mass" if tip_model else "Mass per flyweight",
+                "description": "Changes the tip and its mass moments, retaining the arm/body."
+                if tip_model
+                else "Scales mass and moments together at unchanged mass distribution.",
                 "group": "primary",
                 "unit": "kg",
                 "minimum": 0.000001,
                 "path": prefix + "/mass_geometry/mass_per_flyweight_kg",
                 "mass_geometry_path": prefix + "/mass_geometry",
-                "default": component["mass_geometry"]["mass_per_flyweight_kg"],
+                "tip_body_mass": body if tip_model else None,
+                "tip_arm_length": length,
+                "default": tip if tip_model else mass["mass_per_flyweight_kg"],
             },
             {
                 "key": "primary_ramp_profile",
@@ -104,7 +123,10 @@ def tune_surface(session, principal, setup_revision_id):
                     "maximum": param.get("maximum"),
                 }
             )
+    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id)
     return TuneSurface(
+        cvt_object_id=cvt.cvt_design_id,
+        cvt_revision_id=cvt.id,
         template={
             "kind": "tunes",
             "name": "New tune",
@@ -151,10 +173,18 @@ def apply_values(assembly, params, values):
                 )
             if "mass_geometry_path" in param:
                 mass = pointer(assembly, param["mass_geometry_path"])
-                ratio = value / mass["mass_per_flyweight_kg"]
-                for name in mass:
-                    if "moment" in name:
-                        mass[name] *= ratio
+                body = param.get("tip_body_mass")
+                if body is not None:
+                    delta = value - (mass["mass_per_flyweight_kg"] - body)
+                    length = param["tip_arm_length"]
+                    mass["first_moment_u_kg_m"] += delta * length
+                    mass["second_moment_u_kg_m2"] += delta * length**2
+                    value += body
+                else:
+                    ratio = value / mass["mass_per_flyweight_kg"]
+                    for name in mass:
+                        if "moment" in name:
+                            mass[name] *= ratio
         elif not isinstance(value, dict) or value.get("kind") != "piecewise_ramp":
             raise ApiProblem(
                 422, "tune_value", f"{param['label']} must be a piecewise ramp."

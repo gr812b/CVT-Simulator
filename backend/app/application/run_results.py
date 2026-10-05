@@ -79,7 +79,7 @@ def references(run):
         for kind, name, revision, unsaved in (
             (
                 "setup",
-                p.get("setup_name") or "Frozen setup",
+                p.get("setup_name") or "Vehicle setup",
                 p.get("setup_revision_id") or run.vehicle_assembly_version_id,
                 False,
             ),
@@ -91,7 +91,7 @@ def references(run):
             ),
             (
                 "scenario",
-                scenario.get("name") or "Frozen scenario",
+                scenario.get("name") or "Load case",
                 p.get("scenario_revision_id"),
                 bool(p.get("scenario_unsaved")),
             ),
@@ -226,9 +226,9 @@ def availability(session, run):
     )
     metrics = (run.summary_scalars or {}).get("metrics", {})
     return ResultAvailability(
-        full_result=run.status == "completed" and bool(full and full[2]),
+        full_result=bool(full and full[2]),
         full_result_hash=full[1] if full else None,
-        preview=run.status == "completed" and preview,
+        preview=preview,
         partial=metrics.get("completed") is False,
         original_row_count=(run.summary_series or {}).get("original_row_count"),
     )
@@ -260,7 +260,7 @@ def _experiment_configuration(run, settings):
     document = SetupDocument.model_validate(
         {
             "kind": "setups",
-            "name": f"{run.name[:210]} — frozen setup",
+            "name": f"{run.name[:210]} setup",
             "source_label": f"Simulation {run.id}",
             "data": {
                 "engine": {

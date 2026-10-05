@@ -10,6 +10,7 @@ from app.api.v1.run_admission import submission_attempt
 from app.application import access, jobs
 from app.application.auth import Principal
 from app.application.container import ApplicationContainer
+from app.application.course import course_profile
 from app.core.errors import ApiProblem
 from app.database import runs as artifacts
 from app.database.base import utc_now
@@ -32,6 +33,7 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 PrincipalDep = Depends(get_current_principal)
+PublicReaderDep = Depends(get_public_reader)
 SessionDep = Depends(get_database_session)
 ContainerDep = Depends(get_container)
 
@@ -249,7 +251,7 @@ def rerun(
 
 @router.get("/{run_id}/input", response_model=RunInputResponse)
 def input_document(
-    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
+    run_id: str, principal=PublicReaderDep, session: Session = SessionDep
 ):
     run = access.public_run(session, run_id)
     return RunInputResponse(
@@ -258,9 +260,7 @@ def input_document(
 
 
 @router.get("/{run_id}/preview", response_model=RunPreviewResponse)
-def preview(
-    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
-):
+def preview(run_id: str, principal=PublicReaderDep, session: Session = SessionDep):
     run = access.public_run(session, run_id)
     return RunPreviewResponse(
         run=jobs.status(run),
@@ -270,11 +270,19 @@ def preview(
 
 @router.get("/{run_id}/result", response_model=RunResultResponse)
 def result(
-    run_id: str, principal=Depends(get_public_reader), session: Session = SessionDep
+    run_id: str,
+    principal=PublicReaderDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
 ):
     run = access.public_run(session, run_id)
+    result_document = artifacts.get_database_run_result(session, run_id)
     return RunResultResponse(
+        course=course_profile(run.input_contract, result_document, run.provenance),
+        scene_geometry=container.gateway.assembly_scene(
+            run.input_contract["assembly"]
+        ).geometry,
         run=jobs.status(run),
         input_document_snapshot=run.input_contract,
-        result=artifacts.get_database_run_result(session, run_id),
+        result=result_document,
     )

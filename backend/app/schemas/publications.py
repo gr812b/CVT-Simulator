@@ -1,4 +1,4 @@
-"""Explicit publication snapshots; private source rows are never public API data."""
+"""Frozen public configuration snapshots and version history."""
 
 from datetime import datetime
 from typing import Literal
@@ -20,6 +20,7 @@ class PublishedDependency(ApiModel):
 
 
 class PublicationItem(ApiModel):
+    source_object_id: str
     id: str
     kind: PublicationKind
     name: str

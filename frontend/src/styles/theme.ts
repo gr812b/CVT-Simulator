@@ -53,3 +53,26 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
   light: {},
   dark: {},
 });
+
+/** Shared 3D art direction. These are visual materials, not hardware properties. */
+export const sceneAppearance = {
+  primary: '#e85959',
+  secondary: '#4db6ac',
+  aluminium: '#cbd4df',
+  fixedSheave: '#aab8cc',
+  movingSheave: '#eabf75',
+  flyweight: '#dd795a',
+  roller: '#dee4ed',
+  ramp: '#77b3d5',
+  helix: '#72c1a5',
+  shaft: '#8795a8',
+  belt: '#333e50',
+  unavailable: '#818b9a',
+  grid: '#424b5c',
+  ghostOpacity: 0.22,
+  metalness: 0.5,
+  roughness: 0.36,
+  radialSegments: 72,
+  maxPixelRatio: 2,
+  light: { sky: '#f1f5ff', ground: '#69778c', intensity: 2.1 },
+} as const;

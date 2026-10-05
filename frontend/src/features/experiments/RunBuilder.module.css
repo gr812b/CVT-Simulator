@@ -5,6 +5,10 @@
 .summary {
   overflow-wrap: anywhere;
 }
+.steps :global(.mantine-Stepper-stepLabel) {
+  white-space: normal;
+  line-height: 1.25;
+}
 @media (max-width: 62em) {
   .summaryColumn {
     position: static;

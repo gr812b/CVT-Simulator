@@ -73,6 +73,8 @@ export const Playback = () => {
     <SimulationPlayback
       result={displayedRun.result}
       document={displayedRun.inputDocumentSnapshot}
+      sceneGeometry={displayedRun.sceneGeometry}
+      course={displayedRun.course}
       navigation={[
         { label: 'Run details', to: `/runs/${displayedRun.run.id}` },
         { label: 'Run history', to: '/runs' },

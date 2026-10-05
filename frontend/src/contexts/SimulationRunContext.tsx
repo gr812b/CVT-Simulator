@@ -57,7 +57,7 @@ export const SimulationRunProvider = ({
       if (runId === null) return null;
       const status = await getSimulationRun(runId);
       setActiveRunState(status);
-      if (status.status !== 'completed') return null;
+      if (!status.hasResult) return null;
       const restored = await getSimulationResult(runId);
       setCompletedRunState(restored);
       return restored;

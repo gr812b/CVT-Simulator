@@ -19,7 +19,7 @@ from app.application.demo import DEMO_PATH
 from app.application.physical_contracts import baseline_case
 from app.database.hashing import canonical_json_hash
 from app.database.runs import verify_result_contract
-from app.schemas.demo import DemoPlaybackResponse
+from app.schemas.demo import DemoArtifact
 
 
 def main():
@@ -77,9 +77,12 @@ def main():
     )
     if result["metrics"]["completed"] is not True:
         raise RuntimeError("A partial simulation cannot replace the public demo")
-    demo = DemoPlaybackResponse(
+    demo = DemoArtifact(
         name="Baja launch demo",
-        description="A recorded ten-second launch using the project's default Baja setup on flat ground.",
+        description=(
+            "A recorded ten-second launch using the project's "
+            "default Baja setup on flat ground."
+        ),
         generated_at=datetime.now(UTC),
         runtime_identity=identity,
         input_hash=canonical_json_hash(case),
@@ -93,8 +96,12 @@ def main():
         gzip.compress(demo.model_dump_json().encode("utf-8"), mtime=0)
     )
     temporary.replace(DEMO_PATH)
+    from app.scripts.build_scenes import main as build_scenes
+
+    build_scenes()
     print(
-        f"Saved {DEMO_PATH}: {result['report_table']['row_count']} rows, CINDER {identity['package_version']}, result {demo.result_hash}"
+        f"Saved {DEMO_PATH}: {result['report_table']['row_count']} rows, "
+        f"CINDER {identity['package_version']}, result {demo.result_hash}"
     )
 
 
