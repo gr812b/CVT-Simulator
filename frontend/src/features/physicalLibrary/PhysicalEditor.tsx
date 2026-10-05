@@ -1,3 +1,6 @@
+import { AuthorLink } from '../community/AuthorLink';
+import { useAuth } from '@contexts/AuthContext';
+import { ConfigurationView } from '../publicLibrary/ConfigurationView';
 import { FormError } from '@components/form/FormError';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -29,7 +32,9 @@ import {
   useBeforeUnload,
   useBlocker,
   useNavigate,
+  useLocation,
   useParams,
+  useSearchParams,
 } from 'react-router-dom';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import {
@@ -69,11 +74,12 @@ import { CopyAttribution } from '../publicLibrary/CopyAttribution';
 
 export function PhysicalEditorPage() {
   const { kind, objectId } = useParams();
+  const [params] = useSearchParams();
   if (!isPhysicalKind(kind) || !objectId)
     return <Navigate to="/library/setups" replace />;
   return (
     <PhysicalEditor
-      key={`${kind}/${objectId}`}
+      key={`${kind}/${objectId}/${params.get('revision') ?? ''}`}
       kind={kind}
       objectId={objectId}
     />
@@ -88,7 +94,13 @@ function PhysicalEditor({
   objectId: string;
 }) {
   const navigate = useNavigate();
+  const { hash } = useLocation();
+  const { session } = useAuth();
+  const [params] = useSearchParams();
+  const revisionId = params.get('revision') ?? undefined;
   const isNew = objectId === 'new';
+  const [editing, setEditing] = useState(isNew);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [detail, setDetail] = useState<PhysicalDetail | null>(null);
   const [document, setDocument] = useState<PhysicalDocument | null>(null);
   const [saved, setSaved] = useState('');
@@ -100,7 +112,7 @@ function PhysicalEditor({
   const [loading, setLoading] = useState(true);
   const [workingBusy, setBusy] = useState(false);
   const [componentLoading, setComponentLoading] = useState(false);
-  const busy = workingBusy || componentLoading;
+  const busy = workingBusy || componentLoading || catalogLoading;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
@@ -113,7 +125,7 @@ function PhysicalEditor({
   const permitNavigation = useRef(false);
   const serialized = document ? JSON.stringify(document) : '';
   const dirty = !!document && (serialized !== saved || invalid.size > 0);
-  const editable = isNew || !!detail?.item.owned;
+  const editable = editing && (isNew || !!detail?.item.owned);
   const blocker = useBlocker(
     useCallback(() => dirty && !permitNavigation.current, [dirty]),
   );
@@ -144,14 +156,13 @@ function PhysicalEditor({
     setError(null);
     const load = async () => {
       try {
-        const [loaded, metadata, engines, belts, cvts] = await Promise.all([
+        const [loaded, metadata] = await Promise.all([
           isNew
             ? physicalTemplate(kind, controller.signal)
-            : getPhysical(kind, objectId, undefined, controller.signal),
-          physicalMetadata(controller.signal),
-          listPhysical('engines', 'all', false, controller.signal),
-          listPhysical('belts', 'all', false, controller.signal),
-          listPhysical('cvts', 'all', false, controller.signal),
+            : getPhysical(kind, objectId, revisionId, controller.signal),
+          kind === 'cvts' || kind === 'setups'
+            ? physicalMetadata(controller.signal)
+            : Promise.resolve({ cvt_fields: [] }),
         ]);
         if (controller.signal.aborted) return;
         if ('document' in loaded) accept(loaded);
@@ -163,7 +174,6 @@ function PhysicalEditor({
           setValidation(null);
         }
         setFields(metadata.cvt_fields);
-        setCatalog([...engines, ...belts, ...cvts]);
       } catch (reason) {
         if (!controller.signal.aborted)
           setError(
@@ -177,7 +187,40 @@ function PhysicalEditor({
     };
     void load();
     return () => controller.abort();
-  }, [kind, objectId, isNew, retry, accept]);
+  }, [kind, objectId, revisionId, isNew, retry, accept]);
+  useEffect(() => {
+    if (!loading && hash === '#tunes')
+      window.document
+        .getElementById('tunes')
+        ?.scrollIntoView({ block: 'start' });
+  }, [loading, hash]);
+  useEffect(() => {
+    if (!editable) return;
+    const controller = new AbortController();
+    setCatalogLoading(true);
+    const kinds: PhysicalKind[] =
+      kind === 'setups'
+        ? ['engines', 'belts', 'cvts']
+        : kind === 'cvts'
+          ? ['belts']
+          : [];
+    void Promise.all(
+      kinds.map((value) =>
+        listPhysical(value, 'all', false, controller.signal),
+      ),
+    )
+      .then((lists) => {
+        if (!controller.signal.aborted) setCatalog(lists.flat());
+      })
+      .catch((cause) => {
+        if (!controller.signal.aborted)
+          setError(cause instanceof Error ? cause.message : String(cause));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCatalogLoading(false);
+      });
+    return () => controller.abort();
+  }, [editable, kind]);
 
   const perform = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -205,6 +248,7 @@ function PhysicalEditor({
         note,
       );
       accept(result.detail);
+      setEditing(false);
       setMessage(result.changed ? 'Saved.' : 'Already saved.');
       if (isNew) {
         permitNavigation.current = true;
@@ -283,14 +327,19 @@ function PhysicalEditor({
     URL.revokeObjectURL(url);
   };
 
+  if (isNew && !session)
+    return (
+      <Navigate
+        to={`/login?next=${encodeURIComponent(`/library/${kind}/new`)}`}
+        replace
+      />
+    );
   if (loading)
     return (
       <Container py="xl">
         <Group>
           <Loader size="sm" />
-          <Text role="status">
-            Loading physical inputs and checking the saved configuration…
-          </Text>
+          <Text role="status">Loading configuration…</Text>
         </Group>
       </Container>
     );
@@ -317,7 +366,7 @@ function PhysicalEditor({
         <Group justify="space-between">
           <Button
             component={Link}
-            to={`/library/${kind}`}
+            to={session ? `/library/${kind}` : `/catalog?kind=${kind}`}
             variant="subtle"
             leftSection={<IconArrowLeft size={16} />}
           >
@@ -335,12 +384,10 @@ function PhysicalEditor({
             {isNew ? `New ${singularLabels[kind]}` : detail?.item.name}
           </Title>
           <Text c="dimmed" mt="xs">
-            {kind === 'setups'
-              ? 'Your vehicle, engine, belt and CVT, saved together.'
-              : 'Reusable physical inputs for your simulations.'}
+            {document.description}
           </Text>
         </div>
-        {!editable && (
+        {!detail?.item.owned && !isNew && (
           <Alert
             color="blue"
             title={detail?.item.sample ? 'CINDER default' : 'Community item'}
@@ -348,6 +395,13 @@ function PhysicalEditor({
             Explore these saved values, then copy them into your library to
             edit.
           </Alert>
+        )}
+        {detail && (
+          <Text size="sm" c="dimmed">
+            By{' '}
+            <AuthorLink name={detail.item.author} id={detail.item.author_id} />{' '}
+            · v{detail.item.revision_number}
+          </Text>
         )}
         {detail?.item.owned && (
           <CopyAttribution kind={kind} objectId={objectId} />
@@ -371,6 +425,33 @@ function PhysicalEditor({
               <div className={styles.actions}>
                 <Group justify="space-between">
                   <Group gap="sm">
+                    {detail?.item.owned && !editing && !revisionId && (
+                      <Button onClick={() => setEditing(true)}>
+                        Edit configuration
+                      </Button>
+                    )}
+                    {detail?.item.owned && !editing && revisionId && (
+                      <Button
+                        component={Link}
+                        to={`/library/${kind}/${objectId}`}
+                      >
+                        Open latest version
+                      </Button>
+                    )}
+                    {editing && !isNew && (
+                      <Button
+                        variant="default"
+                        disabled={busy}
+                        onClick={() => {
+                          if (detail) accept(detail);
+                          setInvalid(new Set());
+                          setEditing(false);
+                          setError(null);
+                        }}
+                      >
+                        Cancel editing
+                      </Button>
+                    )}
                     {editable && (
                       <Button
                         type="submit"
@@ -381,13 +462,15 @@ function PhysicalEditor({
                         Save
                       </Button>
                     )}
-                    <Button
-                      variant="default"
-                      disabled={busy || invalid.size > 0}
-                      onClick={() => void check()}
-                    >
-                      Check inputs
-                    </Button>
+                    {editable && (
+                      <Button
+                        variant="default"
+                        disabled={busy || invalid.size > 0}
+                        onClick={() => void check()}
+                      >
+                        Check inputs
+                      </Button>
+                    )}
                     {detail?.item.owned && (
                       <PublishDialog
                         kind={kind}
@@ -395,14 +478,14 @@ function PhysicalEditor({
                         disabled={busy || dirty || detail.item.archived}
                       />
                     )}
-                    {detail && (
+                    {detail && session && (
                       <Button
                         variant="default"
                         leftSection={<IconCopy size={16} />}
                         disabled={busy || dirty}
                         onClick={() => void duplicate()}
                       >
-                        {editable ? 'Duplicate' : 'Copy to my library'}
+                        {detail.item.owned ? 'Duplicate' : 'Copy to my library'}
                       </Button>
                     )}
                   </Group>
@@ -446,17 +529,19 @@ function PhysicalEditor({
                   {message}
                 </Alert>
               )}
-              <PhysicalStatus
-                validation={validation}
-                stale={serialized !== validated || invalid.size > 0}
-                setup={kind === 'setups'}
-              />
+              {(editable || validation?.is_valid === false) && (
+                <PhysicalStatus
+                  validation={validation}
+                  stale={serialized !== validated || invalid.size > 0}
+                  setup={kind === 'setups'}
+                />
+              )}
               {resolved && serialized === validated && (
                 <Button variant="subtle" onClick={downloadResolved}>
                   Download resolved CINDER input
                 </Button>
               )}
-              {!!detail?.updates.length && (
+              {editable && !!detail?.updates.length && (
                 <Accordion variant="separated">
                   <Accordion.Item value="updates">
                     <Accordion.Control>Component updates</Accordion.Control>
@@ -502,167 +587,182 @@ function PhysicalEditor({
                 </Accordion>
               )}
               {kind === 'cvts' && detail && (
-                <Paper withBorder p="lg" id="tunes"><PublicTuneList cvtObjectId={detail.item.id} /></Paper>
+                <Paper withBorder p="lg" id="tunes">
+                  <PublicTuneList cvtObjectId={detail.item.id} />
+                </Paper>
               )}
-              <fieldset className={styles.working} disabled={busy}>
-                <Stack gap="lg">
-                  <Paper withBorder p="lg">
-                    <Stack>
-                      <TextInput
-                        label="Name"
-                        value={document.name}
-                        required
-                        maxLength={240}
-                        disabled={disabled}
-                        onChange={(event) =>
-                          setDocument({
-                            ...document,
-                            name: event.currentTarget.value,
-                          })
-                        }
-                      />
-                      <Textarea
-                        label="Description"
-                        value={document.description ?? ''}
-                        autosize
-                        minRows={2}
-                        maxLength={4000}
-                        disabled={disabled}
-                        onChange={(event) =>
-                          setDocument({
-                            ...document,
-                            description: event.currentTarget.value,
-                          })
-                        }
-                      />
-                    </Stack>
-                  </Paper>
-                  <Paper withBorder p="lg">
-                    {document.kind === 'engines' && (
-                      <EngineEditor
-                        value={document.data}
-                        onChange={(data) => setDocument({ ...document, data })}
-                        disabled={disabled}
-                      />
-                    )}
-                    {document.kind === 'belts' && (
-                      <BeltEditor
-                        value={document.data}
-                        onChange={(data) => setDocument({ ...document, data })}
-                        disabled={disabled}
-                      />
-                    )}
-                    {document.kind === 'cvts' && (
-                      <CvtEditor
-                        value={document.data}
-                        onChange={(data) => setDocument({ ...document, data })}
-                        fields={fields}
-                        belts={componentItems('belts')}
-                        disabled={disabled}
-                        onLoadingChange={setComponentLoading}
-                      />
-                    )}
-                    {document.kind === 'setups' && (
-                      <Accordion
-                        multiple
-                        defaultValue={['vehicle']}
-                        variant="separated"
-                      >
-                        <Accordion.Item value="vehicle">
-                          <Accordion.Control>
-                            Vehicle & drivetrain
-                          </Accordion.Control>
-                          <Accordion.Panel>
-                            <VehicleEditor
-                              value={document.data.vehicle}
-                              onChange={(vehicle) =>
-                                setDocument({
-                                  ...document,
-                                  data: { ...document.data, vehicle },
-                                })
-                              }
-                              disabled={disabled}
-                            />
-                          </Accordion.Panel>
-                        </Accordion.Item>
-                        <Accordion.Item value="engine">
-                          <Accordion.Control>
-                            Engine · {document.data.engine.name}
-                          </Accordion.Control>
-                          <Accordion.Panel>
-                            <Stack>
-                              <ComponentPicker
-                                kind="engines"
-                                value={document.data.engine}
-                                onChange={(engine) =>
+              {!editable ? (
+                <ConfigurationView document={document} fields={fields} />
+              ) : (
+                <fieldset className={styles.working} disabled={busy}>
+                  <Stack gap="lg">
+                    <Paper withBorder p="lg">
+                      <Stack>
+                        <TextInput
+                          label="Name"
+                          value={document.name}
+                          required
+                          maxLength={240}
+                          disabled={disabled}
+                          onChange={(event) =>
+                            setDocument({
+                              ...document,
+                              name: event.currentTarget.value,
+                            })
+                          }
+                        />
+                        <Textarea
+                          label="Description"
+                          value={document.description ?? ''}
+                          autosize
+                          minRows={2}
+                          maxLength={4000}
+                          disabled={disabled}
+                          onChange={(event) =>
+                            setDocument({
+                              ...document,
+                              description: event.currentTarget.value,
+                            })
+                          }
+                        />
+                      </Stack>
+                    </Paper>
+                    <Paper withBorder p="lg">
+                      {document.kind === 'engines' && (
+                        <EngineEditor
+                          value={document.data}
+                          onChange={(data) =>
+                            setDocument({ ...document, data })
+                          }
+                          disabled={disabled}
+                        />
+                      )}
+                      {document.kind === 'belts' && (
+                        <BeltEditor
+                          value={document.data}
+                          onChange={(data) =>
+                            setDocument({ ...document, data })
+                          }
+                          disabled={disabled}
+                        />
+                      )}
+                      {document.kind === 'cvts' && (
+                        <CvtEditor
+                          value={document.data}
+                          onChange={(data) =>
+                            setDocument({ ...document, data })
+                          }
+                          fields={fields}
+                          belts={componentItems('belts')}
+                          disabled={disabled}
+                          onLoadingChange={setComponentLoading}
+                        />
+                      )}
+                      {document.kind === 'setups' && (
+                        <Accordion
+                          multiple
+                          defaultValue={['vehicle']}
+                          variant="separated"
+                        >
+                          <Accordion.Item value="vehicle">
+                            <Accordion.Control>
+                              Vehicle & drivetrain
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                              <VehicleEditor
+                                value={document.data.vehicle}
+                                onChange={(vehicle) =>
                                   setDocument({
                                     ...document,
-                                    data: { ...document.data, engine },
-                                  })
-                                }
-                                items={componentItems('engines')}
-                                disabled={disabled}
-                                onLoadingChange={setComponentLoading}
-                              />
-                              <EngineEditor
-                                value={document.data.engine.data}
-                                onChange={(data) =>
-                                  setDocument({
-                                    ...document,
-                                    data: {
-                                      ...document.data,
-                                      engine: { ...document.data.engine, data },
-                                    },
+                                    data: { ...document.data, vehicle },
                                   })
                                 }
                                 disabled={disabled}
                               />
-                            </Stack>
-                          </Accordion.Panel>
-                        </Accordion.Item>
-                        <Accordion.Item value="cvt">
-                          <Accordion.Control>
-                            CVT & belt · {document.data.cvt.name}
-                          </Accordion.Control>
-                          <Accordion.Panel>
-                            <Stack>
-                              <ComponentPicker
-                                kind="cvts"
-                                value={document.data.cvt}
-                                onChange={(cvt) =>
-                                  setDocument({
-                                    ...document,
-                                    data: { ...document.data, cvt },
-                                  })
-                                }
-                                items={componentItems('cvts')}
-                                disabled={disabled}
-                                onLoadingChange={setComponentLoading}
-                              />
-                              <CvtEditor
-                                value={document.data.cvt.data}
-                                onChange={(data) =>
-                                  setDocument({
-                                    ...document,
-                                    data: {
-                                      ...document.data,
-                                      cvt: { ...document.data.cvt, data },
-                                    },
-                                  })
-                                }
-                                fields={fields}
-                                belts={componentItems('belts')}
-                                disabled={disabled}
-                                onLoadingChange={setComponentLoading}
-                              />
-                            </Stack>
-                          </Accordion.Panel>
-                        </Accordion.Item>
-                      </Accordion>
-                    )}
-                  </Paper>
-                </Stack>
-              </fieldset>
+                            </Accordion.Panel>
+                          </Accordion.Item>
+                          <Accordion.Item value="engine">
+                            <Accordion.Control>
+                              Engine · {document.data.engine.name}
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                              <Stack>
+                                <ComponentPicker
+                                  kind="engines"
+                                  value={document.data.engine}
+                                  onChange={(engine) =>
+                                    setDocument({
+                                      ...document,
+                                      data: { ...document.data, engine },
+                                    })
+                                  }
+                                  items={componentItems('engines')}
+                                  disabled={disabled}
+                                  onLoadingChange={setComponentLoading}
+                                />
+                                <EngineEditor
+                                  value={document.data.engine.data}
+                                  onChange={(data) =>
+                                    setDocument({
+                                      ...document,
+                                      data: {
+                                        ...document.data,
+                                        engine: {
+                                          ...document.data.engine,
+                                          data,
+                                        },
+                                      },
+                                    })
+                                  }
+                                  disabled={disabled}
+                                />
+                              </Stack>
+                            </Accordion.Panel>
+                          </Accordion.Item>
+                          <Accordion.Item value="cvt">
+                            <Accordion.Control>
+                              CVT & belt · {document.data.cvt.name}
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                              <Stack>
+                                <ComponentPicker
+                                  kind="cvts"
+                                  value={document.data.cvt}
+                                  onChange={(cvt) =>
+                                    setDocument({
+                                      ...document,
+                                      data: { ...document.data, cvt },
+                                    })
+                                  }
+                                  items={componentItems('cvts')}
+                                  disabled={disabled}
+                                  onLoadingChange={setComponentLoading}
+                                />
+                                <CvtEditor
+                                  value={document.data.cvt.data}
+                                  onChange={(data) =>
+                                    setDocument({
+                                      ...document,
+                                      data: {
+                                        ...document.data,
+                                        cvt: { ...document.data.cvt, data },
+                                      },
+                                    })
+                                  }
+                                  fields={fields}
+                                  belts={componentItems('belts')}
+                                  disabled={disabled}
+                                  onLoadingChange={setComponentLoading}
+                                />
+                              </Stack>
+                            </Accordion.Panel>
+                          </Accordion.Item>
+                        </Accordion>
+                      )}
+                    </Paper>
+                  </Stack>
+                </fieldset>
+              )}
               <Group justify="space-between">
                 {detail?.item.owned && (
                   <Button

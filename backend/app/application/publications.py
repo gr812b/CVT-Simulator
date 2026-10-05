@@ -172,6 +172,7 @@ def item(row):
         ]
     return PublicationItem(
         source_object_id=row.source_object_id,
+        source_revision_id=row.source_revision_id,
         **{
             key: getattr(row, key)
             for key in (

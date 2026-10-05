@@ -83,6 +83,7 @@ class RerunStoredRunRequest(ApiModel):
 
 
 class RunStatusResponse(ApiModel):
+    author_id: str | None
     author: str
     id: str
     status: RunStatus

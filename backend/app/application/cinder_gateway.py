@@ -520,9 +520,40 @@ class CinderGateway:
                 if coupling
                 else 0
             )
+            contact_point = (
+                surface.ramp_surface_point(
+                    contact_coordinate=roller.contact_coordinate, axial_position=local
+                )
+                if roller
+                else None
+            )
+            normal = (
+                (
+                    (roller.roller_center_axial_position - contact_point[0])
+                    / mechanism.geometry_spec.roller_radius,
+                    (roller.roller_center_radius - contact_point[1])
+                    / mechanism.geometry_spec.roller_radius,
+                )
+                if roller
+                else None
+            )
+            helix_local = (
+                coupling.evaluate_from_local_coordinate(
+                    axial_position=geometry.secondary_axial_coordinate.value,
+                    d_axial_position_ds=1.0,
+                    d2_axial_position_ds2=0.0,
+                )
+                if coupling
+                else None
+            )
             poses.append(
                 MechanismPose(
                     shift_m=float(shift),
+                    primary_contact_m=contact_point,
+                    primary_normal_axial_radial=normal,
+                    secondary_helix_dtheta_dx=helix_local.dtheta_ds
+                    if helix_local
+                    else None,
                     primary_roller_m=(
                         roller.roller_center_axial_position,
                         roller.roller_center_radius,
@@ -534,8 +565,25 @@ class CinderGateway:
                     secondary_angle_rad=angle,
                 )
             )
+
+        def movable_torque_fraction(pulley):
+            shares = [
+                law.spec.movable_member_torque_fraction
+                for law in pulley.actuator.force_laws
+                if hasattr(getattr(law, "spec", None), "movable_member_torque_fraction")
+            ]
+            # A rigidly guided pulley has symmetric face loading. A helical
+            # element can explicitly configure its movable member's torque share.
+            return sum(shares) if shares else 0.5
+
         preview.geometry.mechanisms = MechanismScene(
             primary=primary,
+            primary_movable_torque_fraction=movable_torque_fraction(
+                spec.pulleys.primary
+            ),
+            secondary_movable_torque_fraction=movable_torque_fraction(
+                spec.pulleys.secondary
+            ),
             primary_has_spring=any(
                 component["kind"] == "axial_spring"
                 for component in assembly["pulleys"]["primary"]["components"]
@@ -548,6 +596,18 @@ class CinderGateway:
             poses=poses,
         )
         return preview
+
+    def force_playback(self, assembly, result, scene=None):
+        """Project retained signals and CINDER contact geometry; never integrate."""
+        from cinder.results.fields import build_belt_tension_field
+
+        from app.application.force_projection import project_forces
+
+        scene = scene or self.assembly_scene(assembly).geometry
+        tension = build_belt_tension_field(
+            sheave_half_angle=scene.sheave_half_angle_rad
+        )
+        return project_forces(result, scene, tension)
 
     def geometry_from_endpoint_radii(
         self, payload: Mapping[str, Any]

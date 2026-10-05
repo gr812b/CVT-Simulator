@@ -85,16 +85,6 @@ const PublicExperiment = lazy(() =>
     ({ PublicExperiment }) => ({ default: PublicExperiment }),
   ),
 );
-const PublicRun = lazy(() =>
-  import('../../features/publicLibrary/PublicRuns').then(({ PublicRun }) => ({
-    default: PublicRun,
-  })),
-);
-const PublicPlayback = lazy(() =>
-  import('../../features/publicLibrary/PublicRuns').then(
-    ({ PublicPlayback }) => ({ default: PublicPlayback }),
-  ),
-);
 
 /**
  * Keep the landing route light. Secondary pages load only after navigation, so
@@ -131,26 +121,23 @@ export const App = () => (
           element={<PublicExperiment />}
         />
         <Route path="/catalog/tunes/:objectId" element={<PublicExperiment />} />
-        <Route path="/catalog/runs/:runId" element={<PublicRun />} />
-        <Route
-          path="/catalog/runs/:runId/playback"
-          element={<PublicPlayback />}
-        />
+        <Route path="/catalog/runs/:runId" element={<RunPage />} />
+        <Route path="/catalog/runs/:runId/playback" element={<Playback />} />
         <Route path="/catalog/:publicationId" element={<Publication />} />
+        <Route path="/runs/:runId" element={<RunPage />} />
+        <Route path="/playback" element={<Playback />} />
+        <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
         <Route element={<RequireAccount />}>
           <Route path="/account" element={<AccountSettings />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/:kind" element={<Library />} />
-          <Route path="/library/:kind/:objectId" element={<PhysicalEditor />} />
           <Route
             path="/load-cases"
             element={<Navigate to="/library/load-cases" replace />}
           />
           <Route path="/input" element={<Input />} />
-          <Route path="/runs/:runId" element={<RunPage />} />
           <Route path="/runs" element={<RunHistory />} />
-          <Route path="/playback" element={<Playback />} />
           <Route path="/geometry" element={<GeometryStudy />} />
           <Route path="/validation" element={<Validation />} />
           <Route

@@ -1,4 +1,10 @@
-import { Button, createTheme, type CSSVariablesResolver } from '@mantine/core';
+import type { components } from '@api/generated/backend';
+import {
+  Button,
+  Tooltip,
+  createTheme,
+  type CSSVariablesResolver,
+} from '@mantine/core';
 
 /** Product palette and component defaults: keep new styling here. */
 export const theme = createTheme({
@@ -21,7 +27,12 @@ export const theme = createTheme({
       '#0f151e',
     ],
   },
-  components: { Button: Button.extend({ defaultProps: { fw: 600 } }) },
+  components: {
+    Button: Button.extend({ defaultProps: { fw: 600 } }),
+    Tooltip: Tooltip.extend({
+      styles: { tooltip: { backgroundColor: '#0f151e', color: '#ffffff' } },
+    }),
+  },
 });
 
 // Existing engineering views consume these aliases during their gradual migration.
@@ -56,17 +67,21 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
 
 /** Shared 3D art direction. These are visual materials, not hardware properties. */
 export const sceneAppearance = {
+  forces: {
+    resultant: '#ffd166',
+    axial: '#50d8ed',
+    radial: '#ef83bb',
+    tangential: '#91d779',
+    torque: '#b8a1ff',
+  },
   primary: '#e85959',
   secondary: '#4db6ac',
   aluminium: '#cbd4df',
   fixedSheave: '#aab8cc',
   movingSheave: '#eabf75',
-  flyweight: '#dd795a',
-  roller: '#dee4ed',
-  ramp: '#77b3d5',
-  helix: '#72c1a5',
   shaft: '#8795a8',
-  spring: '#657389',
+  spring: '#b6a5c9',
+  shaftExtension: 0.8,
   belt: '#333e50',
   unavailable: '#818b9a',
   grid: '#424b5c',
@@ -89,3 +104,17 @@ export const sceneAppearance = {
   },
   light: { sky: '#f1f5ff', ground: '#69778c', intensity: 2.1 },
 } as const;
+
+/** One status palette across run lists, detail pages and Activity. */
+export const runStatusColors: Record<
+  components['schemas']['RunStatusResponse']['status'],
+  string
+> = {
+  queued: 'violet',
+  validating: 'cyan',
+  running: 'blue',
+  completed: 'teal',
+  failed: 'red',
+  timed_out: 'orange',
+  cancelled: 'gray',
+};

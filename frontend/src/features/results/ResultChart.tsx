@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Group,
@@ -14,20 +14,26 @@ import { ActionButton as Button } from '@components/button/ActionButton';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
 import { getSeries, type RunInspection, type RunSeries } from './api';
-import { message } from '../experiments/api';
+import { isActive, message } from '../experiments/api';
 
 export function ResultChart({ inspection }: { inspection: RunInspection }) {
   const { run, availability } = inspection;
-  const [full, setFull] = useState(false);
   const [data, setData] = useState<RunSeries | null>(null);
   const [signal, setSignal] = useState('vehicle.speed');
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const theme = useMantineTheme();
-  const resolution = full || !availability.preview ? 'full' : 'preview';
+  const chart = useRef<ReactECharts>(null);
+  const zoom = useRef<NonNullable<EChartsOption['dataZoom']> | undefined>(
+    undefined,
+  );
+  const resolution =
+    availability.preview && (isActive(run) || !availability.full_result)
+      ? 'preview'
+      : 'full';
+  const checkpoint = availability.full_result_hash;
   useEffect(() => {
     const controller = new AbortController();
-    setData(null);
     setError(null);
     void getSeries(run.id, resolution, controller.signal)
       .then((value) => {
@@ -37,7 +43,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
         if (!controller.signal.aborted) setError(message(cause));
       });
     return () => controller.abort();
-  }, [run.id, resolution, retry]);
+  }, [run.id, resolution, checkpoint, retry]);
   const available =
     data?.columns.filter((column) => column.key !== data.axis_key) ?? [];
   const selected =
@@ -48,7 +54,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
       animation: false,
       color: [theme.colors.red[5]],
       textStyle: { color: theme.colors.dark[0], fontFamily: theme.fontFamily },
-      grid: { left: 70, right: 25, top: 55, bottom: 80 },
+      grid: { left: 70, right: 25, top: 45, bottom: 45 },
       legend: { top: 0, textStyle: { color: theme.colors.dark[0] } },
       tooltip: { trigger: 'axis', renderMode: 'richText', confine: true },
       xAxis: {
@@ -63,18 +69,19 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
         name: selected?.canonical_unit || 'Dimensionless',
         splitLine: { lineStyle: { color: theme.colors.dark[4] } },
       },
-      dataZoom: [
-        { type: 'inside' },
-        {
-          type: 'slider',
-          bottom: 0,
-          textStyle: { color: theme.colors.dark[1] },
-        },
+      toolbox: {
+        feature: { dataZoom: {}, restore: {}, saveAsImage: {} },
+        iconStyle: { borderColor: theme.colors.dark[0] },
+      },
+      dataZoom: zoom.current ?? [
+        { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
+        { type: 'inside', yAxisIndex: 0, filterMode: 'none' },
       ],
       series:
         selected && x
           ? [
               {
+                id: 'selected-signal',
                 type: 'line',
                 name: selected.label,
                 showSymbol: false,
@@ -95,21 +102,16 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
           <Title order={2} size="h3">
             Time history
           </Title>
-          {availability.full_result && availability.preview && (
-            <Button
-              variant="default"
-              onClick={() => setFull((value) => !value)}
-            >
-              {full ? 'Show display preview' : 'Load full report data'}
-            </Button>
+          {isActive(run) && (
+            <Text size="xs" c="dimmed">
+              Updates with saved progress
+            </Text>
           )}
         </Group>
         <Text size="sm" c="dimmed">
-          {resolution === 'preview'
-            ? 'Reduced display preview. Short events may be omitted; metrics below come from the stored solver result.'
-            : 'All stored report-table samples, including duplicate transition times. This is the reporting grid, not an adaptive solver trace.'}
+          {resolution === 'preview' ? 'Live preview' : 'Full report'}
         </Text>
-        {error ? (
+        {error && (
           <Alert color="red" role="alert">
             {error}
             <Button
@@ -119,8 +121,9 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
               Retry chart
             </Button>
           </Alert>
-        ) : !data ? (
-          <Loader aria-label="Loading time histories" />
+        )}
+        {!data ? (
+          !error && <Loader aria-label="Loading time histories" />
         ) : !selected ? (
           <Text>No plottable report columns are available.</Text>
         ) : (
@@ -133,7 +136,22 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
                 value: column.key,
                 label: `${column.label}${column.canonical_unit ? ` (${column.canonical_unit})` : ''}`,
               }))}
-              onChange={(value) => value && setSignal(value)}
+              onChange={(value) => {
+                if (value) {
+                  if (Array.isArray(zoom.current))
+                    zoom.current = [
+                      zoom.current[0],
+                      {
+                        type: 'inside',
+                        yAxisIndex: 0,
+                        filterMode: 'none',
+                        start: 0,
+                        end: 100,
+                      },
+                    ];
+                  setSignal(value);
+                }
+              }}
             />
             <Text size="xs" c="dimmed">
               {data.row_count} displayed / {data.original_row_count} original
@@ -144,8 +162,48 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
               aria-label={`${selected.label} versus time in seconds. ${data.resolution} data.`}
             >
               <ReactECharts
+                ref={chart}
                 option={option}
-                notMerge
+                onEvents={{
+                  datazoom: () => {
+                    const option = chart.current
+                      ?.getEchartsInstance()
+                      .getOption() as
+                      | {
+                          dataZoom?: {
+                            start: number;
+                            end: number;
+                            startValue: number;
+                            endValue: number;
+                          }[];
+                        }
+                      | undefined;
+                    zoom.current = option?.dataZoom?.map((value, i) => ({
+                      type: 'inside',
+                      ...(i === 0 ? { xAxisIndex: 0 } : { yAxisIndex: 0 }),
+                      filterMode: 'none',
+                      ...(value.start === 0 && value.end === 100
+                        ? { start: 0, end: 100 }
+                        : {
+                            startValue: value.startValue,
+                            endValue: value.endValue,
+                          }),
+                    }));
+                  },
+                  restore: () => {
+                    chart.current
+                      ?.getEchartsInstance()
+                      .dispatchAction({
+                        type: 'dataZoom',
+                        batch: [0, 1].map((dataZoomIndex) => ({
+                          dataZoomIndex,
+                          start: 0,
+                          end: 100,
+                        })),
+                      });
+                    zoom.current = undefined;
+                  },
+                }}
                 style={{ height: 350, width: '100%' }}
               />
             </div>

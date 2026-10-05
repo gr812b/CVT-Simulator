@@ -218,10 +218,11 @@ function radialRollers(
   rollerRadius: number,
   wall: number,
   hub: number,
+  color: string,
 ): THREE.Group {
   const group = new THREE.Group(),
-    pinMaterial = metal(appearance.shaft),
-    rollerMaterial = metal(appearance.roller);
+    pinMaterial = metal(color),
+    rollerMaterial = metal(color);
   for (let i = 0; i < visual.trackCount; i++) {
     const station = new THREE.Group();
     station.rotation.z = (i * Math.PI * 2) / visual.trackCount;
@@ -242,7 +243,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
   if (!spec) return [];
   const l = mechanismLayout(g),
     models: Model3DConfig[] = [];
-  const fixed = metal(appearance.shaft),
+  const fixed = metal(appearance.fixedSheave),
     moving = metal(appearance.movingSheave);
   if (spec.primary) {
     const p = spec.primary,
@@ -261,9 +262,6 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         fixed,
       ),
     );
-    const axle = cylinder(l.shaftP, l.carrierP, fixed);
-    axle.position.z = l.carrierP / 2;
-    carrier.add(axle);
     const rampPoints = p.ramp_points_m.map(
       ([axial, radial]) =>
         new THREE.Vector2(
@@ -277,9 +275,9 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       l.wall * 1.8,
       width,
     );
-    const rampMaterial = metal(appearance.ramp),
-      weightMaterial = metal(appearance.flyweight),
-      rollerMaterial = metal(appearance.roller);
+    const rampMaterial = metal(appearance.movingSheave),
+      weightMaterial = metal(appearance.fixedSheave),
+      rollerMaterial = metal(appearance.fixedSheave);
     for (let i = 0; i < p.count; i++) {
       const angle = (i * Math.PI * 2) / p.count;
       const support = new THREE.Group();
@@ -388,6 +386,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
           l.guideRoller,
           l.wall,
           l.shaftP,
+          appearance.fixedSheave,
         ),
       },
     );
@@ -416,7 +415,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         l.sleeveTop,
         visual.trackCount,
       ),
-      metal(appearance.helix),
+      metal(appearance.fixedSheave),
     );
     sleeve.add(
       ring(
@@ -454,9 +453,6 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       );
       sleeve.add(support);
     }
-    const axle = cylinder(l.shaftS, -l.baseS + l.wall, fixed);
-    axle.position.z = (l.baseS - l.wall) / 2;
-    sleeve.add(axle);
     const hubR = l.shaftS + l.wall * 1.25;
     const hub = new THREE.Group();
     hub.add(
@@ -478,7 +474,16 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         moving,
       ),
     );
-    hub.add(radialRollers(l.helixR, l.rollerZ - l.s0, l.rollerS, l.wall, hubR));
+    hub.add(
+      radialRollers(
+        l.helixR,
+        l.rollerZ - l.s0,
+        l.rollerS,
+        l.wall,
+        hubR,
+        appearance.movingSheave,
+      ),
+    );
     models.push(
       { id: 'helix', parentId: 'secondaryFixed', object3D: sleeve },
       { id: 'helixFollowers', parentId: 'secondaryMoving', object3D: hub },

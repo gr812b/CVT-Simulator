@@ -12,7 +12,8 @@ from app.schemas.runs import RunStatusResponse
 
 
 class RunReference(ApiModel):
-    kind: Literal["setup", "tune", "scenario"]
+    kind: Literal["setup", "cvt", "belt", "engine", "tune", "scenario"]
+    href: str | None = None
     name: str
     revision_id: str | None = None
     revision_number: int | None = None
@@ -55,6 +56,7 @@ class ResultTransition(ApiModel):
 
 
 class RunInspection(RunHistoryItem):
+    owned: bool
     availability: ResultAvailability
     warnings: list[str]
     transitions: list[ResultTransition]

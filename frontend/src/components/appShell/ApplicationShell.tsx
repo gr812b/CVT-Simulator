@@ -1,3 +1,4 @@
+import { PageLoading } from '@components/loadingOverlay/PageLoading';
 import { Suspense, useState } from 'react';
 import {
   Alert,
@@ -12,13 +13,12 @@ import {
   Text,
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useLocalStorage } from '@mantine/hooks';
 import {
   IconChartLine,
   IconGeometry,
   IconHome,
   IconLibrary,
-  IconPlayerPlay,
   IconSettings,
   IconTool,
 } from '@tabler/icons-react';
@@ -47,10 +47,7 @@ const sections = [
   },
   {
     label: 'Explore',
-    links: [
-      { to: '/catalog', label: 'Public library', icon: IconLibrary },
-      { to: '/demo', label: 'Playback demo', icon: IconPlayerPlay },
-    ],
+    links: [{ to: '/catalog', label: 'Public library', icon: IconLibrary }],
   },
   {
     label: 'Account',
@@ -84,6 +81,11 @@ export function ApplicationShell() {
   const { session, loading, error, refresh, signOut } = useAuth();
   const location = useLocation();
   const [opened, { toggle, close }] = useDisclosure();
+  const [replayNavigation, setReplayNavigation] = useLocalStorage({
+    key: 'cinder-replay-navigation',
+    defaultValue: true,
+  });
+  const replay = location.pathname.includes('/playback');
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   if (loading)
@@ -115,7 +117,11 @@ export function ApplicationShell() {
   const shell = (
     <AppShell
       header={{ height: 64 }}
-      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{
+        width: 240,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened, desktop: replay && !replayNavigation },
+      }}
       padding="md"
     >
       <AppShell.Header>
@@ -129,6 +135,17 @@ export function ApplicationShell() {
               aria-label="Toggle navigation"
             />
             <Brand />
+            {replay && (
+              <Burger
+                opened={replayNavigation}
+                onClick={() => setReplayNavigation((value) => !value)}
+                visibleFrom="sm"
+                size="sm"
+                aria-label={
+                  replayNavigation ? 'Collapse navigation' : 'Expand navigation'
+                }
+              />
+            )}
           </Group>
           <Group gap="sm">
             {session ? (
@@ -195,21 +212,15 @@ export function ApplicationShell() {
       </AppShell.Navbar>
       <AppShell.Main>
         {session && <RunActivityBanner />}
-        <Suspense
-          fallback={
-            <Center mih="60vh">
-              <Loader aria-label="Loading page" />
-            </Center>
-          }
-        >
+        <Suspense fallback={<PageLoading message="Loading page…" />}>
           <Outlet />
         </Suspense>
       </AppShell.Main>
     </AppShell>
   );
-  return session ? (
-    <RunActivityProvider key={session.user.id}>{shell}</RunActivityProvider>
-  ) : (
-    shell
+  return (
+    <RunActivityProvider key={session?.user.id ?? 'public'}>
+      {shell}
+    </RunActivityProvider>
   );
 }

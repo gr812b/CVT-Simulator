@@ -50,6 +50,7 @@ export class ReportReplayController {
 
   public on(handler: ReplayHandler): () => void {
     this.handlers.add(handler);
+    handler({ type: ReplayEventType.Progress, currentIndex: this.index });
     return () => this.handlers.delete(handler);
   }
 
@@ -147,7 +148,12 @@ export class ReportReplayController {
     }
     if (clamped >= last) {
       const index = count - 1;
-      return { simulationTime: last, lowerIndex: index, upperIndex: index, alpha: 0 };
+      return {
+        simulationTime: last,
+        lowerIndex: index,
+        upperIndex: index,
+        alpha: 0,
+      };
     }
 
     let low = 0;
@@ -163,9 +169,10 @@ export class ReportReplayController {
     const lowerTime = this.times[lowerIndex] ?? clamped;
     const upperTime = this.times[upperIndex] ?? lowerTime;
     const duration = upperTime - lowerTime;
-    const alpha = duration > 0
-      ? Math.min(1, Math.max(0, (clamped - lowerTime) / duration))
-      : 0;
+    const alpha =
+      duration > 0
+        ? Math.min(1, Math.max(0, (clamped - lowerTime) / duration))
+        : 0;
 
     return { simulationTime: clamped, lowerIndex, upperIndex, alpha };
   }
@@ -178,7 +185,8 @@ export class ReportReplayController {
   private continuousTime(now: number): number {
     const first = this.times[0] ?? 0;
     const last = this.times[this.times.length - 1] ?? first;
-    const target = this.startTime + ((now - this.startWallClock) / 1000) * this.speed;
+    const target =
+      this.startTime + ((now - this.startWallClock) / 1000) * this.speed;
     return Math.min(last, Math.max(first, target));
   }
 
@@ -190,8 +198,8 @@ export class ReportReplayController {
 
     let next = this.index;
     while (
-      next < this.times.length - 1
-      && (this.times[next + 1] ?? Number.POSITIVE_INFINITY) <= targetTime
+      next < this.times.length - 1 &&
+      (this.times[next + 1] ?? Number.POSITIVE_INFINITY) <= targetTime
     ) {
       next += 1;
     }
@@ -205,7 +213,10 @@ export class ReportReplayController {
       this.visualTime = this.times[this.times.length - 1] ?? targetTime;
       this.playing = false;
       this.rafId = null;
-      this.emit({ type: ReplayEventType.StateChanged, state: StateType.Paused });
+      this.emit({
+        type: ReplayEventType.StateChanged,
+        state: StateType.Paused,
+      });
       this.emit({ type: ReplayEventType.Finished });
       return;
     }

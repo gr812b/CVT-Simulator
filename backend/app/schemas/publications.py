@@ -20,6 +20,7 @@ class PublishedDependency(ApiModel):
 
 
 class PublicationItem(ApiModel):
+    source_revision_id: str
     source_object_id: str
     id: str
     kind: PublicationKind

@@ -56,6 +56,38 @@ def default_scenario():
     )
 
 
+def demo_scenario():
+    """One course definition for the seeded load case and retained playback."""
+    return ScenarioDocument(
+        kind="scenarios",
+        name="CINDER Default · McMaster demonstration course",
+        notes="Flat acceleration, a 45° climb, a descent, then a 30° climb. Finish at 160 m.",
+        duration_s=90,
+        road=SpatialRoad(
+            features=[
+                {
+                    "id": f"demo-{i}",
+                    "kind": "slope" if angle else "flat",
+                    "name": name,
+                    "length_m": length,
+                    **({"angle_rad": math.radians(angle)} if angle else {}),
+                }
+                for i, (name, length, angle) in enumerate(
+                    [
+                        ("Launch", 30, 0),
+                        ("Main climb", 30, 45),
+                        ("Crest", 10, 0),
+                        ("Descent", 30, -35),
+                        ("Valley", 10, 0),
+                        ("Second climb", 20, 30),
+                        ("Finish", 30, 0),
+                    ]
+                )
+            ]
+        ),
+    )
+
+
 def metadata(settings: Settings):
     return ExperimentMetadata(
         limits=ExperimentLimits(

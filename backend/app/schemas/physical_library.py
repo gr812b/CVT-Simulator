@@ -207,6 +207,7 @@ class ComponentUpdate(PhysicalModel):
 
 
 class PhysicalItem(PhysicalModel):
+    author_id: str | None
     author: str
     sample: bool
     is_default: bool

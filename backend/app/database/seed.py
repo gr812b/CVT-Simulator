@@ -48,14 +48,9 @@ SEED_CVT_ID = "00000000-0000-4000-8000-000000000020"
 SEED_CVT_VERSION_ID = "00000000-0000-4000-8000-000000000021"
 SEED_OUTPUT_ID = "00000000-0000-4000-8000-000000000030"
 SEED_OUTPUT_VERSION_ID = "00000000-0000-4000-8000-000000000031"
-SEED_OUTPUT_LIGHT_ID = "00000000-0000-4000-8000-000000000032"
-SEED_OUTPUT_LIGHT_VERSION_ID = "00000000-0000-4000-8000-000000000033"
 SEED_ASSEMBLY_ID = "00000000-0000-4000-8000-000000000040"
 SEED_ASSEMBLY_VERSION_ID = "00000000-0000-4000-8000-000000000041"
-SEED_ASSEMBLY_LIGHT_ID = "00000000-0000-4000-8000-000000000042"
-SEED_ASSEMBLY_LIGHT_VERSION_ID = "00000000-0000-4000-8000-000000000043"
 SEED_TUNE_ID = "00000000-0000-4000-8000-000000000050"
-SEED_TUNE_LIGHT_ID = "00000000-0000-4000-8000-000000000051"
 SEED_LOAD_CASE_ID = "00000000-0000-4000-8000-000000000060"
 SEED_LOAD_CASE_HILL_20_ID = "00000000-0000-4000-8000-000000000061"
 SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID = "00000000-0000-4000-8000-000000000062"
@@ -64,7 +59,6 @@ SEED_VALIDATION_WORKSPACE_ID = "00000000-0000-4000-8000-000000000080"
 
 POUND_TO_KG = 0.45359237
 SEED_HEAVY_VEHICLE_MASS_KG = 500.0 * POUND_TO_KG
-SEED_LIGHT_VEHICLE_MASS_KG = 400.0 * POUND_TO_KG
 SEED_HILL_20_DEG_RAD = radians(20.0)
 SEED_HILL_30_DEG_RAD = radians(30.0)
 SEED_FLAT_RUNUP_DISTANCE_M = 90.0
@@ -262,9 +256,6 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     heavy_output_boundary = _with_vehicle_mass(
         split["output_boundary_template"], SEED_HEAVY_VEHICLE_MASS_KG
     )
-    light_output_boundary = _with_vehicle_mass(
-        split["output_boundary_template"], SEED_LIGHT_VEHICLE_MASS_KG
-    )
 
     output_system = OutputSystem(
         id=SEED_OUTPUT_ID,
@@ -359,99 +350,6 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     session.flush()
     vehicle_assembly.released_version_id = assembly_version.id
 
-    light_output_system = OutputSystem(
-        id=SEED_OUTPUT_LIGHT_ID,
-        account_id=account.id,
-        name="CINDER Default · Baja 400 lb Locked Final Drive Vehicle",
-        slug="demo-baja-400lb-locked-final-drive-vehicle",
-        description="Seeded 400 lb Baja vehicle/output boundary using the same engine and CVT hardware.",
-        visibility="public",
-        gallery_listed=True,
-        lifecycle_status="active",
-        catalog_status="seeded_example",
-        catalog_priority=75,
-        is_default=False,
-        source_label="Seeded Baja baseline",
-        source_notes="Example 400 lb locked final-drive Baja output system for mass sensitivity checks.",
-        draft_payload=copy.deepcopy(light_output_boundary),
-    )
-    light_output_version = OutputSystemVersion(
-        id=SEED_OUTPUT_LIGHT_VERSION_ID,
-        output_system_id=light_output_system.id,
-        version_number=1,
-        output_boundary_template=light_output_boundary,
-        summary=_output_summary(light_output_boundary),
-        payload_hash=canonical_json_hash(light_output_boundary),
-        schema_version=1,
-        payload_schema_name="cinder.output_boundary.locked_final_drive_vehicle",
-        payload_schema_version=1,
-        validation_status="valid",
-        validation_messages=[],
-        created_by_user_id=user.id,
-        release_notes="Initial seeded 400 lb output system.",
-        visibility_at_release="public",
-        attribution_institution_id=mcmaster.id if mcmaster is not None else None,
-        attribution_label="McMaster Baja Racing" if mcmaster is not None else None,
-    )
-    session.add_all([light_output_system, light_output_version])
-    session.flush()
-    light_output_system.released_version_id = light_output_version.id
-
-    light_vehicle_assembly = VehicleAssembly(
-        id=SEED_ASSEMBLY_LIGHT_ID,
-        account_id=account.id,
-        name="CINDER Default · Baja 400 lb Vehicle Assembly",
-        slug="demo-baja-400lb-vehicle-assembly",
-        description="Seeded 400 lb Baja assembly using the same engine and CVT with a lighter vehicle boundary.",
-        visibility="public",
-        gallery_listed=True,
-        lifecycle_status="active",
-        catalog_status="seeded_example",
-        catalog_priority=65,
-        is_default=False,
-        source_label="Seeded Baja baseline",
-        source_notes="Example 400 lb vehicle assembly tying seeded engine, CVT, and lighter output system together.",
-        draft_payload={
-            "engine_version_id": engine_version.id,
-            "cvt_design_version_id": cvt_version.id,
-            "output_system_version_id": light_output_version.id,
-        },
-    )
-    light_assembly_payload = {
-        "notes": "Seeded Baja 400 lb baseline. Runs freeze the fully resolved CINDER case.",
-        "default_tune_id": SEED_TUNE_LIGHT_ID,
-        "default_load_case_id": SEED_LOAD_CASE_ID,
-    }
-    light_assembly_version = VehicleAssemblyVersion(
-        id=SEED_ASSEMBLY_LIGHT_VERSION_ID,
-        vehicle_assembly_id=light_vehicle_assembly.id,
-        version_number=1,
-        engine_version_id=engine_version.id,
-        cvt_design_version_id=cvt_version.id,
-        output_system_version_id=light_output_version.id,
-        assembly_payload=light_assembly_payload,
-        summary={
-            "kind": "baja_baseline",
-            "name": "CINDER Default · Baja 400 lb Vehicle Assembly",
-            "vehicle_mass_kg": SEED_LIGHT_VEHICLE_MASS_KG,
-            "vehicle_mass_lb": 400.0,
-        },
-        payload_hash=canonical_json_hash(light_assembly_payload),
-        schema_version=1,
-        payload_schema_name="cvt_simulator.vehicle_assembly",
-        payload_schema_version=1,
-        validation_status="valid",
-        validation_messages=[],
-        created_by_user_id=user.id,
-        release_notes="Initial seeded 400 lb vehicle assembly.",
-        visibility_at_release="public",
-        attribution_institution_id=mcmaster.id if mcmaster is not None else None,
-        attribution_label="McMaster Baja Racing" if mcmaster is not None else None,
-    )
-    session.add_all([light_vehicle_assembly, light_assembly_version])
-    session.flush()
-    light_vehicle_assembly.released_version_id = light_assembly_version.id
-
     session.add_all(
         [
             Tune(
@@ -462,15 +360,6 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
                 name="Baseline tune",
                 values=split["baseline_tune"],
                 notes="Seeded knobs extracted from the baseline CVT assembly.",
-            ),
-            Tune(
-                id=SEED_TUNE_LIGHT_ID,
-                account_id=account.id,
-                vehicle_assembly_id=light_vehicle_assembly.id,
-                cvt_design_id=cvt_design.id,
-                name="Baseline tune — 400 lb vehicle",
-                values=copy.deepcopy(split["baseline_tune"]),
-                notes="Same seeded CVT tune, associated with the 400 lb vehicle assembly.",
             ),
             LoadCase(
                 id=SEED_LOAD_CASE_ID,

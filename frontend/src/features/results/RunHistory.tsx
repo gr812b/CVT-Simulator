@@ -1,7 +1,8 @@
+import { RunStatusBadge } from './RunStatusBadge';
+import { AuthorLink } from '../community/AuthorLink';
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Badge,
   Container,
   Group,
   Loader,
@@ -17,12 +18,7 @@ import {
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  getHistory,
-  formatMetric,
-  type HistoryQuery,
-  type RunHistoryPage,
-} from './api';
+import { getHistory, type HistoryQuery, type RunHistoryPage } from './api';
 import { isActive, message } from '../experiments/api';
 
 const statuses: NonNullable<HistoryQuery['status']>[] = [
@@ -40,7 +36,7 @@ const sources: NonNullable<HistoryQuery['source']>[] = [
   'direct',
 ];
 
-export function RunHistory() {
+export function RunHistory({ publicView = false }: { publicView?: boolean }) {
   const [params, setParams] = useSearchParams();
   const search = params.get('q') ?? '';
   const [query] = useDebouncedValue(search, 250);
@@ -85,6 +81,7 @@ export function RunHistory() {
         const result = await getHistory(
           {
             q: query,
+            scope: publicView ? 'all' : 'own',
             status,
             source,
             since: date(from, false),
@@ -114,22 +111,29 @@ export function RunHistory() {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, status, source, from, through, oldest, page, retry]);
+  }, [query, status, source, from, through, oldest, page, retry, publicView]);
   return (
-    <Container size="xl" py="lg">
+    <Container
+      size="xl"
+      w="100%"
+      px={publicView ? 0 : undefined}
+      py={publicView ? 0 : 'lg'}
+    >
       <Stack gap="lg">
-        <Group justify="space-between">
-          <div>
-            <Title order={1}>Runs & results</Title>
-            <Text c="dimmed" mt="xs">
-              Return to saved inputs, results and the experiments that produced
-              them.
-            </Text>
-          </div>
-          <Button component={Link} to="/input">
-            New experiment
-          </Button>
-        </Group>
+        {!publicView && (
+          <Group justify="space-between">
+            <div>
+              <Title order={1}>Runs & results</Title>
+              <Text c="dimmed" mt="xs">
+                Return to saved inputs, results and the experiments that
+                produced them.
+              </Text>
+            </div>
+            <Button component={Link} to="/input">
+              New experiment
+            </Button>
+          </Group>
+        )}
         <Paper withBorder p="lg">
           <Stack>
             <TextInput
@@ -190,7 +194,7 @@ export function RunHistory() {
                 variant="subtle"
                 size="xs"
                 onClick={() => {
-                  setParams({});
+                  setParams(publicView ? { kind: 'runs' } : {});
                 }}
               >
                 Clear filters
@@ -234,80 +238,44 @@ export function RunHistory() {
                   </Text>
                 </Paper>
               ) : (
-                <SimpleGrid cols={{ base: 1, md: 2 }}>
-                  {data.items.map(({ run, references, metrics }) => (
+                <Stack>
+                  {data.items.map(({ run, references }) => (
                     <Paper withBorder p="lg" key={run.id}>
-                      <Stack h="100%" justify="space-between">
-                        <Stack gap="sm">
-                          <Group justify="space-between">
-                            <Badge
-                              color={
-                                run.status === 'completed'
-                                  ? 'teal'
-                                  : isActive(run)
-                                    ? 'blue'
-                                    : 'yellow'
-                              }
-                            >
-                              {run.status.replace(/_/g, ' ')}
-                            </Badge>
-                            <Text size="xs" c="dimmed">
-                              {new Date(run.submitted_at).toLocaleString()}
-                            </Text>
-                          </Group>
-                          <Title
-                            order={2}
-                            size="h3"
-                            style={{ overflowWrap: 'anywhere' }}
-                          >
+                      <div className="public-run-row">
+                        <div style={{ minWidth: 0 }}>
+                          <Text fw={600} style={{ overflowWrap: 'anywhere' }}>
                             {run.name}
-                          </Title>
-                          {references.map((ref) => (
-                            <Text key={ref.kind} size="sm">
-                              <Text span c="dimmed" tt="capitalize">
-                                {ref.kind}:{' '}
-                              </Text>
-                              {ref.name}
-                              {ref.revision_number
-                                ? ` · r${ref.revision_number}`
-                                : ''}
-                              {ref.unsaved ? ' · temporary values' : ''}
-                            </Text>
-                          ))}
-                          <Group gap="lg">
-                            {metrics.slice(0, 3).map((metric) => (
-                              <div key={metric.key}>
-                                <Text size="xs" c="dimmed">
-                                  {metric.label}
-                                </Text>
-                                <Text size="sm">{formatMetric(metric)}</Text>
-                              </div>
-                            ))}
-                          </Group>
-                          {run.error && (
-                            <Text size="sm" c="red.4">
-                              {run.error.message}
-                            </Text>
-                          )}
-                        </Stack>
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            By{' '}
+                            <AuthorLink name={run.author} id={run.author_id} />{' '}
+                            · {new Date(run.submitted_at).toLocaleDateString()}
+                          </Text>
+                          <Text size="xs" c="dimmed" lineClamp={1}>
+                            {references.map((ref) => ref.name).join(' · ')}
+                          </Text>
+                        </div>
+                        <RunStatusBadge status={run.status} />
                         <Button
                           component={Link}
                           to={`/runs/${run.id}`}
                           variant="light"
                         >
-                          Open run
+                          View run
                         </Button>
-                      </Stack>
+                      </div>
                     </Paper>
                   ))}
-                </SimpleGrid>
+                </Stack>
               )}
               {data.total > 24 && (
-                <Pagination
-                  total={Math.ceil(data.total / 24)}
-                  value={page}
-                  onChange={(value) => update('page', String(value))}
-                />
+                <Group justify="center" py="xl">
+                  <Pagination
+                    total={Math.ceil(data.total / 24)}
+                    value={page}
+                    onChange={(value) => update('page', String(value))}
+                  />
+                </Group>
               )}
             </>
           )

@@ -1,4 +1,4 @@
-import { Brand } from '@components/appShell/Brand';
+import { PublicHeader } from '@components/appShell/PublicHeader';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -36,18 +36,14 @@ export function Demo() {
     <>
       <Container fluid py="lg">
         <Stack gap="sm">
-          <Brand />
+          <PublicHeader />
           <Group>
-            <Title order={1}>{demo?.name ?? 'Baja launch demo'}</Title>
+            <Title order={1}>{demo?.name ?? 'Baja hill course demo'}</Title>
             <Badge variant="light">Recorded demo · no account needed</Badge>
           </Group>
           <Text>
             {demo?.description ??
-              'Explore the default launch in the same playback used for your own simulations.'}
-          </Text>
-          <Text size="sm" c="dimmed">
-            Play, pause, scrub through the run and download its data. This saved
-            example loads without starting a new simulation.
+              'Explore acceleration, 45° and 30° climbs with a descent between them in the same playback used for your own simulations.'}
           </Text>
           {error ? (
             <Alert title="Demo unavailable" color="red" role="alert">
@@ -66,14 +62,12 @@ export function Demo() {
       </Container>
       {demo && (
         <SimulationPlayback
+          forceSource="demo"
           result={demo.result}
           document={demo.inputDocumentSnapshot}
           sceneGeometry={demo.scene_geometry}
           course={demo.course}
-          navigation={[
-            { label: 'Home', to: '/' },
-            { label: 'Public library', to: '/catalog' },
-          ]}
+          navigation={[{ label: 'Home', to: '/' }]}
         />
       )}
     </>

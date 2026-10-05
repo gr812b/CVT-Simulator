@@ -1,5 +1,8 @@
 """Every simulation entry point uses the durable, account-limited queue."""
 
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.orm import Session
+
 from app.api.v1.dependencies import (
     get_container,
     get_current_principal,
@@ -28,8 +31,7 @@ from app.schemas.runs import (
     RunResultResponse,
     RunStatusResponse,
 )
-from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy.orm import Session
+from app.schemas.scene import ForcePlayback
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 PrincipalDep = Depends(get_current_principal)
@@ -265,6 +267,26 @@ def preview(run_id: str, principal=PublicReaderDep, session: Session = SessionDe
     return RunPreviewResponse(
         run=jobs.status(run),
         preview=artifacts.get_database_run_preview(session, run_id),
+    )
+
+
+@router.get("/{run_id}/forces", response_model=ForcePlayback)
+def forces(
+    run_id: str,
+    principal=PublicReaderDep,
+    session: Session = SessionDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    run = access.public_run(session, run_id)
+    if run.status in ("queued", "validating", "running"):
+        raise ApiProblem(
+            409,
+            "run_still_active",
+            "Force playback is available once the run has stopped.",
+        )
+    return container.gateway.force_playback(
+        run.input_contract["assembly"],
+        artifacts.get_database_run_result(session, run_id),
     )
 
 

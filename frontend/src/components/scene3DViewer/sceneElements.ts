@@ -1,30 +1,50 @@
 import * as THREE from 'three';
 import type { Scene3DController } from '@utils/Scene3DController';
 import { sceneAppearance } from '../../styles/theme';
-import { CVT_MODEL_IDS } from './proceduralModels';
 import { createBeltMesh } from './beltGeometry';
 
-/** Reveal the working mechanisms through their enclosing sheaves and cam wall. */
+const originalAppearance = new WeakMap<
+  THREE.Material,
+  { opacity: number; transparent: boolean; depthWrite: boolean }
+>();
+
+/** Ghost every physical assembly recursively, leaving force arrows and guides opaque. */
 export function setCVTModelsTransparent(
   controller: Scene3DController,
   transparent: boolean,
 ): void {
-  [...CVT_MODEL_IDS, 'helix'].forEach((id) => {
-    const model = controller.getModel(id);
-    if (!model) return;
-    model.object3D.children.forEach((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
-      if (id === 'helix' && object.name !== 'slot-wall') return;
-      const materials = Array.isArray(object.material)
-        ? object.material
-        : [object.material];
-      materials.forEach((material) => {
-        material.transparent = transparent;
-        material.opacity = transparent ? sceneAppearance.ghostOpacity : 1;
-        material.depthWrite = !transparent;
-        material.needsUpdate = true;
-      });
-    });
+  const materials = new Set<THREE.Material>();
+  const roots = [
+    controller.getModel('primaryFixed')?.object3D,
+    controller.getModel('secondaryFixed')?.object3D,
+    controller.getScene().getObjectByName('cvt-belt'),
+  ];
+  roots.forEach((root) =>
+    root?.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        (Array.isArray(object.material)
+          ? object.material
+          : [object.material]
+        ).forEach((material) => materials.add(material));
+      }
+    }),
+  );
+  materials.forEach((material) => {
+    let original = originalAppearance.get(material);
+    if (!original) {
+      original = {
+        opacity: material.opacity,
+        transparent: material.transparent,
+        depthWrite: material.depthWrite,
+      };
+      originalAppearance.set(material, original);
+    }
+    material.transparent = transparent || original.transparent;
+    material.opacity = transparent
+      ? original.opacity * sceneAppearance.ghostOpacity
+      : original.opacity;
+    material.depthWrite = transparent ? false : original.depthWrite;
+    material.needsUpdate = true;
   });
 }
 
@@ -71,6 +91,7 @@ export function setupBelt(controller: Scene3DController): {
   cleanup: () => void;
 } {
   const mesh = createBeltMesh();
+  mesh.name = 'cvt-belt';
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   controller.addObject(mesh);

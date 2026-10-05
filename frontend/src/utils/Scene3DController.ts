@@ -51,6 +51,7 @@ export class Scene3DController {
   private animationFrameId: number | null = null;
 
   private frameUpdate: FrameUpdate | null = null;
+  private frameObservers = new Set<FrameUpdate>();
   private temporalRotationProvider: TemporalRotationProvider | null = null;
 
   private blurSampleTarget: THREE.WebGLRenderTarget | null = null;
@@ -138,7 +139,7 @@ export class Scene3DController {
     });
     this.renderer.setPixelRatio(
       config.pixelRatio ??
-      Math.min(window.devicePixelRatio, sceneAppearance.maxPixelRatio),
+        Math.min(window.devicePixelRatio, sceneAppearance.maxPixelRatio),
     );
     this.renderer.setSize(
       this.container.clientWidth,
@@ -403,6 +404,14 @@ export class Scene3DController {
     this.frameUpdate = update;
   }
 
+  /** Update overlays after the mechanism pose and before the same frame renders. */
+  public onFrame(update: FrameUpdate): () => void {
+    this.frameObservers.add(update);
+    return () => {
+      this.frameObservers.delete(update);
+    };
+  }
+
   /**
    * Register local rigid-body rotational trajectories for finite-shutter blur.
    *
@@ -431,6 +440,7 @@ export class Scene3DController {
       if (this.renderOnDemand && !this.dirty && !this.frameUpdate) return;
       this.dirty = false;
       if (this.frameUpdate) this.frameUpdate(now);
+      for (const update of this.frameObservers) update(now);
 
       const targets = this.temporalRotationProvider?.() ?? [];
       if (this.shouldUseShutterBlur(targets)) {
@@ -452,7 +462,7 @@ export class Scene3DController {
       (target) =>
         Number.isFinite(target.angularSpeedRadPerSecond) &&
         Math.abs(target.angularSpeedRadPerSecond) * SHUTTER_EXPOSURE_SECONDS >=
-        BLUR_MIN_TRAVEL_RAD,
+          BLUR_MIN_TRAVEL_RAD,
     );
   }
 
@@ -817,6 +827,7 @@ export class Scene3DController {
     }
 
     this.frameUpdate = null;
+    this.frameObservers.clear();
     this.temporalRotationProvider = null;
     this.disposeBlurResources();
 

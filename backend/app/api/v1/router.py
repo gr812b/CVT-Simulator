@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 
 from . import (
     auth,
+    community,
     demo,
     experiments,
     library,
@@ -29,15 +30,14 @@ router = APIRouter(
     }
 )
 router.include_router(auth.router)
+router.include_router(community.router)
 router.include_router(demo.router)
 router.include_router(publications.router)
 router.include_router(results.router)
 router.include_router(experiments.router)
 router.include_router(metadata.router)
 router.include_router(library.router, dependencies=[Depends(get_current_principal)])
-router.include_router(
-    physical_library.router, dependencies=[Depends(get_current_principal)]
-)
+router.include_router(physical_library.router)
 router.include_router(presets.router)
 router.include_router(
     simulation_cases.router, dependencies=[Depends(get_current_principal)]

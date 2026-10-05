@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ResolvedSceneGeometry } from '@components/scene3DViewer/sceneSpec';
 import type { SimulationCaseDocument, SimulationResult } from '@api/client';
-import { Alert, Group, Paper, SimpleGrid, Stack, Title } from '@mantine/core';
+import { Alert, Group, Paper, Stack } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
-import { Graph2D } from '@components/graph2D/graph2D';
+import { PlotWorkspace } from './PlotWorkspace';
 import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
 import { Playbar } from '@components/playbar/Playbar';
 import { ReportReplayController } from '@utils/reportReplay';
@@ -18,16 +18,20 @@ import styles from './Playback.module.scss';
 /** Shared playback for owned results and the anonymous retained demo. */
 export function SimulationPlayback({
   result,
+  forceSource,
   document,
   sceneGeometry,
   course,
   navigation,
+  live = false,
 }: {
+  forceSource?: string;
   result: SimulationResult;
   document: SimulationCaseDocument;
   sceneGeometry: ResolvedSceneGeometry;
   course: components['schemas']['RunResultResponse']['course'];
   navigation: { label: string; to: string }[];
+  live?: boolean;
 }) {
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -65,10 +69,20 @@ export function SimulationPlayback({
   );
   return (
     <div ref={rootRef} className={styles.playback}>
-      {result.metrics.completed === false && <Alert color="yellow" title="Partial run" mx="lg" mt="md">
-        Saved through {result.metrics.duration_s.toFixed(2)} simulated seconds. Stop: {result.metrics.termination_reason.replace(/_/g, ' ')}.
-        Playback and CSV contain the saved portion.
-      </Alert>}
+      {result.metrics.completed === false && (
+        <Alert
+          color={live ? 'blue' : 'yellow'}
+          title={live ? 'Live progress' : 'Partial run'}
+          mx="lg"
+          mt="md"
+        >
+          Saved through {result.metrics.duration_s.toFixed(2)} simulated
+          seconds.{' '}
+          {live
+            ? 'The simulation is still running.'
+            : `Stopped: ${result.metrics.termination_reason.replace(/_/g, ' ')}.`}
+        </Alert>
+      )}
       <Group justify="space-between" className={styles.buttonsContainer}>
         <Group gap="sm">
           {navigation.map((item) => (
@@ -88,50 +102,27 @@ export function SimulationPlayback({
           Download CSV
         </Button>
       </Group>
-      <Stack gap="lg">
-        <Paper withBorder className={styles.sceneContainer}>
-          <Scene3DViewer
-            replayController={replayController}
-            result={result}
-            document={document}
-            resolvedGeometry={sceneGeometry}
-          />
-        </Paper>
-        {course && (
-          <CoursePlayback
-            course={course}
-            table={table}
-            replayController={replayController}
-          />
-        )}
-        {categories.map((category) => (
-          <Paper
-            key={category.title}
-            component="section"
-            withBorder
-            p={{ base: 'sm', sm: 'lg' }}
-          >
-            <Stack gap="md">
-              <Title order={2} size="h3">
-                {category.title}
-              </Title>
-              <SimpleGrid
-                cols={{ base: 1, md: Math.min(2, category.graphs.length) }}
-                spacing="lg"
-              >
-                {category.graphs.map((graph) => (
-                  <Graph2D
-                    key={graph.config.title}
-                    {...graph}
-                    className={styles.plotContainer}
-                    replayController={replayController}
-                  />
-                ))}
-              </SimpleGrid>
-            </Stack>
+      <div className={styles.workspace}>
+        <Stack gap="md" className={styles.visualPanel}>
+          <Paper withBorder className={styles.sceneContainer}>
+            <Scene3DViewer
+              forceSource={forceSource}
+              replayController={replayController}
+              result={result}
+              document={document}
+              resolvedGeometry={sceneGeometry}
+            />
           </Paper>
-        ))}
-      </Stack>
+          {course && (
+            <CoursePlayback
+              course={course}
+              table={table}
+              replayController={replayController}
+            />
+          )}
+        </Stack>
+        <PlotWorkspace categories={categories} controller={replayController} />
+      </div>
       <div
         ref={footerRef}
         className={styles.playbarContainer}

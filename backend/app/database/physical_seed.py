@@ -1,7 +1,7 @@
-"""Additive sample catalog with stable IDs and deliberately pinned history.
+"""Seed the canonical catalog while retaining immutable saved revisions.
 
-No existing object or revision is rewritten. Illustrative variations are
-explicitly labeled; the values originate from the project's runnable preset.
+Retired sample vehicles are hidden from browsing, so saved runs keep their
+original references without presenting multiple default vehicles.
 """
 
 import copy
@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.application.physical_contracts import (
     template_document,
-    vehicle_boundary,
 )
 from app.database import library
 from app.database.seed import SEED_ACCOUNT_ID, SEED_USER_ID, _baseline_tuning_schema
@@ -20,10 +19,14 @@ from app.database.tuning import readable_tuning_schema
 
 def sample_id(key: str) -> str:
     from app.database.seed import (
+        SEED_ASSEMBLY_ID,
+        SEED_ASSEMBLY_VERSION_ID,
         SEED_CVT_ID,
         SEED_CVT_VERSION_ID,
         SEED_ENGINE_ID,
         SEED_ENGINE_VERSION_ID,
+        SEED_OUTPUT_ID,
+        SEED_OUTPUT_VERSION_ID,
     )
 
     aliases = {
@@ -31,6 +34,12 @@ def sample_id(key: str) -> str:
         "cvt:r1": SEED_CVT_VERSION_ID,
         "engine": SEED_ENGINE_ID,
         "engine:r1": SEED_ENGINE_VERSION_ID,
+        "setup": SEED_ASSEMBLY_ID,
+        "setup:r1": SEED_ASSEMBLY_VERSION_ID,
+        "setup:r2": SEED_ASSEMBLY_VERSION_ID,
+        "vehicle": SEED_OUTPUT_ID,
+        "vehicle:r1": SEED_OUTPUT_VERSION_ID,
+        "vehicle:r2": SEED_OUTPUT_VERSION_ID,
     }
     return aliases.get(
         key, str(uuid5(NAMESPACE_URL, f"cinder-web:physical-samples:v1:{key}"))
@@ -144,68 +153,25 @@ def seed_physical_catalog(session: Session) -> None:
         "belt:r1"
     )
 
-    vehicle = template.data.vehicle.model_copy(deep=True)
-    original_vehicle = vehicle_boundary(vehicle)
-    vehicle.mass_kg = 500 * 0.45359237
-    insert(
-        "output-systems",
-        "vehicle",
-        "CINDER Default · vehicle properties",
-        [
-            (original_vehicle, "Original 300 kg project vehicle.", {}),
-            (
-                vehicle_boundary(vehicle),
-                "Illustrative 500 lb vehicle mass used by the application baseline.",
-                {},
-            ),
-        ],
-        default=True,
-    )
-    vehicle.mass_kg = 400 * 0.45359237
-    insert(
-        "output-systems",
-        "vehicle-light",
-        "CINDER Default · 400 lb vehicle properties",
-        [
-            (vehicle_boundary(vehicle), "Illustrative mass sensitivity example.", {}),
-        ],
-    )
-    refs = {
-        "engine_version_id": sample_id("engine:r1"),
-        "cvt_design_version_id": sample_id("cvt:r1"),
-        "assembly_payload": {},
-    }
-    insert(
-        "vehicle-assemblies",
-        "setup",
-        "CINDER Default · McMaster Baja · 500 lb",
-        [
-            (
-                {},
-                "Original 300 kg configuration.",
-                {**refs, "output_system_version_id": sample_id("vehicle:r1")},
-            ),
-            (
-                {},
-                "Updated to the application’s illustrative 500 lb configuration; component revisions stay pinned.",
-                {**refs, "output_system_version_id": sample_id("vehicle:r2")},
-            ),
-        ],
-        default=True,
-    )
-    insert(
-        "vehicle-assemblies",
-        "setup-light",
-        "CINDER Default · Baja · 400 lb",
-        [
-            (
-                {},
-                "Lighter vehicle using the same McMaster 2025 CVT and Enduro belt.",
-                {
-                    **refs,
-                    "cvt_design_version_id": sample_id("cvt:r1"),
-                    "output_system_version_id": sample_id("vehicle-light:r1"),
-                },
-            ),
-        ],
-    )
+    # Retire former sample variants without invalidating existing run references.
+    from sqlalchemy import select
+
+    from app.database.models import VehicleAssembly
+    from app.database.publication_models import PhysicalPublication
+    from app.database.seed import SEED_ASSEMBLY_ID
+
+    for setup in session.scalars(
+        select(VehicleAssembly).where(VehicleAssembly.account_id == SEED_ACCOUNT_ID)
+    ):
+        if setup.id == SEED_ASSEMBLY_ID:
+            setup.name = "McMaster 2025 · 500 lb"
+            continue
+        setup.lifecycle_status = "archived"
+        setup.is_default = False
+        setup.gallery_listed = False
+        for publication in session.scalars(
+            select(PhysicalPublication).where(
+                PhysicalPublication.source_object_id == setup.id
+            )
+        ):
+            publication.gallery_listed = False

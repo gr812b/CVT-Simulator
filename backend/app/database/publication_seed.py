@@ -17,6 +17,7 @@ def seed_publications(session):
             select(model).where(
                 model.account_id == SEED_ACCOUNT_ID,
                 model.released_version_id.is_not(None),
+                model.lifecycle_status != "archived",
             )
         ):
             publications.publish_saved_revision(

@@ -10,11 +10,10 @@ import {
   Stack,
   Text,
   Textarea,
-  useMantineTheme,
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { IconPlus, IconTrash, IconUpload } from '@tabler/icons-react';
-import ReactECharts from 'echarts-for-react';
+import { EngineCurve } from './EngineCurve';
 import { displayScale } from '@utils/units';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import { importCurve, type EngineData } from './api';
@@ -30,7 +29,6 @@ export function EngineEditor({
   onChange: (value: EngineData) => void;
   disabled?: boolean;
 }) {
-  const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const [text, setText] = useState('');
   const [units, setUnits] = useState<
@@ -100,49 +98,7 @@ export function EngineEditor({
             </Button>
           )}
         </Group>
-        <ReactECharts
-          style={{ height: 250 }}
-          option={{
-            animation: false,
-            backgroundColor: 'transparent',
-            color: [theme.colors.red[4]],
-            aria: {
-              enabled: true,
-              description:
-                'Engine torque versus speed. Exact values are editable in the table below.',
-            },
-            tooltip: { trigger: 'axis' },
-            grid: { left: 65, right: 20, bottom: 45, top: 15 },
-            xAxis: {
-              type: 'value',
-              name: 'Speed (rpm)',
-              nameLocation: 'middle',
-              nameGap: 28,
-              axisLabel: { color: theme.colors.dark[1] },
-              nameTextStyle: { color: theme.colors.dark[1] },
-              splitLine: { lineStyle: { color: theme.colors.dark[5] } },
-            },
-            yAxis: {
-              type: 'value',
-              name: 'Torque (N·m)',
-              nameLocation: 'middle',
-              nameGap: 43,
-              axisLabel: { color: theme.colors.dark[1] },
-              nameTextStyle: { color: theme.colors.dark[1] },
-              splitLine: { lineStyle: { color: theme.colors.dark[5] } },
-            },
-            series: [
-              {
-                type: 'line',
-                showSymbol: true,
-                data: value.points.map((point) => [
-                  point.angular_speed_rad_per_s * RPM_PER_RAD_S,
-                  point.torque_Nm,
-                ]),
-              },
-            ],
-          }}
-        />
+        <EngineCurve value={value} />
         <Text size="xs" c="dimmed" mb="sm">
           The plot joins the entered points for inspection. CINDER owns the
           engine-curve interpolation used in simulation.

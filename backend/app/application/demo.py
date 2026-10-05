@@ -66,3 +66,13 @@ def scene():
     return saved_scene(
         "landing", assembly_with_matching_belt(baseline_case()["assembly"])
     )
+
+
+@lru_cache(maxsize=1)
+def forces():
+    from app.application.cinder_gateway import CinderGateway
+
+    demo = playback()
+    return CinderGateway().force_playback(
+        demo.input_document_snapshot["assembly"], demo.result, demo.scene_geometry
+    )

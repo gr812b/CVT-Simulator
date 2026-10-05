@@ -1,3 +1,5 @@
+import { Brand } from '@components/appShell/Brand';
+import { useAuth } from '@contexts/AuthContext';
 import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -20,8 +22,7 @@ import {
   IconFileText,
   IconPlayerPlay,
 } from '@tabler/icons-react';
-import { Brand } from '@components/appShell/Brand';
-import { useAuth } from '@contexts/AuthContext';
+import { PublicHeader } from '@components/appShell/PublicHeader';
 import styles from './Home.module.scss';
 
 const HomeCvtPreview = lazy(() => import('./HomeCvtPreview'));
@@ -52,32 +53,7 @@ export const Home = () => {
   return (
     <div className={styles.home}>
       <Container size="xl">
-        <Group
-          component="nav"
-          justify="space-between"
-          className={styles.navigation}
-          aria-label="Main navigation"
-        >
-          <Brand />
-          <Group gap="xs">
-            <Anchor
-              href={GITHUB_URL}
-              {...external}
-              className={styles.sourceLink}
-            >
-              GitHub
-            </Anchor>
-            {session ? (
-              <Button component={Link} to="/dashboard" variant="light">
-                Open workspace
-              </Button>
-            ) : (
-              <Button component={Link} to="/login" variant="default">
-                Sign in
-              </Button>
-            )}
-          </Group>
-        </Group>
+        <PublicHeader />
         <main>
           <section className={styles.hero} aria-labelledby="home-title">
             <Stack gap="xl" className={styles.heroCopy}>
@@ -243,6 +219,13 @@ export const Home = () => {
             </Anchor>
             <Anchor component={Link} to="/demo" size="sm">
               Try the demo
+            </Anchor>
+            <Anchor
+              href="https://pypi.org/project/cinder-cvt/"
+              {...external}
+              size="sm"
+            >
+              PyPI package
             </Anchor>
           </Group>
         </Group>

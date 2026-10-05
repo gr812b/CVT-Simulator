@@ -1,6 +1,7 @@
 # Backend runtime dependencies.
-# Keep CINDER pinned exactly so persisted run provenance and cache identity are reproducible.
-cinder-cvt==1.1.4
+# Install from backend/. This checkout includes the 1.1.5.dev0 reporting extension.
+# Use the same bundled source in local environments and Docker until its release.
+../cvtModel
 
 fastapi>=0.116,<1.0
 uvicorn[standard]>=0.35,<1.0

@@ -1,3 +1,4 @@
+import { SchoolSelect } from '../../features/community/SchoolSelect';
 import { useState } from 'react';
 import {
   Alert,
@@ -109,11 +110,11 @@ export function AccountSettings() {
                 required
                 {...profile.getInputProps('display_name')}
               />
-              <TextInput
-                label="School"
-                description="Optional"
-                maxLength={200}
-                {...profile.getInputProps('school')}
+              <SchoolSelect
+                value={profile.values.school}
+                onChange={(value) =>
+                  profile.setFieldValue('school', value ?? '')
+                }
               />
               <Text size="sm" c="dimmed">
                 Free accounts save simulation content publicly.

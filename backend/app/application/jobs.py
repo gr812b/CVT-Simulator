@@ -48,10 +48,11 @@ def status(run, *, include_provenance=True):
                 | ((Run.submitted_at == run.submitted_at) & (Run.id < run.id)),
             )
         )
-    from app.application.authorship import author_name
+    from app.application.authorship import author_name, public_author_id
 
     return RunStatusResponse(
         author=author_name(session, run.created_by_user_id),
+        author_id=public_author_id(session, run.created_by_user_id),
         queue_position=position,
         has_result=bool(run.summary_series),
         id=run.id,

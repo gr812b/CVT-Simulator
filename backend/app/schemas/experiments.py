@@ -186,6 +186,7 @@ class ExperimentRevisionInfo(ExperimentModel):
 
 
 class ExperimentItem(ExperimentModel):
+    author_id: str | None
     author: str
     sample: bool = False
     description: str = ""

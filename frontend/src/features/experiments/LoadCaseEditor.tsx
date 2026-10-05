@@ -103,7 +103,11 @@ export function LoadCaseEditor({
       opened
       onClose={close}
       title={id ? 'Load case' : 'Create load case'}
-      size="xl"
+      size="min(1200px, 96vw)"
+      styles={{
+        header: { position: 'sticky', top: 0, zIndex: 3 },
+        body: { paddingBottom: 'var(--mantine-spacing-xl)' },
+      }}
       closeOnEscape={!busy}
       closeOnClickOutside={false}
     >
@@ -132,8 +136,18 @@ export function LoadCaseEditor({
               style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
             >
               <Stack>
-                <TextInput label="Load case name" required placeholder="Give this course a name"
-                  value={history.value.name} onChange={e => history.change({ ...history.value!, name: e.currentTarget.value })} />
+                <TextInput
+                  label="Load case name"
+                  required
+                  placeholder="Give this course a name"
+                  value={history.value.name}
+                  onChange={(e) =>
+                    history.change({
+                      ...history.value!,
+                      name: e.currentTarget.value,
+                    })
+                  }
+                />
                 <Group>
                   <Button
                     size="xs"
@@ -166,31 +180,41 @@ export function LoadCaseEditor({
                   onChange={history.change}
                   onRoadValidityChange={setRoadValid}
                 />
-                <RevisionToolbar
-                  label="Load case"
-                  showPicker={false}
-                  showFields={false}
-                  document={history.value}
-                  detail={detail}
-                  items={[]}
-                  busy={busy}
-                  invalid={Boolean(invalid.size) || !roadValid}
-                  onChange={(next) =>
-                    next.kind === 'scenarios' && history.change(next)
-                  }
-                  onLoad={() => { }}
-                  onNew={() => { }}
-                  onSave={(asNew) => void save(asNew)}
-                  onRefresh={() => setRetry((x) => x + 1)}
-                  onRestored={(next) => {
-                    setDetail(next);
-                    if (next.document.kind === 'scenarios') {
-                      reset(next.document);
-                      setSaved(JSON.stringify(next.document));
-                    }
+                <div
+                  style={{
+                    position: 'sticky',
+                    bottom: 0,
+                    padding: '12px 0',
+                    background: 'var(--mantine-color-body)',
+                    zIndex: 2,
+                    borderTop: '1px solid var(--mantine-color-default-border)',
                   }}
-                />
-
+                >
+                  <RevisionToolbar
+                    label="Load case"
+                    showPicker={false}
+                    showFields={false}
+                    document={history.value}
+                    detail={detail}
+                    items={[]}
+                    busy={busy}
+                    invalid={Boolean(invalid.size) || !roadValid}
+                    onChange={(next) =>
+                      next.kind === 'scenarios' && history.change(next)
+                    }
+                    onLoad={() => {}}
+                    onNew={() => {}}
+                    onSave={(asNew) => void save(asNew)}
+                    onRefresh={() => setRetry((x) => x + 1)}
+                    onRestored={(next) => {
+                      setDetail(next);
+                      if (next.document.kind === 'scenarios') {
+                        reset(next.document);
+                        setSaved(JSON.stringify(next.document));
+                      }
+                    }}
+                  />
+                </div>
               </Stack>
             </fieldset>
           </QuantityValidationContext.Provider>

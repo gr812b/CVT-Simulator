@@ -3,7 +3,9 @@
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import EmailStr, Field, StringConstraints, field_validator
+from pydantic import AfterValidator, EmailStr, Field, StringConstraints, field_validator
+
+from app.application.schools import known_school
 
 from .common import ApiModel
 
@@ -22,7 +24,11 @@ class EmailRequest(ApiModel):
         return value.lower()
 
 
-School = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
+School = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, max_length=200),
+    AfterValidator(known_school),
+]
 
 
 class RegisterRequest(EmailRequest):

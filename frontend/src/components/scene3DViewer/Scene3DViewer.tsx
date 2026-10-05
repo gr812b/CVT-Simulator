@@ -1,3 +1,4 @@
+import { ForceOverlay } from './ForceOverlay';
 import { mechanismPose } from './mechanisms';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -53,6 +54,7 @@ const TENSION_BOUNDARY_KEYS = [
 ] as const;
 
 interface Scene3DViewerProps {
+  forceSource?: string;
   replayController: ReportReplayController;
   result: SimulationResult;
   document: SimulationCaseDocument;
@@ -76,6 +78,7 @@ function formatScaleValue(value: number): string {
 
 export const Scene3DViewer = ({
   replayController,
+  forceSource,
   result,
   resolvedGeometry,
   className,
@@ -130,7 +133,10 @@ export const Scene3DViewer = ({
     };
   }, [baseGeometry, initialLayout]);
 
-  const beltTravel = useMemo(() => integratedAngularPosition(table, 'state.belt_speed'), [table]);
+  const beltTravel = useMemo(
+    () => integratedAngularPosition(table, 'state.belt_speed'),
+    [table],
+  );
   const primaryIntegratedAngle = useMemo(
     () => integratedAngularPosition(table, 'state.primary_angular_speed'),
     [table],
@@ -163,7 +169,21 @@ export const Scene3DViewer = ({
 
   const helixAngleAt = useCallback(
     (sample: ReplayBracket): number =>
-      mechanismPose(geometry, sceneDistance(finite(interpolatedValue(table, 'state.shift_position', sample.lowerIndex, sample.upperIndex, sample.alpha), 0)))?.secondary_angle_rad ?? 0,
+      mechanismPose(
+        geometry,
+        sceneDistance(
+          finite(
+            interpolatedValue(
+              table,
+              'state.shift_position',
+              sample.lowerIndex,
+              sample.upperIndex,
+              sample.alpha,
+            ),
+            0,
+          ),
+        ),
+      )?.secondary_angle_rad ?? 0,
     [geometry, table],
   );
 
@@ -309,15 +329,17 @@ export const Scene3DViewer = ({
             BELT_SAMPLE_COUNT,
           );
           const tensionSample =
-            showTension && tensionField !== undefined && tensionField.domain === beltDomain.key
+            showTension &&
+            tensionField !== undefined &&
+            tensionField.domain === beltDomain.key
               ? sampleSpatialFieldInterpolated(
-                tensionField,
-                domainSample,
-                table,
-                sample.lowerIndex,
-                sample.upperIndex,
-                sample.alpha,
-              )
+                  tensionField,
+                  domainSample,
+                  table,
+                  sample.lowerIndex,
+                  sample.upperIndex,
+                  sample.alpha,
+                )
               : undefined;
           const layout = updateBeltMesh(
             beltMesh,
@@ -327,7 +349,9 @@ export const Scene3DViewer = ({
             tensionSample?.values,
             tensionRange,
             showTension && tensionAvailable,
-            showAngularRotation ? sceneDistance(interpolatedArrayValue(beltTravel, sample)) : 0,
+            showAngularRotation
+              ? sceneDistance(interpolatedArrayValue(beltTravel, sample))
+              : 0,
           );
           if (layout !== null) {
             primaryCenter = layout.primaryCenter;
@@ -424,16 +448,16 @@ export const Scene3DViewer = ({
       const helixRate =
         upperTime > lowerTime
           ? (helixAngleAt({
-            lowerIndex: sample.upperIndex,
-            upperIndex: sample.upperIndex,
-            alpha: 0,
-          }) -
-            helixAngleAt({
-              lowerIndex: sample.lowerIndex,
-              upperIndex: sample.lowerIndex,
+              lowerIndex: sample.upperIndex,
+              upperIndex: sample.upperIndex,
               alpha: 0,
-            })) /
-          (upperTime - lowerTime)
+            }) -
+              helixAngleAt({
+                lowerIndex: sample.lowerIndex,
+                upperIndex: sample.lowerIndex,
+                alpha: 0,
+              })) /
+            (upperTime - lowerTime)
           : 0;
 
       const sampleAtShutterOffset = (wallOffsetSeconds: number) =>
@@ -554,7 +578,7 @@ export const Scene3DViewer = ({
   useEffect(() => {
     if (!sceneController) return;
     setCVTModelsTransparent(sceneController, modelsTransparent);
-  }, [modelsTransparent, models, sceneController]);
+  }, [modelsTransparent, models, sceneController, beltMesh]);
 
   useEffect(() => {
     if (!sceneController) return;
@@ -579,6 +603,18 @@ export const Scene3DViewer = ({
         role="group"
         aria-label="3D view options"
       >
+        {forceSource && (
+          <ForceOverlay
+            key={forceSource}
+            source={forceSource}
+            scene={sceneController}
+            geometry={geometry}
+            replay={replayController}
+            table={table}
+            transparent={modelsTransparent}
+            onTransparent={setModelsTransparent}
+          />
+        )}
         {[
           {
             label: 'Belt',

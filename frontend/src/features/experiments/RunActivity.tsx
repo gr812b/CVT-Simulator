@@ -1,3 +1,6 @@
+import { runStatusColors } from '@styles/theme';
+import { useAuth } from '@contexts/AuthContext';
+import { RunStatusBadge } from '../results/RunStatusBadge';
 import {
   createContext,
   useCallback,
@@ -27,17 +30,21 @@ const Context = createContext<{
 } | null>(null);
 
 export function RunActivityProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  const enabled = !!session;
   const [activity, setActivity] = useState<RunActivity | null>(null);
   const [error, setError] = useState<string | null>(null);
   const refresh = useCallback(async () => {
+    if (!enabled) return;
     try {
       setActivity(await getActivity());
       setError(null);
     } catch (cause) {
       setError(message(cause));
     }
-  }, []);
+  }, [enabled]);
   useEffect(() => {
+    if (!enabled) return;
     let disposed = false;
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
@@ -60,7 +67,7 @@ export function RunActivityProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       window.removeEventListener('focus', focus);
     };
-  }, [refresh]);
+  }, [refresh, enabled]);
   const dismiss = useCallback(
     async (id: string) => {
       await readNotice(id);
@@ -124,10 +131,15 @@ export function RunActivityButton() {
             <Alert color="red">{error || localError}</Alert>
           )}
           {activity?.active && (
-            <Alert title="Active simulation">
+            <Alert
+              color={runStatusColors[activity.active.status]}
+              title="Active simulation"
+            >
               <Text>
                 {activity.active.name} · {activity.active.status}
-                {activity.active.queue_position ? ` · queue position ${activity.active.queue_position}` : ''}
+                {activity.active.queue_position
+                  ? ` · queue position ${activity.active.queue_position}`
+                  : ''}
               </Text>
               <Button
                 component={Link}
@@ -152,7 +164,7 @@ export function RunActivityButton() {
                 <Text size="sm" fw={600}>
                   {notice.run.name}
                 </Text>
-                <Badge variant="light">{notice.run.status}</Badge>
+                <RunStatusBadge status={notice.run.status} />
               </Group>
               <Group>
                 <Button
@@ -193,11 +205,7 @@ export function RunActivityButton() {
               variant="default"
               justify="space-between"
               onClick={() => setOpened(false)}
-              rightSection={
-                <Badge size="xs" variant="light">
-                  {run.status}{run.queue_position ? ` · queue position ${run.queue_position}` : ''}
-                </Badge>
-              }
+              rightSection={<RunStatusBadge size="xs" status={run.status} />}
             >
               <Text truncate size="sm">
                 {run.name}
@@ -218,7 +226,7 @@ export function RunActivityBanner() {
   return (
     <Alert
       mb="md"
-      color={notice.run.status === 'completed' ? 'teal' : 'yellow'}
+      color={runStatusColors[notice.run.status]}
       title={`${notice.run.name} · ${notice.run.status}`}
       role="status"
     >
@@ -227,7 +235,8 @@ export function RunActivityBanner() {
           {notice.run.status === 'completed'
             ? 'Your result is ready.'
             : (notice.run.error?.message ?? 'Your simulation has stopped.')}
-          {notice.run.has_result && notice.run.status !== 'completed' &&
+          {notice.run.has_result &&
+            notice.run.status !== 'completed' &&
             ' Saved progress is available for playback.'}
         </Text>
         <Group gap="xs">

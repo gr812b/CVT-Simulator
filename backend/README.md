@@ -74,28 +74,97 @@ python -m app.scripts.init_database
 uvicorn app.main:app --reload
 ```
 
-In another backend terminal with the same environment/database, start
-`python -m app.scripts.run_worker`. The worker requires POSIX; use the Linux
-backend container on Windows. Without a worker, accepted simulations stay queued.
+On Linux/macOS, start `python -m app.scripts.run_worker` in another backend
+terminal with the same environment/database. On Windows, use the Docker setup
+below for both API and worker. Without a worker, simulations stay queued.
 
-The worker can run directly as PID 1 inside its container. Each child checks the
-worker PID supplied at launch before and after arming Linux parent-death
-protection; PID 1 alone does not mean its parent was lost. An actual mismatch
-exits with code 125 and logs the expected and observed parent IDs. After updating
-worker code, rebuild the image and recreate the worker container: restarting an
-existing container still uses its old image. This startup fix needs no database
-reset or migration.
+### Windows / Docker Desktop setup
 
-`requirements.txt` is the backend runtime dependency list. CINDER is installed
-from PyPI at the exact version pinned there, so local, CI, and production runs
-use the same immutable package release. `requirements-dev.txt` simply extends
-that runtime list with developer/test tooling. When adopting a new CINDER
-release, bump the CINDER pin in `requirements.txt` deliberately and run the
-backend migration and test suite before deployment.
+Start Docker Desktop with Linux containers enabled. Run the following commands
+from the **repository root**, where `backend/Dockerfile` exists. In PowerShell:
 
-For simultaneous CINDER/backend development you can still temporarily install a
-local CINDER checkout into your virtual environment with `pip install -e`, but
-that is an explicit developer override rather than the checked-in dependency.
+```powershell
+cd F:\Code\Projects\CVT-Simulator
+```
+
+In Command Prompt, use `cd /d F:\Code\Projects\CVT-Simulator` to change drives too.
+The remaining Docker commands work in either shell. The API and worker must share
+the same volume and database URL.
+
+First setup:
+
+```powershell
+docker build -f backend/Dockerfile -t cinder-local .
+docker volume create cinder-local-data
+docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local alembic upgrade head
+docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.init_database
+docker run -d --name cinder-local-api -p 8000:8000 -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local
+docker run -d --name cinder-local-worker -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.run_worker
+```
+
+After applying a code update, rebuild and recreate **both** containers. Restarting
+an old container does not install the new image. These commands preserve accounts
+and runs in the existing volume; retain your existing volume/database settings if
+you use different names.
+
+```powershell
+docker stop cinder-local-api cinder-local-worker
+docker rm cinder-local-api cinder-local-worker
+docker build -f backend/Dockerfile -t cinder-local .
+docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local alembic upgrade head
+docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.init_database
+docker run -d --name cinder-local-api -p 8000:8000 -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local
+docker run -d --name cinder-local-worker -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.run_worker
+```
+
+Normal reseeding adds missing defaults, including the demo course. It does not
+require `--reset`. The playback/force update introduces no new database migration.
+
+In a frontend terminal, with Node installed:
+
+```powershell
+cd F:\Code\Projects\CVT-Simulator\frontend
+npm ci
+npm run dev
+```
+
+Frontend startup regenerates API types using `backend/venv/Scripts/python.exe`
+(on Windows), so keep that virtual environment and its backend dependencies
+installed. Alternatively, export the contracts with Docker before starting the
+frontend; this PowerShell variant needs no host Python environment:
+
+```powershell
+cd F:\Code\Projects\CVT-Simulator
+New-Item -ItemType Directory -Force backend/generated | Out-Null
+docker run --rm --mount "type=bind,source=$($PWD.Path)/backend/generated,target=/contracts" cinder-local python -m app.scripts.export_contract_artifacts --output-dir /contracts
+cd frontend
+$env:CINDER_SKIP_BACKEND_EXPORT = "1"
+npm run dev
+```
+
+Repeat the Docker export after backend/API changes if using that alternative.
+Open `http://localhost:5173` or `http://localhost:5173/demo` for anonymous playback.
+
+Useful diagnostics (Ctrl+C exits log following):
+
+```powershell
+docker ps -a
+docker logs --tail 100 cinder-local-api
+docker logs --tail 100 -f cinder-local-worker
+```
+
+A missing Docker engine pipe means Docker Desktop is not running. A missing
+`backend` path means the shell is not at the repository root. Child exit 125 logs
+the expected and observed parent IDs; rebuild/recreate the worker to install the
+PID-1 startup fix. No database reset is needed for that fix.
+
+`requirements.txt` installs the bundled `../cvtModel` source (currently
+CINDER 1.1.5.dev0) alongside backend dependencies. Run installation from
+`backend/`. This reporting update exposes signed sheave balances and solver
+accelerations; it does not change the integration equations. Local and Docker
+installations use the same source, and run provenance retains its package version.
+`requirements-dev.txt` extends that list with developer tooling. After pulling
+changes to `cvtModel/`, reinstall requirements or rebuild both containers.
 
 The API is served at `http://localhost:8000/api/v1`; Swagger UI is at
 `http://localhost:8000/docs`.
@@ -120,34 +189,27 @@ before claiming jobs; it prints the database location when setup is incomplete.
 python -m app.scripts.init_database
 ```
 
-This creates `./cvt_simulator_dev.db` and inserts deterministic seed data:
+This creates `./cvt_simulator_dev.db` and inserts deterministic public defaults:
 
-- Baja-oriented institutions such as McMaster, Cornell, Virginia Tech, WVU, and RIT;
-- one demo account/user;
-- one official/default seeded engine boundary;
-- one default seeded CVT hardware design;
-- two seeded output systems with gearbox/final-drive data owned outside the CVT: 500 lb default and 400 lb lightweight variants;
-- two seeded vehicle assemblies pinning the same released engine/CVT versions while varying only output-system mass;
-- seeded baseline tunes for those assemblies;
-- three load cases: flat launch, 20° hill launch, and a 90 m flat-then-30° hill route;
+- a Baja SAE school catalog for signup and author filters;
+- one seed account (create your own account to sign in);
+- one Kohler CH440 (Baja Restricted) engine;
+- one McMaster 2025 CVT using the Enduro 100 belt;
+- one McMaster 500 lb vehicle setup and its output system;
+- manufacturer/series belt choices and baseline/paper-inspired CVT tunes;
+- flat, constant-angle, climb/descent and whoops load cases;
+- the 160 m McMaster demonstration course used by anonymous playback;
 - one execution preset.
 
-The current public CINDER document supports both constant-grade and distance-indexed
-`piecewise_constant_grade` road profiles. The "90 m flat into 30° hill" seed executes
-as a true staged route: level ground until 90 m vehicle distance, then a 30° grade.
+The demonstration course is 30 m flat, 30 m at +35°, 10 m flat, 30 m at −35°,
+10 m flat, 20 m at +20°, then 30 m flat. Distances are measured along the road;
+course mode stops at the finish. Its retained playback was produced by a real
+simulation with the same road definition as the seeded load case.
 
-M2 also adds reusable belts, two fixed-pivot CVT examples, complete vehicle setups,
-and immutable sample revision history. Seeding is additive: rerunning it preserves
-existing edits. The frontend derives identity from the signed-in session; demo IDs
-are seed data and are not authentication settings.
-
-M3 adds revisioned flat, hill and whoops scenarios plus an illustrative two-revision
-tune. Optional `--development-fixtures` also adds clearly labeled queued, failed
-and cancelled runs in the isolated fixture accounts. It never fabricates results.
-
-M4 adds four intentionally listed setup/CVT publication samples. Opt-in fixtures
-also exercise listed and unlisted sharing. Repeated seeding preserves their access
-settings and existing snapshots.
+Seeding adds missing samples and reconciles the curated default catalog. User
+objects and runs are retained. Optional `--development-fixtures` adds clearly
+labeled isolated accounts and queued/failed/cancelled examples; it never
+fabricates simulation results.
 
 Use a custom SQLite path if desired:
 
@@ -269,10 +331,9 @@ docker build -f backend/Dockerfile -t cvt-simulator-api .
 docker run --rm -p 8000:8000 cvt-simulator-api
 ```
 
-The container installs the exact `cinder-cvt` release pinned in
-`requirements.txt`; it no longer copies or installs a repository-local
-`cvtModel/` tree. This makes the deployed CINDER version explicit and identical
-to the normal backend dependency.
+The container builds CINDER from `cvtModel/` in this checkout through the same
+`requirements.txt` used locally. Rebuild and recreate both API and worker
+containers together when that source changes.
 
 The backend preset files are copied with `backend/`; for example, the tuned
 launch preset is available at `/app/presets/baja-launch-baseline.json` inside
@@ -337,6 +398,9 @@ GET  /api/v1/runs/{run_id}
 GET  /api/v1/runs/{run_id}/input
 GET  /api/v1/runs/{run_id}/preview
 GET  /api/v1/runs/{run_id}/result
+GET  /api/v1/runs/{run_id}/forces          stopped runs only; projected contact vectors
+GET  /api/v1/demo                         retained anonymous playback
+GET  /api/v1/demo/forces                  anonymous projected contact vectors
 POST /api/v1/runs/{run_id}/cancel
 GET  /api/v1/runs/activity
 POST /api/v1/runs/notices/{notice_id}/read

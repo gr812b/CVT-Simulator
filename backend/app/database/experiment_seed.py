@@ -1,8 +1,8 @@
-"""Additive public scenario examples, never rewritten during repeat seeding."""
+"""Public samples; updates append revisions without changing saved run inputs."""
 
 import math
 
-from app.application.roads import default_scenario, feature_templates
+from app.application.roads import default_scenario, demo_scenario, feature_templates
 from app.database.base import utc_now
 from app.database.experiment_models import Experiment, ExperimentRevision
 from app.database.hashing import canonical_json_hash
@@ -14,6 +14,7 @@ from app.schemas.experiments import ScenarioDocument, SpatialRoad
 def seed_experiments(session):
     templates = feature_templates()
     examples = [
+        ("demo-course", [demo_scenario()]),
         (
             "flat",
             [
@@ -82,7 +83,29 @@ def seed_experiments(session):
         )
     for key, documents in examples:
         object_id = sample_id(f"scenario:{key}")
-        if session.get(Experiment, object_id):
+        existing = session.get(Experiment, object_id)
+        if existing:
+            if (
+                key == "demo-course"
+                and existing.is_sample
+                and existing.account_id == SEED_ACCOUNT_ID
+            ):
+                current = session.get(ExperimentRevision, existing.current_revision_id)
+                payload = documents[-1].model_dump(mode="json")
+                content_hash = canonical_json_hash(payload)
+                if current.content_hash != content_hash:
+                    revision = ExperimentRevision(
+                        experiment_id=existing.id,
+                        number=current.number + 1,
+                        document=payload,
+                        content_hash=content_hash,
+                        created_by_user_id=SEED_USER_ID,
+                        change_note="Steeper demonstration course: 45° and 30° climbs.",
+                    )
+                    session.add(revision)
+                    session.flush()
+                    existing.current_revision_id = revision.id
+                    existing.name = documents[-1].name
             continue
         obj = Experiment(
             id=object_id,

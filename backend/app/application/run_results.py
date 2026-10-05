@@ -15,6 +15,7 @@ from app.application import (
 )
 from app.application.experiment_tuning import tune_surface
 from app.core.errors import ApiProblem
+from app.database import library
 from app.database import runs as artifacts
 from app.database.models import Run, RunArtifact, RunCacheEntry
 from app.schemas.experiments import ExperimentSelection
@@ -54,11 +55,11 @@ METRICS = {
 }
 
 
-def references(run):
+def references(run, session=None, principal=None):
     p = run.provenance or {}
     tune = p.get("tune_document") or {}
     scenario = p.get("scenario") or run.load_case_snapshot or {}
-    return [
+    result = [
         RunReference(
             kind=kind,
             name=name,
@@ -87,6 +88,90 @@ def references(run):
             ),
         )
     ]
+
+    if session is None:
+        return result
+    # Link the exact saved revisions, including components resolved by the setup.
+    setup_id = p.get("setup_revision_id") or run.vehicle_assembly_version_id
+    setup = None
+    if setup_id:
+        try:
+            setup = access.library_version(
+                session, principal, "vehicle-assemblies", setup_id
+            )
+        except ApiProblem:
+            pass
+    component_versions = {
+        "cvt": (
+            "cvt-designs",
+            "cvts",
+            p.get("cvt_revision_id")
+            or (setup.cvt_design_version_id if setup else None),
+        ),
+        "engine": (
+            "engines",
+            "engines",
+            p.get("engine_revision_id") or (setup.engine_version_id if setup else None),
+        ),
+    }
+    for kind, (resource, route, revision_id) in component_versions.items():
+        if not revision_id:
+            continue
+        try:
+            version = access.library_version(session, principal, resource, revision_id)
+        except ApiProblem:
+            continue
+        binding = library.binding_for(resource)
+        obj = session.get(
+            binding.object_model, getattr(version, binding.object_fk_name)
+        )
+        result.append(
+            RunReference(
+                kind=kind,
+                name=(version.summary or {}).get("physical_metadata", {}).get("name")
+                or obj.name,
+                revision_id=version.id,
+                revision_number=version.version_number,
+                href=f"/library/{route}/{obj.id}?revision={version.id}",
+            )
+        )
+        if kind == "cvt" and version.belt_version_id:
+            belt = access.library_version(
+                session, principal, "belts", version.belt_version_id
+            )
+            obj = belt.belt
+            result.append(
+                RunReference(
+                    kind="belt",
+                    name=(belt.summary or {}).get("physical_metadata", {}).get("name")
+                    or obj.name,
+                    revision_id=belt.id,
+                    revision_number=belt.version_number,
+                    href=f"/library/belts/{obj.id}?revision={belt.id}",
+                )
+            )
+    for ref in result:
+        if ref.kind == "setup" and setup:
+            ref.href = (
+                f"/library/setups/{setup.vehicle_assembly_id}?revision={setup.id}"
+            )
+            ref.revision_number = setup.version_number
+        elif ref.kind in {"tune", "scenario"} and ref.revision_id:
+            try:
+                revision = experiments.get_revision(
+                    session,
+                    principal,
+                    ref.revision_id,
+                    "tunes" if ref.kind == "tune" else "scenarios",
+                )
+            except ApiProblem:
+                continue
+            route = "tunes" if ref.kind == "tune" else "load-cases"
+            ref.href = (
+                f"/catalog/{route}/{revision.experiment_id}?revision={revision.id}"
+            )
+            ref.revision_number = revision.number
+    return result
 
 
 def metric_values(run):
@@ -308,8 +393,9 @@ def inspect_run(session, principal, settings, run_id):
         jobs.recover(session, settings, principal.account_id)
     summary = run.summary_scalars or {}
     return RunInspection(
+        owned=bool(principal.account_id and principal.account_id == run.account_id),
         run=jobs.status(run),
-        references=references(run),
+        references=references(run, session, principal),
         metrics=metric_values(run),
         availability=availability(session, run),
         warnings=[

@@ -51,10 +51,6 @@ export function CoursePlayback({
           position={distance}
           label="Recorded course elevation"
         />
-        <Text size="xs" c="dimmed">
-          From this run’s saved road profile. Elevation is relative to distance
-          zero; axes are scaled independently.
-        </Text>
       </Stack>
     </Paper>
   );

@@ -34,9 +34,9 @@ function sheave(
   minimum: number,
   maximum: number,
   side: number,
-  accent: string,
   shaft: boolean,
   shaftRadius: number,
+  shaftReach = 0,
 ): THREE.Group {
   const group = new THREE.Group();
   const hub = sheaveHub(minimum, geometry);
@@ -68,7 +68,7 @@ function sheave(
     hub,
     side * thickness - thickness * 1.25,
     side * thickness + thickness * 1.25,
-    material(accent),
+    material(shaft ? appearance.fixedSheave : appearance.movingSheave),
   );
   group.add(hubMesh);
   const rimMesh = new THREE.Mesh(
@@ -78,7 +78,7 @@ function sheave(
       8,
       appearance.radialSegments,
     ),
-    material(accent),
+    material(shaft ? appearance.fixedSheave : appearance.movingSheave),
   );
   rimMesh.position.z = side * (lip + thickness * 0.7);
   group.add(rimMesh);
@@ -86,7 +86,7 @@ function sheave(
   // A small back-face witness mark makes rigid-body rotation readable.
   const marker = new THREE.Mesh(
     new THREE.BoxGeometry(rim * 0.32, thickness * 0.6, thickness * 0.25),
-    material(accent),
+    material(shaft ? appearance.fixedSheave : appearance.movingSheave),
   );
   marker.position.set(
     rim * 0.76,
@@ -96,16 +96,20 @@ function sheave(
   marker.rotation.y = -side * geometry.halfAngle;
   group.add(marker);
   if (shaft) {
+    // One continuous shaft joins the external boundary to the actuator carrier.
+    const outerReach = maximum * appearance.shaftExtension + lip + thickness;
+    const innerReach = Math.max(shaftReach, geometry.beltOuterWidth + lip);
     const axle = new THREE.Mesh(
       new THREE.CylinderGeometry(
         shaftRadius,
         shaftRadius,
-        geometry.beltOuterWidth + lip * 2 + thickness * 7,
+        outerReach + innerReach,
         32,
       ),
       material(appearance.shaft),
     );
     axle.rotation.x = Math.PI / 2;
+    axle.position.z = (side * (outerReach - innerReach)) / 2;
     group.add(axle);
   }
   return group;
@@ -121,9 +125,9 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         geometry.primaryMinRadius,
         geometry.primaryMaxRadius,
         -1,
-        appearance.primary,
         true,
         layout.shaftP,
+        layout.carrierP,
       ),
     },
     {
@@ -134,7 +138,6 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         geometry.primaryMinRadius,
         geometry.primaryMaxRadius,
         1,
-        appearance.primary,
         false,
         layout.shaftP,
       ),
@@ -146,9 +149,9 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         geometry.secondaryMinRadius,
         geometry.secondaryMaxRadius,
         1,
-        appearance.secondary,
         true,
         layout.shaftS,
+        -layout.baseS + layout.wall,
       ),
     },
     {
@@ -159,7 +162,6 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         geometry.secondaryMinRadius,
         geometry.secondaryMaxRadius,
         -1,
-        appearance.secondary,
         false,
         layout.shaftS,
       ),
@@ -233,22 +235,25 @@ export function fitCVT(
   const radius =
     Math.max(geometry.primaryMaxRadius, geometry.secondaryMaxRadius) + margin;
   const layout = mechanismLayout(geometry);
-  const mechanisms = geometry.mechanisms;
+  const shaftEnvelope =
+    appearance.shaftExtension + Math.tan(geometry.halfAngle) + 0.2;
   controller.fitBounds(
     new THREE.Box3(
       new THREE.Vector3(
         -geometry.centreDistance / 2 - geometry.primaryMaxRadius - margin,
         -radius,
-        mechanisms?.secondary_helix_points_m.length
-          ? Math.min(-radius * 0.7, layout.baseS - layout.wall * 2)
-          : -radius * 0.7,
+        Math.min(
+          -geometry.primaryMaxRadius * shaftEnvelope,
+          layout.baseS - layout.wall * 2,
+        ),
       ),
       new THREE.Vector3(
         geometry.centreDistance / 2 + geometry.secondaryMaxRadius + margin,
         radius,
-        mechanisms?.primary
-          ? Math.max(radius * 0.9, layout.carrierP + layout.wall)
-          : radius * 0.9,
+        Math.max(
+          geometry.secondaryMaxRadius * shaftEnvelope,
+          layout.carrierP + layout.wall,
+        ),
       ),
     ),
   );

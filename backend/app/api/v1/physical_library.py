@@ -2,9 +2,6 @@
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
-
 from app.api.v1.dependencies import (
     get_current_principal,
     get_database_session,
@@ -41,6 +38,8 @@ from app.schemas.physical_library import (
     PhysicalValidateRequest,
     PhysicalValidationResponse,
 )
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/physical-library", tags=["physical library"])
 
@@ -61,17 +60,29 @@ def template(
     )
 
 
-@router.post("/engine-curve/import", response_model=CurveImportResponse)
+@router.post(
+    "/engine-curve/import",
+    response_model=CurveImportResponse,
+    dependencies=[Depends(get_current_principal)],
+)
 def import_curve(request: CurveImportRequest):
     return CurveImportResponse(points=import_engine_curve(request))
 
 
-@router.post("/belt-section/resolve", response_model=BeltSection)
+@router.post(
+    "/belt-section/resolve",
+    response_model=BeltSection,
+    dependencies=[Depends(get_current_principal)],
+)
 def belt_section(request: BeltSectionSolveRequest):
     return resolve_belt_section(request)
 
 
-@router.post("/validate", response_model=PhysicalValidationResponse)
+@router.post(
+    "/validate",
+    response_model=PhysicalValidationResponse,
+    dependencies=[Depends(get_current_principal)],
+)
 def validate(request: PhysicalValidateRequest):
     validation, resolved = validate_physical(request.document)
     return PhysicalValidationResponse(
@@ -85,7 +96,7 @@ def list_items(
     scope: Literal["own", "samples", "all"] = "own",
     include_archived: bool = False,
     session: Session = Depends(get_database_session),
-    principal: Principal = Depends(get_current_principal),
+    principal: Principal = Depends(get_public_reader),
 ):
     return PhysicalListResponse(
         items=service.list_items(session, principal, kind, scope, include_archived)
@@ -118,7 +129,7 @@ def get_item(
     object_id: str,
     revision_id: str | None = None,
     session: Session = Depends(get_database_session),
-    principal: Principal = Depends(get_current_principal),
+    principal: Principal = Depends(get_public_reader),
 ):
     return service.detail(session, principal, kind, object_id, revision_id)
 
@@ -195,7 +206,7 @@ def compare(
     from_revision_id: str,
     to_revision_id: str,
     session: Session = Depends(get_database_session),
-    principal: Principal = Depends(get_current_principal),
+    principal: Principal = Depends(get_public_reader),
 ):
     left = service.detail(session, principal, kind, object_id, from_revision_id)
     right = service.detail(session, principal, kind, object_id, to_revision_id)

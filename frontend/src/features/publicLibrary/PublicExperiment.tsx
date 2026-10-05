@@ -1,3 +1,5 @@
+import { AuthorLink } from '../community/AuthorLink';
+import { LoadCaseEditor } from '../experiments/LoadCaseEditor';
 import { useEffect, useState } from 'react';
 import {
   Accordion,
@@ -11,7 +13,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { useAuth } from '@contexts/AuthContext';
 import {
@@ -56,7 +58,9 @@ export function PublicTuneList({ cvtObjectId }: { cvtObjectId: string }) {
           <Group justify="space-between">
             <div>
               <Text fw={600}>{item.name}</Text>
-              <Text size="sm">By {item.author}</Text>
+              <Text size="sm">
+                By <AuthorLink name={item.author} id={item.author_id} />
+              </Text>
               <Text size="sm" c="dimmed">
                 {item.description}
               </Text>
@@ -78,6 +82,9 @@ export function PublicTuneList({ cvtObjectId }: { cvtObjectId: string }) {
 
 export function PublicExperiment() {
   const { objectId } = useParams();
+  const [params] = useSearchParams();
+  const revision = params.get('revision') ?? undefined;
+  const [editing, setEditing] = useState(false);
   const { session } = useAuth();
   const [detail, setDetail] = useState<ExperimentDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +93,7 @@ export function PublicExperiment() {
     let stopped = false;
     setDetail(null);
     setError(null);
-    void getExperiment(objectId ?? '')
+    void getExperiment(objectId ?? '', revision)
       .then((next) => {
         if (!stopped) setDetail(next);
       })
@@ -96,9 +103,19 @@ export function PublicExperiment() {
     return () => {
       stopped = true;
     };
-  }, [objectId, retry]);
+  }, [objectId, revision, retry]);
   return (
     <CatalogFrame>
+      {editing && (
+        <LoadCaseEditor
+          id={objectId ?? null}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            setRetry((x) => x + 1);
+          }}
+        />
+      )}
       <Button
         component={Link}
         to={`/catalog?kind=${detail?.item.kind === 'tunes' ? 'cvts' : 'load-cases'}`}
@@ -123,6 +140,30 @@ export function PublicExperiment() {
             <Title order={1}>{detail.document.name}</Title>
             <Badge>Public</Badge>
           </Group>
+          <Text size="sm" c="dimmed">
+            By{' '}
+            <AuthorLink name={detail.item.author} id={detail.item.author_id} />{' '}
+            · v{detail.item.revision_number}
+          </Text>
+          {detail.document.kind === 'scenarios' && session && !revision && (
+            <Button
+              w="fit-content"
+              variant="light"
+              onClick={() => setEditing(true)}
+            >
+              {detail.item.owned ? 'Edit load case' : 'Customize load case'}
+            </Button>
+          )}
+          {revision && (
+            <Button
+              component={Link}
+              to={`/catalog/${detail.document.kind === 'scenarios' ? 'load-cases' : 'tunes'}/${detail.item.id}`}
+              variant="light"
+              w="fit-content"
+            >
+              Open latest version
+            </Button>
+          )}
           <Text style={{ whiteSpace: 'pre-wrap' }}>
             {detail.document.notes}
           </Text>
@@ -172,9 +213,7 @@ export function PublicExperiment() {
               </Accordion.Control>
               <Accordion.Panel>
                 <Stack>
-                  <Text size="sm">
-                    Current version {detail.item.revision_number}
-                  </Text>
+                  <Text size="sm">Viewing v{detail.item.revision_number}</Text>
                   {detail.history.map((item) => (
                     <Text size="sm" key={item.id}>
                       Version {item.number} ·{' '}

@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import {
   Accordion,
   Alert,
+  Anchor,
   Code,
   Group,
   Pagination,
@@ -23,7 +25,7 @@ import {
   type RunInspection,
 } from './api';
 import { ResultChart } from './ResultChart';
-import { message } from '../experiments/api';
+import { isActive, message } from '../experiments/api';
 
 const exports: { kind: ExportKind; label: string; full: boolean }[] = [
   { kind: 'input', label: 'Canonical input JSON', full: false },
@@ -83,17 +85,15 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
                 {ref.kind}
               </Text>
               <Text>
-                {ref.name}
-                {ref.revision_number
-                  ? ` · v${ref.revision_number}`
-                  : ''}
+                {ref.href ? (
+                  <Anchor component={Link} to={ref.href}>
+                    {ref.name}
+                  </Anchor>
+                ) : (
+                  ref.name
+                )}
                 {ref.unsaved ? ' · temporary values included' : ''}
               </Text>
-              {ref.revision_id && (
-                <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>
-                  {ref.revision_id}
-                </Text>
-              )}
             </div>
           ))}
           <Group>
@@ -149,11 +149,13 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
         </Stack>
       </Paper>
       {availability.partial && (
-        <Alert color="yellow" title="Partial result">
-          The worker returned a result, but the simulation did not reach its
-          requested final time. Reported metrics describe only the available
-          trajectory. Termination:{' '}
-          {inspection.termination_reason?.replace(/_/g, ' ') ?? 'unspecified'}.
+        <Alert
+          color={isActive(run) ? 'blue' : 'yellow'}
+          title={isActive(run) ? 'Live progress' : 'Partial result'}
+        >
+          {isActive(run)
+            ? 'The simulation is still running. Charts and metrics update with its latest saved progress.'
+            : `The simulation stopped before completing the requested run. Metrics and playback cover the saved trajectory. Reason: ${inspection.termination_reason?.replace(/_/g, ' ') ?? 'unspecified'}.`}
         </Alert>
       )}
       {run.status === 'completed' && !availability.full_result && (

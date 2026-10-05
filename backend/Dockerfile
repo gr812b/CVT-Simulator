@@ -8,8 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# CINDER and all backend runtime dependencies come from the backend's pinned
-# requirements file. No repository-local CINDER source is copied into the image.
+# Install the reporting-capable CINDER source from this same checkout.
+COPY cvtModel/pyproject.toml cvtModel/README.md cvtModel/LICENSE /cvtModel/
+COPY cvtModel/src /cvtModel/src
 COPY backend/requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
     && python -m pip install --no-cache-dir -r /app/requirements.txt

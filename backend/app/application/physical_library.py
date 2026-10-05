@@ -160,11 +160,12 @@ def template_for_library(session, principal, kind):
 def item_response(obj, kind, principal) -> PhysicalItem:
     from sqlalchemy.orm import object_session
 
-    from app.application.authorship import author_name
+    from app.application.authorship import author_name, public_author_id
 
     version = obj.released_version
     return PhysicalItem(
         author=author_name(object_session(obj), version.created_by_user_id),
+        author_id=public_author_id(object_session(obj), version.created_by_user_id),
         id=obj.id,
         kind=kind,
         name=obj.name,
@@ -546,7 +547,13 @@ def detail(session, principal, kind, object_id, revision_id=None):
                 validation_status=item.validation_status,
             )
         )
-    validation, _ = validate_physical(document)
+    # Immutable revisions already retain their save-time validation. Reading a
+    # record must not rerun the numerical preflight; review/submission validates
+    # against the installed solver explicitly.
+    validation = {
+        "is_valid": version.validation_status == "valid",
+        "findings": version.validation_messages or [],
+    }
     return PhysicalDetail(
         item=selection.item,
         document=document,

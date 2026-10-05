@@ -1,84 +1,131 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import styles from './Playback.module.scss';
-import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { useLoading } from '@contexts/LoadingContext';
-import { useSimulationRun } from '@contexts/SimulationRunContext';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Alert,
+  Anchor,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { getSimulationResult, type CompletedSimulationRun } from '@api/client';
+import { ActionButton as Button } from '@components/button/ActionButton';
+import { PageLoading } from '@components/loadingOverlay/PageLoading';
+import { inspectRun, type RunInspection } from '../../features/results/api';
+import { RunStatusBadge } from '../../features/results/RunStatusBadge';
+import { AuthorLink } from '../../features/community/AuthorLink';
+import { useRunActivity } from '../../features/experiments/RunActivity';
+import { isActive, message } from '../../features/experiments/api';
 import { SimulationPlayback } from './SimulationPlayback';
 
-export const Playback = () => {
-  const navigate = useNavigate();
-  const { completedRun, restoreCompletedRun, activeRun } = useSimulationRun();
+/** Both public and workspace URLs enter exactly the same result-loading path. */
+export function Playback() {
+  const { runId } = useParams();
   const [params] = useSearchParams();
-  const requestedId = params.get('run') ?? undefined;
-  const displayedRun =
-    completedRun && (!requestedId || completedRun.run.id === requestedId)
-      ? completedRun
-      : null;
-  const { isLoading, loadingMessage, setLoading } = useLoading();
-  const [restoreError, setRestoreError] = useState<string | null>(null);
-
+  const id = runId ?? params.get('run');
+  const [data, setData] = useState<{
+    result: CompletedSimulationRun;
+    inspection: RunInspection;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+  const { activity, dismiss } = useRunActivity();
+  const reading = useRef(new Set<string>());
   useEffect(() => {
-    if (displayedRun !== null) return;
-    let disposed = false;
-    setRestoreError(null);
-    setLoading(true, 'Restoring completed simulation...');
-    void restoreCompletedRun(requestedId)
-      .then((run) => {
-        if (run === null && !disposed) {
-          setRestoreError(
-            'Choose a completed run from Activity to open its playback.',
+    for (const notice of activity?.unread ?? []) {
+      if (notice.run.id !== id || reading.current.has(notice.id)) continue;
+      reading.current.add(notice.id);
+      void dismiss(notice.id).catch(() => reading.current.delete(notice.id));
+    }
+  }, [activity, dismiss, id]);
+  useEffect(() => {
+    let active = true;
+    setData(null);
+    setError(null);
+    if (!id) {
+      setError('Choose a run to open its playback.');
+      return;
+    }
+    void inspectRun(id)
+      .then(async (inspection) => {
+        if (isActive(inspection.run))
+          throw new Error(
+            'This run is still active. Open playback once it has stopped.',
           );
-        }
+        const result = await getSimulationResult(id);
+        if (active) setData({ result, inspection });
       })
-      .catch((error) => {
-        if (!disposed)
-          setRestoreError(
-            error instanceof Error ? error.message : String(error),
-          );
-      })
-      .finally(() => {
-        if (!disposed) setLoading(false);
+      .catch((cause) => {
+        if (active) setError(message(cause));
       });
     return () => {
-      disposed = true;
-      setLoading(false);
+      active = false;
     };
-  }, [displayedRun, restoreCompletedRun, setLoading, requestedId]);
-
-  if (displayedRun === null) {
+  }, [id, retry]);
+  if (error)
     return (
-      <div className={styles.playback}>
-        <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-        <div className={styles.emptyState}>
-          <h1>Playback unavailable</h1>
-          <p>{restoreError ?? 'Looking for a completed simulation run...'}</p>
-          <button type="button" onClick={() => navigate('/input')}>
-            Back to run setup
-          </button>
-          {(requestedId || activeRun?.id) && (
-            <button
-              type="button"
-              onClick={() => navigate(`/runs/${requestedId ?? activeRun!.id}`)}
+      <Container py="xl">
+        <Alert color="red" title="Playback unavailable">
+          {error}
+          <Group mt="md">
+            <Button onClick={() => setRetry((x) => x + 1)}>Try again</Button>
+            <Button
+              component={Link}
+              to={id ? `/runs/${id}` : '/catalog?kind=runs'}
+              variant="default"
             >
-              View run status or rerun
-            </button>
-          )}
-        </div>
-      </div>
+              View runs
+            </Button>
+          </Group>
+        </Alert>
+      </Container>
     );
-  }
-
+  if (!data) return <PageLoading message="Loading result playback…" />;
+  const { result, inspection } = data;
   return (
-    <SimulationPlayback
-      result={displayedRun.result}
-      document={displayedRun.inputDocumentSnapshot}
-      sceneGeometry={displayedRun.sceneGeometry}
-      course={displayedRun.course}
-      navigation={[
-        { label: 'Run details', to: `/runs/${displayedRun.run.id}` },
-        { label: 'Run history', to: '/runs' },
-      ]}
-    />
+    <>
+      <Container fluid py="md">
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Title order={1}>{inspection.run.name}</Title>
+            <RunStatusBadge status={inspection.run.status} />
+          </Group>
+          <Text size="sm">
+            By{' '}
+            <AuthorLink
+              name={inspection.run.author}
+              id={inspection.run.author_id}
+            />
+          </Text>
+          <Group gap="md">
+            {inspection.references
+              .filter((ref) => ref.href)
+              .map((ref) => (
+                <Anchor
+                  key={ref.kind}
+                  component={Link}
+                  to={ref.href!}
+                  size="sm"
+                >
+                  {ref.name}
+                  {ref.unsaved ? ' · modified for this run' : ''}
+                </Anchor>
+              ))}
+          </Group>
+        </Stack>
+      </Container>
+      <SimulationPlayback
+        forceSource={inspection.run.id}
+        result={result.result}
+        document={result.inputDocumentSnapshot}
+        sceneGeometry={result.sceneGeometry}
+        course={result.course}
+        live={isActive(inspection.run)}
+        navigation={[
+          { label: 'Run details', to: `/runs/${inspection.run.id}` },
+        ]}
+      />
+    </>
   );
-};
+}

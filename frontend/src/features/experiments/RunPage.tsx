@@ -1,12 +1,14 @@
+import { PageLoading } from '@components/loadingOverlay/PageLoading';
+import { RunStatusBadge } from '../results/RunStatusBadge';
+import { AuthorLink } from '../community/AuthorLink';
+import { useAuth } from '@contexts/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import {
   Accordion,
   Alert,
-  Badge,
   Code,
   Container,
   Group,
-  Loader,
   Paper,
   Stack,
   Text,
@@ -17,15 +19,12 @@ import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cancelRun, isActive, message, rerun, type RunStatus } from './api';
 import { useRunActivity } from './RunActivity';
-import {
-  inspectRun,
-  renameRun,
-  type RunInspection,
-} from '../results/api';
+import { inspectRun, renameRun, type RunInspection } from '../results/api';
 import { ResultDetails } from '../results/ResultDetails';
 
 export function RunPage() {
   const { runId } = useParams();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const { refresh, activity, dismiss } = useRunActivity();
   const readingNotices = useRef(new Set<string>());
@@ -95,7 +94,11 @@ export function RunPage() {
       <Stack>
         <Group justify="space-between">
           <Title order={1}>Simulation run</Title>
-          <Button component={Link} to="/runs" variant="default">
+          <Button
+            component={Link}
+            to={session ? '/runs' : '/catalog?kind=runs'}
+            variant="default"
+          >
             All runs
           </Button>
         </Group>
@@ -104,77 +107,76 @@ export function RunPage() {
             {error}
           </Alert>
         )}
-        {run?.queue_position && <Alert title={`Position ${run.queue_position} in the queue`}>Waiting for a worker. This position may change as workers claim jobs.</Alert>}
-        {run?.has_result && run.status !== 'completed' && <Alert color="yellow" title="Progress saved">The latest saved portion is available for playback and CSV export.</Alert>}
+        {run?.queue_position && (
+          <Alert
+            color="violet"
+            title={`Position ${run.queue_position} in the queue`}
+          >
+            Waiting for a worker. This position may change as workers claim
+            jobs.
+          </Alert>
+        )}
         {!run ? (
-          !error && <Loader aria-label="Loading run" />
+          !error && <PageLoading message="Loading run…" />
         ) : (
           <>
             <Paper withBorder p="lg">
               <Stack>
                 <Group justify="space-between">
                   <Title order={2}>{run.name}</Title>
-                  <Badge
-                    color={
-                      run.status === 'completed'
-                        ? 'teal'
-                        : isActive(run)
-                          ? 'blue'
-                          : 'yellow'
-                    }
-                  >
-                    {run.status}
-                  </Badge>
+                  <RunStatusBadge status={run.status} />
                 </Group>
-                {editingName ? (
-                  <Group align="end">
-                    <TextInput
-                      label="Run name"
-                      value={name}
-                      maxLength={240}
-                      onChange={(event) => setName(event.currentTarget.value)}
-                    />
-                    <Button
-                      loading={busy}
-                      disabledReason={
-                        !name.trim() ? 'Enter a run name.' : undefined
-                      }
-                      onClick={() =>
-                        void act(async () => {
-                          const next = await renameRun(run.id, {
-                            name,
-                            expected_name: run.name ?? 'Simulation',
-                          });
-                          setRun(next);
-                          if (inspection)
-                            setInspection({ ...inspection, run: next });
-                          setEditingName(false);
-                        })
-                      }
-                    >
-                      Save name
-                    </Button>
+                {inspection?.owned &&
+                  (editingName ? (
+                    <Group align="end">
+                      <TextInput
+                        label="Run name"
+                        value={name}
+                        maxLength={240}
+                        onChange={(event) => setName(event.currentTarget.value)}
+                      />
+                      <Button
+                        loading={busy}
+                        disabledReason={
+                          !name.trim() ? 'Enter a run name.' : undefined
+                        }
+                        onClick={() =>
+                          void act(async () => {
+                            const next = await renameRun(run.id, {
+                              name,
+                              expected_name: run.name ?? 'Simulation',
+                            });
+                            setRun(next);
+                            if (inspection)
+                              setInspection({ ...inspection, run: next });
+                            setEditingName(false);
+                          })
+                        }
+                      >
+                        Save name
+                      </Button>
+                      <Button
+                        variant="subtle"
+                        onClick={() => setEditingName(false)}
+                      >
+                        Cancel rename
+                      </Button>
+                    </Group>
+                  ) : (
                     <Button
                       variant="subtle"
-                      onClick={() => setEditingName(false)}
+                      size="xs"
+                      w="fit-content"
+                      onClick={() => {
+                        setName(run.name ?? 'Simulation');
+                        setEditingName(true);
+                      }}
                     >
-                      Cancel rename
+                      Rename run
                     </Button>
-                  </Group>
-                ) : (
-                  <Button
-                    variant="subtle"
-                    size="xs"
-                    w="fit-content"
-                    onClick={() => {
-                      setName(run.name ?? 'Simulation');
-                      setEditingName(true);
-                    }}
-                  >
-                    Rename run
-                  </Button>
-                )}
+                  ))}
                 <Text size="sm" c="dimmed">
+                  By <AuthorLink name={run.author} id={run.author_id} /> ·
                   Submitted {new Date(run.submitted_at).toLocaleString()} ·
                   CINDER {run.cinder_package_version}
                 </Text>
@@ -183,6 +185,7 @@ export function RunPage() {
                 </Text>
                 {isActive(run) && (
                   <Alert
+                    color="blue"
                     title={
                       run.cancel_requested_at
                         ? 'Stopping simulation'
@@ -193,7 +196,9 @@ export function RunPage() {
                   >
                     {run.cancel_requested_at
                       ? 'Your slot will be released once the computation has stopped.'
-                      : 'You can leave this page or close the browser. The run continues on the server, and its update will be waiting in Activity.'}
+                      : inspection?.owned
+                        ? 'You can leave this page. The run continues on the server; Activity will show its result.'
+                        : 'This simulation is running. Its latest saved progress appears here.'}
                   </Alert>
                 )}
                 {run.error && (
@@ -202,53 +207,55 @@ export function RunPage() {
                   </Alert>
                 )}
                 <Group>
-                  <Button
-                    component={Link}
-                    to={`/catalog/runs/${run.id}`}
-                    variant="subtle"
-                  >
-                    Public run page
-                  </Button>
-                  {inspection?.availability.full_result && (
-                    <Button component={Link} to={`/playback?run=${run.id}`}>
+                  {(isActive(run) || inspection?.availability.full_result) && (
+                    <Button
+                      component={Link}
+                      to={`/playback?run=${run.id}`}
+                      disabledReason={
+                        isActive(run)
+                          ? 'Playback is available once this run has stopped.'
+                          : undefined
+                      }
+                    >
                       Open result playback
                     </Button>
                   )}
-                  {isActive(run) ? (
-                    <Button
-                      variant="light"
-                      color="red"
-                      loading={busy}
-                      disabledReason={
-                        run.cancel_requested_at
-                          ? 'Cancellation has already been requested.'
-                          : undefined
-                      }
-                      onClick={() =>
-                        void act(async () => setRun(await cancelRun(run.id)))
-                      }
-                    >
-                      Cancel run
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="light"
-                      loading={busy}
-                      disabledReason={
-                        activity?.active
-                          ? 'You already have a queued or running simulation. Wait for it to finish or cancel it from Activity.'
-                          : undefined
-                      }
-                      onClick={() =>
-                        void act(async () => {
-                          const next = await rerun(run.id, retryKey.current);
-                          navigate(`/runs/${next.id}`);
-                        })
-                      }
-                    >
-                      Rerun frozen inputs
-                    </Button>
-                  )}
+                  {inspection?.owned &&
+                    (isActive(run) ? (
+                      <Button
+                        variant="light"
+                        color="red"
+                        loading={busy}
+                        disabledReason={
+                          run.cancel_requested_at
+                            ? 'Cancellation has already been requested.'
+                            : undefined
+                        }
+                        onClick={() =>
+                          void act(async () => setRun(await cancelRun(run.id)))
+                        }
+                      >
+                        Cancel run
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="light"
+                        loading={busy}
+                        disabledReason={
+                          activity?.active
+                            ? 'You already have a queued or running simulation. Wait for it to finish or cancel it from Activity.'
+                            : undefined
+                        }
+                        onClick={() =>
+                          void act(async () => {
+                            const next = await rerun(run.id, retryKey.current);
+                            navigate(`/runs/${next.id}`);
+                          })
+                        }
+                      >
+                        Rerun saved inputs
+                      </Button>
+                    ))}
                   {run.parent_run_id && (
                     <Button
                       component={Link}
@@ -268,16 +275,19 @@ export function RunPage() {
                           undefined)
                     }
                     component={Link}
-                    to={`/input?source_run=${run.id}`}
+                    to={
+                      session
+                        ? `/input?source_run=${run.id}`
+                        : `/login?next=${encodeURIComponent(`/input?source_run=${run.id}`)}`
+                    }
                   >
                     New experiment from this run
                   </Button>
                 </Group>
                 <Text size="sm" c="dimmed">
-                  {inspection?.experiment_unavailable_reason ??
-                    'Opens the same saved vehicle, CVT, engine, tune and load-case versions, including this run’s overrides. Nothing is copied into your library.'}
+                  {inspection?.experiment_unavailable_reason}
                 </Text>
-                {!isActive(run) && (
+                {inspection?.owned && !isActive(run) && (
                   <Text size="sm" c="dimmed">
                     A rerun creates a new record using these frozen inputs and
                     the currently installed solver. This run will remain

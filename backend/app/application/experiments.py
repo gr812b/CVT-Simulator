@@ -58,10 +58,11 @@ def item_response(session, principal, obj, revision=None):
         else None
     )
     cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id) if setup else None
-    from app.application.authorship import author_name
+    from app.application.authorship import author_name, public_author_id
 
     return ExperimentItem(
         author=author_name(session, revision.created_by_user_id),
+        author_id=public_author_id(session, revision.created_by_user_id),
         cvt_object_id=cvt.cvt_design_id if cvt else None,
         cvt_revision_id=cvt.id if cvt else None,
         id=obj.id,

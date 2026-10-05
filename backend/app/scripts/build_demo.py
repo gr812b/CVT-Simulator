@@ -16,21 +16,22 @@ from pathlib import Path
 
 from app.application.cinder_gateway import CinderGateway
 from app.application.demo import DEMO_PATH
-from app.application.physical_contracts import baseline_case
+from app.application.physical_contracts import template_document, validate_physical
+from app.application.roads import apply_scenario, demo_scenario
+from app.core.settings import Settings
 from app.database.hashing import canonical_json_hash
 from app.database.runs import verify_result_contract
 from app.schemas.demo import DemoArtifact
 
 
 def main():
-    case = baseline_case()
-    # Keep baseline mechanics/tune intact; retain ten seconds at a 20 ms report grid.
-    case["scenario"]["time_span_s"] = [0.0, 10.0]
-    case["execution"]["reporting"]["grid"] = {
-        "kind": "uniform_time_step",
-        "count": None,
-        "step_seconds": 0.02,
-    }
+    setup = template_document("setups")
+    setup.data.vehicle.mass_kg = 500 * 0.45359237
+    validation, case = validate_physical(setup)
+    if not validation["is_valid"] or case is None:
+        raise RuntimeError("The McMaster demo setup must pass input validation")
+    scenario = demo_scenario()
+    road = apply_scenario(case, scenario, Settings.from_environment())
     identity = CinderGateway().runtime_identity()
     with tempfile.TemporaryDirectory(prefix="cinder-demo-") as directory:
         source, destination = (
@@ -41,7 +42,13 @@ def main():
             json.dumps(
                 {
                     "input": case,
+                    "worker_pid": os.getpid(),
                     "options": {},
+                    "course_policy": {
+                        "finish_m": road.length_m,
+                        "rollback_m": scenario.stops.rollback_m,
+                        "no_progress_s": scenario.stops.no_progress_s,
+                    },
                     "runtime_identity": identity,
                     "deadline_monotonic": time.monotonic() + 120,
                     "memory_bytes": 4096 * 1024 * 1024,
@@ -77,12 +84,16 @@ def main():
     )
     if result["metrics"]["completed"] is not True:
         raise RuntimeError("A partial simulation cannot replace the public demo")
+    distance = next(
+        column["values"]
+        for column in result["report_table"]["columns"]
+        if column["key"] == "vehicle.distance"
+    )
+    if max(value for value in distance if value is not None) < road.length_m - 0.01:
+        raise RuntimeError("The demo did not reach the course finish")
     demo = DemoArtifact(
-        name="Baja launch demo",
-        description=(
-            "A recorded ten-second launch using the project's "
-            "default Baja setup on flat ground."
-        ),
+        name="McMaster hill course demo",
+        description="The 500 lb McMaster setup crosses a 45° hill and a second 30° climb on a 160 m course.",
         generated_at=datetime.now(UTC),
         runtime_identity=identity,
         input_hash=canonical_json_hash(case),

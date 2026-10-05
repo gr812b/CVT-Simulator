@@ -1,3 +1,4 @@
+import { SchoolSelect } from '../../features/community/SchoolSelect';
 import { Brand } from '@components/appShell/Brand';
 import { useEffect, useState } from 'react';
 import {
@@ -168,16 +169,16 @@ export function AuthPage({ mode }: { mode: Mode }) {
               )}
               {mode === 'register' && (
                 <>
-                  <TextInput
-                    label="School"
-                    description="Optional — leave blank if not affiliated with a school."
-                    maxLength={200}
-                    {...form.getInputProps('school')}
+                  <SchoolSelect
+                    value={form.values.school}
+                    onChange={(value) =>
+                      form.setFieldValue('school', value ?? '')
+                    }
                   />
                   <Text size="sm" c="dimmed">
                     Free accounts save configurations, load cases, tunes and
-                    runs publicly. Your email and account details remain
-                    private.
+                    runs publicly. Your display name and school appear in the
+                    public directory. Your email remains private.
                   </Text>
                 </>
               )}

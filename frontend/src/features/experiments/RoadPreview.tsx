@@ -36,7 +36,7 @@ export function RoadPreview({ road }: { road: Road }) {
         </Text>
       </Group>
       <Text size="xs" c="dimmed">
-        Elevation is scaled to fit.{' '}
+        Horizontal distance and elevation use the same scale.{' '}
         {road.endpoint === 'continue_grade'
           ? 'The final grade continues after the route.'
           : 'The road becomes flat after the route.'}

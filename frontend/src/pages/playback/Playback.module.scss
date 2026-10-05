@@ -8,7 +8,7 @@
   padding: 0.5rem 0 1rem;
 }
 .sceneContainer {
-  height: clamp(360px, 60vh, 650px);
+  height: clamp(340px, 45vh, 540px);
   overflow: hidden;
 }
 .playbarContainer {
@@ -50,5 +50,38 @@
   .playbarContainer > div > :nth-child(4) {
     grid-column: 3;
     grid-row: 1;
+  }
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.visualPanel {
+  min-width: 0;
+}
+.analysisPanel {
+  min-width: 0;
+  container-type: inline-size;
+}
+.plotGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+}
+@container (min-width: 620px) {
+  .plotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 75em) {
+  .workspace {
+    grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.3fr);
+  }
+  .visualPanel {
+    position: sticky;
+    top: calc(var(--app-shell-header-offset, 0px) + 1rem);
   }
 }
