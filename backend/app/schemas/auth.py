@@ -9,7 +9,7 @@ from app.application.schools import known_school
 
 from .common import ApiModel
 
-Password = Annotated[str, StringConstraints(min_length=12, max_length=128)]
+Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 DisplayName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
 ]

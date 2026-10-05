@@ -250,7 +250,7 @@ function Graph2DComponent({
 
 /**
  * Memoized Graph2D - uses referential equality to avoid expensive deep equality checks
- * on large datasets. DOM-based index updates during playback bypass React entirely.
+ * on large datasets. Renderer-layer cursor updates during playback bypass React entirely.
  */
 export const Graph2D = memo(
   Graph2DComponent,

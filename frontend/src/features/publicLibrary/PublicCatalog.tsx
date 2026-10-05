@@ -1,6 +1,6 @@
-import { Tabs } from '@mantine/core';
+import { LibraryTabs } from '../physicalLibrary/LibraryTabs';
 import { useSearchParams } from 'react-router-dom';
-import { kindLabels, isPhysicalKind } from '../physicalLibrary/api';
+import { isPhysicalKind } from '../physicalLibrary/api';
 import {
   LibraryBrowser,
   type LibraryCategory,
@@ -20,7 +20,9 @@ export function PublicCatalog({ authorId }: { authorId?: string }) {
       : 'setups';
   return (
     <>
-      <Tabs
+      <LibraryTabs
+        runs
+        people={!authorId}
         value={kind}
         onChange={(kind) =>
           kind &&
@@ -32,18 +34,7 @@ export function PublicCatalog({ authorId }: { authorId?: string }) {
             return next;
           })
         }
-      >
-        <Tabs.List>
-          {Object.entries(kindLabels).map(([value, label]) => (
-            <Tabs.Tab key={value} value={value}>
-              {label}
-            </Tabs.Tab>
-          ))}
-          <Tabs.Tab value="load-cases">Load cases</Tabs.Tab>
-          <Tabs.Tab value="runs">Runs</Tabs.Tab>
-          {!authorId && <Tabs.Tab value="users">People</Tabs.Tab>}
-        </Tabs.List>
-      </Tabs>
+      />
       {kind === 'users' ? (
         <PublicUsers />
       ) : kind === 'runs' ? (

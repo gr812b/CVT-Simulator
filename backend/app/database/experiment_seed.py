@@ -133,6 +133,13 @@ def seed_experiments(session):
             obj.current_revision_id = revision.id
         session.flush()
     _seed_sample_tunes(session)
+    from sqlalchemy import select
+
+    from app.application.experiment_tuning import ensure_default_tune
+    from app.database.models import CVTDesignVersion
+
+    for cvt in session.scalars(select(CVTDesignVersion)):
+        ensure_default_tune(session, cvt)
 
 
 def _seed_sample_tunes(session):
@@ -199,7 +206,7 @@ def _seed_sample_tunes(session):
             account_id=SEED_ACCOUNT_ID,
             kind="tunes",
             name=f"{code} · {label}",
-            setup_object_id=sample_id("setup"),
+            cvt_object_id=cvt.cvt_design_id,
             is_sample=True,
         )
         session.add(obj)
@@ -207,7 +214,7 @@ def _seed_sample_tunes(session):
         document = TuneDocument(
             kind="tunes",
             name=obj.name,
-            setup_revision_id=sample_id("setup:r2"),
+            cvt_revision_id=cvt.id,
             values={**deepcopy(defaults), **changes},
             notes=f"Section 4.5 tuning example. {description} Uses the application's corrected Enduro section; does not reproduce the frozen paper results.",
         ).model_dump(mode="json")
@@ -248,6 +255,9 @@ def seed_experiment_fixtures(session, *, account_id, user_id, setup_revision_id,
 
     setup = session.get(VehicleAssemblyVersion, setup_revision_id)
     cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id)
+    from app.application.experiment_tuning import ensure_default_tune
+
+    ensure_default_tune(session, cvt)
     engine = session.get(EngineVersion, setup.engine_version_id)
     output = session.get(OutputSystemVersion, setup.output_system_version_id)
     case = baseline_case()

@@ -19,8 +19,8 @@ class Experiment(StringUUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(240))
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     is_sample: Mapped[bool] = mapped_column(Boolean, default=False)
-    setup_object_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("vehicle_assemblies.id", ondelete="RESTRICT")
+    cvt_object_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cvt_designs.id", ondelete="RESTRICT"), index=True
     )
     current_revision_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("experiment_revisions.id", ondelete="RESTRICT")
@@ -59,3 +59,17 @@ class RunNotification(StringUUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), default=utc_now
     )
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CVTDefaultTune(Base):
+    """A CVT revision's preferred tune; runs freeze the chosen tune revision."""
+
+    __tablename__ = "cvt_default_tunes"
+    cvt_revision_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("cvt_design_versions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tune_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("experiments.id", ondelete="RESTRICT"), nullable=False
+    )

@@ -368,6 +368,16 @@ class CinderGateway:
                 break
         return projected
 
+    def _scene_geometry_spec(self, geometry):
+        return self._geometry_context(geometry).build_geometry_spec(
+            primary_outer_radius_at_zero_shift=_number(
+                geometry, "primary_outer_radius_at_zero_shift_m"
+            ),
+            secondary_outer_radius_at_zero_shift=_number(
+                geometry, "secondary_outer_radius_at_zero_shift_m"
+            ),
+        )
+
     def scene_preview(
         self, geometry: Mapping[str, Any], *, frame_count: int = 1
     ) -> ScenePreview:
@@ -376,14 +386,7 @@ class CinderGateway:
         Belt points evaluate CINDER's public cord-path expressions. Sheave
         radius envelopes come from the same resolved spec as the studies.
         """
-        spec = self._geometry_context(geometry).build_geometry_spec(
-            primary_outer_radius_at_zero_shift=_number(
-                geometry, "primary_outer_radius_at_zero_shift_m"
-            ),
-            secondary_outer_radius_at_zero_shift=_number(
-                geometry, "secondary_outer_radius_at_zero_shift_m"
-            ),
-        )
+        spec = self._scene_geometry_spec(geometry)
         dimensions = SceneGeometry(
             belt_outer_width_m=spec.belt.outer_width,
             belt_inner_width_m=spec.belt.inner_width,
@@ -431,6 +434,109 @@ class CinderGateway:
                 )
             )
         return ScenePreview(geometry=dimensions, frames=frames)
+
+    def tune_scene(self, assembly):
+        """Preview the initial mechanism contact without a full-travel audit.
+
+        This is a visual projection, not a substitute for save/run validation.
+        """
+        from cinder.contracts.document import (
+            _decode_flyweight_geometry,
+            _decode_pulley,
+        )
+        from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
+            PivotedRollerFollowerGeometry,
+        )
+
+        preview = self.scene_preview(assembly["geometry"])
+        primary = None
+        roller_point = None
+        for component in assembly["pulleys"]["primary"]["components"]:
+            if component["kind"] != "fixed_pivot_roller_flyweight":
+                continue
+            spec = _decode_flyweight_geometry(component["geometry"])
+            surface = PivotedRollerFollowerGeometry(spec)
+            contact = surface.contact_candidates(0)
+            if not contact:
+                raise ValueError(
+                    "The primary roller does not contact this ramp at its initial position."
+                )
+            roller = min(contact, key=lambda item: item.angle)
+            roller_point = (
+                roller.roller_center_axial_position,
+                roller.roller_center_radius,
+            )
+            primary = FlyweightScene(
+                count=component["mass_geometry"]["number_of_flyweights"],
+                pivot_m=(spec.pivot_axial_position, spec.pivot_radius),
+                roller_radius_m=spec.roller_radius,
+                roller_side_sign=spec.roller_side_sign,
+                ramp_points_m=[
+                    surface.ramp_surface_point(
+                        contact_coordinate=float(x), axial_position=0
+                    )
+                    for x in np.linspace(
+                        spec.ramp_profile.x_min, spec.ramp_profile.x_max, 80
+                    )
+                ],
+            )
+        coupling = assembly["pulleys"]["secondary"].get("helical_coupling")
+        points, poses = [], []
+        secondary = _decode_pulley(
+            assembly["pulleys"]["secondary"], location="secondary"
+        ).helical_coupling
+        if coupling:
+            helix = secondary.profile
+            for q in np.linspace(
+                helix.opening_travel_min, helix.opening_travel_max, 80
+            ):
+                theta = helix.evaluate(float(q)).theta
+                points.append(
+                    (
+                        helix.radius * float(np.cos(theta)),
+                        helix.radius * float(np.sin(theta)),
+                        float(q),
+                    )
+                )
+        dimensions = self._scene_geometry_spec(assembly["geometry"])
+        path = BeltPulleyGeometry(dimensions)
+        for shift in np.unique(
+            np.append(
+                np.linspace(0, dimensions.max_shift, 65), dimensions.deadzone_shift
+            )
+        ):
+            position = path.evaluate(float(shift))
+            local = position.secondary_axial_coordinate.value
+            angle = (
+                secondary.evaluate_from_local_coordinate(
+                    axial_position=local, d_axial_position_ds=0, d2_axial_position_ds2=0
+                ).theta
+                if secondary
+                else 0
+            )
+            poses.append(
+                MechanismPose(
+                    shift_m=float(shift),
+                    primary_roller_m=roller_point if shift == 0 else None,
+                    primary_ramp_shift_m=position.primary_axial_coordinate.value,
+                    secondary_axial_position_m=local,
+                    secondary_angle_rad=angle,
+                )
+            )
+        preview.geometry.mechanisms = MechanismScene(
+            primary=primary,
+            secondary_helix_points_m=points,
+            primary_has_spring=any(
+                c["kind"] == "axial_spring"
+                for c in assembly["pulleys"]["primary"]["components"]
+            ),
+            secondary_has_spring=any(
+                c["kind"] == "axial_spring"
+                for c in assembly["pulleys"]["secondary"]["components"]
+            ),
+            poses=poses,
+        )
+        return preview
 
     def assembly_scene(self, assembly):
         return self._assembly_scene(json.dumps(assembly, sort_keys=True))

@@ -62,9 +62,9 @@ export function AuthPage({ mode }: { mode: Mode }) {
           : 'Enter your name.',
       password: (value) =>
         mode === 'forgot' ||
-        (mode === 'login' ? value.length > 0 : value.length >= 12)
+        (mode === 'login' ? value.length > 0 : value.length >= 8)
           ? null
-          : 'Use at least 12 characters.',
+          : 'Use at least 8 characters.',
       confirm: (value, values) =>
         !['register', 'reset'].includes(mode) || value === values.password
           ? null
@@ -197,7 +197,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
                   description={
                     mode === 'login'
                       ? undefined
-                      : 'At least 12 characters. Spaces and passphrases are welcome.'
+                      : 'At least 8 characters. Spaces and passphrases are welcome.'
                   }
                   autoComplete={
                     mode === 'login' ? 'current-password' : 'new-password'

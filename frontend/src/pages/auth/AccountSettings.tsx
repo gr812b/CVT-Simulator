@@ -35,7 +35,7 @@ export function AccountSettings() {
     initialValues: { current_password: '', password: '', confirm: '' },
     validate: {
       password: (value) =>
-        value.length >= 12 ? null : 'Use at least 12 characters.',
+        value.length >= 8 ? null : 'Use at least 8 characters.',
       confirm: (value, values) =>
         value === values.password ? null : 'Passwords do not match.',
     },
@@ -152,7 +152,7 @@ export function AccountSettings() {
               />
               <PasswordInput
                 label="New password"
-                description="At least 12 characters."
+                description="At least 8 characters."
                 autoComplete="new-password"
                 maxLength={128}
                 required

@@ -11,9 +11,16 @@ from app.application import access, jobs, roads
 from app.application import experiments as service
 from app.application.auth import Principal
 from app.application.container import ApplicationContainer
-from app.application.experiment_tuning import tune_surface
+from app.application.experiment_tuning import (
+    apply_values,
+    cvt_tuning,
+    set_default_tune,
+    tune_surface,
+)
 from app.application.physical_library import differences
+from app.core.errors import ApiProblem
 from app.schemas.experiments import (
+    DefaultTuneRequest,
     ExperimentArchive,
     ExperimentCompare,
     ExperimentCopy,
@@ -30,9 +37,11 @@ from app.schemas.experiments import (
     RoadResolution,
     SpatialRoad,
     SubmitExperiment,
+    TunePreviewRequest,
     TuneSurface,
 )
 from app.schemas.runs import RunStatusResponse
+from app.schemas.scene import ScenePreview
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -40,6 +49,7 @@ router = APIRouter(prefix="/experiments", tags=["experiments"])
 PrincipalDep = Depends(get_current_principal)
 SessionDep = Depends(get_database_session)
 ContainerDep = Depends(get_container)
+PublicDep = Depends(get_public_reader)
 
 
 @router.get("/metadata", response_model=ExperimentMetadata)
@@ -52,13 +62,13 @@ def resolve_road(request: SpatialRoad, container: ApplicationContainer = Contain
     return roads.resolve_road(request, container.settings)
 
 
-@router.get("/tuning/{setup_revision_id}", response_model=TuneSurface)
+@router.get("/tuning/{cvt_revision_id}", response_model=TuneSurface)
 def tuning(
-    setup_revision_id: str,
+    cvt_revision_id: str,
     session: Session = SessionDep,
-    principal: Principal = PrincipalDep,
+    principal=PublicDep,
 ):
-    return tune_surface(session, principal, setup_revision_id)
+    return tune_surface(session, principal, cvt_revision_id)
 
 
 @router.post("/preview", response_model=ExperimentPreview)
@@ -117,7 +127,7 @@ def list_items(
     cvt_object_id: str | None = None,
     author_id: str | None = None,
     session: Session = SessionDep,
-    principal=Depends(get_public_reader),
+    principal=PublicDep,
 ):
     return ExperimentList(
         items=service.list_items(
@@ -151,7 +161,7 @@ def detail(
     object_id: str,
     revision_id: str | None = None,
     session: Session = SessionDep,
-    principal=Depends(get_public_reader),
+    principal=PublicDep,
 ):
     return service.detail(session, principal, object_id, revision_id)
 
@@ -240,7 +250,7 @@ def compare(
     before: str,
     after: str,
     session: Session = SessionDep,
-    principal=Depends(get_public_reader),
+    principal=PublicDep,
 ):
     left, right = [
         service.get_revision(session, principal, rev) for rev in (before, after)
@@ -248,3 +258,28 @@ def compare(
     if left.experiment_id != right.experiment_id:
         raise access.unavailable()
     return ExperimentCompare(differences=differences(left.document, right.document))
+
+
+@router.put("/tuning/{cvt_revision_id}/default", response_model=TuneSurface)
+def choose_default(
+    cvt_revision_id: str,
+    request: DefaultTuneRequest,
+    session: Session = SessionDep,
+    principal: Principal = PrincipalDep,
+):
+    return set_default_tune(session, principal, cvt_revision_id, request)
+
+
+@router.post("/tuning/preview", response_model=ScenePreview)
+def preview_tune(
+    request: TunePreviewRequest,
+    session: Session = SessionDep,
+    principal=PublicDep,
+    container: ApplicationContainer = ContainerDep,
+):
+    _, assembly, params = cvt_tuning(session, principal, request.cvt_revision_id)
+    apply_values(assembly, params, request.values)
+    try:
+        return container.gateway.tune_scene(assembly)
+    except (ValueError, KeyError, TypeError) as error:
+        raise ApiProblem(422, "tune_preview_invalid", str(error)) from error

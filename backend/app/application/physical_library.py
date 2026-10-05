@@ -445,6 +445,9 @@ def save_document(
     )
     if isinstance(document, CvtDocument):
         version.belt_version_id = document.data.belt.revision_id
+        from app.application.experiment_tuning import ensure_default_tune
+
+        ensure_default_tune(session, version)
     version.payload_hash = canonical_json_hash(document.model_dump(mode="json"))
     obj.draft_updated_at = utc_now()
     session.flush()
@@ -564,7 +567,25 @@ def detail(session, principal, kind, object_id, revision_id=None):
         "is_valid": version.validation_status == "valid",
         "findings": version.validation_messages or [],
     }
+    references = []
+    choices = []
+    if document.kind == "setups":
+        choices = [("engines", document.data.engine), ("cvts", document.data.cvt)]
+    elif document.kind == "cvts":
+        choices = [("belts", document.data.belt)]
+    for child_kind, choice in choices:
+        if choice.revision_id:
+            child = _revision(session, principal, child_kind, choice.revision_id)
+            references.append(
+                {
+                    "kind": child_kind,
+                    "object_id": _parent(session, child_kind, child).id,
+                    "revision_id": choice.revision_id,
+                    "name": choice.name,
+                }
+            )
     return PhysicalDetail(
+        references=references,
         item=selection.item,
         document=document,
         history=history,

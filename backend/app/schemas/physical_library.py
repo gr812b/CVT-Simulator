@@ -233,7 +233,15 @@ class PhysicalSelection(PhysicalModel):
     document: PhysicalDocument
 
 
+class PhysicalReference(PhysicalModel):
+    kind: PhysicalKind
+    object_id: str
+    revision_id: str
+    name: str
+
+
 class PhysicalDetail(PhysicalSelection):
+    references: list[PhysicalReference] = Field(default_factory=list)
     history: list[PhysicalRevision]
     updates: list[ComponentUpdate]
     validation: CaseValidation

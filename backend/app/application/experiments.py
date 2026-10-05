@@ -8,7 +8,12 @@ from sqlalchemy import select, update
 from app.application import access
 from app.application.auth import aware
 from app.application.cinder_gateway import CinderGateway
-from app.application.experiment_tuning import apply_values, setup_tuning
+from app.application.experiment_tuning import (
+    apply_values,
+    cvt_tuning,
+    default_tune_revision,
+    setup_tuning,
+)
 from app.application.input_validation import validate_assembly, validate_case
 from app.application.physical_contracts import (
     baseline_case,
@@ -18,9 +23,13 @@ from app.application.physical_library import document_for_revision
 from app.application.roads import apply_scenario, default_scenario, validate_scenario
 from app.core.errors import ApiProblem
 from app.database.base import utc_now
-from app.database.experiment_models import Experiment, ExperimentRevision
+from app.database.experiment_models import (
+    CVTDefaultTune,
+    Experiment,
+    ExperimentRevision,
+)
 from app.database.hashing import canonical_json_hash
-from app.database.models import CVTDesignVersion, VehicleAssemblyVersion
+from app.database.models import CVTDesignVersion
 from app.schemas.experiments import (
     ExperimentDetail,
     ExperimentDocument,
@@ -52,12 +61,11 @@ def get_revision(session, principal, revision_id, kind=None):
 
 def item_response(session, principal, obj, revision=None):
     revision = revision or session.get(ExperimentRevision, obj.current_revision_id)
-    setup = (
-        session.get(VehicleAssemblyVersion, revision.document["setup_revision_id"])
+    cvt = (
+        session.get(CVTDesignVersion, revision.document["cvt_revision_id"])
         if obj.kind == "tunes"
         else None
     )
-    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id) if setup else None
     from app.application.authorship import author_name, public_author_id
 
     return ExperimentItem(
@@ -73,7 +81,6 @@ def item_response(session, principal, obj, revision=None):
         updated_at=aware(obj.updated_at),
         owned=obj.account_id == principal.account_id,
         archived=obj.archived,
-        setup_object_id=setup.vehicle_assembly_id if setup else None,
         sample=obj.is_sample,
         description=revision.document.get("notes", ""),
     )
@@ -91,17 +98,15 @@ def list_items(
         ).where(ExperimentRevision.created_by_user_id == author_id)
     if not include_archived:
         stmt = stmt.where(Experiment.archived.is_(False))
+    if cvt_object_id is not None:
+        stmt = stmt.where(Experiment.cvt_object_id == cvt_object_id)
     items = [
         item_response(session, principal, obj)
         for obj in session.scalars(
             stmt.order_by(Experiment.updated_at.desc(), Experiment.id)
         )
     ]
-    return [
-        item
-        for item in items
-        if cvt_object_id is None or item.cvt_object_id == cvt_object_id
-    ]
+    return items
 
 
 def detail(session, principal, object_id, revision_id=None):
@@ -134,9 +139,7 @@ def validate_document(session, principal, document, settings):
     if document.kind == "scenarios":
         validate_scenario(document, settings)
         return None
-    setup, assembly, params = setup_tuning(
-        session, principal, document.setup_revision_id
-    )
+    cvt, assembly, params = cvt_tuning(session, principal, document.cvt_revision_id)
     apply_values(assembly, params, document.values)
     gateway = CinderGateway()
     try:
@@ -146,16 +149,20 @@ def validate_document(session, principal, document, settings):
         raise ApiProblem(422, "invalid_tune", str(exc)) from exc
     if not validation["is_valid"]:
         raise ApiProblem(
-            422, "invalid_tune", "The tuned assembly is invalid.", validation
+            422,
+            "invalid_tune",
+            " ".join(f["message"] for f in validation["findings"])
+            or "The tuned assembly is invalid.",
+            validation,
         )
-    return setup.vehicle_assembly_id
+    return cvt.cvt_design_id
 
 
 def save(
     session, principal, settings, document, *, expected=None, object_id=None, note=""
 ):
     principal.require_write()
-    setup_id = validate_document(session, principal, document, settings)
+    cvt_id = validate_document(session, principal, document, settings)
     payload = document.model_dump(mode="json")
     content_hash = canonical_json_hash(payload)
     if object_id:
@@ -179,6 +186,15 @@ def save(
                 "This item changed or was archived. Reopen it before saving.",
             )
         previous = session.get(ExperimentRevision, expected)
+        if (
+            document.kind == "tunes"
+            and previous.document["cvt_revision_id"] != document.cvt_revision_id
+        ):
+            raise ApiProblem(
+                422,
+                "tune_cvt_mismatch",
+                "Create a new tune when changing its CVT version.",
+            )
         if previous.content_hash == content_hash:
             return obj, False
         number = previous.number + 1
@@ -205,10 +221,10 @@ def save(
     )
     session.add(revision)
     session.flush()
-    obj.current_revision_id, obj.name, obj.setup_object_id = (
+    obj.current_revision_id, obj.name, obj.cvt_object_id = (
         revision.id,
         document.name,
-        setup_id,
+        cvt_id,
     )
     obj.updated_at = utc_now()
     session.flush()
@@ -217,6 +233,14 @@ def save(
 
 def archive(session, principal, object_id, expected, archived):
     obj = get_item(session, principal, object_id, write=True)
+    if archived and session.scalar(
+        select(CVTDefaultTune.cvt_revision_id).where(CVTDefaultTune.tune_id == obj.id)
+    ):
+        raise ApiProblem(
+            409,
+            "default_tune",
+            "Choose another default tune before archiving this one.",
+        )
     if not session.execute(
         update(Experiment)
         .where(Experiment.id == obj.id, Experiment.current_revision_id == expected)
@@ -239,6 +263,8 @@ def configuration(session, principal, settings, selection):
     tune_revision = (
         get_revision(session, principal, selection.tune_revision_id, "tunes")
         if selection.tune_revision_id
+        else default_tune_revision(session, setup.cvt_design_version_id)
+        if selection.tune_values is None
         else None
     )
     scenario_revision = (
@@ -247,13 +273,7 @@ def configuration(session, principal, settings, selection):
         else None
     )
     tune = DOCUMENT.validate_python(tune_revision.document) if tune_revision else None
-    tune_setup = (
-        session.get(VehicleAssemblyVersion, tune.setup_revision_id) if tune else None
-    )
-    if tune and (
-        tune_setup is None
-        or tune_setup.cvt_design_version_id != setup.cvt_design_version_id
-    ):
+    if tune and tune.cvt_revision_id != setup.cvt_design_version_id:
         raise ApiProblem(
             422,
             "tune_cvt_mismatch",

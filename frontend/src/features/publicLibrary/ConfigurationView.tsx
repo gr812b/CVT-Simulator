@@ -11,6 +11,7 @@ import type {
   BeltData,
   EngineData,
   PhysicalDocument,
+  PhysicalDetail,
   PhysicalField,
   VehicleData,
 } from '../physicalLibrary/api';
@@ -20,6 +21,8 @@ import {
 } from '@utils/jsonPointer';
 import { displayScale } from '@utils/units';
 import { EngineCurve } from '../physicalLibrary/EngineCurve';
+import { ConfigurationLink } from '../physicalLibrary/ConfigurationLink';
+import { isCvtHardwareField } from '../physicalLibrary/cvtHardware';
 
 type Measurement = {
   label: string;
@@ -176,22 +179,14 @@ function EngineView({ value }: { value: EngineData }) {
 export function ConfigurationView({
   document,
   fields,
+  references = [],
 }: {
   document: PhysicalDocument;
   fields: PhysicalField[];
+  references?: PhysicalDetail['references'];
 }) {
-  const cvt =
-    document.kind === 'setups'
-      ? document.data.cvt.data
-      : document.kind === 'cvts'
-        ? document.data
-        : null;
-  const engine =
-    document.kind === 'setups'
-      ? document.data.engine.data
-      : document.kind === 'engines'
-        ? document.data
-        : null;
+  const cvt = document.kind === 'cvts' ? document.data : null;
+  const engine = document.kind === 'engines' ? document.data : null;
   const groups = cvt
     ? [
         'geometry',
@@ -205,6 +200,8 @@ export function ConfigurationView({
           items: fields
             .filter(
               (field) =>
+                isCvtHardwareField(field.path) &&
+                !field.advanced &&
                 field.path.startsWith(`/${group}/`) &&
                 !field.path.startsWith('/geometry/belt'),
             )
@@ -241,13 +238,50 @@ export function ConfigurationView({
           </Stack>
         </Paper>
       )}
+      {references.map((reference) => (
+        <Paper withBorder p="lg" key={reference.kind}>
+          <Stack gap="xs">
+            <Text size="sm" c="dimmed">
+              {reference.kind === 'engines'
+                ? 'Engine'
+                : reference.kind === 'cvts'
+                  ? 'CVT'
+                  : 'Belt'}
+            </Text>
+            <ConfigurationLink
+              to={`/catalog/${reference.kind}/${reference.object_id}?revision=${reference.revision_id}`}
+              from={document.name}
+            >
+              {reference.name}
+            </ConfigurationLink>
+            {reference.kind === 'engines' && (
+              <Text size="sm">Full-open-throttle torque curve</Text>
+            )}
+            {reference.kind === 'cvts' && document.kind === 'setups' && (
+              <Text size="sm" c="dimmed">
+                Belt · {document.data.cvt.data.belt.name}
+              </Text>
+            )}
+            {reference.kind === 'belts' && cvt && (
+              <Text size="sm">
+                {Number((cvt.belt.data.outer_length_m * 1000).toPrecision(5))}{' '}
+                mm outer length ·{' '}
+                {Number(
+                  ((cvt.belt.data.half_angle_rad * 180) / Math.PI).toPrecision(
+                    4,
+                  ),
+                )}
+                ° belt and sheave half-angle
+              </Text>
+            )}
+          </Stack>
+        </Paper>
+      ))}
       {engine && (
         <Paper withBorder p="lg">
           <Stack>
             <Title order={2} size="h3">
-              {document.kind === 'setups'
-                ? document.data.engine.name
-                : 'Full-open-throttle torque curve'}
+              Full-open-throttle torque curve
             </Title>
             <EngineView value={engine} />
           </Stack>
@@ -260,17 +294,6 @@ export function ConfigurationView({
       )}
       {cvt && (
         <>
-          <Paper withBorder p="lg">
-            <Stack>
-              <Title order={2} size="h3">
-                Belt · {cvt.belt.name}
-              </Title>
-              <BeltView value={cvt.belt.data} />
-              <Text size="sm" c="dimmed">
-                CINDER uses the belt half-angle for both sheaves.
-              </Text>
-            </Stack>
-          </Paper>
           <Accordion multiple defaultValue={['geometry']} variant="separated">
             {groups.map(({ group, items }) => (
               <Accordion.Item key={group} value={group}>

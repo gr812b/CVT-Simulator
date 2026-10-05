@@ -3,10 +3,17 @@
 import math
 from copy import deepcopy
 
+from sqlalchemy import select
+
 from app.application import access
 from app.application.physical_contracts import baseline_case, cvt_fields
 from app.core.errors import ApiProblem
-from app.database.models import CVTDesignVersion, OutputSystemVersion
+from app.database.experiment_models import (
+    CVTDefaultTune,
+    Experiment,
+    ExperimentRevision,
+)
+from app.database.hashing import canonical_json_hash
 from app.database.resolver import _current_assembly_document
 from app.database.tuning import readable_tuning_schema
 from app.schemas.experiments import TuneSurface
@@ -21,6 +28,9 @@ def pointer(root, path):
 
 def parameters(assembly, schema):
     result = readable_tuning_schema(assembly, schema)["parameters"]
+    for param in result:
+        param["minimum"] = param.get("minimum", param.get("min"))
+        param["maximum"] = param.get("maximum", param.get("max"))
     for i, component in enumerate(assembly["pulleys"]["primary"]["components"]):
         if component["kind"] != "fixed_pivot_roller_flyweight":
             continue
@@ -62,27 +72,152 @@ def parameters(assembly, schema):
                 "kind": "ramp",
                 "label": "Primary ramp profile",
                 "description": "Ramp geometry for the selected fixed-pivot actuator.",
-                "group": "ramp",
+                "group": "primary",
                 "path": prefix + "/geometry/ramp_profile",
                 "default": component["geometry"]["ramp_profile"],
             },
         ]
+    coupling = assembly["pulleys"]["secondary"].get("helical_coupling")
+    if coupling:
+        result = [p for p in result if p["key"] != "secondary_helix_profile"]
+        result.append(
+            {
+                "key": "secondary_helix_profile",
+                "kind": "ramp",
+                "group": "secondary",
+                "label": "Secondary helix profile",
+                "description": "Helix angle is measured from the circumferential direction.",
+                "path": "/pulleys/secondary/helical_coupling/profile/circumferential_profile",
+                "default": coupling["profile"]["circumferential_profile"],
+                "angle_convention": "helix",
+            }
+        )
     return result
+
+
+def cvt_tuning(session, principal, cvt_revision_id):
+    cvt = access.library_version(session, principal, "cvt-designs", cvt_revision_id)
+    assembly = _current_assembly_document(
+        cvt.cinder_assembly, baseline_case()["execution"]
+    )
+    return cvt, assembly, parameters(assembly, cvt.tuning_schema)
+
+
+def ensure_default_tune(session, cvt):
+    """Called only by creation/seed workflows, never as a side effect of reading."""
+    current = session.get(CVTDefaultTune, cvt.id)
+    if current:
+        return current
+    reference = session.scalar(
+        select(Experiment).where(
+            Experiment.cvt_object_id == cvt.cvt_design_id,
+            Experiment.is_sample.is_(True),
+            Experiment.name == "R00 · Reference",
+            Experiment.archived.is_(False),
+        )
+    )
+    if reference:
+        revision = session.get(ExperimentRevision, reference.current_revision_id)
+        if revision.document.get("cvt_revision_id") != cvt.id:
+            reference = None
+    if reference is None:
+        reference = Experiment(
+            account_id=cvt.cvt_design.account_id,
+            kind="tunes",
+            name="Default tune",
+            cvt_object_id=cvt.cvt_design_id,
+            is_sample=cvt.cvt_design.catalog_status
+            in ("seeded_example", "official", "admin_curated"),
+        )
+        session.add(reference)
+        session.flush()
+        assembly = _current_assembly_document(
+            cvt.cinder_assembly, baseline_case()["execution"]
+        )
+        document = {
+            "kind": "tunes",
+            "name": reference.name,
+            "notes": "",
+            "cvt_revision_id": cvt.id,
+            "values": {
+                p["key"]: p["default"] for p in parameters(assembly, cvt.tuning_schema)
+            },
+        }
+        revision = ExperimentRevision(
+            experiment_id=reference.id,
+            number=1,
+            document=document,
+            content_hash=canonical_json_hash(document),
+            created_by_user_id=cvt.created_by_user_id,
+            change_note="Initial tune for this CVT version.",
+        )
+        session.add(revision)
+        session.flush()
+        reference.current_revision_id = revision.id
+    current = CVTDefaultTune(cvt_revision_id=cvt.id, tune_id=reference.id)
+    session.add(current)
+    session.flush()
+    return current
+
+
+def default_tune_revision(session, cvt_revision_id):
+    default = session.get(CVTDefaultTune, cvt_revision_id)
+    if default is None:
+        raise ApiProblem(
+            409,
+            "missing_default_tune",
+            "Initialize the database to create this CVT's default tune.",
+        )
+    obj = session.get(Experiment, default.tune_id)
+    return session.get(ExperimentRevision, obj.current_revision_id)
+
+
+def set_default_tune(session, principal, cvt_revision_id, request):
+    from app.application import experiments
+
+    cvt = access.library_version(session, principal, "cvt-designs", cvt_revision_id)
+    access.library_object(
+        session, principal, "cvt-designs", cvt.cvt_design_id, write=True
+    )
+    tune = experiments.get_item(session, principal, request.tune_id)
+    revision = session.get(ExperimentRevision, tune.current_revision_id)
+    if (
+        tune.archived
+        or tune.kind != "tunes"
+        or revision.document["cvt_revision_id"] != cvt.id
+    ):
+        raise ApiProblem(
+            422, "tune_cvt_mismatch", "Choose an active tune for this CVT version."
+        )
+    from sqlalchemy import update
+
+    changed = session.execute(
+        update(CVTDefaultTune)
+        .where(
+            CVTDefaultTune.cvt_revision_id == cvt.id,
+            CVTDefaultTune.tune_id == request.expected_tune_id,
+        )
+        .values(tune_id=tune.id)
+    ).rowcount
+    if not changed:
+        raise ApiProblem(
+            409,
+            "default_tune_conflict",
+            "The default tune changed. Reload before choosing it again.",
+        )
+    return tune_surface(session, principal, cvt.id)
 
 
 def setup_tuning(session, principal, setup_revision_id):
     setup = access.library_version(
         session, principal, "vehicle-assemblies", setup_revision_id
     )
-    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id)
-    assembly = _current_assembly_document(
-        cvt.cinder_assembly, baseline_case()["execution"]
-    )
-    return setup, assembly, parameters(assembly, cvt.tuning_schema)
+    _, assembly, params = cvt_tuning(session, principal, setup.cvt_design_version_id)
+    return setup, assembly, params
 
 
-def tune_surface(session, principal, setup_revision_id):
-    setup, assembly, params = setup_tuning(session, principal, setup_revision_id)
+def tune_surface(session, principal, cvt_revision_id):
+    cvt, _assembly, params = cvt_tuning(session, principal, cvt_revision_id)
     hints = cvt_fields()
     fields = []
     for param in params:
@@ -97,6 +232,7 @@ def tune_surface(session, principal, setup_revision_id):
                 {
                     **common,
                     "default": param["default"],
+                    "angle_convention": param.get("angle_convention", "profile"),
                     "fields": [
                         hint.model_copy(update={"path": hint.path[len(normalized) :]})
                         for hint in hints
@@ -123,21 +259,22 @@ def tune_surface(session, principal, setup_revision_id):
                     "maximum": param.get("maximum"),
                 }
             )
-    cvt = session.get(CVTDesignVersion, setup.cvt_design_version_id)
+    from app.application import experiments
+
+    revision = default_tune_revision(session, cvt.id)
+    default = experiments.detail(
+        session, principal, revision.experiment_id, revision.id
+    )
+    template = default.document.model_copy(deep=True)
+    template.values = {**{p["key"]: p["default"] for p in params}, **template.values}
     return TuneSurface(
         cvt_object_id=cvt.cvt_design_id,
         cvt_revision_id=cvt.id,
-        template={
-            "kind": "tunes",
-            "name": "New tune",
-            "setup_revision_id": setup.id,
-            "values": {p["key"]: p["default"] for p in params},
-        },
-        setup_name=setup.vehicle_assembly.name,
-        setup_revision_number=setup.version_number,
-        default_vehicle_mass_kg=session.get(
-            OutputSystemVersion, setup.output_system_version_id
-        ).output_boundary_template["vehicle"]["mass_kg"],
+        cvt_name=cvt.cvt_design.name,
+        cvt_revision_number=cvt.version_number,
+        can_set_default=cvt.cvt_design.account_id == principal.account_id,
+        default_tune=default,
+        template=template,
         fields=fields,
     )
 
@@ -149,8 +286,7 @@ def apply_values(assembly, params, values):
         raise ApiProblem(
             422,
             "unsupported_tune_value",
-            "Values not supported by this setup revision: "
-            + ", ".join(sorted(unknown)),
+            "Values not supported by this CVT version: " + ", ".join(sorted(unknown)),
         )
     for key, value in values.items():
         param = known[key]

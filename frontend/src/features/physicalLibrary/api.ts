@@ -45,8 +45,8 @@ export type PhysicalMetadata = Pick<
 export const kindLabels: Record<PhysicalKind, string> = {
   setups: 'Vehicle setups',
   engines: 'Engines',
-  belts: 'Belts',
   cvts: 'CVTs',
+  belts: 'Belts',
 };
 export const singularLabels: Record<PhysicalKind, string> = {
   setups: 'vehicle setup',

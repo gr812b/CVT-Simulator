@@ -20,7 +20,6 @@ import {
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import {
-  IconArrowLeft,
   IconCheck,
   IconCopy,
   IconHistory,
@@ -68,7 +67,8 @@ import { DifferenceList, PhysicalStatus } from './PhysicalStatus';
 import { RevisionHistory } from './RevisionHistory';
 import { VehicleEditor } from './VehicleEditor';
 import styles from './PhysicalEditor.module.scss';
-import { PublicTuneList } from '../publicLibrary/PublicExperiment';
+import { CvtTunes } from '../experiments/CvtTunes';
+import { ConfigurationBack } from './ConfigurationLink';
 import { PublishDialog } from '../publicLibrary/PublishDialog';
 import { CopyAttribution } from '../publicLibrary/CopyAttribution';
 
@@ -94,7 +94,7 @@ function PhysicalEditor({
   objectId: string;
 }) {
   const navigate = useNavigate();
-  const { hash } = useLocation();
+  const { hash, state: returnState } = useLocation();
   const { session } = useAuth();
   const [params] = useSearchParams();
   const revisionId = params.get('revision') ?? undefined;
@@ -253,6 +253,7 @@ function PhysicalEditor({
       if (isNew) {
         permitNavigation.current = true;
         navigate(`/library/${kind}/${result.detail.item.id}`, {
+          state: returnState,
           replace: true,
         });
       }
@@ -271,7 +272,7 @@ function PhysicalEditor({
       if (!detail) return;
       const result = await copyPhysical(kind, detail.item.revision_id);
       permitNavigation.current = true;
-      navigate(`/library/${kind}/${result.item.id}`);
+      navigate(`/library/${kind}/${result.item.id}`, { state: returnState });
     });
   const restore = (revision: string) =>
     perform(async () => {
@@ -364,14 +365,10 @@ function PhysicalEditor({
     <Container size="lg" py="lg">
       <Stack gap="lg">
         <Group justify="space-between">
-          <Button
-            component={Link}
+          <ConfigurationBack
             to={session ? `/library/${kind}` : `/catalog?kind=${kind}`}
-            variant="subtle"
-            leftSection={<IconArrowLeft size={16} />}
-          >
-            {kindLabels[kind]}
-          </Button>
+            label={kindLabels[kind]}
+          />
           <Group>
             <Badge variant="outline" color={dirty ? 'yellow' : 'teal'}>
               {dirty ? 'Unsaved changes' : isNew ? 'New working copy' : 'Saved'}
@@ -434,6 +431,7 @@ function PhysicalEditor({
                       <Button
                         component={Link}
                         to={`/library/${kind}/${objectId}`}
+                        state={returnState}
                       >
                         Open latest version
                       </Button>
@@ -586,13 +584,12 @@ function PhysicalEditor({
                   </Accordion.Item>
                 </Accordion>
               )}
-              {kind === 'cvts' && detail && (
-                <Paper withBorder p="lg" id="tunes">
-                  <PublicTuneList cvtObjectId={detail.item.id} />
-                </Paper>
-              )}
               {!editable ? (
-                <ConfigurationView document={document} fields={fields} />
+                <ConfigurationView
+                  document={document}
+                  fields={fields}
+                  references={detail?.references}
+                />
               ) : (
                 <fieldset className={styles.working} disabled={busy}>
                   <Stack gap="lg">
@@ -762,6 +759,14 @@ function PhysicalEditor({
                     </Paper>
                   </Stack>
                 </fieldset>
+              )}
+              {kind === 'cvts' && detail && !editable && (
+                <Paper withBorder p="lg" id="tunes">
+                  <CvtTunes
+                    cvtObjectId={detail.item.id}
+                    cvtRevisionId={revisionId ?? detail.item.revision_id}
+                  />
+                </Paper>
               )}
               <Group justify="space-between">
                 {detail?.item.owned && (

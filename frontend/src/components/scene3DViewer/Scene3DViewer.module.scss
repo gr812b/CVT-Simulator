@@ -100,3 +100,7 @@
     max(0.5rem, env(safe-area-inset-bottom))
     max(0.5rem, env(safe-area-inset-left));
 }
+
+.componentPreview {
+  min-height: 0;
+}

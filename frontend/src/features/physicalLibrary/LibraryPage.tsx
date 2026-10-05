@@ -1,6 +1,7 @@
+import { LibraryTabs } from './LibraryTabs';
 import { LoadCaseEditor } from '../experiments/LoadCaseEditor';
 import { useState } from 'react';
-import { Container, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { IconPlus } from '@tabler/icons-react';
 import {
@@ -10,7 +11,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { isPhysicalKind, kindLabels, singularLabels } from './api';
+import { isPhysicalKind, singularLabels } from './api';
 import { LibraryBrowser } from './LibraryBrowser';
 
 export function LibraryPage() {
@@ -59,19 +60,10 @@ export function LibraryPage() {
             </Button>
           )}
         </Group>
-        <Tabs
+        <LibraryTabs
           value={kind}
           onChange={(value) => value && navigate(`/library/${value}?${params}`)}
-        >
-          <Tabs.List>
-            {Object.entries(kindLabels).map(([value, label]) => (
-              <Tabs.Tab key={value} value={value}>
-                {label}
-              </Tabs.Tab>
-            ))}
-            <Tabs.Tab value="load-cases">Load cases</Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
+        />
         <LibraryBrowser kind={kind} refresh={loadCaseRefresh} />
       </Stack>
     </Container>

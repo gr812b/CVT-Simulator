@@ -384,7 +384,7 @@ def experiment_draft(session, principal, settings, run_id):
         setup=physical_library.selection_for_revision(
             session, principal, "setups", version.id
         ),
-        surface=tune_surface(session, principal, version.id),
+        surface=tune_surface(session, principal, version.cvt_design_version_id),
         tune=selected_experiment(selection.tune_revision_id, "tunes"),
         load_case=selected_experiment(selection.scenario_revision_id, "scenarios"),
     )

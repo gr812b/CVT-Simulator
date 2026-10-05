@@ -140,7 +140,7 @@ class TuneDocument(ExperimentModel):
     kind: Literal["tunes"]
     name: Name
     notes: str = Field(default="", max_length=4000)
-    setup_revision_id: str
+    cvt_revision_id: str
     values: TuneValues = Field(default_factory=dict)
 
 
@@ -198,7 +198,6 @@ class ExperimentItem(ExperimentModel):
     updated_at: datetime
     owned: bool
     archived: bool
-    setup_object_id: str | None = None
     cvt_object_id: str | None = None
     cvt_revision_id: str | None = None
 
@@ -265,6 +264,7 @@ class ProfileTuneField(ExperimentModel):
     group: str
     default: CinderRamp
     fields: list[PhysicalField]
+    angle_convention: Literal["profile", "helix"] = "profile"
 
 
 TuneField = Annotated[ScalarTuneField | ProfileTuneField, Field(discriminator="kind")]
@@ -274,9 +274,10 @@ class TuneSurface(ExperimentModel):
     cvt_object_id: str
     cvt_revision_id: str
     template: TuneDocument
-    setup_name: str
-    setup_revision_number: int
-    default_vehicle_mass_kg: float
+    cvt_name: str
+    cvt_revision_number: int
+    can_set_default: bool
+    default_tune: ExperimentDetail
     fields: list[TuneField]
 
 
@@ -355,3 +356,13 @@ class SubmitExperiment(ExperimentSelection):
     request_key: str = Field(min_length=16, max_length=64)
     name: Name = "Simulation"
     parent_run_id: str | None = None
+
+
+class DefaultTuneRequest(ExperimentModel):
+    tune_id: str
+    expected_tune_id: str
+
+
+class TunePreviewRequest(ExperimentModel):
+    cvt_revision_id: str
+    values: TuneValues = Field(default_factory=dict)

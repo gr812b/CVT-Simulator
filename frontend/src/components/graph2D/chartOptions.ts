@@ -424,7 +424,7 @@ export function generateEChartsOptions(
     // TODO: Only enable if playback paused
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'cross' },
+      axisPointer: { type: 'none' },
       backgroundColor: COLORS.TOOLTIP_BG,
       borderColor: COLORS.GRID,
       textStyle: { color: COLORS.TEXT },

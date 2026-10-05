@@ -23,10 +23,10 @@ export type RunActivity = Schema['RunActivity'];
 
 export const getExperimentMetadata = async () =>
   dataOrThrow(await api.GET('/api/v1/experiments/metadata'));
-export const getTuneSurface = async (setup: string) =>
+export const getTuneSurface = async (cvt: string) =>
   dataOrThrow(
-    await api.GET('/api/v1/experiments/tuning/{setup_revision_id}', {
-      params: { path: { setup_revision_id: setup } },
+    await api.GET('/api/v1/experiments/tuning/{cvt_revision_id}', {
+      params: { path: { cvt_revision_id: cvt } },
     }),
   );
 export const resolveRoad = async (body: Road, signal?: AbortSignal) =>
@@ -154,3 +154,18 @@ export const message = (error: unknown) =>
     : 'This operation could not be completed.';
 export const isActive = (run: RunStatus) =>
   run.status === 'queued' || run.status === 'running';
+
+export const setDefaultTune = async (surface: TuneSurface, tuneId: string) =>
+  dataOrThrow(
+    await api.PUT('/api/v1/experiments/tuning/{cvt_revision_id}/default', {
+      params: { path: { cvt_revision_id: surface.cvt_revision_id } },
+      body: { tune_id: tuneId, expected_tune_id: surface.default_tune.item.id },
+    }),
+  );
+export const previewTune = async (value: Tune, signal?: AbortSignal) =>
+  dataOrThrow(
+    await api.POST('/api/v1/experiments/tuning/preview', {
+      body: { cvt_revision_id: value.cvt_revision_id, values: value.values },
+      signal,
+    }),
+  );

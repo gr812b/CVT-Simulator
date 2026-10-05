@@ -52,7 +52,6 @@ import {
   listExperiments,
   message,
   previewExperiment,
-  saveExperiment,
   submitExperiment,
   type ExperimentDetail,
   type ExperimentItem,
@@ -69,14 +68,39 @@ import {
   PrimaryBoundaryEditor,
   type PrimaryBoundary,
 } from './PrimaryBoundaryEditor';
-import { RevisionToolbar } from './RevisionToolbar';
 import { RoadPreview } from './RoadPreview';
 import { ScenarioEditor } from './ScenarioEditor';
-import { TuneEditor } from './TuneEditor';
+import { TuneDialog } from './TuneDialog';
 import { useRunActivity } from './RunActivity';
 import styles from './RunBuilder.module.css';
 
 type Setup = Extract<PhysicalDocument, { kind: 'setups' }>;
+async function setupWithTune(
+  vehicle: Setup,
+  tune: ExperimentDetail | null,
+): Promise<Setup> {
+  if (
+    tune?.document.kind !== 'tunes' ||
+    !tune.item.cvt_object_id ||
+    vehicle.data.cvt.revision_id === tune.document.cvt_revision_id
+  )
+    return vehicle;
+  const cvt = await getPhysical(
+    'cvts',
+    tune.item.cvt_object_id,
+    tune.document.cvt_revision_id,
+  );
+  if (cvt.document.kind !== 'cvts') throw new Error('This tune has no CVT.');
+  const { kind, ...choice } = cvt.document;
+  void kind;
+  return {
+    ...vehicle,
+    data: {
+      ...vehicle.data,
+      cvt: { ...choice, revision_id: cvt.item.revision_id },
+    },
+  };
+}
 const steps = [
   'Vehicle',
   'CVT & belt',
@@ -113,6 +137,9 @@ export function ExperimentPage() {
     null,
   );
   const [tuneOpen, setTuneOpen] = useState(false);
+  const [requestedTune, setRequestedTune] = useState<ExperimentDetail | null>(
+    null,
+  );
   const [busy, setBusy] = useState(true);
   const [componentBusy, setComponentBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -256,7 +283,11 @@ export function ExperimentPage() {
           road ? getExperiment(road.id) : null,
         ]);
         const nextSurface = current
-          ? await getTuneSurface(current.item.revision_id)
+          ? await getTuneSurface(
+              current.document.kind === 'setups'
+                ? current.document.data.cvt.revision_id!
+                : '',
+            )
           : null;
         if (disposed) return;
         if (current?.document.kind === 'setups') {
@@ -265,37 +296,31 @@ export function ExperimentPage() {
         }
         if (nextSurface) {
           setSurface(nextSurface);
-          setTune(nextSurface.template);
+          setTune(nextSurface.default_tune.document as Tune);
+          setTuneDetail(nextSurface.default_tune);
         }
         if (selectedRoad) acceptLoadCase(selectedRoad);
         if (params.get('tune')) {
-          const selectedTune = await getExperiment(params.get('tune')!);
-          if (disposed) return;
-          if (
-            selectedTune.document.kind === 'tunes' &&
-            selectedTune.item.setup_object_id
-          ) {
-            const revision = selectedTune.document.setup_revision_id;
-            const [pinnedSetup, pinnedSurface] = await Promise.all([
-              getPhysical(
-                'setups',
-                selectedTune.item.setup_object_id,
-                revision,
-              ),
-              getTuneSurface(revision),
-            ]);
+          const selectedTune = await getExperiment(
+            params.get('tune')!,
+            params.get('tune_revision') ?? undefined,
+          );
+          if (disposed || selectedTune.document.kind !== 'tunes') return;
+          setRequestedTune(selectedTune);
+          if (current?.document.kind === 'setups') {
+            const vehicle = await setupWithTune(current.document, selectedTune);
+            const chosenSurface =
+              nextSurface?.cvt_revision_id ===
+              selectedTune.document.cvt_revision_id
+                ? nextSurface
+                : await getTuneSurface(selectedTune.document.cvt_revision_id);
             if (disposed) return;
-            if (pinnedSetup.document.kind !== 'setups') return;
-            setSetupDetail({
-              ...pinnedSetup,
-              item: { ...pinnedSetup.item, revision_id: revision },
-            });
-            setSetup(pinnedSetup.document);
-            setSurface(pinnedSurface);
+            setSetup(vehicle);
+            setSurface(chosenSurface);
             setTuneDetail(selectedTune);
             setTune(selectedTune.document);
           }
-        }
+        } else setRequestedTune(null);
       })
       .catch((cause) => {
         if (!disposed) setError(message(cause));
@@ -321,12 +346,18 @@ export function ExperimentPage() {
       );
       const next = await getPhysical('setups', id, selected?.revision_id);
       if (next.document.kind !== 'setups') return;
-      const nextSurface = await getTuneSurface(next.item.revision_id);
+      const vehicle = await setupWithTune(next.document, requestedTune);
+      const nextSurface = await getTuneSurface(vehicle.data.cvt.revision_id!);
+      const chosen =
+        requestedTune?.document.kind === 'tunes' &&
+        requestedTune.document.cvt_revision_id === nextSurface.cvt_revision_id
+          ? requestedTune
+          : nextSurface.default_tune;
       setSetupDetail(next);
-      setSetup(next.document);
+      setSetup(vehicle);
       setSurface(nextSurface);
-      setTune(nextSurface.template);
-      setTuneDetail(null);
+      setTune(chosen.document as Tune);
+      setTuneDetail(chosen);
       setPrimary(null);
       setVehicleMassOverride(null);
       setPreview(null);
@@ -342,7 +373,7 @@ export function ExperimentPage() {
         return;
       const template = await physicalTemplate('setups');
       if (template.kind !== 'setups') return;
-      setSetup({ ...template, name: '' });
+      setSetup(await setupWithTune({ ...template, name: '' }, requestedTune));
       setSetupDetail(null);
       setSurface(null);
       setTune(null);
@@ -382,13 +413,23 @@ export function ExperimentPage() {
     let nextTune = tune;
     if (
       !nextSurface ||
-      nextSurface.template.setup_revision_id !== current.item.revision_id
+      (current.document.kind === 'setups' &&
+        nextSurface.cvt_revision_id !== current.document.data.cvt.revision_id)
     ) {
       const previousSurface = nextSurface;
-      nextSurface = await getTuneSurface(current.item.revision_id);
+      nextSurface = await getTuneSurface(
+        current.document.kind === 'setups'
+          ? current.document.data.cvt.revision_id!
+          : '',
+      );
       if (previousSurface?.cvt_revision_id !== nextSurface.cvt_revision_id) {
-        nextTune = nextSurface.template;
-        setTuneDetail(null);
+        const chosen =
+          requestedTune?.document.kind === 'tunes' &&
+          requestedTune.document.cvt_revision_id === nextSurface.cvt_revision_id
+            ? requestedTune
+            : nextSurface.default_tune;
+        nextTune = chosen.document as Tune;
+        setTuneDetail(chosen);
       }
       setSurface(nextSurface);
       setTune(nextTune);
@@ -645,6 +686,12 @@ export function ExperimentPage() {
                             )}
                           </>
                         )}
+                        {requestedTune && step === 0 && (
+                          <Alert title={`Using ${requestedTune.item.name}`}>
+                            Choose a vehicle. This tune and its CVT will be
+                            selected for the setup.
+                          </Alert>
+                        )}
                         {setup && step === 1 && (
                           <>
                             <ComponentPicker
@@ -684,41 +731,41 @@ export function ExperimentPage() {
                               label="CVT tune"
                               searchable
                               allowDeselect={false}
-                              value={tuneDetail?.item.id ?? 'default'}
-                              data={[
-                                {
-                                  group: 'Selected CVT',
-                                  items: [
-                                    {
-                                      value: 'default',
-                                      label: 'Use CVT default settings',
-                                    },
-                                  ],
-                                },
-                                ...libraryOptions(
-                                  tunes.filter(
+                              value={tuneDetail?.item.id ?? null}
+                              placeholder="Unsaved tune values"
+                              data={libraryOptions(
+                                [
+                                  surface.default_tune.item,
+                                  ...tunes.filter(
                                     (item) =>
+                                      item.id !==
+                                        surface.default_tune.item.id &&
                                       item.cvt_revision_id ===
                                         surface.cvt_revision_id &&
                                       (!item.archived ||
                                         item.id === tuneDetail?.item.id),
                                   ),
-                                  (item) => item.id,
-                                ),
-                              ]}
+                                ].map((item) => ({
+                                  ...item,
+                                  name:
+                                    item.name +
+                                    (item.id === surface.default_tune.item.id
+                                      ? ' · Default'
+                                      : ''),
+                                })),
+                                (item) => item.id,
+                              )}
                               onChange={(id) =>
                                 void task(async () => {
-                                  if (id === 'default') {
-                                    setTune(surface.template);
-                                    setTuneDetail(null);
-                                    return;
-                                  }
                                   if (!id) return;
-                                  const next = await getExperiment(
-                                    id,
-                                    tunes.find((item) => item.id === id)
-                                      ?.revision_id,
-                                  );
+                                  const next =
+                                    id === surface.default_tune.item.id
+                                      ? surface.default_tune
+                                      : await getExperiment(
+                                          id,
+                                          tunes.find((item) => item.id === id)
+                                            ?.revision_id,
+                                        );
                                   if (next.document.kind === 'tunes') {
                                     setTune(next.document);
                                     setTuneDetail(next);
@@ -1080,92 +1127,28 @@ export function ExperimentPage() {
                 }}
               />
             )}
-            <Modal
-              opened={tuneOpen}
-              onClose={() => setTuneOpen(false)}
-              title="CVT tune"
-              size="xl"
-            >
-              {tune && surface && (
-                <Stack>
-                  <RevisionToolbar
-                    label="Tune"
-                    document={tune}
-                    detail={tuneDetail}
-                    items={tunes.filter(
-                      (item) =>
-                        item.cvt_revision_id === surface.cvt_revision_id,
-                    )}
-                    busy={busy}
-                    invalid={Boolean(invalid.size)}
-                    onChange={(next) => next.kind === 'tunes' && setTune(next)}
-                    onNew={() => {
-                      setTune({ ...surface.template, name: '' });
-                      setTuneDetail(null);
-                    }}
-                    onLoad={(id) =>
-                      void task(async () => {
-                        const next = await getExperiment(
-                          id,
-                          tunes.find((item) => item.id === id)?.revision_id,
-                        );
-                        if (
-                          next.document.kind !== 'tunes' ||
-                          !next.item.setup_object_id
-                        )
-                          return;
-                        if (
-                          next.item.cvt_revision_id !== surface.cvt_revision_id
-                        )
-                          throw new Error(
-                            'Choose a tune for this CVT version.',
-                          );
-                        setTune(next.document);
-                        setTuneDetail(next);
-                      })
-                    }
-                    onSave={(asNew) =>
-                      void task(async () => {
-                        const next = await saveExperiment(
-                          tune,
-                          tuneDetail,
-                          asNew,
-                        );
-                        setTuneDetail(next);
-                        if (next.document.kind === 'tunes')
-                          setTune(next.document);
-                        setTunes(await listExperiments('tunes'));
-                      })
-                    }
-                    onRestored={(next) => {
-                      setTuneDetail(next);
-                      if (next.document.kind === 'tunes')
-                        setTune(next.document);
-                    }}
-                    onRefresh={() =>
-                      void task(async () =>
-                        setTunes(await listExperiments('tunes')),
-                      )
-                    }
-                  />
-                  <TuneEditor
-                    value={tune}
-                    surface={surface}
-                    onChange={setTune}
-                  />
-                  <Button
-                    disabledReason={
-                      invalid.size
-                        ? 'Correct the highlighted tuning inputs.'
-                        : undefined
-                    }
-                    onClick={() => setTuneOpen(false)}
-                  >
-                    Use these tune values
-                  </Button>
-                </Stack>
-              )}
-            </Modal>
+            {tuneOpen && tune && surface && (
+              <TuneDialog
+                mode={tuneDetail?.item.owned ? 'edit' : 'copy'}
+                initial={tune}
+                detail={tuneDetail}
+                surface={surface}
+                onClose={() => setTuneOpen(false)}
+                onSaved={(next) => {
+                  setTuneDetail(next);
+                  if (next.document.kind === 'tunes') setTune(next.document);
+                  setTunes((old) => [
+                    ...old.filter((item) => item.id !== next.item.id),
+                    next.item,
+                  ]);
+                  setTuneOpen(false);
+                }}
+                onUse={(value) => {
+                  setTune(value);
+                  setTuneOpen(false);
+                }}
+              />
+            )}
           </QuantityValidationContext.Provider>
         )}
         <Modal

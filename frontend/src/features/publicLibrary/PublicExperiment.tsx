@@ -3,6 +3,7 @@ import { LoadCaseEditor } from '../experiments/LoadCaseEditor';
 import { useEffect, useState } from 'react';
 import {
   Accordion,
+  Anchor,
   Alert,
   Badge,
   Code,
@@ -18,70 +19,20 @@ import { ActionButton as Button } from '@components/button/ActionButton';
 import { useAuth } from '@contexts/AuthContext';
 import {
   getExperiment,
-  listExperiments,
+  restoreExperiment,
   message,
   type ExperimentDetail,
-  type ExperimentItem,
 } from '../experiments/api';
 import { RoadPreview } from '../experiments/RoadPreview';
 import { CatalogFrame } from './CatalogFrame';
-
-export function PublicTuneList({ cvtObjectId }: { cvtObjectId: string }) {
-  const [items, setItems] = useState<ExperimentItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    let stopped = false;
-    setItems(null);
-    setError(null);
-    void listExperiments('tunes', cvtObjectId)
-      .then((next) => {
-        if (!stopped) setItems(next.filter((x) => !x.archived));
-      })
-      .catch((cause) => {
-        if (!stopped) setError(message(cause));
-      });
-    return () => {
-      stopped = true;
-    };
-  }, [cvtObjectId]);
-  return (
-    <Stack>
-      <Title order={2}>Tunes for this CVT</Title>
-      <Text c="dimmed">
-        Saved tunes for this CVT. A tune can be used with any vehicle using its
-        CVT version.
-      </Text>
-      {error && <Alert color="red">{error}</Alert>}
-      {!items && !error && <Loader />}
-      {items?.map((item) => (
-        <Paper withBorder p="lg" key={item.id}>
-          <Group justify="space-between">
-            <div>
-              <Text fw={600}>{item.name}</Text>
-              <Text size="sm">
-                By <AuthorLink name={item.author} id={item.author_id} />
-              </Text>
-              <Text size="sm" c="dimmed">
-                {item.description}
-              </Text>
-            </div>
-            <Button
-              component={Link}
-              to={`/catalog/tunes/${item.id}`}
-              variant="light"
-            >
-              View tune
-            </Button>
-          </Group>
-        </Paper>
-      ))}
-      {items?.length === 0 && <Text>No saved tunes yet.</Text>}
-    </Stack>
-  );
-}
+import { ConfigurationBack } from '../physicalLibrary/ConfigurationLink';
+import { TuneDetails } from '../experiments/TuneDetails';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function PublicExperiment() {
   const { objectId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const revision = params.get('revision') ?? undefined;
   const [editing, setEditing] = useState(false);
@@ -89,6 +40,7 @@ export function PublicExperiment() {
   const [detail, setDetail] = useState<ExperimentDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
+  const [working, setWorking] = useState(false);
   useEffect(() => {
     let stopped = false;
     setDetail(null);
@@ -116,14 +68,10 @@ export function PublicExperiment() {
           }}
         />
       )}
-      <Button
-        component={Link}
+      <ConfigurationBack
         to={`/catalog?kind=${detail?.item.kind === 'tunes' ? 'cvts' : 'load-cases'}`}
-        variant="subtle"
-        w="fit-content"
-      >
-        Back to public library
-      </Button>
+        label="public library"
+      />
       {error && (
         <Alert color="red">
           {error}
@@ -139,6 +87,7 @@ export function PublicExperiment() {
           <Group>
             <Title order={1}>{detail.document.name}</Title>
             <Badge>Public</Badge>
+            {detail.item.archived && <Badge color="gray">Archived</Badge>}
           </Group>
           <Text size="sm" c="dimmed">
             By{' '}
@@ -158,6 +107,7 @@ export function PublicExperiment() {
             <Button
               component={Link}
               to={`/catalog/${detail.document.kind === 'scenarios' ? 'load-cases' : 'tunes'}/${detail.item.id}`}
+              state={location.state}
               variant="light"
               w="fit-content"
             >
@@ -195,16 +145,16 @@ export function PublicExperiment() {
               </Button>
             </>
           ) : (
-            <Button
-              component={Link}
-              to={
-                session
-                  ? `/input?setup=${detail.item.setup_object_id}&tune=${detail.item.id}`
-                  : `/login?next=${encodeURIComponent(`/input?setup=${detail.item.setup_object_id}&tune=${detail.item.id}`)}`
-              }
-            >
-              Use this tune
-            </Button>
+            <TuneDetails
+              detail={detail}
+              historical={Boolean(revision)}
+              onSaved={(next) => {
+                setDetail(next);
+                navigate(`/catalog/tunes/${next.item.id}`, {
+                  state: location.state,
+                });
+              }}
+            />
           )}
           <Accordion variant="separated">
             <Accordion.Item value="history">
@@ -215,11 +165,37 @@ export function PublicExperiment() {
                 <Stack>
                   <Text size="sm">Viewing v{detail.item.revision_number}</Text>
                   {detail.history.map((item) => (
-                    <Text size="sm" key={item.id}>
-                      Version {item.number} ·{' '}
-                      {new Date(item.created_at).toLocaleDateString()}
-                      {item.change_note ? ` · ${item.change_note}` : ''}
-                    </Text>
+                    <Group justify="space-between" key={item.id}>
+                      <Anchor
+                        component={Link}
+                        to={`/catalog/${detail.item.kind === 'tunes' ? 'tunes' : 'load-cases'}/${detail.item.id}?revision=${item.id}`}
+                        state={location.state}
+                      >
+                        Version {item.number} ·{' '}
+                        {new Date(item.created_at).toLocaleDateString()}
+                        {item.change_note ? ` · ${item.change_note}` : ''}
+                      </Anchor>
+                      {detail.item.owned &&
+                        !revision &&
+                        !detail.item.archived &&
+                        item.id !== detail.item.revision_id && (
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            disabled={working}
+                            onClick={() => {
+                              setWorking(true);
+                              setError(null);
+                              void restoreExperiment(detail, item.id)
+                                .then(setDetail)
+                                .catch((cause) => setError(message(cause)))
+                                .finally(() => setWorking(false));
+                            }}
+                          >
+                            Restore as new version
+                          </Button>
+                        )}
+                    </Group>
                   ))}
                   <Code block>{JSON.stringify(detail.document, null, 2)}</Code>
                 </Stack>

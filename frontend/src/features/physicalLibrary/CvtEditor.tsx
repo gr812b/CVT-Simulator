@@ -9,15 +9,14 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import {
   expandJsonPointerTemplate,
   getValueAtJsonPointer,
   setValueAtJsonPointer,
-  type JsonValue,
 } from '@utils/jsonPointer';
 import { BeltPicker } from './BeltPicker';
+import { isCvtHardwareField } from './cvtHardware';
 import type { CvtData, PhysicalField, PhysicalItem } from './api';
 
 function fieldLabel(field: PhysicalField, path: string) {
@@ -25,81 +24,6 @@ function fieldLabel(field: PhysicalField, path: string) {
   return segment
     ? `Segment ${Number(segment[1]) + 1} · ${field.label}`
     : field.label;
-}
-
-function ProfileActions({
-  assembly,
-  prefix,
-  onChange,
-}: {
-  assembly: CvtData['assembly'];
-  prefix: string;
-  onChange: (assembly: CvtData['assembly']) => void;
-}) {
-  const profiles: { path: string; segments: JsonValue[] }[] = [];
-  const visit = (value: unknown, path: string) => {
-    if (!value || typeof value !== 'object') return;
-    Object.entries(value).forEach(([key, child]) => {
-      const next = `${path}/${key}`;
-      if (key === 'segments' && Array.isArray(child) && next.startsWith(prefix))
-        profiles.push({ path: next, segments: child as JsonValue[] });
-      else visit(child, next);
-    });
-  };
-  visit(assembly, '');
-  return (
-    <Stack gap="xs">
-      {profiles.map((profile) => (
-        <Group key={profile.path}>
-          <Text size="sm">
-            {profile.path.includes('circumferential')
-              ? 'Helix profile'
-              : 'Ramp profile'}
-          </Text>
-          <Button
-            size="xs"
-            variant="light"
-            disabledReason={
-              profile.segments.length >= 24
-                ? 'The profile has reached its 24-segment limit.'
-                : undefined
-            }
-            onClick={() =>
-              onChange(
-                setValueAtJsonPointer(assembly, profile.path, [
-                  ...profile.segments,
-                  structuredClone(profile.segments.at(-1)!),
-                ]),
-              )
-            }
-          >
-            Duplicate final segment
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            disabledReason={
-              profile.segments.length <= 1
-                ? 'At least one profile segment is required.'
-                : undefined
-            }
-            onClick={() =>
-              onChange(
-                setValueAtJsonPointer(
-                  assembly,
-                  profile.path,
-                  profile.segments.slice(0, -1),
-                ),
-              )
-            }
-          >
-            Remove final segment
-          </Button>
-        </Group>
-      ))}
-    </Stack>
-  );
 }
 
 export function CvtEditor({
@@ -126,6 +50,7 @@ export function CvtEditor({
       {fields
         .filter(
           (field) =>
+            isCvtHardwareField(field.path) &&
             (advanced || !field.advanced) &&
             field.path.startsWith(prefix.replace(/\/\d+\//g, '/*/')) &&
             !field.path.startsWith('/geometry/belt') &&
@@ -162,6 +87,10 @@ export function CvtEditor({
   );
   return (
     <Stack gap="lg">
+      <Text size="sm" c="dimmed">
+        Weights, springs, ramp and helix profiles are adjusted in Tunes for this
+        CVT after saving the hardware.
+      </Text>
       <Accordion
         variant="separated"
         multiple
@@ -256,8 +185,7 @@ export function CvtEditor({
         {(['primary', 'secondary'] as const).map((mount) => (
           <Accordion.Item key={mount} value={mount}>
             <Accordion.Control>
-              {mount === 'primary' ? 'Primary' : 'Secondary'} actuator hardware
-              & profiles
+              {mount === 'primary' ? 'Primary' : 'Secondary'} mounting geometry
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="xl">
@@ -276,13 +204,6 @@ export function CvtEditor({
                     <Text fw={600}>Helical coupling</Text>
                     {numericFields(`/pulleys/${mount}/helical_coupling/`)}
                   </Stack>
-                )}
-                {!disabled && (
-                  <ProfileActions
-                    assembly={assembly}
-                    prefix={`/pulleys/${mount}/`}
-                    onChange={changeAssembly}
-                  />
                 )}
               </Stack>
             </Accordion.Panel>

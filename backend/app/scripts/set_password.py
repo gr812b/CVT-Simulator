@@ -25,9 +25,9 @@ def main() -> None:
             parser.error(
                 "No existing user has that email. Register a new account in the app."
             )
-        password = getpass("New password (12–128 characters): ")
-        if not 12 <= len(password) <= 128:
-            parser.error("Password must contain 12–128 characters.")
+        password = getpass("New password (8–128 characters): ")
+        if not 8 <= len(password) <= 128:
+            parser.error("Password must contain 8–128 characters.")
         if getpass("Confirm new password: ") != password:
             parser.error("Passwords do not match.")
         invalidate_credentials(session, user, password)

@@ -26,9 +26,9 @@ from cinder.model.cvt.actuation import (
     FlyweightMassGeometry,
     HelicalTorqueReactionForce,
     HelicalTorqueReactionSpec,
-    PulleyActuator,
     PivotedRollerFollowerFlyweightMap,
     PivotedRollerFollowerGeometrySpec,
+    PulleyActuator,
 )
 from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
     CompiledPivotedRollerFollowerGeometry,
@@ -60,17 +60,31 @@ from cinder.model.system import (
     PulleySpec,
 )
 
-from .versions import ASSEMBLY_DOCUMENT_SCHEMA_VERSION
 from ._decode import (
     DesignDocumentError,
+)
+from ._decode import (
     optional_number as _optional_number,
+)
+from ._decode import (
     require as _require,
+)
+from ._decode import (
     require_integer as _integer,
+)
+from ._decode import (
     require_mapping as _mapping,
+)
+from ._decode import (
     require_number as _number,
+)
+from ._decode import (
     require_sequence as _sequence,
+)
+from ._decode import (
     require_string as _string,
 )
+from .versions import ASSEMBLY_DOCUMENT_SCHEMA_VERSION
 
 ASSEMBLY_DOCUMENT_TYPE = "cinder_cvt_assembly"
 
@@ -351,12 +365,11 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
 _flyweight_compilation_lock = RLock()
 
 
-@lru_cache(maxsize=32)
-def _compile_flyweight_geometry(
-    serialized: str,
-) -> CompiledPivotedRollerFollowerGeometry:
-    geometry = json.loads(serialized)
-    geometry_spec = PivotedRollerFollowerGeometrySpec(
+def _decode_flyweight_geometry(
+    geometry: Mapping[str, Any],
+) -> PivotedRollerFollowerGeometrySpec:
+    """Decode mounting/profile geometry without compiling or auditing travel."""
+    return PivotedRollerFollowerGeometrySpec(
         pivot_axial_position=_number(geometry, "pivot_axial_position_m"),
         pivot_radius=_number(geometry, "pivot_radius_m"),
         arm_length=_number(geometry, "arm_length_m"),
@@ -393,8 +406,15 @@ def _compile_flyweight_geometry(
             geometry, "coordinate_tolerance_m", default=1.0e-10
         ),
     )
+
+
+@lru_cache(maxsize=32)
+def _compile_flyweight_geometry(
+    serialized: str,
+) -> CompiledPivotedRollerFollowerGeometry:
+    geometry = json.loads(serialized)
     return CompiledPivotedRollerFollowerGeometry(
-        geometry_spec,
+        _decode_flyweight_geometry(geometry),
         _integer(geometry, "compilation_points")
         if "compilation_points" in geometry
         else 257,

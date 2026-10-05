@@ -59,6 +59,14 @@ The [demo and worker follow-up](../docs/DEMO_AND_WORKER_TROUBLESHOOTING.md) adds
 anonymous recorded demo and portable memory monitoring. Install the updated
 requirements before restarting the worker; its new dependency is `psutil`.
 
+## CVT-owned tunes and component previews
+
+See [CVT_TUNES_AND_PLAYBACK_CURSOR.md](../docs/CVT_TUNES_AND_PLAYBACK_CURSOR.md)
+for the CVT-owned tune workflow, per-version defaults, shared editor and mechanism
+previews, and the playback cursor fix. Run `alembic upgrade head` before restarting
+this update: migration `20261005_0010` moves existing tunes to their CVT references
+and initializes defaults while retaining saved run inputs.
+
 ## Local development
 
 From `backend/`:
