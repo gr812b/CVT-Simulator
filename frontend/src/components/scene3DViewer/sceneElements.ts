@@ -4,16 +4,17 @@ import { sceneAppearance } from '../../styles/theme';
 import { CVT_MODEL_IDS } from './proceduralModels';
 import { createBeltMesh } from './beltGeometry';
 
-/** Toggle a translucent "ghosted" view of the sheaves without touching the belt. */
+/** Reveal the working mechanisms through their enclosing sheaves and cam wall. */
 export function setCVTModelsTransparent(
   controller: Scene3DController,
   transparent: boolean,
 ): void {
-  CVT_MODEL_IDS.forEach((id) => {
+  [...CVT_MODEL_IDS, 'helix'].forEach((id) => {
     const model = controller.getModel(id);
     if (!model) return;
-    model.object3D.traverse((object) => {
+    model.object3D.children.forEach((object) => {
       if (!(object instanceof THREE.Mesh)) return;
+      if (id === 'helix' && object.name !== 'slot-wall') return;
       const materials = Array.isArray(object.material)
         ? object.material
         : [object.material];
@@ -77,10 +78,13 @@ export function setupBelt(controller: Scene3DController): {
     beltMesh: mesh,
     cleanup: () => {
       controller.removeObject(mesh);
-      mesh.traverse(object => {
+      mesh.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
         object.geometry.dispose();
-        (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => material.dispose());
+        (Array.isArray(object.material)
+          ? object.material
+          : [object.material]
+        ).forEach((material) => material.dispose());
       });
     },
   };

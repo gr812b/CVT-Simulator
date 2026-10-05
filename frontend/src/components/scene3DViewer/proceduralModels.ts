@@ -1,4 +1,11 @@
-import { createMechanisms, mechanismPose, positionMechanisms } from './mechanisms';
+import {
+  createMechanisms,
+  mechanismLayout,
+  mechanismPose,
+  positionMechanisms,
+  sheaveHub,
+} from './mechanisms';
+import { ring } from './mechanismGeometry';
 import * as THREE from 'three';
 import type { Model3DConfig } from '@utils/sceneTypes';
 import type { Scene3DController } from '@utils/Scene3DController';
@@ -11,10 +18,6 @@ export const CVT_MODEL_IDS = [
   'secondaryFixed',
   'secondaryMoving',
 ] as const;
-
-function hubRadius(minRadius: number, geometry: SceneGeometry): number {
-  return Math.max(minRadius - geometry.beltHeight, minRadius * 0.14);
-}
 
 function material(color: string): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
@@ -33,9 +36,10 @@ function sheave(
   side: number,
   accent: string,
   shaft: boolean,
+  shaftRadius: number,
 ): THREE.Group {
   const group = new THREE.Group();
-  const hub = hubRadius(minimum, geometry);
+  const hub = sheaveHub(minimum, geometry);
   const rim = maximum + geometry.beltHeight * 0.12;
   const thickness = rim * 0.055;
   const slope = Math.tan(geometry.halfAngle);
@@ -52,14 +56,20 @@ function sheave(
     appearance.radialSegments,
   );
   surface.rotateX(Math.PI / 2);
-  group.add(new THREE.Mesh(surface, material(shaft ? appearance.fixedSheave : appearance.movingSheave)));
+  group.add(
+    new THREE.Mesh(
+      surface,
+      material(shaft ? appearance.fixedSheave : appearance.movingSheave),
+    ),
+  );
 
-  const hubMesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(hub, hub, thickness * 2.5, 40),
+  const hubMesh = ring(
+    shaft ? shaftRadius * 0.98 : shaftRadius * 1.02,
+    hub,
+    side * thickness - thickness * 1.25,
+    side * thickness + thickness * 1.25,
     material(accent),
   );
-  hubMesh.rotation.x = Math.PI / 2;
-  hubMesh.position.z = side * thickness;
   group.add(hubMesh);
   const rimMesh = new THREE.Mesh(
     new THREE.TorusGeometry(
@@ -88,8 +98,8 @@ function sheave(
   if (shaft) {
     const axle = new THREE.Mesh(
       new THREE.CylinderGeometry(
-        hub * 0.52,
-        hub * 0.52,
+        shaftRadius,
+        shaftRadius,
         geometry.beltOuterWidth + lip * 2 + thickness * 7,
         32,
       ),
@@ -102,6 +112,7 @@ function sheave(
 }
 
 export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
+  const layout = mechanismLayout(geometry);
   return [
     {
       id: 'primaryFixed',
@@ -112,6 +123,7 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         -1,
         appearance.primary,
         true,
+        layout.shaftP,
       ),
     },
     {
@@ -124,6 +136,7 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         1,
         appearance.primary,
         false,
+        layout.shaftP,
       ),
     },
     {
@@ -135,6 +148,7 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         1,
         appearance.secondary,
         true,
+        layout.shaftS,
       ),
     },
     {
@@ -147,6 +161,7 @@ export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
         -1,
         appearance.secondary,
         false,
+        layout.shaftS,
       ),
     },
     ...createMechanisms(geometry),
@@ -174,12 +189,12 @@ export function positionCVT(
   const slope = Math.tan(geometry.halfAngle);
   const primaryGap =
     geometry.beltOuterWidth / 2 -
-    (pose.primaryRadius - hubRadius(geometry.primaryMinRadius, geometry)) *
-    slope;
+    (pose.primaryRadius - sheaveHub(geometry.primaryMinRadius, geometry)) *
+      slope;
   const secondaryGap =
     geometry.beltOuterWidth / 2 -
-    (pose.secondaryRadius - hubRadius(geometry.secondaryMinRadius, geometry)) *
-    slope;
+    (pose.secondaryRadius - sheaveHub(geometry.secondaryMinRadius, geometry)) *
+      slope;
   controller.updateModels({
     primaryFixed: {
       position: [...pose.primaryCenter, pose.beltZ - primaryGap],
@@ -198,7 +213,13 @@ export function positionCVT(
     },
     secondaryMoving: {
       position: [0, 0, -2 * secondaryGap],
-      rotation: [0, 0, pose.helixAngle ?? mechanismPose(geometry, pose.shift)?.secondary_angle_rad ?? 0],
+      rotation: [
+        0,
+        0,
+        pose.helixAngle ??
+          mechanismPose(geometry, pose.shift)?.secondary_angle_rad ??
+          0,
+      ],
     },
   });
   positionMechanisms(controller, geometry, pose.shift);
@@ -208,20 +229,26 @@ export function fitCVT(
   controller: Scene3DController,
   geometry: SceneGeometry,
 ): void {
-  const margin = geometry.beltHeight * 0.15;
+  const margin = geometry.beltHeight * 0.3;
   const radius =
     Math.max(geometry.primaryMaxRadius, geometry.secondaryMaxRadius) + margin;
+  const layout = mechanismLayout(geometry);
+  const mechanisms = geometry.mechanisms;
   controller.fitBounds(
     new THREE.Box3(
       new THREE.Vector3(
         -geometry.centreDistance / 2 - geometry.primaryMaxRadius - margin,
         -radius,
-        -radius * 0.7,
+        mechanisms?.secondary_helix_points_m.length
+          ? Math.min(-radius * 0.7, layout.baseS - layout.wall * 2)
+          : -radius * 0.7,
       ),
       new THREE.Vector3(
         geometry.centreDistance / 2 + geometry.secondaryMaxRadius + margin,
         radius,
-        radius * 0.9,
+        mechanisms?.primary
+          ? Math.max(radius * 0.9, layout.carrierP + layout.wall)
+          : radius * 0.9,
       ),
     ),
   );

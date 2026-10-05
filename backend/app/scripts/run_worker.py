@@ -13,13 +13,15 @@ import time
 from pathlib import Path
 
 import psutil
+from sqlalchemy import update
+
 from app.application import jobs
 from app.application.auth import aware
 from app.core.settings import Settings
 from app.database.base import utc_now
+from app.database.maintenance import DatabaseNotReadyError, require_current_schema
 from app.database.models import Run
 from app.database.session import make_engine, make_session_factory
-from sqlalchemy import update
 
 LOG = logging.getLogger("cinder.worker")
 
@@ -33,6 +35,11 @@ def capture_stderr(stream, tail):
 
 
 def stopped_error(returncode):
+    if returncode == 125:
+        return {
+            "code": "worker_parent_changed",
+            "message": "The simulation lost its worker during startup. Retry as a new run; see the worker terminal for details.",
+        }
     if returncode == -signal.SIGXFSZ:
         return {
             "code": "run_result_size_limit",
@@ -82,6 +89,7 @@ def execute(factory, settings, run):
                     "course_policy": policy,
                     "options": run.execution_options,
                     "runtime_identity": run.runtime_identity,
+                    "worker_pid": os.getpid(),
                     "deadline_monotonic": deadline_monotonic,
                     "memory_bytes": settings.run_memory_limit_mb * 1024 * 1024,
                     "result_bytes": settings.run_max_result_bytes,
@@ -275,6 +283,10 @@ def main():
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     try:
+        try:
+            require_current_schema(engine)
+        except DatabaseNotReadyError as exc:
+            parser.error(str(exc))
         while not stopping:
             with factory.begin() as session:
                 run = jobs.claim(session, settings)

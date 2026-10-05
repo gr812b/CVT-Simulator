@@ -78,6 +78,14 @@ In another backend terminal with the same environment/database, start
 `python -m app.scripts.run_worker`. The worker requires POSIX; use the Linux
 backend container on Windows. Without a worker, accepted simulations stay queued.
 
+The worker can run directly as PID 1 inside its container. Each child checks the
+worker PID supplied at launch before and after arming Linux parent-death
+protection; PID 1 alone does not mean its parent was lost. An actual mismatch
+exits with code 125 and logs the expected and observed parent IDs. After updating
+worker code, rebuild the image and recreate the worker container: restarting an
+existing container still uses its old image. This startup fix needs no database
+reset or migration.
+
 `requirements.txt` is the backend runtime dependency list. CINDER is installed
 from PyPI at the exact version pinned there, so local, CI, and production runs
 use the same immutable package release. `requirements-dev.txt` simply extends
@@ -102,6 +110,11 @@ results. Direct/debug and validation submissions use the same queue and limits.
 New jobs do not reuse the legacy global cache; existing artifacts stay readable.
 
 ### Option A: local SQLite database
+
+Run initialization, the API and the worker from `backend/`, using the same
+`CVT_DATABASE_URL`. The default SQLite filename is relative to the working
+directory. The worker checks for missing tables/columns and an unreadable schema
+before claiming jobs; it prints the database location when setup is incomplete.
 
 ```bash
 python -m app.scripts.init_database
@@ -141,6 +154,30 @@ Use a custom SQLite path if desired:
 ```bash
 python -m app.scripts.init_database --database-url sqlite:///./scratch.db
 ```
+
+For a disposable development database that needs a fresh start, **stop the API,
+every worker and any database browser first**, then run:
+
+```bash
+python -m app.scripts.init_database --reset
+python -m app.scripts.run_worker --once
+```
+
+This deletes accounts, saved configurations and runs, then recreates the seeded
+workspace. It removes the database together with SQLite's `-journal`, `-wal` and
+`-shm` files. Reset refuses when it detects an open database handle and prints its
+process ID. This check is best effort: OS permissions can hide handles, and a
+process could start after the check. Keep all clients stopped until seeding
+finishes. Never delete only a journal when trying to preserve existing data.
+
+`malformed database schema ... index ... already exists` during a SELECT indicates
+an unreadable SQLite schema; it does not by itself show that an Alembic migration
+tried to create the index twice. A later `no such table: runs` means that connection
+sees an uninitialized or incomplete database. These messages alone cannot tell
+whether the file was replaced or the configured path changed. The reset above is
+the supported recovery for disposable development data. Restart the API and the
+long-running worker only after it succeeds. No reset is needed for a healthy
+database just to install this maintenance fix.
 
 ### Option B: Postgres
 

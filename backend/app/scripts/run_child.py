@@ -30,6 +30,25 @@ def apply_limits(envelope):
     cap(resource.RLIMIT_CORE, 0)
 
 
+def monitor_worker_parent(worker_pid):
+    """Arm Linux parent-death protection, including a worker running as PID 1."""
+
+    import ctypes
+
+    # Compare against the PID captured by the worker before Popen. Sampling only
+    # here could accept a process that adopted us after the real worker exited.
+    if os.getppid() != worker_pid:
+        return False
+    prctl = ctypes.CDLL(None, use_errno=True).prctl
+    prctl.argtypes = [ctypes.c_int, *([ctypes.c_ulong] * 4)]
+    prctl.restype = ctypes.c_int
+    if prctl(1, signal.SIGKILL, 0, 0, 0) != 0:  # PR_SET_PDEATHSIG
+        raise OSError(ctypes.get_errno(), "Could not arm worker-parent monitoring")
+    # Close the race between checking the parent and installing the signal.
+    # PID 1 is a legitimate worker when it is the container's entry process.
+    return os.getppid() == worker_pid
+
+
 def main():
     input_path, output_path = map(Path, sys.argv[1:3])
     envelope = json.loads(input_path.read_text())
@@ -43,14 +62,13 @@ def main():
     try:
         apply_limits(envelope)
         if sys.platform == "linux":
-            import ctypes
-
-            parent = os.getppid()
-            if ctypes.CDLL(None, use_errno=True).prctl(1, signal.SIGKILL) != 0:
-                raise OSError(
-                    ctypes.get_errno(), "Could not arm worker-parent monitoring"
+            worker_pid = envelope["worker_pid"]
+            if not monitor_worker_parent(worker_pid):
+                LOG.error(
+                    "Worker parent changed during startup: expected PID %s, observed PID %s",
+                    worker_pid,
+                    os.getppid(),
                 )
-            if os.getppid() != parent or parent == 1:
                 return 125
         phase = "solver_import"
         from app.application.cinder_gateway import CinderGateway

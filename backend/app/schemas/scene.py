@@ -7,6 +7,7 @@ class MechanismPose(ApiModel):
     shift_m: float
     primary_roller_m: tuple[float, float] | None
     primary_ramp_shift_m: float
+    secondary_axial_position_m: float
     secondary_angle_rad: float
 
 
@@ -14,11 +15,14 @@ class FlyweightScene(ApiModel):
     count: int
     pivot_m: tuple[float, float]
     roller_radius_m: float
+    roller_side_sign: int
     ramp_points_m: list[tuple[float, float]]
 
 
 class MechanismScene(ApiModel):
     primary: FlyweightScene | None
+    primary_has_spring: bool
+    secondary_has_spring: bool
     secondary_helix_points_m: list[tuple[float, float, float]]
     poses: list[MechanismPose]
 

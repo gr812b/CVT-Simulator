@@ -66,6 +66,7 @@ export const sceneAppearance = {
   ramp: '#77b3d5',
   helix: '#72c1a5',
   shaft: '#8795a8',
+  spring: '#657389',
   belt: '#333e50',
   unavailable: '#818b9a',
   grid: '#424b5c',
@@ -74,5 +75,17 @@ export const sceneAppearance = {
   roughness: 0.36,
   radialSegments: 72,
   maxPixelRatio: 2,
+  mechanism: {
+    trackCount: 3,
+    springTurns: 6,
+    maxPanelAngle: 0.14,
+    // Schematic hardware dimensions, expressed relative to belt height.
+    clearance: 0.12,
+    slotClearance: 0.002,
+    wall: 0.18,
+    secondaryRoller: 0.25,
+    guideRoller: 0.18,
+    springWire: 0.055,
+  },
   light: { sky: '#f1f5ff', ground: '#69778c', intensity: 2.1 },
 } as const;

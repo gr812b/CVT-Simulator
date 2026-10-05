@@ -461,6 +461,7 @@ class CinderGateway:
                 count=mechanism.mass_geometry.number_of_flyweights,
                 pivot_m=(geometry.pivot_axial_position, geometry.pivot_radius),
                 roller_radius_m=geometry.roller_radius,
+                roller_side_sign=geometry.roller_side_sign,
                 ramp_points_m=[
                     surface.ramp_surface_point(
                         contact_coordinate=float(x), axial_position=0
@@ -486,7 +487,15 @@ class CinderGateway:
                     )
                 )
         poses = []
-        for shift in np.linspace(0, spec.geometry.spec.max_shift, 65):
+        # Keep the seating transition as an exact interpolation knot; otherwise
+        # the preview moves the secondary slightly while still in the deadzone.
+        scene_shifts = np.unique(
+            np.append(
+                np.linspace(0, spec.geometry.spec.max_shift, 65),
+                spec.geometry.spec.deadzone_shift,
+            )
+        )
+        for shift in scene_shifts:
             geometry = spec.geometry.evaluate(float(shift))
             local = geometry.primary_axial_coordinate.value
             roller = (
@@ -521,11 +530,22 @@ class CinderGateway:
                     if roller
                     else None,
                     primary_ramp_shift_m=local,
+                    secondary_axial_position_m=geometry.secondary_axial_coordinate.value,
                     secondary_angle_rad=angle,
                 )
             )
         preview.geometry.mechanisms = MechanismScene(
-            primary=primary, secondary_helix_points_m=helix_points, poses=poses
+            primary=primary,
+            primary_has_spring=any(
+                component["kind"] == "axial_spring"
+                for component in assembly["pulleys"]["primary"]["components"]
+            ),
+            secondary_has_spring=any(
+                component["kind"] == "axial_spring"
+                for component in assembly["pulleys"]["secondary"]["components"]
+            ),
+            secondary_helix_points_m=helix_points,
+            poses=poses,
         )
         return preview
 

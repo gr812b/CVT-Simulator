@@ -324,3 +324,4 @@ backend/.env
 frontend/.env.local
 *.db-shm
 *.db-wal
+*.db-journal

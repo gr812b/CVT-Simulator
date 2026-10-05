@@ -13,6 +13,7 @@ from pathlib import Path
 
 from app.core.settings import Settings
 from app.database.bootstrap import create_and_seed_database
+from app.database.maintenance import DatabaseNotReadyError, reset_sqlite_database
 
 
 def main() -> None:
@@ -36,7 +37,7 @@ def main() -> None:
     parser.add_argument(
         "--reset",
         action="store_true",
-        help="Delete the selected local SQLite development database before creating a fresh public workspace.",
+        help="Delete and reseed the local SQLite development database. Stop the API, all workers and database tools first.",
     )
     args = parser.parse_args()
 
@@ -54,27 +55,29 @@ def main() -> None:
             or url.get_backend_name() != "sqlite"
             or not url.database
             or url.database == ":memory:"
+            or url.query.get("uri")
         ):
             parser.error(
-                "--reset requires a file-backed SQLite database in development mode."
+                "--reset requires a plain file-backed SQLite URL in development mode (no URI options)."
             )
         database = Path(url.database).resolve()
-        for path in (
-            database,
-            Path(str(database) + "-wal"),
-            Path(str(database) + "-shm"),
-        ):
-            path.unlink(missing_ok=True)
+        try:
+            reset_sqlite_database(database)
+        except (DatabaseNotReadyError, OSError) as exc:
+            parser.error(str(exc))
         print(f"Reset local development database: {database}")
     create_and_seed_database(settings, preset_path=args.preset_path)
     if args.development_fixtures:
         from app.database.development_fixtures import seed_development_fixtures
         from app.database.session import make_engine, make_session_factory
 
-        factory = make_session_factory(make_engine(settings.database_url))
-        with factory() as session:
-            seed_development_fixtures(session)
-            session.commit()
+        engine = make_engine(settings.database_url)
+        try:
+            with make_session_factory(engine)() as session:
+                seed_development_fixtures(session)
+                session.commit()
+        finally:
+            engine.dispose()
     print(f"Database created and seeded: {settings.database_url}")
 
 
