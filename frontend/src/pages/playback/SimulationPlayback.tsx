@@ -14,6 +14,7 @@ import { downloadReportTableCsv } from '@utils/csvExport';
 import { reportAxisTimes } from '@utils/reportTable';
 import { buildReportGraphs } from './reportGraphs';
 import styles from './Playback.module.scss';
+import layout from '@components/appShell/PageGutter.module.scss';
 
 /** Shared playback for owned results and the anonymous retained demo. */
 export function SimulationPlayback({
@@ -68,12 +69,11 @@ export function SimulationPlayback({
     [navigate],
   );
   return (
-    <div ref={rootRef} className={styles.playback}>
+    <div ref={rootRef} className={`${styles.playback} ${layout.gutter}`}>
       {result.metrics.completed === false && (
         <Alert
           color={live ? 'blue' : 'yellow'}
           title={live ? 'Live progress' : 'Partial run'}
-          mx="lg"
           mt="md"
         >
           Saved through {result.metrics.duration_s.toFixed(2)} simulated
@@ -125,7 +125,7 @@ export function SimulationPlayback({
       </div>
       <div
         ref={footerRef}
-        className={styles.playbarContainer}
+        className={`${styles.playbarContainer} ${layout.gutter}`}
         role="region"
         aria-label="Playback controls"
       >

@@ -182,7 +182,9 @@ def item_response(obj, kind, principal) -> PhysicalItem:
     )
 
 
-def list_items(session, principal, kind, scope="own", include_archived=False):
+def list_items(
+    session, principal, kind, scope="own", include_archived=False, author_id=None
+):
     binding = library.binding_for(RESOURCES[kind])
     model = binding.object_model
     own = model.account_id == principal.account_id
@@ -199,6 +201,14 @@ def list_items(session, principal, kind, scope="own", include_archived=False):
         if scope == "samples"
         else model.visibility == "public"
     )
+    if author_id is not None:
+        version = binding.version_model
+        statement = statement.join(
+            version, model.released_version_id == version.id
+        ).where(
+            version.created_by_user_id == author_id,
+            model.visibility == "public",
+        )
     if not include_archived:
         statement = statement.where(model.lifecycle_status != "archived")
     result = []

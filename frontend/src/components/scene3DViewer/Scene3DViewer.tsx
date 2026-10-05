@@ -1,4 +1,17 @@
 import { ForceOverlay } from './ForceOverlay';
+import { useFullscreenElement } from '@mantine/hooks';
+import {
+  IconArrowsMaximize,
+  IconArrowsMinimize,
+  IconRestore,
+} from '@tabler/icons-react';
+import { Playbar } from '@components/playbar/Playbar';
+import { reportAxisTimes } from '@utils/reportTable';
+import {
+  DEFAULT_SCENE,
+  useScenePreferences,
+  type ScenePreferences,
+} from '../../features/playback/preferences';
 import { mechanismPose } from './mechanisms';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -189,14 +202,26 @@ export const Scene3DViewer = ({
 
   const models = useMemo(() => createCVTModels(geometry), [geometry]);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
-  const [beltVisible, setBeltVisible] = useState(true);
-  const [showTension, setShowTension] = useState(false);
-  const [showAngularRotation, setShowAngularRotation] = useState(true);
-  const [showMotionBlur, setShowMotionBlur] = useState(false);
-  const [gridsVisible, setGridsVisible] = useState(false);
-  const [orthographicView, setOrthographicView] = useState(false);
-  const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
-  const [modelsTransparent, setModelsTransparent] = useState(false);
+  const [preferences, setPreferences] = useScenePreferences();
+  const {
+    beltVisible,
+    showTension,
+    showAngularRotation,
+    showMotionBlur,
+    gridsVisible,
+    orthographicView,
+    crossSectionEnabled,
+    modelsTransparent,
+  } = preferences;
+  const togglePreference = (key: Exclude<keyof ScenePreferences, 'forces'>) =>
+    setPreferences((current) => ({ ...current, [key]: !current[key] }));
+  const {
+    ref: fullscreenRef,
+    toggle: toggleFullscreen,
+    fullscreen,
+  } = useFullscreenElement<HTMLDivElement>();
+  const [fullscreenError, setFullscreenError] = useState<string | null>(null);
+  const times = useMemo(() => reportAxisTimes(table), [table]);
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
 
   const motionTargetsRef = useRef<TemporalRotationTarget[]>([]);
@@ -590,9 +615,28 @@ export const Scene3DViewer = ({
 
   return (
     <div
-      ref={containerRef}
-      className={`${styles.scene3dViewer} ${className ?? ''}`}
+      ref={fullscreenRef}
+      className={`${styles.scene3dViewer} ${fullscreen ? styles.fullscreen : ''} ${className ?? ''}`}
+      aria-label="CVT scene"
     >
+      <div className={styles.viewport}>
+        <div ref={containerRef} className={styles.canvasContainer} />
+        {showTension && tensionAvailable && tensionRange !== null && (
+          <div className={styles.tensionLegend}>
+            <div className={styles.legendTitle}>Belt tension</div>
+            <div className={styles.legendBar} />
+            <div className={styles.legendValues}>
+              <span>
+                {formatScaleValue(tensionRange.minimum)} {tensionUnit}
+              </span>
+              <span>
+                {formatScaleValue(tensionRange.maximum)} {tensionUnit}
+              </span>
+            </div>
+            <div className={styles.legendNote}>Fixed scale for entire run</div>
+          </div>
+        )}
+      </div>
       {error && (
         <Alert className={styles.sceneError} title="3D preview unavailable">
           {error}
@@ -611,20 +655,23 @@ export const Scene3DViewer = ({
             geometry={geometry}
             replay={replayController}
             table={table}
-            transparent={modelsTransparent}
-            onTransparent={setModelsTransparent}
+            settings={preferences.forces}
+            onChange={(forces) =>
+              setPreferences((current) => ({ ...current, forces }))
+            }
+            fullscreen={fullscreen}
           />
         )}
         {[
           {
             label: 'Belt',
             active: beltVisible,
-            toggle: () => setBeltVisible((v) => !v),
+            toggle: () => togglePreference('beltVisible'),
           },
           {
             label: 'Tension',
             active: showTension,
-            toggle: () => setShowTension((v) => !v),
+            toggle: () => togglePreference('showTension'),
             reason: tensionAvailable
               ? undefined
               : 'Belt tension is unavailable for this result.',
@@ -632,32 +679,32 @@ export const Scene3DViewer = ({
           {
             label: 'Transparent',
             active: modelsTransparent,
-            toggle: () => setModelsTransparent((v) => !v),
+            toggle: () => togglePreference('modelsTransparent'),
           },
           {
             label: 'Rotation',
             active: showAngularRotation,
-            toggle: () => setShowAngularRotation((v) => !v),
+            toggle: () => togglePreference('showAngularRotation'),
           },
           {
             label: 'Blur',
             active: showMotionBlur,
-            toggle: () => setShowMotionBlur((v) => !v),
+            toggle: () => togglePreference('showMotionBlur'),
           },
           {
             label: 'Orthographic',
             active: orthographicView,
-            toggle: () => setOrthographicView((v) => !v),
+            toggle: () => togglePreference('orthographicView'),
           },
           {
             label: 'Grids',
             active: gridsVisible,
-            toggle: () => setGridsVisible((v) => !v),
+            toggle: () => togglePreference('gridsVisible'),
           },
           {
             label: 'Section',
             active: crossSectionEnabled,
-            toggle: () => setCrossSectionEnabled((v) => !v),
+            toggle: () => togglePreference('crossSectionEnabled'),
           },
         ].map((option) => (
           <ActionButton
@@ -675,21 +722,56 @@ export const Scene3DViewer = ({
             {option.label}
           </ActionButton>
         ))}
+        <ActionButton
+          size="compact-xs"
+          variant="default"
+          leftSection={<IconRestore size={13} />}
+          onClick={() => {
+            setPreferences(DEFAULT_SCENE);
+            sceneController?.resetView();
+          }}
+        >
+          Reset scene
+        </ActionButton>
+        <ActionButton
+          size="compact-xs"
+          variant="default"
+          leftSection={
+            fullscreen ? (
+              <IconArrowsMinimize size={13} />
+            ) : (
+              <IconArrowsMaximize size={13} />
+            )
+          }
+          disabledReason={
+            !window.document.fullscreenEnabled
+              ? 'Fullscreen is unavailable in this browser.'
+              : undefined
+          }
+          aria-pressed={fullscreen}
+          onClick={() => {
+            setFullscreenError(null);
+            void toggleFullscreen().catch(() =>
+              setFullscreenError('Couldn’t open fullscreen. Try again.'),
+            );
+          }}
+        >
+          {fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+        </ActionButton>
       </div>
-
-      {showTension && tensionAvailable && tensionRange !== null && (
-        <div className={styles.tensionLegend}>
-          <div className={styles.legendTitle}>Belt tension</div>
-          <div className={styles.legendBar} />
-          <div className={styles.legendValues}>
-            <span>
-              {formatScaleValue(tensionRange.minimum)} {tensionUnit}
-            </span>
-            <span>
-              {formatScaleValue(tensionRange.maximum)} {tensionUnit}
-            </span>
-          </div>
-          <div className={styles.legendNote}>Fixed scale for entire run</div>
+      {fullscreenError && (
+        <Alert
+          className={styles.sceneError}
+          color="red"
+          withCloseButton
+          onClose={() => setFullscreenError(null)}
+        >
+          {fullscreenError}
+        </Alert>
+      )}
+      {fullscreen && (
+        <div className={styles.fullscreenPlayback}>
+          <Playbar replayController={replayController} times={times} />
         </div>
       )}
     </div>

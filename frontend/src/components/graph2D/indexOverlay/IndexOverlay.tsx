@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import type { ECharts } from 'echarts';
 import { ReplayEventType } from '@utils/reportReplay';
 import styles from './IndexOverlay.module.scss';
@@ -12,7 +12,7 @@ interface IndexOverlayProps {
       handler: (event: { type: string; currentIndex?: number }) => void,
     ) => () => void;
   };
-  onMount?: (callback: (chart: ECharts) => void) => void;
+  chart: ECharts | null;
 }
 
 /** Lightweight replay cursor. Values remain available through the hover tooltip. */
@@ -21,9 +21,8 @@ export function IndexOverlay({
   yData,
   seriesNames = [],
   replayController,
-  onMount,
+  chart,
 }: IndexOverlayProps) {
-  const [chart, setChart] = useState<ECharts | null>(null);
   const line = useRef<HTMLDivElement>(null);
   const dots = useRef<(HTMLDivElement | null)[]>([]);
   const index = useRef(0);
@@ -36,9 +35,6 @@ export function IndexOverlay({
     height: number;
   } | null>(null);
   const selected = useRef<Record<string, boolean>>({});
-  useEffect(() => {
-    onMount?.(setChart);
-  }, [onMount]);
 
   const draw = useCallback(() => {
     if (!chart || chart.isDisposed() || !line.current || !grid.current) return;
@@ -73,7 +69,7 @@ export function IndexOverlay({
   }, [chart]);
 
   useEffect(() => {
-    if (!chart) return;
+    if (!chart || chart.isDisposed()) return;
     const refresh = () => {
       if (chart.isDisposed()) return;
       // ECharts exposes axis conversion but not its resolved grid rectangle.
@@ -94,6 +90,7 @@ export function IndexOverlay({
           (value: number) =>
             chart.convertToPixel({ yAxisIndex: 0 }, value) as number,
         );
+      if (![...xs, ...ys].every(Number.isFinite)) return;
       grid.current = {
         x: Math.min(...xs),
         y: Math.min(...ys),
@@ -106,12 +103,25 @@ export function IndexOverlay({
       selected.current = option.legend?.[0]?.selected ?? {};
       draw();
     };
-    chart.on('finished', refresh);
+    // Initial lazy setOption may render after onChartReady; do not depend on
+    // tooltip hover or an animation finishing to establish the cursor bounds.
+    const events = ['rendered', 'finished', 'datazoom', 'legendselectchanged'];
+    events.forEach((event) => chart.on(event, refresh));
+    const resize = new ResizeObserver(refresh);
+    resize.observe(chart.getDom());
+    const frame = requestAnimationFrame(refresh);
     refresh();
     return () => {
-      chart.off('finished', refresh);
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+      events.forEach((event) => chart.off(event, refresh));
+      grid.current = null;
     };
   }, [chart, draw]);
+
+  useEffect(() => {
+    draw();
+  }, [draw, xData, yData, seriesNames]);
 
   useEffect(
     () =>

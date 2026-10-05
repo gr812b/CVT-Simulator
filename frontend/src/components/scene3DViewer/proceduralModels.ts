@@ -99,17 +99,18 @@ function sheave(
     // One continuous shaft joins the external boundary to the actuator carrier.
     const outerReach = maximum * appearance.shaftExtension + lip + thickness;
     const innerReach = Math.max(shaftReach, geometry.beltOuterWidth + lip);
+    // Both boundary connections leave toward negative Z. On the secondary,
+    // the shaft continues through the helix carrier before extending outward.
+    const start = side < 0 ? -outerReach : -innerReach - outerReach;
+    const end =
+      side < 0 ? innerReach : Math.max(lip + thickness, thickness * 2.25);
     const axle = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        shaftRadius,
-        shaftRadius,
-        outerReach + innerReach,
-        32,
-      ),
+      new THREE.CylinderGeometry(shaftRadius, shaftRadius, end - start, 32),
       material(appearance.shaft),
     );
     axle.rotation.x = Math.PI / 2;
-    axle.position.z = (side * (outerReach - innerReach)) / 2;
+    axle.name = 'boundary-shaft';
+    axle.position.z = (start + end) / 2;
     group.add(axle);
   }
   return group;
@@ -244,14 +245,16 @@ export function fitCVT(
         -radius,
         Math.min(
           -geometry.primaryMaxRadius * shaftEnvelope,
-          layout.baseS - layout.wall * 2,
+          layout.baseS -
+            layout.wall * 2 -
+            geometry.secondaryMaxRadius * shaftEnvelope,
         ),
       ),
       new THREE.Vector3(
         geometry.centreDistance / 2 + geometry.secondaryMaxRadius + margin,
         radius,
         Math.max(
-          geometry.secondaryMaxRadius * shaftEnvelope,
+          geometry.secondaryMaxRadius * (Math.tan(geometry.halfAngle) + 0.2),
           layout.carrierP + layout.wall,
         ),
       ),

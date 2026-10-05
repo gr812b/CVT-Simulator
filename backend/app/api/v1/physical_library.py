@@ -95,11 +95,14 @@ def list_items(
     kind: PhysicalKind,
     scope: Literal["own", "samples", "all"] = "own",
     include_archived: bool = False,
+    author_id: str | None = None,
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_public_reader),
 ):
     return PhysicalListResponse(
-        items=service.list_items(session, principal, kind, scope, include_archived)
+        items=service.list_items(
+            session, principal, kind, scope, include_archived, author_id
+        )
     )
 
 

@@ -1,3 +1,4 @@
+import type { ForcePreferences } from '../../features/playback/preferences';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Accordion,
@@ -34,35 +35,35 @@ export function ForceOverlay({
   geometry,
   replay,
   table,
-  transparent,
-  onTransparent,
+  settings,
+  onChange,
+  fullscreen = false,
 }: {
   source: string;
   scene: Scene3DController | null;
   geometry: SceneGeometry;
   replay: ReportReplayController;
   table: ReportTable;
-  transparent: boolean;
-  onTransparent: (value: boolean) => void;
+  settings: ForcePreferences;
+  onChange: (settings: ForcePreferences) => void;
+  fullscreen?: boolean;
 }) {
   const [opened, setOpened] = useState(false);
-  const [enabled, setEnabled] = useState(false);
+  const { enabled, body, selected, components, scale, labels } = settings;
+  const update = (next: Partial<ForcePreferences>) =>
+    onChange({ ...settings, ...next });
   const [data, setData] = useState<ForcePlayback | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
-  const [body, setBody] = useState<ForceOptions['body']>('primary');
-  const [selected, setSelected] = useState<string[] | null>(null);
-  const [components, setComponents] = useState(['axial']);
-  const [scale, setScale] = useState(1);
-  const [labels, setLabels] = useState(false);
   const [cursor, setCursor] = useState(() => replay.visualSample());
   const time = cursor.simulationTime;
   const tracks = useMemo(
-    () => data?.tracks.filter((t) => t.body === body) ?? [],
+    () => data?.tracks.filter((t) => body === 'both' || t.body === body) ?? [],
     [body, data],
   );
-  const keys =
-    selected ?? tracks.filter((t) => t.unit === 'N').map((t) => t.key);
+  const keys = (
+    selected ?? tracks.filter((t) => t.unit === 'N').map((t) => t.key)
+  ).filter((key) => tracks.some((track) => track.key === key));
   const options = useRef<ForceOptions>({
     body,
     tracks: keys,
@@ -135,7 +136,7 @@ export function ForceOverlay({
       onChange={setOpened}
       position="bottom-end"
       width={380}
-      withinPortal
+      withinPortal={!fullscreen}
     >
       <Popover.Target>
         <Button
@@ -144,7 +145,7 @@ export function ForceOverlay({
           disabledReason={!scene ? 'Wait for the 3D scene.' : undefined}
           onClick={() => {
             setOpened((v) => !v);
-            if (!data) setEnabled(true);
+            if (!data) update({ enabled: true });
           }}
         >
           Forces
@@ -161,7 +162,7 @@ export function ForceOverlay({
           <Switch
             label="Show contact vectors"
             checked={enabled}
-            onChange={(e) => setEnabled(e.currentTarget.checked)}
+            onChange={(e) => update({ enabled: e.currentTarget.checked })}
           />
           {error && (
             <Alert color="red">
@@ -180,25 +181,26 @@ export function ForceOverlay({
           <SegmentedControl
             value={body}
             data={[
-              { value: 'primary', label: 'Primary movable' },
-              { value: 'secondary', label: 'Secondary movable' },
+              { value: 'both', label: 'Both pulleys' },
+              { value: 'primary', label: 'Primary' },
+              { value: 'secondary', label: 'Secondary' },
             ]}
             onChange={(v) => {
-              setBody(v as ForceOptions['body']);
-              setSelected(null);
+              update({ body: v as ForceOptions['body'], selected: null });
             }}
           />
           <MultiSelect<string>
             label="Contacts and torques"
             data={tracks.map((t) => ({ value: t.key, label: t.label }))}
             value={keys}
-            onChange={setSelected}
+            onChange={(selected) => update({ selected })}
+            comboboxProps={{ withinPortal: !fullscreen }}
             searchable
           />
           <Checkbox.Group
             label="Vector components"
             value={components}
-            onChange={setComponents}
+            onChange={(components) => update({ components })}
           >
             <Group mt="xs">
               <Checkbox value="axial" label="Axial" color="cyan" />
@@ -216,18 +218,13 @@ export function ForceOverlay({
             max={3}
             step={0.05}
             value={scale}
-            onChange={setScale}
+            onChange={(scale) => update({ scale })}
             aria-label="Force arrow scale"
           />
           <Checkbox
             label="Labels on arrows"
             checked={labels}
-            onChange={(e) => setLabels(e.currentTarget.checked)}
-          />
-          <Checkbox
-            label="Transparent hardware"
-            checked={transparent}
-            onChange={(e) => onTransparent(e.currentTarget.checked)}
+            onChange={(e) => update({ labels: e.currentTarget.checked })}
           />
           {data && bracket && (
             <Accordion variant="separated">

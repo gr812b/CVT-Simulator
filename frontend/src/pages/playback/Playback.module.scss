@@ -1,7 +1,6 @@
 .playback {
   width: 100%;
   min-width: 0;
-  padding-inline: clamp(1rem, 2vw, 2rem);
   padding-bottom: calc(var(--playbar-height, 100px) + 1rem);
 }
 .buttonsContainer {
@@ -19,9 +18,7 @@
   z-index: 110;
   background: var(--mantine-color-body);
   border-top: 1px solid var(--mantine-color-default-border);
-  padding: 0.3rem max(0.3rem, env(safe-area-inset-right))
-    max(0.3rem, env(safe-area-inset-bottom))
-    max(0.3rem, env(safe-area-inset-left));
+  padding-block: 0.3rem max(0.3rem, env(safe-area-inset-bottom));
   box-shadow: 0 -3px 18px #0003;
 }
 .emptyState {
@@ -29,28 +26,6 @@
 }
 .plotContainer {
   overflow-x: auto;
-}
-@media (max-width: 36em) {
-  .playbarContainer > div {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 0.35rem;
-    padding: 0.35rem;
-    font-size: 0.75rem;
-  }
-  .playbarContainer > div > div {
-    min-width: 0;
-  }
-  .playbarContainer > div > :nth-child(3) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: auto;
-    margin: 0.5rem;
-  }
-  .playbarContainer > div > :nth-child(4) {
-    grid-column: 3;
-    grid-row: 1;
-  }
 }
 
 .workspace {

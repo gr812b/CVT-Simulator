@@ -207,6 +207,7 @@ def history(
     offset=0,
     oldest_first=False,
     scope="own",
+    author_id=None,
 ):
     if since and until and since > until:
         raise ApiProblem(
@@ -215,6 +216,8 @@ def history(
     if principal.account_id:
         jobs.recover(session, settings, principal.account_id)
     conditions = [Run.account_id == principal.account_id] if scope == "own" else []
+    if author_id is not None:
+        conditions.append(Run.created_by_user_id == author_id)
     if query.strip():
         escaped = (
             query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

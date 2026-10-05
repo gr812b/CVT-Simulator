@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0;
   width: 100%;
 
   .playPause {
@@ -15,7 +15,12 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    filter: invert(1);
+    color: var(--mantine-color-text);
+    flex-shrink: 0;
+    border-radius: var(--mantine-radius-sm);
+    &:focus-visible {
+      outline: 2px solid var(--mantine-primary-color-filled);
+    }
 
     svg {
       width: 1.5rem;
@@ -33,6 +38,26 @@
     text-align: center;
     white-space: nowrap;
   }
+}
 
-
+@media (max-width: 36em) {
+  .playbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    > div {
+      min-width: 0;
+    }
+    > :nth-child(3) {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      width: auto;
+      margin: 0.5rem;
+    }
+    > :nth-child(4) {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
 }

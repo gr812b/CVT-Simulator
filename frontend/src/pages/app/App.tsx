@@ -74,6 +74,11 @@ const PublicLibrary = lazy(() =>
     ({ PublicLibrary }) => ({ default: PublicLibrary }),
   ),
 );
+const PublicProfile = lazy(() =>
+  import('../../features/community/PublicProfile').then(
+    ({ PublicProfile }) => ({ default: PublicProfile }),
+  ),
+);
 const Publication = lazy(() =>
   import('../../features/publicLibrary/PublicationPage').then(
     ({ PublicationPage }) => ({ default: PublicationPage }),
@@ -116,6 +121,7 @@ export const App = () => (
       />
       <Route element={<ApplicationShell />}>
         <Route path="/catalog" element={<PublicLibrary />} />
+        <Route path="/people/:userId" element={<PublicProfile />} />
         <Route
           path="/catalog/load-cases/:objectId"
           element={<PublicExperiment />}

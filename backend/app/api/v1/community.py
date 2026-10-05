@@ -1,6 +1,7 @@
 """Browse public authors and the shared school catalog."""
 
 from app.api.v1.dependencies import get_database_session
+from app.application import access
 from app.application.schools import school_catalog
 from app.database.models import User
 from app.schemas.community import PublicUser, PublicUserPage, SchoolCatalog
@@ -61,4 +62,18 @@ def users(
         total=session.scalar(select(func.count()).select_from(User).where(*conditions)),
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get("/users/{user_id}", response_model=PublicUser)
+def user_profile(user_id: str, session: Session = Depends(get_database_session)):
+    user = session.scalar(
+        select(User).where(User.id == user_id, User.password_hash.is_not(None))
+    )
+    if user is None:
+        raise access.unavailable()
+    return PublicUser(
+        id=user.id,
+        display_name=user.display_name or "CINDER member",
+        school=user.school,
     )

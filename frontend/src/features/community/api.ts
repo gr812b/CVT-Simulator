@@ -20,3 +20,13 @@ export async function getUsers(query: Query, signal?: AbortSignal) {
     await api.GET('/api/v1/community/users', { params: { query }, signal }),
   );
 }
+
+export type PublicUser = components['schemas']['PublicUser'];
+export async function getUser(id: string, signal?: AbortSignal) {
+  return dataOrThrow(
+    await api.GET('/api/v1/community/users/{user_id}', {
+      params: { path: { user_id: id } },
+      signal,
+    }),
+  );
+}

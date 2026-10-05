@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Modal, Stack, Text } from '@mantine/core';
+import { Modal } from '@components/modal/Modal';
+import { Alert, Stack, Text } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { Link } from 'react-router-dom';
 import {

@@ -36,7 +36,13 @@ const sources: NonNullable<HistoryQuery['source']>[] = [
   'direct',
 ];
 
-export function RunHistory({ publicView = false }: { publicView?: boolean }) {
+export function RunHistory({
+  publicView = false,
+  authorId,
+}: {
+  publicView?: boolean;
+  authorId?: string;
+}) {
   const [params, setParams] = useSearchParams();
   const search = params.get('q') ?? '';
   const [query] = useDebouncedValue(search, 250);
@@ -82,6 +88,7 @@ export function RunHistory({ publicView = false }: { publicView?: boolean }) {
           {
             q: query,
             scope: publicView ? 'all' : 'own',
+            author_id: authorId,
             status,
             source,
             since: date(from, false),
@@ -111,7 +118,18 @@ export function RunHistory({ publicView = false }: { publicView?: boolean }) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, status, source, from, through, oldest, page, retry, publicView]);
+  }, [
+    query,
+    status,
+    source,
+    from,
+    through,
+    oldest,
+    page,
+    retry,
+    publicView,
+    authorId,
+  ]);
   return (
     <Container
       size="xl"

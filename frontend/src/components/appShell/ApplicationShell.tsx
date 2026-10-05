@@ -2,6 +2,8 @@ import { PageLoading } from '@components/loadingOverlay/PageLoading';
 import { Suspense, useState } from 'react';
 import {
   Alert,
+  ActionIcon,
+  Tooltip,
   AppShell,
   Burger,
   Center,
@@ -11,10 +13,13 @@ import {
   NavLink,
   Stack,
   Text,
+  useMantineTheme,
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
-import { useDisclosure, useLocalStorage } from '@mantine/hooks';
+import { useDisclosure, useLocalStorage, useMediaQuery } from '@mantine/hooks';
 import {
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
   IconChartLine,
   IconGeometry,
   IconHome,
@@ -33,6 +38,7 @@ import {
   RunActivityProvider,
 } from '../../features/experiments/RunActivity';
 import { Brand } from './Brand';
+import { AuthorLink } from '../../features/community/AuthorLink';
 
 const sections = [
   {
@@ -86,6 +92,13 @@ export function ApplicationShell() {
     defaultValue: true,
   });
   const replay = location.pathname.includes('/playback');
+  const theme = useMantineTheme();
+  const desktop = useMediaQuery(
+    `(min-width: ${theme.breakpoints.sm})`,
+    undefined,
+    { getInitialValueInEffect: false },
+  );
+  const compact = replay && !replayNavigation && desktop;
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   if (loading)
@@ -118,9 +131,9 @@ export function ApplicationShell() {
     <AppShell
       header={{ height: 64 }}
       navbar={{
-        width: 240,
+        width: replay && !replayNavigation ? 56 : 240,
         breakpoint: 'sm',
-        collapsed: { mobile: !opened, desktop: replay && !replayNavigation },
+        collapsed: { mobile: !opened },
       }}
       padding="md"
     >
@@ -135,24 +148,16 @@ export function ApplicationShell() {
               aria-label="Toggle navigation"
             />
             <Brand />
-            {replay && (
-              <Burger
-                opened={replayNavigation}
-                onClick={() => setReplayNavigation((value) => !value)}
-                visibleFrom="sm"
-                size="sm"
-                aria-label={
-                  replayNavigation ? 'Collapse navigation' : 'Expand navigation'
-                }
-              />
-            )}
           </Group>
           <Group gap="sm">
             {session ? (
               <>
                 <RunActivityButton />
                 <Text size="sm" truncate maw={180} visibleFrom="sm">
-                  {session.user.display_name}
+                  <AuthorLink
+                    name={session.user.display_name}
+                    id={session.user.id}
+                  />
                 </Text>
               </>
             ) : (
@@ -163,32 +168,80 @@ export function ApplicationShell() {
           </Group>
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar p="md">
+      <AppShell.Navbar p={compact ? 8 : 'md'} id="workspace-navigation">
+        {replay && (
+          <AppShell.Section visibleFrom="sm" mb="md">
+            <Group justify="space-between">
+              {!compact && (
+                <Text size="sm" fw={600}>
+                  Navigation
+                </Text>
+              )}
+              <Tooltip
+                label={compact ? 'Expand navigation' : 'Collapse navigation'}
+                withArrow
+              >
+                <ActionIcon
+                  variant="default"
+                  aria-label={
+                    compact ? 'Expand navigation' : 'Collapse navigation'
+                  }
+                  aria-expanded={!compact}
+                  aria-controls="workspace-navigation"
+                  onClick={() => setReplayNavigation(!replayNavigation)}
+                >
+                  {compact ? (
+                    <IconLayoutSidebarLeftExpand size={18} />
+                  ) : (
+                    <IconLayoutSidebarLeftCollapse size={18} />
+                  )}
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </AppShell.Section>
+        )}
         <AppShell.Section grow style={{ overflowY: 'auto' }}>
           {sections.map((section, index) => (
             <div key={section.label}>
               {index > 0 && <Divider my="lg" />}
-              <Text size="xs" c="dimmed" mb="xs" tt="uppercase" fw={700}>
-                {section.label}
-              </Text>
+              {!compact && (
+                <Text size="xs" c="dimmed" mb="xs" tt="uppercase" fw={700}>
+                  {section.label}
+                </Text>
+              )}
               {section.links.map(({ to, label, icon: Icon }) => (
-                <NavLink
+                <Tooltip
                   key={to}
-                  component={Link}
-                  to={to}
                   label={label}
-                  leftSection={<Icon size={18} />}
-                  active={
-                    location.pathname === to ||
-                    location.pathname.startsWith(`${to}/`)
-                  }
-                  onClick={close}
-                />
+                  disabled={!compact}
+                  position="right"
+                >
+                  <NavLink
+                    component={Link}
+                    to={to}
+                    label={compact ? undefined : label}
+                    aria-label={label}
+                    styles={
+                      compact
+                        ? {
+                            root: { padding: 10 },
+                            section: { marginInlineEnd: 0 },
+                          }
+                        : undefined
+                    }
+                    leftSection={<Icon size={18} />}
+                    active={
+                      location.pathname === to ||
+                      location.pathname.startsWith(`${to}/`)
+                    }
+                    onClick={close}
+                  />
+                </Tooltip>
               ))}
             </div>
           ))}
         </AppShell.Section>
-        {session && (
+        {session && !compact && (
           <AppShell.Section pt="md">
             <Stack gap="sm">
               <Text size="xs" c="dimmed" truncate>

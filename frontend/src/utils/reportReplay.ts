@@ -2,6 +2,7 @@ export enum ReplayEventType {
   Progress = 'Progress',
   StateChanged = 'StateChanged',
   Finished = 'Finished',
+  SpeedChanged = 'SpeedChanged',
 }
 
 export enum StateType {
@@ -12,7 +13,8 @@ export enum StateType {
 export type ReportReplayEvent =
   | { type: ReplayEventType.Progress; currentIndex: number }
   | { type: ReplayEventType.StateChanged; state: StateType }
-  | { type: ReplayEventType.Finished };
+  | { type: ReplayEventType.Finished }
+  | { type: ReplayEventType.SpeedChanged; speed: number };
 
 export interface VisualReplaySample {
   simulationTime: number;
@@ -91,6 +93,7 @@ export class ReportReplayController {
     }
 
     this.speed = next;
+    this.emit({ type: ReplayEventType.SpeedChanged, speed: next });
   }
 
   public setCurrentIndex(next: number): void {

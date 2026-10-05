@@ -1,8 +1,8 @@
 import { PublicHeader } from '@components/appShell/PublicHeader';
+import layout from '@components/appShell/PageGutter.module.scss';
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Badge,
   Button,
   Container,
   Group,
@@ -34,12 +34,11 @@ export function Demo() {
   }, [retry]);
   return (
     <>
-      <Container fluid py="lg">
+      <Container fluid py="lg" className={layout.gutter}>
         <Stack gap="sm">
           <PublicHeader />
           <Group>
             <Title order={1}>{demo?.name ?? 'Baja hill course demo'}</Title>
-            <Badge variant="light">Recorded demo · no account needed</Badge>
           </Group>
           <Text>
             {demo?.description ??

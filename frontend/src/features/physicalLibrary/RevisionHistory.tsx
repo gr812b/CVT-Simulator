@@ -1,13 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import {
-  Alert,
-  Group,
-  Loader,
-  Modal,
-  Select,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { Modal } from '@components/modal/Modal';
+import { Alert, Group, Loader, Select, Stack, Text } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import {
   comparePhysical,

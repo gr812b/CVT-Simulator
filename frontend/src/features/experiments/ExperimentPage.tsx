@@ -2,6 +2,7 @@ import { EditorDisclosure } from '@components/form/EditorDisclosure';
 import { FormError } from '@components/form/FormError';
 import { libraryOptions } from '../physicalLibrary/libraryOptions';
 import { useEffect, useRef, useState } from 'react';
+import { Modal } from '@components/modal/Modal';
 import {
   Alert,
   Badge,
@@ -10,7 +11,6 @@ import {
   Grid,
   Group,
   Loader,
-  Modal,
   Paper,
   Select,
   Stack,
@@ -95,7 +95,9 @@ export function ExperimentPage() {
   const [fields, setFields] = useState<PhysicalField[]>([]);
   const [catalog, setCatalog] = useState<PhysicalItem[]>([]);
   const [setup, setSetup] = useState<Setup | null>(null);
-  const [setupDetail, setSetupDetail] = useState<PhysicalSelection | null>(null);
+  const [setupDetail, setSetupDetail] = useState<PhysicalSelection | null>(
+    null,
+  );
   const [surface, setSurface] = useState<TuneSurface | null>(null);
   const [tune, setTune] = useState<Tune | null>(null);
   const [tuneDetail, setTuneDetail] = useState<ExperimentDetail | null>(null);
@@ -104,7 +106,9 @@ export function ExperimentPage() {
   const [loadCase, setLoadCase] = useState<ExperimentDetail | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [primary, setPrimary] = useState<PrimaryBoundary>(null);
-  const [vehicleMassOverride, setVehicleMassOverride] = useState<number | null>(null);
+  const [vehicleMassOverride, setVehicleMassOverride] = useState<number | null>(
+    null,
+  );
   const [loadEditor, setLoadEditor] = useState<{ id: string | null } | null>(
     null,
   );
@@ -114,6 +118,9 @@ export function ExperimentPage() {
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<ExperimentPreview | null>(null);
   const [previewKey, setPreviewKey] = useState('');
+  const [checkingInputs, setCheckingInputs] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [checkAttempt, setCheckAttempt] = useState(0);
   const [invalid, setInvalid] = useState(new Set<string>());
   const [runName, setRunName] = useState('');
   const [retry, setRetry] = useState(0);
@@ -125,12 +132,17 @@ export function ExperimentPage() {
   const tuneDirty =
     !!tune &&
     JSON.stringify(tune) !==
-    JSON.stringify(tuneDetail?.document ?? surface?.template);
+      JSON.stringify(tuneDetail?.document ?? surface?.template);
   const scenarioDirty =
     !!scenario &&
     JSON.stringify(scenario) !== JSON.stringify(loadCase?.document);
   const dirty =
-    setupDirty || tuneDirty || scenarioDirty || !!primary || vehicleMassOverride !== null || invalid.size > 0;
+    setupDirty ||
+    tuneDirty ||
+    scenarioDirty ||
+    !!primary ||
+    vehicleMassOverride !== null ||
+    invalid.size > 0;
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       !leaving.current &&
@@ -177,7 +189,9 @@ export function ExperimentPage() {
       ),
       listExperiments('scenarios'),
       listExperiments('tunes'),
-      params.get('source_run') ? getRunExperiment(params.get('source_run')!) : null,
+      params.get('source_run')
+        ? getRunExperiment(params.get('source_run')!)
+        : null,
     ])
       .then(async ([meta, physical, groups, roads, savedTunes, source]) => {
         if (disposed) return;
@@ -193,7 +207,7 @@ export function ExperimentPage() {
           setSetupDetail(source.setup);
           setSetup(source.setup.document);
           setCatalog([
-            ...items.filter(item => item.id !== source.setup.item.id),
+            ...items.filter((item) => item.id !== source.setup.item.id),
             source.setup.item,
           ]);
           setSurface(source.surface);
@@ -201,12 +215,14 @@ export function ExperimentPage() {
           if (source.tune) {
             const selectedTune = source.tune;
             setTunes([
-              ...savedTunes.filter(item => item.id !== selectedTune.item.id),
+              ...savedTunes.filter((item) => item.id !== selectedTune.item.id),
               selectedTune.item,
             ]);
           }
-          const savedTune = source.tune?.document.kind === 'tunes'
-            ? source.tune.document : source.surface.template;
+          const savedTune =
+            source.tune?.document.kind === 'tunes'
+              ? source.tune.document
+              : source.surface.template;
           setTune({
             ...savedTune,
             values: source.selection.tune_values ?? savedTune.values,
@@ -218,15 +234,16 @@ export function ExperimentPage() {
           if (source.load_case) {
             const selectedRoad = source.load_case;
             setLoadCases([
-              ...roads.filter(item => item.id !== selectedRoad.item.id),
+              ...roads.filter((item) => item.id !== selectedRoad.item.id),
               selectedRoad.item,
             ]);
           }
           return;
         }
         setVehicleMassOverride(null);
-        const selected =
-          groups[0].find((item) => item.id === params.get('setup'));
+        const selected = groups[0].find(
+          (item) => item.id === params.get('setup'),
+        );
         const road =
           roads.find((item) => item.id === params.get('scenario')) ??
           roads.find(
@@ -279,7 +296,6 @@ export function ExperimentPage() {
             setTune(selectedTune.document);
           }
         }
-
       })
       .catch((cause) => {
         if (!disposed) setError(message(cause));
@@ -300,7 +316,9 @@ export function ExperimentPage() {
         )
       )
         return;
-      const selected = catalog.find(item => item.kind === 'setups' && item.id === id);
+      const selected = catalog.find(
+        (item) => item.kind === 'setups' && item.id === id,
+      );
       const next = await getPhysical('setups', id, selected?.revision_id);
       if (next.document.kind !== 'setups') return;
       const nextSurface = await getTuneSurface(next.item.revision_id);
@@ -381,16 +399,64 @@ export function ExperimentPage() {
   const selection: ExperimentSelection | null =
     setupDetail && tune && scenario
       ? {
-        setup_revision_id: setupDetail.item.revision_id,
-        tune_revision_id: tuneDetail?.item.revision_id ?? null,
-        tune_values: tune.values,
-        scenario_revision_id: loadCase?.item.revision_id ?? null,
-        scenario,
-        primary_boundary: primary ?? null,
-        vehicle_mass_kg: vehicleMassOverride,
-      }
+          setup_revision_id: setupDetail.item.revision_id,
+          tune_revision_id: tuneDetail?.item.revision_id ?? null,
+          tune_values: tune.values,
+          scenario_revision_id: loadCase?.item.revision_id ?? null,
+          scenario,
+          primary_boundary: primary ?? null,
+          vehicle_mass_kg: vehicleMassOverride,
+        }
       : null;
   const selectionKey = JSON.stringify(selection);
+  const hasPreview = preview !== null;
+  useEffect(() => {
+    if (
+      step !== 5 ||
+      selectionKey === 'null' ||
+      setupDirty ||
+      invalid.size ||
+      (hasPreview && previewKey === selectionKey)
+    ) {
+      setCheckingInputs(false);
+      return;
+    }
+    const controller = new AbortController();
+    setCheckingInputs(true);
+    setPreviewError(null);
+    // Debounce edits to run settings, and cancel stale responses on navigation.
+    const timer = window.setTimeout(() => {
+      void previewExperiment(
+        JSON.parse(selectionKey) as ExperimentSelection,
+        controller.signal,
+      )
+        .then((result) => {
+          if (controller.signal.aborted) return;
+          setCheckingInputs(false);
+          setPreview(result);
+          setPreviewKey(selectionKey);
+        })
+        .catch((cause: unknown) => {
+          if (!controller.signal.aborted) setPreviewError(message(cause));
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setCheckingInputs(false);
+        });
+    }, 250);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+    // selectionKey is the complete serialized API request.
+  }, [
+    step,
+    selectionKey,
+    setupDirty,
+    invalid.size,
+    previewKey,
+    hasPreview,
+    checkAttempt,
+  ]);
   const go = (next: number) =>
     void task(async () => {
       if (invalid.size)
@@ -400,24 +466,10 @@ export function ExperimentPage() {
       if (!setup?.name.trim())
         throw new Error('Give this vehicle setup a name.');
       if (next >= 2) {
-        const prepared = await prepareSetup();
+        await prepareSetup();
         if (next === 5) {
           if (!scenario || (!loadCase && !params.get('source_run')))
             throw new Error('Choose or create a saved load case.');
-          const body: ExperimentSelection = {
-            setup_revision_id: prepared.detail.item.revision_id,
-            tune_revision_id:
-              prepared.tune === tune
-                ? (tuneDetail?.item.revision_id ?? null)
-                : null,
-            tune_values: prepared.tune.values,
-            scenario_revision_id: loadCase?.item.revision_id ?? null,
-            scenario,
-            primary_boundary: primary ?? null,
-            vehicle_mass_kg: vehicleMassOverride,
-          };
-          setPreview(await previewExperiment(body));
-          setPreviewKey(JSON.stringify(body));
         }
       }
       setStep(next);
@@ -444,19 +496,22 @@ export function ExperimentPage() {
   const patchSetup = (data: Partial<Setup['data']>) => {
     if (setup) setSetup({ ...setup, data: { ...setup.data, ...data } });
   };
-  const reason = working
-    ? 'Please wait for the current action.'
-    : invalid.size
-      ? 'Correct the highlighted inputs.'
-      : !runName.trim()
-        ? 'Enter a run name.'
-        : activity?.active
-          ? 'You already have a queued or running simulation. Wait for it to finish or cancel it from Activity.'
-          : setupDirty || !preview || previewKey !== selectionKey
-            ? 'Review the current inputs before running.'
-            : !preview.validation.is_valid
-              ? 'Resolve the input errors before running.'
-              : undefined;
+  const reason =
+    checkingInputs && step === 5
+      ? 'Checking the simulation inputs.'
+      : working
+        ? 'Please wait for the current action.'
+        : invalid.size
+          ? 'Correct the highlighted inputs.'
+          : !runName.trim()
+            ? 'Enter a run name.'
+            : activity?.active
+              ? 'You already have a queued or running simulation. Wait for it to finish or cancel it from Activity.'
+              : setupDirty || !preview || previewKey !== selectionKey
+                ? 'Review the current inputs before running.'
+                : !preview.validation.is_valid
+                  ? 'Resolve the input errors before running.'
+                  : undefined;
   const primaryLabel = !primary
     ? (setup?.data.engine.name ?? 'Choose an engine')
     : primary.kind === 'fixed_shaft'
@@ -535,8 +590,12 @@ export function ExperimentPage() {
                             </Group>
                             {setup && (
                               <>
-                                <EditorDisclosure key={setupDetail?.item.id ?? 'new'} title="Vehicle" initiallyOpen={!setupDetail}
-                                  summary={`${setup.name || 'New vehicle'} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`}>
+                                <EditorDisclosure
+                                  key={setupDetail?.item.id ?? 'new'}
+                                  title="Vehicle"
+                                  initiallyOpen={!setupDetail}
+                                  summary={`${setup.name || 'New vehicle'} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`}
+                                >
                                   <TextInput
                                     label="Vehicle setup name"
                                     required
@@ -555,19 +614,28 @@ export function ExperimentPage() {
                                       patchSetup({ vehicle })
                                     }
                                   />
-
                                 </EditorDisclosure>
                                 {vehicleMassOverride !== null && (
                                   <Paper withBorder p="md">
                                     <Stack gap="sm">
                                       <QuantityInput
-                                        label="Run-only vehicle mass" unit="kg" scale={1} min={0.001}
-                                        value={vehicleMassOverride} onChange={setVehicleMassOverride}
+                                        label="Run-only vehicle mass"
+                                        unit="kg"
+                                        scale={1}
+                                        min={0.001}
+                                        value={vehicleMassOverride}
+                                        onChange={setVehicleMassOverride}
                                       />
                                       <Text size="sm" c="dimmed">
-                                        This run used a mass override. The saved vehicle stays unchanged.
+                                        This run used a mass override. The saved
+                                        vehicle stays unchanged.
                                       </Text>
-                                      <Button variant="subtle" onClick={() => setVehicleMassOverride(null)}>
+                                      <Button
+                                        variant="subtle"
+                                        onClick={() =>
+                                          setVehicleMassOverride(null)
+                                        }
+                                      >
                                         Use saved vehicle mass
                                       </Button>
                                     </Stack>
@@ -588,8 +656,12 @@ export function ExperimentPage() {
                               onChange={(cvt) => patchSetup({ cvt })}
                               onLoadingChange={setComponentBusy}
                             />
-                            <EditorDisclosure key={setup.data.cvt.revision_id ?? 'new'} title="CVT" initiallyOpen={!setup.data.cvt.revision_id}
-                              summary={`${setup.data.cvt.name} · ${setup.data.cvt.data.belt.name}`}>
+                            <EditorDisclosure
+                              key={setup.data.cvt.revision_id ?? 'new'}
+                              title="CVT"
+                              initiallyOpen={!setup.data.cvt.revision_id}
+                              summary={`${setup.data.cvt.name} · ${setup.data.cvt.data.belt.name}`}
+                            >
                               <CvtEditor
                                 value={setup.data.cvt.data}
                                 fields={fields}
@@ -597,30 +669,87 @@ export function ExperimentPage() {
                                   (item) => item.kind === 'belts',
                                 )}
                                 onChange={(data) =>
-                                  patchSetup({ cvt: { ...setup.data.cvt, data } })
+                                  patchSetup({
+                                    cvt: { ...setup.data.cvt, data },
+                                  })
                                 }
                                 onLoadingChange={setComponentBusy}
                               />
                             </EditorDisclosure>
                           </>
                         )}
-                        {setup && step === 2 && surface && tune && <Stack>
-                          <Select label="CVT tune" searchable allowDeselect={false}
-                            value={tuneDetail?.item.id ?? 'default'}
-                            data={[{ group: 'Selected CVT', items: [{ value: 'default', label: 'Use CVT default settings' }] },
-                            ...libraryOptions(tunes.filter(item => item.cvt_revision_id === surface.cvt_revision_id && (!item.archived || item.id === tuneDetail?.item.id)), item => item.id)]}
-                            onChange={id => void task(async () => {
-                              if (id === 'default') { setTune(surface.template); setTuneDetail(null); return; }
-                              if (!id) return;
-                              const next = await getExperiment(id, tunes.find(item => item.id === id)?.revision_id);
-                              if (next.document.kind === 'tunes') { setTune(next.document); setTuneDetail(next); }
-                            })} />
-                          <Paper withBorder p="md"><Stack gap="xs">
-                            <Text fw={600}>{tuneDetail?.item.name ?? 'CVT default settings'}</Text>
-                            <Text size="sm" c="dimmed">{tuneDetail?.item.description || 'The saved CVT’s weights, springs and ramp settings.'}</Text>
-                            <Button variant="light" onClick={() => { if (!tuneDetail) setTune({ ...tune, name: '' }); setTuneOpen(true); }}>Adjust tune</Button>
-                          </Stack></Paper>
-                        </Stack>}
+                        {setup && step === 2 && surface && tune && (
+                          <Stack>
+                            <Select
+                              label="CVT tune"
+                              searchable
+                              allowDeselect={false}
+                              value={tuneDetail?.item.id ?? 'default'}
+                              data={[
+                                {
+                                  group: 'Selected CVT',
+                                  items: [
+                                    {
+                                      value: 'default',
+                                      label: 'Use CVT default settings',
+                                    },
+                                  ],
+                                },
+                                ...libraryOptions(
+                                  tunes.filter(
+                                    (item) =>
+                                      item.cvt_revision_id ===
+                                        surface.cvt_revision_id &&
+                                      (!item.archived ||
+                                        item.id === tuneDetail?.item.id),
+                                  ),
+                                  (item) => item.id,
+                                ),
+                              ]}
+                              onChange={(id) =>
+                                void task(async () => {
+                                  if (id === 'default') {
+                                    setTune(surface.template);
+                                    setTuneDetail(null);
+                                    return;
+                                  }
+                                  if (!id) return;
+                                  const next = await getExperiment(
+                                    id,
+                                    tunes.find((item) => item.id === id)
+                                      ?.revision_id,
+                                  );
+                                  if (next.document.kind === 'tunes') {
+                                    setTune(next.document);
+                                    setTuneDetail(next);
+                                  }
+                                })
+                              }
+                            />
+                            <Paper withBorder p="md">
+                              <Stack gap="xs">
+                                <Text fw={600}>
+                                  {tuneDetail?.item.name ??
+                                    'CVT default settings'}
+                                </Text>
+                                <Text size="sm" c="dimmed">
+                                  {tuneDetail?.item.description ||
+                                    'The saved CVT’s weights, springs and ramp settings.'}
+                                </Text>
+                                <Button
+                                  variant="light"
+                                  onClick={() => {
+                                    if (!tuneDetail)
+                                      setTune({ ...tune, name: '' });
+                                    setTuneOpen(true);
+                                  }}
+                                >
+                                  Adjust tune
+                                </Button>
+                              </Stack>
+                            </Paper>
+                          </Stack>
+                        )}
                         {setup && step === 3 && (
                           <PrimaryBoundaryEditor
                             value={primary}
@@ -635,8 +764,12 @@ export function ExperimentPage() {
                               onChange={(engine) => patchSetup({ engine })}
                               onLoadingChange={setComponentBusy}
                             />
-                            <EditorDisclosure key={setup.data.engine.revision_id ?? 'new'} title="Engine" initiallyOpen={!setup.data.engine.revision_id}
-                              summary={`${setup.data.engine.name} · full-open-throttle torque curve`}>
+                            <EditorDisclosure
+                              key={setup.data.engine.revision_id ?? 'new'}
+                              title="Engine"
+                              initiallyOpen={!setup.data.engine.revision_id}
+                              summary={`${setup.data.engine.name} · full-open-throttle torque curve`}
+                            >
                               <EngineEditor
                                 value={setup.data.engine.data}
                                 onChange={(data) =>
@@ -659,13 +792,23 @@ export function ExperimentPage() {
                                 value={loadCase?.item.id ?? null}
                                 placeholder="Choose a road or load case"
                                 data={libraryOptions(
-                                  loadCases.filter((item) => !item.archived || item.id === loadCase?.item.id),
+                                  loadCases.filter(
+                                    (item) =>
+                                      !item.archived ||
+                                      item.id === loadCase?.item.id,
+                                  ),
                                   (item) => item.id,
                                 )}
                                 onChange={(id) =>
                                   id &&
                                   void task(async () =>
-                                    acceptLoadCase(await getExperiment(id, loadCases.find(item => item.id === id)?.revision_id)),
+                                    acceptLoadCase(
+                                      await getExperiment(
+                                        id,
+                                        loadCases.find((item) => item.id === id)
+                                          ?.revision_id,
+                                      ),
+                                    ),
                                   )
                                 }
                               />
@@ -676,15 +819,20 @@ export function ExperimentPage() {
                                 New load case
                               </Button>
                             </Group>
-                            {!loadCase && scenario && params.get('source_run') && (
-                              <Stack gap="sm">
-                                <Text fw={600}>{scenario.name} · run-only load case</Text>
-                                <Text size="sm" c="dimmed">
-                                  These road settings will be reused for this run without creating a library item.
-                                </Text>
-                                <RoadPreview road={scenario.road} />
-                              </Stack>
-                            )}
+                            {!loadCase &&
+                              scenario &&
+                              params.get('source_run') && (
+                                <Stack gap="sm">
+                                  <Text fw={600}>
+                                    {scenario.name} · run-only load case
+                                  </Text>
+                                  <Text size="sm" c="dimmed">
+                                    These road settings will be reused for this
+                                    run without creating a library item.
+                                  </Text>
+                                  <RoadPreview road={scenario.road} />
+                                </Stack>
+                              )}
                             {loadCase && scenario && (
                               <>
                                 <Group justify="space-between">
@@ -735,7 +883,7 @@ export function ExperimentPage() {
                               value={scenario}
                               metadata={metadata}
                               onChange={setScenario}
-                              onRoadValidityChange={() => { }}
+                              onRoadValidityChange={() => {}}
                             />
                             {scenarioDirty && (
                               <Text size="sm" c="dimmed">
@@ -744,9 +892,31 @@ export function ExperimentPage() {
                                 remains unchanged.
                               </Text>
                             )}
-                            <Button variant="default" onClick={() => go(5)}>
-                              Refresh input check
-                            </Button>
+                            {checkingInputs && (
+                              <Group gap="sm" role="status" aria-live="polite">
+                                <Loader size="sm" />
+                                <Text size="sm">
+                                  Checking the simulation inputs…
+                                </Text>
+                              </Group>
+                            )}
+                            {previewError && (
+                              <Alert
+                                color="red"
+                                title="Input check failed"
+                                role="alert"
+                              >
+                                <Text size="sm">{previewError}</Text>
+                                <Button
+                                  variant="subtle"
+                                  onClick={() =>
+                                    setCheckAttempt((value) => value + 1)
+                                  }
+                                >
+                                  Try again
+                                </Button>
+                              </Alert>
+                            )}
                             <PhysicalStatus
                               validation={preview?.validation ?? null}
                               stale={previewKey !== selectionKey || setupDirty}
@@ -841,11 +1011,20 @@ export function ExperimentPage() {
                           : 'Choose a CVT',
                         step: 1,
                       },
-                      { label: 'Tune', value: tuneDetail?.item.name ?? (tuneDirty ? 'Custom tune' : 'CVT default'), step: 2 },
+                      {
+                        label: 'Tune',
+                        value:
+                          tuneDetail?.item.name ??
+                          (tuneDirty ? 'Custom tune' : 'CVT default'),
+                        step: 2,
+                      },
                       { label: 'Primary', value: primaryLabel, step: 3 },
                       {
                         label: 'Load case',
-                        value: loadCase?.item.name ?? scenario?.name ?? 'Choose a load case',
+                        value:
+                          loadCase?.item.name ??
+                          scenario?.name ??
+                          'Choose a load case',
                         step: 4,
                       },
                     ].map((item) => (
@@ -870,7 +1049,10 @@ export function ExperimentPage() {
                     ))}
                     <Divider />
                     <Text size="sm">
-                      {scenario?.stops?.mode === 'timed' ? 'Timed run' : 'Run to course finish'} · up to {scenario?.duration_s ?? '—'} s ·{' '}
+                      {scenario?.stops?.mode === 'timed'
+                        ? 'Timed run'
+                        : 'Run to course finish'}{' '}
+                      · up to {scenario?.duration_s ?? '—'} s ·{' '}
                       {tuneDetail?.item.name ??
                         (tuneDirty ? 'Custom tune values' : 'Setup tuning')}
                     </Text>
@@ -923,7 +1105,10 @@ export function ExperimentPage() {
                     }}
                     onLoad={(id) =>
                       void task(async () => {
-                        const next = await getExperiment(id, tunes.find(item => item.id === id)?.revision_id);
+                        const next = await getExperiment(
+                          id,
+                          tunes.find((item) => item.id === id)?.revision_id,
+                        );
                         if (
                           next.document.kind !== 'tunes' ||
                           !next.item.setup_object_id

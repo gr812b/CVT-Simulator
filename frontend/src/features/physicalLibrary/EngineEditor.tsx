@@ -1,10 +1,10 @@
 import { useState } from 'react';
+import { Modal } from '@components/modal/Modal';
 import {
   Accordion,
   Alert,
   FileButton,
   Group,
-  Modal,
   Select,
   SimpleGrid,
   Stack,

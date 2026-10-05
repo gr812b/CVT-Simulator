@@ -17,6 +17,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { getUsers, type PublicUserPage } from '../community/api';
 import { SchoolSelect } from '../community/SchoolSelect';
+import { AuthorLink } from '../community/AuthorLink';
 import { message } from '../experiments/api';
 
 export function PublicUsers() {
@@ -101,7 +102,9 @@ export function PublicUsers() {
                   <Group wrap="nowrap">
                     <Avatar name={user.display_name} color="initials" />
                     <div>
-                      <Text fw={600}>{user.display_name}</Text>
+                      <Text fw={600}>
+                        <AuthorLink id={user.id} name={user.display_name} />
+                      </Text>
                       <Text c="dimmed" size="sm">
                         {user.school || 'Independent member'}
                       </Text>

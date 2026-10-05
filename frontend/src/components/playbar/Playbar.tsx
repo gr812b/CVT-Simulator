@@ -1,10 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Playbar.module.scss';
-import { ReportReplayController, ReplayEventType, StateType } from '@utils/reportReplay';
+import {
+  ReportReplayController,
+  ReplayEventType,
+  StateType,
+} from '@utils/reportReplay';
 import { DiscreteSlider } from '@components/Slider/Slider';
 import { SpeedSelector } from '@components/SpeedSelector/SpeedSelector';
-import PlayIcon from '@assets/icons/play.svg?react';
-import PauseIcon from '@assets/icons/pause.svg?react';
+import {
+  IconPlayerPlayFilled,
+  IconPlayerPauseFilled,
+} from '@tabler/icons-react';
 
 interface PlaybarProps {
   replayController: ReportReplayController;
@@ -38,7 +44,7 @@ const PlayPauseButton = React.memo(function PlayPauseButton({
       onClick={onToggle}
       aria-label={isPlaying ? 'Pause' : 'Play'}
     >
-      {isPlaying ? <PauseIcon /> : <PlayIcon />}
+      {isPlaying ? <IconPlayerPauseFilled /> : <IconPlayerPlayFilled />}
     </button>
   );
 });
@@ -66,7 +72,13 @@ const SeekSlider = React.memo(function SeekSlider({
   selectedIndex: number;
   onSeek: (idx: number) => void;
 }) {
-  return <DiscreteSlider values={times} selectedIndex={selectedIndex} onIndexChange={onSeek} />;
+  return (
+    <DiscreteSlider
+      values={times}
+      selectedIndex={selectedIndex}
+      onIndexChange={onSeek}
+    />
+  );
 });
 
 const SpeedControl = React.memo(function SpeedControl({
@@ -80,20 +92,22 @@ const SpeedControl = React.memo(function SpeedControl({
 });
 
 export const Playbar = ({ replayController, times }: PlaybarProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(
+    () => replayController.visualSample().playing,
+  );
+  const [speed, setSpeed] = useState(
+    () => replayController.visualSample().speed,
+  );
 
   // UI index: only for display/slider
   const [uiIndex, setUiIndex] = useState(0);
 
-  // Refs so callbacks can be stable and not depend on changing state
-  const isPlayingRef = useRef(isPlaying);
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
-
   useEffect(() => {
     return replayController.on((event) => {
+      const sample = replayController.visualSample();
+      setSpeed(sample.speed);
+      setIsPlaying(sample.playing);
       if (event.type === ReplayEventType.StateChanged) {
         setIsPlaying(event.state === StateType.Playing);
         return;
@@ -113,20 +127,45 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
 
   // Stable toggle handler (doesn't change identity when isPlaying changes)
   const handlePlayPause = useCallback(() => {
-    if (isPlayingRef.current) replayController.pause();
+    if (replayController.visualSample().playing) replayController.pause();
     else replayController.play();
   }, [replayController]);
 
   // Spacebar listener attaches once (because handlePlayPause is stable)
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Space') {
-        event.preventDefault();
-        handlePlayPause();
-      }
+      const target = event.target;
+      const editing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target instanceof HTMLTextAreaElement ||
+          (target instanceof HTMLInputElement &&
+            !target.readOnly &&
+            [
+              'text',
+              'search',
+              'email',
+              'url',
+              'tel',
+              'password',
+              'number',
+            ].includes(target.type)));
+      if (
+        event.code !== 'Space' ||
+        event.defaultPrevented ||
+        editing ||
+        (document.fullscreenElement &&
+          !document.fullscreenElement.contains(rootRef.current))
+      )
+        return;
+      // Capture before a focused button, slider, or select handles Space.
+      // preventDefault also ensures only the active playbar handles this event.
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) handlePlayPause();
     };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
   }, [handlePlayPause]);
 
   const handleSpeedChange = useCallback(
@@ -134,25 +173,25 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
       setSpeed(newSpeed);
       replayController.setSpeed(newSpeed);
     },
-    [replayController]
+    [replayController],
   );
 
   const handleSeek = useCallback(
     (index: number) => {
       // If user scrubs while playing, pause first
-      if (isPlayingRef.current) replayController.pause();
+      if (replayController.visualSample().playing) replayController.pause();
 
       setUiIndex(index);
       replayController.setCurrentIndex(index);
     },
-    [replayController]
+    [replayController],
   );
 
   const currentTime = times[uiIndex];
   const endTime = times[times.length - 1];
 
   return (
-    <div className={styles.playbar}>
+    <div ref={rootRef} className={styles.playbar}>
       <PlayPauseButton isPlaying={isPlaying} onToggle={handlePlayPause} />
       <TimeLabel currentTime={currentTime} endTime={endTime} />
       <SeekSlider times={times} selectedIndex={uiIndex} onSeek={handleSeek} />

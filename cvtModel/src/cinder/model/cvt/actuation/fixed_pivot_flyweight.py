@@ -166,17 +166,17 @@ class FlyweightMassGeometry:
                 raise ValueError(f"{name} must be non-negative.")
 
         tolerance = 256.0 * np.finfo(float).eps
-        if self.first_moment_u**2 > (
-            self.mass_per_flyweight * self.second_moment_u
-        ) * (1.0 + tolerance):
+        if self.first_moment_u**2 > (self.mass_per_flyweight * self.second_moment_u) * (
+            1.0 + tolerance
+        ):
             raise ValueError("first_moment_u is inconsistent with the mass moments.")
-        if self.first_moment_v**2 > (
-            self.mass_per_flyweight * self.second_moment_v
-        ) * (1.0 + tolerance):
+        if self.first_moment_v**2 > (self.mass_per_flyweight * self.second_moment_v) * (
+            1.0 + tolerance
+        ):
             raise ValueError("first_moment_v is inconsistent with the mass moments.")
-        if self.product_moment_uv**2 > (
-            self.second_moment_u * self.second_moment_v
-        ) * (1.0 + tolerance):
+        if self.product_moment_uv**2 > (self.second_moment_u * self.second_moment_v) * (
+            1.0 + tolerance
+        ):
             raise ValueError(
                 "product_moment_uv is inconsistent with the second moments."
             )
@@ -254,7 +254,7 @@ class FlyweightMassGeometry:
             ConcentratedTipHardwareMass,
         ):
             raise TypeError(
-                "tip_hardware must be a " "ConcentratedTipHardwareMass instance."
+                "tip_hardware must be a ConcentratedTipHardwareMass instance."
             )
         return cls.uniform_arm_with_end_mass(
             number_of_flyweights=number_of_flyweights,
@@ -968,7 +968,7 @@ class PivotedRollerFollowerGeometry:
                     severity="error",
                     code="kinematics.nonpositive_motion_ratio",
                     message=(
-                        "Selected branch reaches a non-finite or " "non-positive dq/dx."
+                        "Selected branch reaches a non-finite or non-positive dq/dx."
                     ),
                 )
             )
@@ -1511,25 +1511,19 @@ class _OffsetCurve:
     offset_regular_factor: float
 
 
-class PivotedRollerFollowerFlyweightMap:
-    """Runtime ``q, J, I`` map compiled from the selected contact branch.
+class CompiledPivotedRollerFollowerGeometry:
+    """Audited contact branch and spline, independent of flyweight mass.
 
-    Construction chooses the smallest-q mathematical contact at the beginning
-    of travel and follows that branch continuously across the operating
-    interval.  A clamped cubic spline then provides the cheap C2 runtime angle
-    map.  Shaft inertia and its derivative continue to come from the physical
-    mass moments rather than an independently fitted law.
+    Keep a private copy when sharing a compilation: custom ramp profiles and
+    scipy spline arrays can be mutable. Compilation retains every construction
+    check used by the runtime map.
     """
 
     def __init__(
         self,
-        *,
         geometry_spec: PivotedRollerFollowerGeometrySpec,
-        mass_geometry: FlyweightMassGeometry,
         compilation_points: int = 257,
     ) -> None:
-        if not isinstance(mass_geometry, FlyweightMassGeometry):
-            raise TypeError("mass_geometry must be a FlyweightMassGeometry.")
         if (
             isinstance(compilation_points, bool)
             or not isinstance(compilation_points, int)
@@ -1538,7 +1532,6 @@ class PivotedRollerFollowerFlyweightMap:
             raise ValueError("compilation_points must be an integer of at least 9.")
 
         self._geometry = PivotedRollerFollowerGeometry(geometry_spec)
-        self._mass_geometry = mass_geometry
         self._compilation_points = compilation_points
 
         # A coarser independent construction check catches branch loss and
@@ -1587,6 +1580,57 @@ class PivotedRollerFollowerFlyweightMap:
                 "The compiled fixed-pivot flyweight map reverses or reaches a "
                 "singular motion ratio."
             )
+
+
+class PivotedRollerFollowerFlyweightMap:
+    """Runtime ``q, J, I`` map compiled from the selected contact branch.
+
+    Construction chooses the smallest-q mathematical contact at the beginning
+    of travel and follows that branch continuously across the operating
+    interval.  A clamped cubic spline then provides the cheap C2 runtime angle
+    map.  Shaft inertia and its derivative continue to come from the physical
+    mass moments rather than an independently fitted law.
+    """
+
+    def __init__(
+        self,
+        *,
+        geometry_spec: PivotedRollerFollowerGeometrySpec,
+        mass_geometry: FlyweightMassGeometry,
+        compilation_points: int = 257,
+    ) -> None:
+        if not isinstance(mass_geometry, FlyweightMassGeometry):
+            raise TypeError("mass_geometry must be a FlyweightMassGeometry.")
+        compiled = CompiledPivotedRollerFollowerGeometry(
+            geometry_spec, compilation_points
+        )
+        self._use_compilation(compiled, mass_geometry)
+
+    @classmethod
+    def from_compiled_geometry(
+        cls,
+        compiled: CompiledPivotedRollerFollowerGeometry,
+        mass_geometry: FlyweightMassGeometry,
+    ) -> "PivotedRollerFollowerFlyweightMap":
+        """Bind physical mass moments to an already audited geometry."""
+        if not isinstance(compiled, CompiledPivotedRollerFollowerGeometry):
+            raise TypeError("compiled must be a CompiledPivotedRollerFollowerGeometry.")
+        if not isinstance(mass_geometry, FlyweightMassGeometry):
+            raise TypeError("mass_geometry must be a FlyweightMassGeometry.")
+        instance = cls.__new__(cls)
+        instance._use_compilation(compiled, mass_geometry)
+        return instance
+
+    def _use_compilation(
+        self,
+        compiled: CompiledPivotedRollerFollowerGeometry,
+        mass_geometry: FlyweightMassGeometry,
+    ) -> None:
+        self._geometry = compiled._geometry
+        self._compilation_points = compiled._compilation_points
+        self._validation_report = compiled._validation_report
+        self._angle_spline = compiled._angle_spline
+        self._mass_geometry = mass_geometry
 
     @property
     def validation_report(self) -> FixedPivotValidationReport:

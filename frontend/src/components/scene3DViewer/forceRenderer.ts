@@ -7,7 +7,7 @@ import { sceneDistance, type SceneGeometry } from './sceneSpec';
 import { sceneAppearance } from '../../styles/theme';
 
 export type ForceOptions = {
-  body: ForceTrack['body'];
+  body: ForceTrack['body'] | 'both';
   tracks: string[];
   components: string[];
   scale: number;
@@ -161,7 +161,7 @@ export class ForceRenderer {
       const item = this.arrows.get(track.key)!;
       const s = forceAt(track, bracket);
       item.group.visible =
-        options.body === track.body &&
+        (options.body === 'both' || options.body === track.body) &&
         options.tracks.includes(track.key) &&
         !!s;
       if (!s || !item.group.visible) continue;

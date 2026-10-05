@@ -8,8 +8,12 @@ Python callers.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
+from copy import deepcopy
+from functools import lru_cache
 from math import degrees, radians
+from threading import RLock
 from typing import Any
 
 from cinder.model.cvt.actuation import (
@@ -25,6 +29,9 @@ from cinder.model.cvt.actuation import (
     PulleyActuator,
     PivotedRollerFollowerFlyweightMap,
     PivotedRollerFollowerGeometrySpec,
+)
+from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
+    CompiledPivotedRollerFollowerGeometry,
 )
 from cinder.model.cvt.geometry import (
     BeltPulleyGeometry,
@@ -339,6 +346,71 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
     )
 
 
+# Cache only JSON-defined geometry, never arbitrary mutable Python profiles.
+# The lock also prevents concurrent cold requests compiling the same branch twice.
+_flyweight_compilation_lock = RLock()
+
+
+@lru_cache(maxsize=32)
+def _compile_flyweight_geometry(
+    serialized: str,
+) -> CompiledPivotedRollerFollowerGeometry:
+    geometry = json.loads(serialized)
+    geometry_spec = PivotedRollerFollowerGeometrySpec(
+        pivot_axial_position=_number(geometry, "pivot_axial_position_m"),
+        pivot_radius=_number(geometry, "pivot_radius_m"),
+        arm_length=_number(geometry, "arm_length_m"),
+        roller_radius=_number(geometry, "roller_radius_m"),
+        ramp_reference_axial_position=_number(
+            geometry, "ramp_reference_axial_position_m"
+        ),
+        ramp_reference_radius=_number(geometry, "ramp_reference_radius_m"),
+        ramp_profile=_decode_piecewise_ramp(
+            _mapping(_require(geometry, "ramp_profile"), "geometry.ramp_profile")
+        ),
+        ramp_axial_direction=(
+            _integer(geometry, "ramp_axial_direction")
+            if "ramp_axial_direction" in geometry
+            else 1
+        ),
+        axial_position_min=_number(geometry, "axial_position_min_m"),
+        axial_position_max=_number(geometry, "axial_position_max_m"),
+        roller_side_sign=_integer(geometry, "roller_side_sign"),
+        root_scan_points=(
+            _integer(geometry, "root_scan_points")
+            if "root_scan_points" in geometry
+            else 257
+        ),
+        validation_positions=(
+            _integer(geometry, "validation_positions")
+            if "validation_positions" in geometry
+            else 33
+        ),
+        root_residual_tolerance=_optional_number(
+            geometry, "root_residual_tolerance_m2", default=1.0e-14
+        ),
+        coordinate_tolerance=_optional_number(
+            geometry, "coordinate_tolerance_m", default=1.0e-10
+        ),
+    )
+    return CompiledPivotedRollerFollowerGeometry(
+        geometry_spec,
+        _integer(geometry, "compilation_points")
+        if "compilation_points" in geometry
+        else 257,
+    )
+
+
+def _decode_flyweight_map(
+    geometry: Mapping[str, Any], mass: FlyweightMassGeometry
+) -> PivotedRollerFollowerFlyweightMap:
+    key = json.dumps(dict(geometry), sort_keys=True, allow_nan=False)
+    with _flyweight_compilation_lock:
+        # No request can mutate the cached profile, audit, or spline arrays.
+        compiled = deepcopy(_compile_flyweight_geometry(key))
+    return PivotedRollerFollowerFlyweightMap.from_compiled_geometry(compiled, mass)
+
+
 def _decode_force_law(payload: Mapping[str, Any]) -> object:
     kind = _string(payload, "kind")
     if kind == "axial_spring":
@@ -367,43 +439,6 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
     if kind == "fixed_pivot_roller_flyweight":
         geometry = _mapping(_require(payload, "geometry"), "geometry")
         mass = _mapping(_require(payload, "mass_geometry"), "mass_geometry")
-        geometry_spec = PivotedRollerFollowerGeometrySpec(
-            pivot_axial_position=_number(geometry, "pivot_axial_position_m"),
-            pivot_radius=_number(geometry, "pivot_radius_m"),
-            arm_length=_number(geometry, "arm_length_m"),
-            roller_radius=_number(geometry, "roller_radius_m"),
-            ramp_reference_axial_position=_number(
-                geometry, "ramp_reference_axial_position_m"
-            ),
-            ramp_reference_radius=_number(geometry, "ramp_reference_radius_m"),
-            ramp_profile=_decode_piecewise_ramp(
-                _mapping(_require(geometry, "ramp_profile"), "geometry.ramp_profile")
-            ),
-            ramp_axial_direction=(
-                _integer(geometry, "ramp_axial_direction")
-                if "ramp_axial_direction" in geometry
-                else 1
-            ),
-            axial_position_min=_number(geometry, "axial_position_min_m"),
-            axial_position_max=_number(geometry, "axial_position_max_m"),
-            roller_side_sign=_integer(geometry, "roller_side_sign"),
-            root_scan_points=(
-                _integer(geometry, "root_scan_points")
-                if "root_scan_points" in geometry
-                else 257
-            ),
-            validation_positions=(
-                _integer(geometry, "validation_positions")
-                if "validation_positions" in geometry
-                else 33
-            ),
-            root_residual_tolerance=_optional_number(
-                geometry, "root_residual_tolerance_m2", default=1.0e-14
-            ),
-            coordinate_tolerance=_optional_number(
-                geometry, "coordinate_tolerance_m", default=1.0e-10
-            ),
-        )
         mass_geometry = FlyweightMassGeometry(
             number_of_flyweights=_integer(mass, "number_of_flyweights"),
             mass_per_flyweight=_number(mass, "mass_per_flyweight_kg"),
@@ -420,15 +455,7 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
         )
         return FixedPivotFlyweightForce(
             FixedPivotFlyweightForceSpec(
-                mechanism_map=PivotedRollerFollowerFlyweightMap(
-                    geometry_spec=geometry_spec,
-                    mass_geometry=mass_geometry,
-                    compilation_points=(
-                        _integer(geometry, "compilation_points")
-                        if "compilation_points" in geometry
-                        else 257
-                    ),
-                )
+                mechanism_map=_decode_flyweight_map(geometry, mass_geometry)
             )
         )
     if kind == "helical_torque_reaction":

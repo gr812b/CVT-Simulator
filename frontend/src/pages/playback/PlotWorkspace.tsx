@@ -1,16 +1,14 @@
 import { useMemo, useRef, useState } from 'react';
-import {
-  Group,
-  Modal,
-  MultiSelect,
-  Paper,
-  Stack,
-  Tabs,
-  Text,
-} from '@mantine/core';
+import { Modal } from '@components/modal/Modal';
+import { Group, MultiSelect, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { Graph2D, type GraphViewState } from '@components/graph2D/graph2D';
-import { CHART_COLORS } from '@components/graph2D/chartOptions';
+import { compactChartLayout } from '@components/graph2D/compactChartLayout';
+import { IconRestore } from '@tabler/icons-react';
+import {
+  DEFAULT_PLOTS,
+  usePlotPreferences,
+} from '../../features/playback/preferences';
 import type { ReportReplayController } from '@utils/reportReplay';
 import type { GraphCategory } from './reportGraphs';
 import styles from './Playback.module.scss';
@@ -69,8 +67,12 @@ export function PlotWorkspace({
   categories: GraphCategory[];
   controller: ReportReplayController;
 }) {
-  const [tab, setTab] = useState('overview');
-  const [choices, setChoices] = useState<Record<string, string[]>>({});
+  const [preferences, setPreferences] = usePlotPreferences();
+  const { choices } = preferences;
+  const tab = tabs.some((item) => item.id === preferences.tab)
+    ? preferences.tab
+    : 'overview';
+  const [resetKey, setResetKey] = useState(0);
   const states = useRef(new Map<string, GraphViewState>());
   const [expanded, setExpanded] = useState<string | null>(null);
   const current = tabs.find((t) => t.id === tab)!;
@@ -81,31 +83,37 @@ export function PlotWorkspace({
         .flatMap((c) => c.graphs),
     [categories, current],
   );
-  const selected =
-    choices[tab] ??
-    current.defaults.filter((title) =>
-      graphs.some((g) => g.config.title! === title),
-    );
+  const selected = (choices[tab] ?? current.defaults).filter((title) =>
+    graphs.some((g) => g.config.title === title),
+  );
   const shown = graphs.filter((g) => selected.includes(g.config.title!));
   const draw = (graph: (typeof graphs)[number], large = false) => (
     <Graph2D
       {...graph}
       config={{ ...graph.config, title: undefined, height: large ? 560 : 310 }}
-      chartOptions={{
-        legend: {
-          type: 'scroll',
-          top: 12,
-          left: 10,
-          right: 120,
-          textStyle: { color: CHART_COLORS.TEXT },
-        },
-        grid: { top: 55, left: 45, right: 15, bottom: 40, containLabel: true },
-      }}
+      chartOptions={compactChartLayout(
+        graph.config.yAxis.unit ?? graph.config.yAxis.name,
+      )}
       replayController={controller}
-      viewState={states.current.get(graph.config.title!)}
-      onViewStateChange={(state) =>
-        states.current.set(graph.config.title!, state)
+      viewState={
+        states.current.get(graph.config.title!) ?? {
+          zoom: [],
+          selected: preferences.series[graph.config.title!] ?? {},
+        }
       }
+      onViewStateChange={(state) => {
+        const title = graph.config.title!;
+        states.current.set(title, state);
+        if (
+          JSON.stringify(preferences.series[title] ?? {}) !==
+          JSON.stringify(state.selected)
+        ) {
+          setPreferences((current) => ({
+            ...current,
+            series: { ...current.series, [title]: state.selected },
+          }));
+        }
+      }}
     />
   );
   const enlarged = graphs.find((g) => g.config.title! === expanded);
@@ -116,7 +124,7 @@ export function PlotWorkspace({
           value={tab}
           onChange={(value) => {
             if (value) {
-              setTab(value);
+              setPreferences((current) => ({ ...current, tab: value }));
               setExpanded(null);
             }
           }}
@@ -129,16 +137,39 @@ export function PlotWorkspace({
             ))}
           </Tabs.List>
         </Tabs>
+        <Group justify="space-between">
+          <Text size="sm" fw={500} id="plot-picker-label">
+            Plots
+          </Text>
+          <Button
+            size="compact-xs"
+            variant="subtle"
+            leftSection={<IconRestore size={13} />}
+            onClick={() => {
+              states.current.clear();
+              setPreferences(DEFAULT_PLOTS);
+              setExpanded(null);
+              setResetKey((value) => value + 1);
+            }}
+          >
+            Reset plots
+          </Button>
+        </Group>
         <MultiSelect<string>
-          label="Plots"
+          aria-labelledby="plot-picker-label"
           description="Choose up to four. Click a plot to move playback to that point."
           data={graphs.map((g) => g.config.title!)}
           value={selected}
           maxValues={4}
           searchable
-          onChange={(value) => setChoices({ ...choices, [tab]: value })}
+          onChange={(value) =>
+            setPreferences((current) => ({
+              ...current,
+              choices: { ...current.choices, [tab]: value },
+            }))
+          }
         />
-        <div className={styles.plotGrid}>
+        <div className={styles.plotGrid} key={resetKey}>
           {shown.map((graph) => (
             <Paper withBorder p="xs" key={graph.config.title!}>
               <Group justify="space-between" align="start" wrap="nowrap">

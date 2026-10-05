@@ -38,16 +38,19 @@ type Card = Pick<
 export function LibraryBrowser({
   kind,
   publicView = false,
+  authorId,
   refresh = 0,
 }: {
   kind: LibraryCategory;
   publicView?: boolean;
+  authorId?: string;
   refresh?: number;
 }) {
   const { session } = useAuth();
   const [params, setParams] = useSearchParams();
-  const scope =
-    params.get('scope') === 'samples'
+  const scope = authorId
+    ? 'all'
+    : params.get('scope') === 'samples'
       ? 'samples'
       : params.get('scope') === 'own' && session
         ? 'own'
@@ -78,7 +81,13 @@ export function LibraryBrowser({
     setError(null);
     const load = async (): Promise<Card[]> => {
       if (kind === 'load-cases')
-        return (await listExperiments('scenarios')).map((item) => ({
+        return (
+          await listExperiments('scenarios', undefined, {
+            authorId,
+            signal: abort.signal,
+            includeArchived: archived && scope === 'own',
+          })
+        ).map((item) => ({
           ...item,
           sample: !!item.sample,
           description: item.description ?? '',
@@ -90,6 +99,7 @@ export function LibraryBrowser({
           scope,
           archived && scope === 'own',
           abort.signal,
+          authorId,
         )
       ).map((item) => ({
         ...item,
@@ -107,7 +117,7 @@ export function LibraryBrowser({
         if (!abort.signal.aborted) setLoading(false);
       });
     return () => abort.abort();
-  }, [kind, scope, archived, refresh, retry]);
+  }, [kind, scope, archived, refresh, retry, authorId]);
   const visible = items.filter(
     (item) =>
       (scope !== 'own' || item.owned) &&
@@ -124,16 +134,18 @@ export function LibraryBrowser({
   return (
     <Stack gap="lg">
       <Group justify="space-between" align="center">
-        <SegmentedControl
-          aria-label="Library source"
-          value={scope}
-          onChange={(value) => update('scope', value)}
-          data={[
-            ...(publicView ? [{ value: 'all', label: 'All public' }] : []),
-            ...(session ? [{ value: 'own', label: 'My library' }] : []),
-            { value: 'samples', label: 'CINDER defaults' },
-          ]}
-        />
+        {!authorId && (
+          <SegmentedControl
+            aria-label="Library source"
+            value={scope}
+            onChange={(value) => update('scope', value)}
+            data={[
+              ...(publicView ? [{ value: 'all', label: 'All public' }] : []),
+              ...(session ? [{ value: 'own', label: 'My library' }] : []),
+              { value: 'samples', label: 'CINDER defaults' },
+            ]}
+          />
+        )}
         <TextInput
           aria-label="Search library"
           placeholder="Search names or authors"
@@ -160,7 +172,7 @@ export function LibraryBrowser({
               : 'Community configurations'}{' '}
           · {loading ? 'Loading…' : `${visible.length} items`}
         </Text>
-        {session && (
+        {session && !authorId && (
           <Checkbox
             label="Include archived"
             checked={archived}

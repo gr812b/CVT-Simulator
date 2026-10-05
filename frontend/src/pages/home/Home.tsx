@@ -4,7 +4,6 @@ import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Anchor,
-  Badge,
   Button,
   Center,
   Container,
@@ -23,28 +22,27 @@ import {
   IconPlayerPlay,
 } from '@tabler/icons-react';
 import { PublicHeader } from '@components/appShell/PublicHeader';
+import { PROJECT_LINKS } from '../../config/projectLinks';
 import styles from './Home.module.scss';
 
 const HomeCvtPreview = lazy(() => import('./HomeCvtPreview'));
-const GITHUB_URL = 'https://github.com/gr812b/CVT-Simulator';
-const PAPER_URL = `${GITHUB_URL}/blob/develop/docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf`;
 const external = { target: '_blank', rel: 'noopener noreferrer' } as const;
 
 const steps = [
   {
     number: '01',
-    title: 'Build your setup',
-    text: 'Bring together a vehicle, CVT, belt and engine. Start with public examples, then make them your own.',
+    title: 'Use your own vehicle and CVT',
+    text: 'Enter your vehicle, engine, belt and CVT dimensions, or start from the McMaster defaults. Save the parts you want to reuse.',
   },
   {
     number: '02',
-    title: 'Give it a road',
-    text: 'Choose a road grade or create a reusable load case with hills and whoops. Review the complete setup before you run.',
+    title: 'Choose a tune and load case',
+    text: 'Adjust the springs, flyweights and helix, then choose a saved road or build one with climbs, descents and whoops.',
   },
   {
     number: '03',
-    title: 'Follow the motion',
-    text: 'Replay the CVT alongside plots of speed, ratio, torque and belt behaviour. Keep the inputs with the result, and export the data.',
+    title: 'Look inside the result',
+    text: 'Replay the motion with force vectors, inspect speed, ratio, torque and belt slip, and download the data for your own analysis.',
   },
 ];
 
@@ -57,16 +55,18 @@ export const Home = () => {
         <main>
           <section className={styles.hero} aria-labelledby="home-title">
             <Stack gap="xl" className={styles.heroCopy}>
-              <Text className={styles.eyebrow}>CVT dynamics, made visible</Text>
+              <Text className={styles.eyebrow}>
+                Rubber V-belt CVT simulation
+              </Text>
               <Title id="home-title" className={styles.title}>
                 Understand
                 <br />
                 every <span>shift.</span>
               </Title>
               <Text size="lg" c="dimmed" maw={490}>
-                Explore how a belt CVT responds to the vehicle, the engine and
-                the road. Build a setup, run the model, and see the motion
-                behind the numbers.
+                Simulate your vehicle and CVT with different tunes and road
+                loads. Replay the motion and inspect the forces, torque and belt
+                slip using the model described in the paper.
               </Text>
               <Group gap="sm">
                 <Button
@@ -87,9 +87,6 @@ export const Home = () => {
                   {session ? 'Build a setup' : 'Create a free account'}
                 </Button>
               </Group>
-              <Text size="sm" c="dimmed">
-                The recorded demo is ready to explore. No account needed.
-              </Text>
             </Stack>
             <figure className={styles.modelFigure}>
               <div className={styles.model}>
@@ -104,10 +101,8 @@ export const Home = () => {
                 </Suspense>
               </div>
               <figcaption>
-                <span className={styles.modelLabel}>
-                  A belt. Two pulleys. A changing ratio.
-                </span>
-                <span>Default CVT · drag or use arrow keys to rotate</span>
+                <span className={styles.modelLabel}>McMaster 2025 CVT</span>
+                <span>Drag or use arrow keys to rotate</span>
               </figcaption>
             </figure>
           </section>
@@ -115,10 +110,10 @@ export const Home = () => {
             <Group justify="space-between" align="end" mb="xl">
               <div>
                 <Text className={styles.eyebrow} mb="sm">
-                  From setup to insight
+                  Using CINDER
                 </Text>
                 <Title id="workflow-title" order={2}>
-                  Make the whole drivetrain part of the question.
+                  Set up a run, then explore what happened.
                 </Title>
               </div>
               <Anchor component={Link} to="/catalog">
@@ -148,22 +143,20 @@ export const Home = () => {
           </section>
           <section className={styles.research} aria-labelledby="research-title">
             <Stack gap="md">
-              <Text className={styles.eyebrow}>Built around the model</Text>
+              <Text className={styles.eyebrow}>The formulation</Text>
               <Title id="research-title" order={2}>
-                Read the reasoning.
-                <br />
-                Explore the implementation.
+                The model behind the simulation.
               </Title>
               <Text c="dimmed" maw={570}>
-                CINDER brings belt CVT geometry, actuation and drivetrain
-                dynamics into one simulation workflow. The accompanying
-                formulation paper explains the model and its assumptions; the
-                repository lets you follow the implementation.
+                The paper derives the coupled motion of the pulleys, belt and
+                clamping mechanisms, and explains the assumptions and numerical
+                checks. CINDER implements that formulation; this website gives
+                you a way to set up simulations and inspect their results.
               </Text>
               <Group mt="sm">
                 <Button
                   component="a"
-                  href={PAPER_URL}
+                  href={PROJECT_LINKS.paper}
                   {...external}
                   variant="default"
                   leftSection={<IconFileText size={18} />}
@@ -172,7 +165,7 @@ export const Home = () => {
                 </Button>
                 <Button
                   component="a"
-                  href={GITHUB_URL}
+                  href={PROJECT_LINKS.github}
                   {...external}
                   variant="subtle"
                   leftSection={<IconBrandGithub size={18} />}
@@ -181,21 +174,37 @@ export const Home = () => {
                 </Button>
               </Group>
             </Stack>
-            <Stack gap="lg" className={styles.author}>
-              <Badge variant="light" w="fit-content">
-                An evolving engineering tool
-              </Badge>
-              <Text size="xl" fw={600}>
-                Created by Kai Arseneau
+            <Stack
+              component="aside"
+              gap="md"
+              className={styles.author}
+              aria-labelledby="author-title"
+            >
+              <Title id="author-title" order={2} size="h3">
+                A note from me
+              </Title>
+              <Text>
+                Hey, I’m Kai. I worked on CVT tuning with McMaster Baja, and I
+                wanted a way to see what was actually going on inside these
+                things.
               </Text>
               <Text c="dimmed">
-                Rooted in Baja SAE drivetrain design. Built to make CVT
-                behaviour easier to investigate, discuss and understand.
+                This website and its interface were AI-generated, so there will
+                probably be bugs. The mathematical model behind it has had a lot
+                more scrutiny, with the derivation and mechanical and numerical
+                checks laid out in the paper. The reference acceleration case
+                had a final energy balance remainder of 4.9 × 10<sup>−5</sup>%.
+                That’s a consistency check, though—it doesn’t mean the model
+                matches a real CVT. Experimental validation is still to come,
+                and there are plenty of assumptions in the paper.
               </Text>
-              <Text size="sm" c="dimmed">
-                Use the model with its documented assumptions. Questions, ideas
-                and bug reports are welcome on GitHub.
+              <Text c="dimmed">
+                I’m hoping this helps other Baja members understand their CVTs a
+                bit better. The site is free to use, I’m not selling anything,
+                and the source is on GitHub. If something looks wrong, please
+                let me know.
               </Text>
+              <Text size="sm">— Kai Arseneau</Text>
             </Stack>
           </section>
         </main>
@@ -211,20 +220,19 @@ export const Home = () => {
             </Text>
           </Group>
           <Group gap="lg">
-            <Anchor href={PAPER_URL} {...external} size="sm">
+            <Anchor href={PROJECT_LINKS.paper} {...external} size="sm">
               Paper
             </Anchor>
-            <Anchor href={GITHUB_URL} {...external} size="sm">
+            <Anchor href={PROJECT_LINKS.github} {...external} size="sm">
               GitHub
+            </Anchor>
+            <Anchor href={PROJECT_LINKS.license} {...external} size="sm">
+              Source license
             </Anchor>
             <Anchor component={Link} to="/demo" size="sm">
               Try the demo
             </Anchor>
-            <Anchor
-              href="https://pypi.org/project/cinder-cvt/"
-              {...external}
-              size="sm"
-            >
+            <Anchor href={PROJECT_LINKS.package} {...external} size="sm">
               PyPI package
             </Anchor>
           </Group>

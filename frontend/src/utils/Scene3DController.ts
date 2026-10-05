@@ -73,6 +73,7 @@ export class Scene3DController {
   private orbitOnly: boolean;
   private renderOnDemand: boolean;
   private fittedBounds: THREE.Box3 | null = null;
+  private initialCamera: Scene3DConfig['camera'];
   private invalidate = () => {
     this.dirty = true;
   };
@@ -99,6 +100,7 @@ export class Scene3DController {
 
   constructor(config: Scene3DConfig) {
     this.container = config.container;
+    this.initialCamera = config.camera;
     this.orbitOnly = config.orbitOnly ?? false;
     this.renderOnDemand = config.renderOnDemand ?? false;
     this.scene = new THREE.Scene();
@@ -194,6 +196,17 @@ export class Scene3DController {
     this.controls.enablePan = !this.orbitOnly;
     this.controls.enableZoom = !this.orbitOnly;
     this.controls.addEventListener('change', this.invalidate);
+  }
+
+  /** Restore the configured view without rebuilding the scene or replay. */
+  public resetView(): void {
+    this.setCameraProjection(this.initialCamera.type);
+    this.camera.position.set(...this.initialCamera.position);
+    this.controls?.target.set(...this.initialCamera.lookAt);
+    this.camera.lookAt(...this.initialCamera.lookAt);
+    if (this.fittedBounds) this.fitBounds(this.fittedBounds);
+    this.controls?.update();
+    this.invalidate();
   }
 
   /** Fit the actual resolved envelope, preserving the chosen view direction. */

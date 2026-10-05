@@ -36,12 +36,22 @@ export const resolveRoad = async (body: Road, signal?: AbortSignal) =>
 export const listExperiments = async (
   kind: ExperimentKind,
   cvtObjectId?: string,
+  options?: {
+    authorId?: string;
+    signal?: AbortSignal;
+    includeArchived?: boolean;
+  },
 ) =>
   dataOrThrow(
     await api.GET('/api/v1/experiments/items/{kind}', {
+      signal: options?.signal,
       params: {
         path: { kind },
-        query: { include_archived: true, cvt_object_id: cvtObjectId },
+        query: {
+          include_archived: options?.includeArchived ?? true,
+          cvt_object_id: cvtObjectId,
+          author_id: options?.authorId,
+        },
       },
     }),
   ).items;
@@ -100,8 +110,11 @@ export const compareExperiments = async (before: string, after: string) =>
       params: { query: { before, after } },
     }),
   ).differences;
-export const previewExperiment = async (body: ExperimentSelection) =>
-  dataOrThrow(await api.POST('/api/v1/experiments/preview', { body }));
+export const previewExperiment = async (
+  body: ExperimentSelection,
+  signal?: AbortSignal,
+) =>
+  dataOrThrow(await api.POST('/api/v1/experiments/preview', { body, signal }));
 export const submitExperiment = async (body: SubmitExperiment) =>
   dataOrThrow(await api.POST('/api/v1/experiments/runs', { body }));
 export const getActivity = async () =>
@@ -112,9 +125,9 @@ export const getRun = async (id: string) =>
       params: { path: { run_id: id } },
     }),
   );
-export const listRuns = async () =>
+export const listRuns = async (signal?: AbortSignal, limit = 20) =>
   dataOrThrow(
-    await api.GET('/api/v1/runs', { params: { query: { limit: 20 } } }),
+    await api.GET('/api/v1/runs', { params: { query: { limit } }, signal }),
   ).items ?? [];
 export const cancelRun = async (id: string) =>
   dataOrThrow(

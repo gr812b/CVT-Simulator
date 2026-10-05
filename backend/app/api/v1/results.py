@@ -40,6 +40,7 @@ def history(
     offset: int = Query(default=0, ge=0),
     oldest_first: bool = False,
     scope: Literal["own", "all"] = "own",
+    author_id: str | None = None,
     session: Session = SessionDep,
     principal=Depends(get_public_reader),
     container: ApplicationContainer = ContainerDep,
@@ -57,6 +58,7 @@ def history(
         offset=offset,
         oldest_first=oldest_first,
         scope=scope,
+        author_id=author_id,
     )
 
 

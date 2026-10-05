@@ -1,11 +1,11 @@
 import { FormError } from '@components/form/FormError';
 import { libraryOptions } from '../physicalLibrary/libraryOptions';
 import { useState } from 'react';
+import { Modal } from '@components/modal/Modal';
 import {
   Alert,
   Badge,
   Group,
-  Modal,
   Select,
   Stack,
   Text,
@@ -97,28 +97,30 @@ export function RevisionToolbar({
           onChange={(id) => (id ? onLoad(id) : onNew())}
         />
       )}
-      {showFields && <>
-        <TextInput
-          label={`${label} name`}
-          value={document.name}
-          maxLength={240}
-          required
-          onChange={(event) =>
-            onChange({ ...document, name: event.currentTarget.value })
-          }
-        />
-        <Textarea
-          label={`${label} notes`}
-          value={document.notes ?? ''}
-          maxLength={4000}
-          autosize
-          minRows={1}
-          maxRows={4}
-          onChange={(event) =>
-            onChange({ ...document, notes: event.currentTarget.value })
-          }
-        />
-      </>}
+      {showFields && (
+        <>
+          <TextInput
+            label={`${label} name`}
+            value={document.name}
+            maxLength={240}
+            required
+            onChange={(event) =>
+              onChange({ ...document, name: event.currentTarget.value })
+            }
+          />
+          <Textarea
+            label={`${label} notes`}
+            value={document.notes ?? ''}
+            maxLength={4000}
+            autosize
+            minRows={1}
+            maxRows={4}
+            onChange={(event) =>
+              onChange({ ...document, notes: event.currentTarget.value })
+            }
+          />
+        </>
+      )}
       <Group gap="xs">
         <Button
           size="md"
@@ -136,7 +138,9 @@ export function RevisionToolbar({
           }
           onClick={() => onSave(false)}
         >
-          {detail?.item.owned ? `Save ${label.toLowerCase()}` : `Save new ${label.toLowerCase()}`}
+          {detail?.item.owned
+            ? `Save ${label.toLowerCase()}`
+            : `Save new ${label.toLowerCase()}`}
         </Button>
         <Button
           size="xs"

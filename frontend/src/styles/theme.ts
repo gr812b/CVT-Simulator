@@ -1,10 +1,18 @@
 import type { components } from '@api/generated/backend';
 import {
   Button,
+  Popover,
+  Menu,
   Tooltip,
   createTheme,
   type CSSVariablesResolver,
 } from '@mantine/core';
+
+export const overlayLayers = {
+  dropdown: 80,
+  modal: 200,
+  modalDropdown: 300,
+} as const;
 
 /** Product palette and component defaults: keep new styling here. */
 export const theme = createTheme({
@@ -28,6 +36,10 @@ export const theme = createTheme({
     ],
   },
   components: {
+    Popover: Popover.extend({
+      defaultProps: { zIndex: overlayLayers.dropdown, hideDetached: true },
+    }),
+    Menu: Menu.extend({ defaultProps: { zIndex: overlayLayers.dropdown } }),
     Button: Button.extend({ defaultProps: { fw: 600 } }),
     Tooltip: Tooltip.extend({
       styles: { tooltip: { backgroundColor: '#0f151e', color: '#ffffff' } },

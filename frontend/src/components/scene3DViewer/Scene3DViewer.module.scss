@@ -5,6 +5,8 @@
   border-radius: var(--mantine-radius-md);
   overflow: hidden;
   position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   background: radial-gradient(
     ellipse at 55% 45%,
     color-mix(in srgb, var(--mantine-color-dark-5) 35%, transparent),
@@ -72,4 +74,29 @@
   font-size: 11px;
   color: var(--mantine-color-dimmed);
   margin-top: 5px;
+}
+
+.viewport {
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+.canvasContainer {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.fullscreen {
+  min-height: 0;
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+  background-color: var(--mantine-color-body);
+}
+.fullscreenPlayback {
+  border-top: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+  padding: 0.5rem max(0.5rem, env(safe-area-inset-right))
+    max(0.5rem, env(safe-area-inset-bottom))
+    max(0.5rem, env(safe-area-inset-left));
 }

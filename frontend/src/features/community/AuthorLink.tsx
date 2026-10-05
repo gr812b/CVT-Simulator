@@ -3,11 +3,7 @@ import { Link } from 'react-router-dom';
 
 export function AuthorLink({ name, id }: { name: string; id?: string | null }) {
   return id ? (
-    <Anchor
-      component={Link}
-      to={`/catalog?kind=users&user=${encodeURIComponent(id)}`}
-      inherit
-    >
+    <Anchor component={Link} to={`/people/${encodeURIComponent(id)}`} inherit>
       {name}
     </Anchor>
   ) : (

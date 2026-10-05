@@ -79,10 +79,16 @@ def item_response(session, principal, obj, revision=None):
     )
 
 
-def list_items(session, principal, kind, include_archived=False, cvt_object_id=None):
+def list_items(
+    session, principal, kind, include_archived=False, cvt_object_id=None, author_id=None
+):
     stmt = select(Experiment).where(
         Experiment.kind == kind,
     )
+    if author_id is not None:
+        stmt = stmt.join(
+            ExperimentRevision, Experiment.current_revision_id == ExperimentRevision.id
+        ).where(ExperimentRevision.created_by_user_id == author_id)
     if not include_archived:
         stmt = stmt.where(Experiment.archived.is_(False))
     items = [

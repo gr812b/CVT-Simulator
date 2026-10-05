@@ -1,3 +1,5 @@
+import { compactChartLayout } from '@components/graph2D/compactChartLayout';
+import { DEFAULT_PLOTS, usePlotPreferences } from '../playback/preferences';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -19,7 +21,8 @@ import { isActive, message } from '../experiments/api';
 export function ResultChart({ inspection }: { inspection: RunInspection }) {
   const { run, availability } = inspection;
   const [data, setData] = useState<RunSeries | null>(null);
-  const [signal, setSignal] = useState('vehicle.speed');
+  const [preferences, setPreferences] = usePlotPreferences();
+  const signal = preferences.signal;
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const theme = useMantineTheme();
@@ -54,22 +57,30 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
       animation: false,
       color: [theme.colors.red[5]],
       textStyle: { color: theme.colors.dark[0], fontFamily: theme.fontFamily },
-      grid: { left: 70, right: 25, top: 45, bottom: 45 },
-      legend: { top: 0, textStyle: { color: theme.colors.dark[0] } },
+      ...compactChartLayout(
+        selected?.canonical_unit || 'Dimensionless',
+        theme.colors.dark[0],
+      ),
       tooltip: { trigger: 'axis', renderMode: 'richText', confine: true },
       xAxis: {
         type: 'value',
         name: `Time (${x?.canonical_unit ?? 's'})`,
         nameLocation: 'middle',
-        nameGap: 30,
+        nameGap: 25,
         splitLine: { lineStyle: { color: theme.colors.dark[4] } },
       },
       yAxis: {
         type: 'value',
         name: selected?.canonical_unit || 'Dimensionless',
+        nameLocation: 'end',
+        nameRotate: 0,
+        nameGap: 9,
+        nameTextStyle: { align: 'left' },
         splitLine: { lineStyle: { color: theme.colors.dark[4] } },
       },
       toolbox: {
+        top: 2,
+        right: 8,
         feature: { dataZoom: {}, restore: {}, saveAsImage: {} },
         iconStyle: { borderColor: theme.colors.dark[0] },
       },
@@ -102,6 +113,22 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
           <Title order={2} size="h3">
             Time history
           </Title>
+          <Button
+            size="compact-xs"
+            variant="subtle"
+            onClick={() => {
+              zoom.current = undefined;
+              setPreferences((current) => ({
+                ...current,
+                signal: DEFAULT_PLOTS.signal,
+              }));
+              chart.current
+                ?.getEchartsInstance()
+                .dispatchAction({ type: 'restore' });
+            }}
+          >
+            Reset chart
+          </Button>
           {isActive(run) && (
             <Text size="xs" c="dimmed">
               Updates with saved progress
@@ -149,7 +176,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
                         end: 100,
                       },
                     ];
-                  setSignal(value);
+                  setPreferences((current) => ({ ...current, signal: value }));
                 }
               }}
             />
@@ -162,6 +189,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
               aria-label={`${selected.label} versus time in seconds. ${data.resolution} data.`}
             >
               <ReactECharts
+                key={run.id}
                 ref={chart}
                 option={option}
                 onEvents={{
@@ -191,16 +219,14 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
                     }));
                   },
                   restore: () => {
-                    chart.current
-                      ?.getEchartsInstance()
-                      .dispatchAction({
-                        type: 'dataZoom',
-                        batch: [0, 1].map((dataZoomIndex) => ({
-                          dataZoomIndex,
-                          start: 0,
-                          end: 100,
-                        })),
-                      });
+                    chart.current?.getEchartsInstance().dispatchAction({
+                      type: 'dataZoom',
+                      batch: [0, 1].map((dataZoomIndex) => ({
+                        dataZoomIndex,
+                        start: 0,
+                        end: 100,
+                      })),
+                    });
                     zoom.current = undefined;
                   },
                 }}

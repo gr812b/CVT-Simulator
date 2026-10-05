@@ -10,8 +10,8 @@ Incremental update after `b14fd19` / `CINDER_Playback_Roads_Forces.patch`.
 - Transparent mode covers every physical mesh: belt, shafts, springs,
   flyweights, rollers, tracks and sheaves. Force arrows and grids stay readable.
   Turning it off restores each material's original settings.
-- Plain shafts extend behind the fixed sheaves toward the external shaft
-  boundaries. Dimensions outside the resolved contact geometry are illustrative.
+- Plain shafts extend in the same world direction toward the external shaft
+  boundaries; the secondary shaft passes through its actuator carrier. Dimensions outside the resolved contact geometry are illustrative.
 - The large floating plot values box and both axis sliders are removed. Hover
   values, compact series keys, the replay cursor, scroll zoom, rectangular
   X/Y selection, reset and image export remain.

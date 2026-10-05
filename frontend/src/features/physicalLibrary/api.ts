@@ -68,12 +68,17 @@ export async function listPhysical(
   scope: PhysicalScope = 'own',
   includeArchived = false,
   signal?: AbortSignal,
+  authorId?: string,
 ) {
   return dataOrThrow(
     await api.GET('/api/v1/physical-library/items/{kind}', {
       params: {
         path: { kind },
-        query: { scope, include_archived: includeArchived },
+        query: {
+          scope,
+          include_archived: includeArchived,
+          author_id: authorId,
+        },
       },
       signal,
     }),

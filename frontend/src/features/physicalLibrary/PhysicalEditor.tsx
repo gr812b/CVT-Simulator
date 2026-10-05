@@ -3,6 +3,7 @@ import { useAuth } from '@contexts/AuthContext';
 import { ConfigurationView } from '../publicLibrary/ConfigurationView';
 import { FormError } from '@components/form/FormError';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Modal } from '@components/modal/Modal';
 import {
   Accordion,
   Alert,
@@ -10,7 +11,6 @@ import {
   Container,
   Group,
   Loader,
-  Modal,
   Paper,
   Stack,
   Text,

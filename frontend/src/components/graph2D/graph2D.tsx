@@ -55,9 +55,6 @@ function Graph2DComponent({
 }: Graph2DProps) {
   const chartRef = useRef<ECharts | null>(null);
   const [readyChart, setReadyChart] = useState<ECharts | null>(null);
-  const onChartReadyCallbackRef = useRef<((chart: ECharts) => void) | null>(
-    null,
-  );
 
   // Validate data and generate warnings/errors
   const validation = useMemo(() => validateData(xData, yData), [xData, yData]);
@@ -101,7 +98,6 @@ function Graph2DComponent({
   const handleChartReady = useCallback((chart: ECharts): void => {
     chartRef.current = chart;
     setReadyChart(chart);
-    onChartReadyCallbackRef.current?.(chart);
   }, []);
 
   useEffect(() => {
@@ -245,12 +241,7 @@ function Graph2DComponent({
           yData={yData}
           replayController={replayController}
           seriesNames={config.seriesNames}
-          onMount={(callback) => {
-            onChartReadyCallbackRef.current = callback;
-            if (chartRef.current) {
-              callback(chartRef.current);
-            }
-          }}
+          chart={readyChart}
         />
       </div>
     </div>

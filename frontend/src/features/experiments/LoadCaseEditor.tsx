@@ -1,6 +1,7 @@
 import { FormError } from '@components/form/FormError';
 import { useEffect, useState } from 'react';
-import { Group, Loader, Modal, Stack, Text, TextInput } from '@mantine/core';
+import { Modal } from '@components/modal/Modal';
+import { Group, Loader, Stack, Text, TextInput } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import {
