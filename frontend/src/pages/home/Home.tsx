@@ -34,7 +34,7 @@ const steps = [
   {
     number: '01',
     title: 'Use your own vehicle and CVT',
-    text: 'Enter your vehicle, engine, belt and CVT dimensions, or start from the McMaster defaults. Save the parts you want to reuse.',
+    text: 'Enter your vehicle, engine, belt and CVT dimensions, or start from the CINDER defaults. Save the parts you want to reuse.',
   },
   {
     number: '02',
@@ -104,6 +104,7 @@ export const Home = () => {
               </div>
               <figcaption>
                 <span className={styles.modelLabel}>McMaster 2025 CVT</span>
+                <span>Simplified illustration — not the original CAD</span>
                 <span>Drag or use arrow keys to rotate</span>
               </figcaption>
             </figure>

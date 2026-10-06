@@ -218,28 +218,18 @@ export function LibraryBrowser({
                             : 'Community'
                     }
                     actions={
-                      <>
-                        <Button
-                          component={Link}
-                          to={item.href}
-                          variant="light"
-                          fullWidth
-                        >
-                          View{' '}
-                          {kind === 'load-cases'
-                            ? 'load case'
-                            : 'configuration'}
-                        </Button>
-                        {kind === 'cvts' && (
-                          <Button
-                            component={Link}
-                            to={`${item.href}#tunes`}
-                            fullWidth
-                          >
-                            Browse tunes
-                          </Button>
-                        )}
-                      </>
+                      <Button
+                        component={Link}
+                        to={item.href}
+                        variant="light"
+                        fullWidth
+                      >
+                        {kind === 'cvts'
+                          ? 'View configuration & tunes'
+                          : kind === 'load-cases'
+                            ? 'View load case'
+                            : 'View configuration'}
+                      </Button>
                     }
                   />
                 ))}

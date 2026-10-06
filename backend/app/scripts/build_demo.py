@@ -16,6 +16,7 @@ from pathlib import Path
 
 from app.application.cinder_gateway import CinderGateway
 from app.application.demo import DEMO_PATH
+from app.application.demo_labels import DEMO_COURSE_NAME, DEMO_PLAYBACK_DESCRIPTION
 from app.application.physical_contracts import template_document, validate_physical
 from app.application.roads import apply_scenario, demo_scenario
 from app.core.settings import Settings
@@ -29,7 +30,7 @@ def main():
     setup.data.vehicle.mass_kg = 500 * 0.45359237
     validation, case = validate_physical(setup)
     if not validation["is_valid"] or case is None:
-        raise RuntimeError("The McMaster demo setup must pass input validation")
+        raise RuntimeError("The example demo setup must pass input validation")
     scenario = demo_scenario()
     road = apply_scenario(case, scenario, Settings.from_environment())
     identity = CinderGateway().runtime_identity()
@@ -92,8 +93,8 @@ def main():
     if max(value for value in distance if value is not None) < road.length_m - 0.01:
         raise RuntimeError("The demo did not reach the course finish")
     demo = DemoArtifact(
-        name="McMaster hill course demo",
-        description="The 500 lb McMaster setup crosses a 45° hill and a second 30° climb on a 160 m course.",
+        name=DEMO_COURSE_NAME,
+        description=DEMO_PLAYBACK_DESCRIPTION,
         generated_at=datetime.now(UTC),
         runtime_identity=identity,
         input_hash=canonical_json_hash(case),

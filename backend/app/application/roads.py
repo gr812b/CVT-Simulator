@@ -6,6 +6,7 @@ Linear elevation in that coordinate gives asin(dz/ds), a constant grade.
 
 import math
 
+from app.application.demo_labels import DEMO_COURSE_NAME
 from app.core.errors import ApiProblem
 from app.core.settings import Settings
 from app.schemas.experiments import (
@@ -60,7 +61,7 @@ def demo_scenario():
     """One course definition for the seeded load case and retained playback."""
     return ScenarioDocument(
         kind="scenarios",
-        name="CINDER Default · McMaster demonstration course",
+        name=DEMO_COURSE_NAME,
         notes="Flat acceleration, a 45° climb, a descent, then a 30° climb. Finish at 160 m.",
         duration_s=90,
         road=SpatialRoad(

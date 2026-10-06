@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app.application.course import course_profile
+from app.application.demo_labels import DEMO_COURSE_NAME, DEMO_PLAYBACK_DESCRIPTION
 from app.application.physical_contracts import (
     assembly_with_matching_belt,
     baseline_case,
@@ -44,8 +45,12 @@ def playback():
             or demo.result.get("metrics", {}).get("completed") is not True
         ):
             raise ValueError("Invalid retained demo evidence")
+        # Only presentation labels change. Preserve the recorded input, result,
+        # runtime identity, timestamps and hashes; no demo rerun is necessary.
+        displayed = demo.model_dump()
+        displayed.update(name=DEMO_COURSE_NAME, description=DEMO_PLAYBACK_DESCRIPTION)
         return DemoPlaybackResponse(
-            **demo.model_dump(),
+            **displayed,
             course=course_profile(demo.input_document_snapshot, demo.result),
             scene_geometry=saved_scene(
                 "demo", demo.input_document_snapshot["assembly"]

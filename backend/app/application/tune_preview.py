@@ -191,8 +191,10 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
             shift_m=shift,
             primary_contact_m=contact_point,
             primary_normal_axial_radial=normal,
-            primary_roller_m=(contact.roller_center_axial_position, contact.roller_center_radius)
-                if contact is not None else None,
+            primary_roller_m=(
+                (contact.roller_center_axial_position, contact.roller_center_radius)
+                if contact is not None else None
+            ),
             primary_ramp_shift_m=local_p,
             secondary_axial_position_m=local_s,
             secondary_angle_rad=helix_sample.theta if helix_sample else 0,

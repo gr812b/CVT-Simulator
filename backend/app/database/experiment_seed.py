@@ -100,7 +100,7 @@ def seed_experiments(session):
                         document=payload,
                         content_hash=content_hash,
                         created_by_user_id=SEED_USER_ID,
-                        change_note="Steeper demonstration course: 45° and 30° climbs.",
+                        change_note="Update the built-in demo course definition or description.",
                     )
                     session.add(revision)
                     session.flush()

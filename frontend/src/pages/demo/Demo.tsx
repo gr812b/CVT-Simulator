@@ -38,7 +38,7 @@ export function Demo() {
         <Stack gap="sm">
           <PublicHeader />
           <Group>
-            <Title order={1}>{demo?.name ?? 'Baja hill course demo'}</Title>
+            <Title order={1}>{demo?.name ?? 'Demo course'}</Title>
           </Group>
           <Text>
             {demo?.description ??
