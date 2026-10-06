@@ -258,9 +258,9 @@ def _save_choice(
         source = _revision(session, principal, kind, choice.revision_id)
         parent = _parent(session, kind, source)
         original = document_for_revision(session, principal, kind, source.id)
-        if not duplicate and normalize_document(original) == normalize_document(
-            document
-        ):
+        # A root copy does not imply a copy of unchanged dependencies. Keep the
+        # authorized, immutable revision; fork only an explicitly changed child.
+        if normalize_document(original) == normalize_document(document):
             return choice
     own = (
         parent is not None

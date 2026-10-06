@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef, useState, useCallback, memo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import { ChartSurface } from './ChartSurface';
 import { Text } from '@mantine/core';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
@@ -95,13 +95,13 @@ function Graph2DComponent({
     return options;
   }, [xData, yData, config, chartOptions, validation, viewState]);
 
-  const handleChartReady = useCallback((chart: ECharts): void => {
+  const handleChartReady = useCallback((chart: ECharts | null): void => {
     chartRef.current = chart;
     setReadyChart(chart);
   }, []);
 
   useEffect(() => {
-    if (!readyChart || !xData.length) return;
+    if (!readyChart || readyChart.isDisposed() || !xData.length) return;
     const seek = (event: { offsetX: number; offsetY: number }) => {
       if (
         !readyChart.containPixel({ gridIndex: 0 }, [
@@ -163,7 +163,7 @@ function Graph2DComponent({
     };
     const zr = readyChart.getZr();
     zr.on('click', seek);
-    return () => zr.off('click', seek);
+    return () => { if (!readyChart.isDisposed()) zr.off('click', seek); };
   }, [readyChart, replayController, xData, yData, orderedX]);
 
   const rememberView = () => {
@@ -213,12 +213,10 @@ function Graph2DComponent({
         </Text>
       )}
       <div className={styles.chartContainer}>
-        <ReactECharts
+        <ChartSurface
           option={echartsOptions}
           style={{ width: chartWidth, height: chartHeight }}
-          notMerge={false}
-          lazyUpdate
-          onChartReady={handleChartReady}
+          onReady={handleChartReady}
           onEvents={{
             datazoom: rememberView,
             legendselectchanged: rememberView,

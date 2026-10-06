@@ -19,13 +19,7 @@ export function LibraryTabs({
             {label}
           </Tabs.Tab>
         ))}
-        <Tabs.Tab
-          value="load-cases"
-          ml="md"
-          style={{
-            borderInlineStart: '1px solid var(--mantine-color-default-border)',
-          }}
-        >
+        <Tabs.Tab value="load-cases">
           Load cases
         </Tabs.Tab>
         {runs && <Tabs.Tab value="runs">Runs</Tabs.Tab>}

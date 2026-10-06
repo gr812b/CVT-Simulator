@@ -584,6 +584,14 @@ function PhysicalEditor({
                   </Accordion.Item>
                 </Accordion>
               )}
+              {kind === 'cvts' && detail && !editable && (
+                <Paper withBorder p="lg" id="tunes">
+                  <CvtTunes
+                    cvtObjectId={detail.item.id}
+                    cvtRevisionId={revisionId ?? detail.item.revision_id}
+                  />
+                </Paper>
+              )}
               {!editable ? (
                 <ConfigurationView
                   document={document}
@@ -760,14 +768,7 @@ function PhysicalEditor({
                   </Stack>
                 </fieldset>
               )}
-              {kind === 'cvts' && detail && !editable && (
-                <Paper withBorder p="lg" id="tunes">
-                  <CvtTunes
-                    cvtObjectId={detail.item.id}
-                    cvtRevisionId={revisionId ?? detail.item.revision_id}
-                  />
-                </Paper>
-              )}
+
               <Group justify="space-between">
                 {detail?.item.owned && (
                   <Button

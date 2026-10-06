@@ -1,3 +1,5 @@
+import { PlotInfo } from '@components/plotInfo/PlotInfo';
+import { REPORT_PLOT_HELP } from './reportPlotHelp';
 import { useMemo, useRef, useState } from 'react';
 import { Modal } from '@components/modal/Modal';
 import { Group, MultiSelect, Paper, Stack, Tabs, Text } from '@mantine/core';
@@ -173,9 +175,10 @@ export function PlotWorkspace({
           {shown.map((graph) => (
             <Paper withBorder p="xs" key={graph.config.title!}>
               <Group justify="space-between" align="start" wrap="nowrap">
-                <Text size="sm" fw={600}>
-                  {graph.config.title}
-                </Text>
+                <Group gap={5} wrap="nowrap">
+                  <Text size="sm" fw={600}>{graph.config.title}</Text>
+                  <PlotInfo title={graph.config.title!} description={REPORT_PLOT_HELP[graph.config.title!] ?? 'A recorded report quantity. Follow the plotted axis units and series labels.'}/>
+                </Group>
                 <Button
                   size="compact-xs"
                   variant="subtle"
@@ -199,7 +202,7 @@ export function PlotWorkspace({
       <Modal
         opened={!!enlarged}
         onClose={() => setExpanded(null)}
-        title={expanded}
+        title={<Group gap={5}>{expanded}<PlotInfo title={expanded ?? 'Plot'} description={REPORT_PLOT_HELP[expanded ?? ''] ?? 'A recorded report quantity.'}/></Group>}
         size="min(1200px, 96vw)"
       >
         {enlarged && draw(enlarged, true)}

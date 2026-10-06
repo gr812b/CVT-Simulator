@@ -116,7 +116,12 @@ function sheave(
   return group;
 }
 
-export function createCVTModels(geometry: SceneGeometry): Model3DConfig[] {
+export function createCVTModels(geometry: SceneGeometry, focus?: 'primary' | 'secondary'): Model3DConfig[] {
+  if (focus) return [
+    { id: `${focus}Fixed`, object3D: new THREE.Group() },
+    { id: `${focus}Moving`, parentId: `${focus}Fixed`, object3D: new THREE.Group() },
+    ...createMechanisms(geometry, focus),
+  ];
   const layout = mechanismLayout(geometry);
   return [
     {

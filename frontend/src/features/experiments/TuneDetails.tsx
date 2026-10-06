@@ -1,3 +1,4 @@
+import { physicalDetailPath } from '../physicalLibrary/links';
 import { useEffect, useState } from 'react';
 import { Alert, Group, Loader, Stack } from '@mantine/core';
 import { Link } from 'react-router-dom';
@@ -103,7 +104,7 @@ export function TuneDetails({
       {surface ? (
         <>
           <ConfigurationLink
-            to={`/catalog/cvts/${surface.cvt_object_id}?revision=${surface.cvt_revision_id}`}
+            to={physicalDetailPath('cvts', surface.cvt_object_id, surface.cvt_revision_id)}
             from={detail.document.name}
           >
             {surface.cvt_name}

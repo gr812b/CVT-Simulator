@@ -1,3 +1,4 @@
+import { PlotInfo } from '@components/plotInfo/PlotInfo';
 import { compactChartLayout } from '@components/graph2D/compactChartLayout';
 import { DEFAULT_PLOTS, usePlotPreferences } from '../playback/preferences';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -110,9 +111,10 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
     <Paper withBorder p="lg">
       <Stack>
         <Group justify="space-between">
-          <Title order={2} size="h3">
-            Time history
-          </Title>
+          <Group gap={5}>
+            <Title order={2} size="h3">Time history</Title>
+            <PlotInfo title="Time history" description="The selected report signal against simulation time, in its canonical units. Gaps are unavailable data, not zero. Use the signal description below to interpret its definition and sign."/>
+          </Group>
           <Button
             size="compact-xs"
             variant="subtle"

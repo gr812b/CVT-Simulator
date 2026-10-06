@@ -1,3 +1,4 @@
+import { physicalDetailPath } from '../physicalLibrary/links';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -72,7 +73,7 @@ export function CvtTunes({
         ) : (
           <Button
             component={Link}
-            to={`/login?next=${encodeURIComponent(`/catalog/cvts/${cvtObjectId}?revision=${cvtRevisionId}#tunes`)}`}
+            to={`/login?next=${encodeURIComponent(`${physicalDetailPath('cvts', cvtObjectId, cvtRevisionId)}#tunes`)}`}
           >
             Sign in to add a tune
           </Button>

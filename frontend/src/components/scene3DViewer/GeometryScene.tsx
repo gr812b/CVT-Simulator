@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { Box3 } from 'three';
+import { useEffect, useMemo, useRef } from 'react';
+import { Box3, Vector3 } from 'three';
+import { mechanismLayout, mechanismPose } from './mechanisms';
 import { Alert } from '@mantine/core';
 import { useScene3D } from '@hooks/useScene3D';
 import { createCVTModels, fitCVT, positionCVT } from './proceduralModels';
@@ -19,40 +20,23 @@ export default function GeometryScene({
   frameIndex = 0,
   className,
   component,
+  resetKey = 0,
 }: {
   preview: ScenePreview;
   frameIndex?: number;
   className?: string;
   component?: 'primary' | 'secondary';
+  resetKey?: number;
 }) {
   const geometry = useMemo(
     () => sceneGeometry(preview.geometry),
     [preview.geometry],
   );
-  const models = useMemo(() => {
-    const all = createCVTModels(geometry);
-    if (!component) return all;
-    const keep = new Set<string>();
-    const selected = all.filter((model) => {
-      const belongs =
-        model.id === `${component}Fixed` ||
-        (model.parentId !== undefined && keep.has(model.parentId));
-      if (belongs) keep.add(model.id);
-      else
-        model.object3D?.traverse((object) => {
-          const mesh = object as import('three').Mesh;
-          mesh.geometry?.dispose();
-          if (mesh.material)
-            (Array.isArray(mesh.material)
-              ? mesh.material
-              : [mesh.material]
-            ).forEach((material) => material.dispose());
-        });
-      return belongs;
-    });
-    return selected;
-  }, [geometry, component]);
-  const config = sceneConfiguration(true);
+  const models = useMemo(() => createCVTModels(geometry, component), [geometry, component]);
+  const fitted = useRef<{ controller: unknown; reset: number; component?: string } | null>(null);
+  // Landing scenes remain orbit-only. Tune inspection explicitly permits zoom/pan.
+  const config = sceneConfiguration(false);
+  config.renderOnDemand = true;
   if (component === 'secondary' && config.camera)
     config.camera.position = [3, 9, -16];
   const { containerRef, sceneController, error } = useScene3D({
@@ -74,18 +58,40 @@ export default function GeometryScene({
         shift: sceneDistance(frame.shift_m),
         beltZ: sceneDistance(frame.belt_axial_position_m),
       });
-      const bounds = new Box3();
-      models
-        .filter((model) => !model.parentId)
-        .forEach((model) => {
-          model.object3D?.updateWorldMatrix(true, true);
-          if (model.object3D)
-            bounds.union(new Box3().setFromObject(model.object3D));
-        });
-      if (!bounds.isEmpty())
-        sceneController.fitBounds(
-          bounds.expandByScalar(geometry.beltHeight * 0.25),
-        );
+      const previous = fitted.current;
+      if (!previous || previous.controller !== sceneController || previous.reset !== resetKey || previous.component !== component) {
+        const root = sceneController.getModel(`${component}Fixed`)?.object3D;
+        if (root) {
+          root.updateWorldMatrix(true, true);
+          const bounds = new Box3().setFromObject(root);
+          if (component === 'primary' && geometry.mechanisms?.primary) {
+            // Fit the solved swing envelope once, not just the initial arm pose.
+            const layout = mechanismLayout(geometry);
+            const radius = sceneDistance(geometry.mechanisms.primary.roller_radius_m);
+            const size = new Vector3(radius * 3, radius * 3, radius * 3);
+            for (const pose of geometry.mechanisms.poses) {
+              if (!pose.primary_roller_m) continue;
+              const point = new Vector3(sceneDistance(pose.primary_roller_m[1]), 0,
+                layout.back - sceneDistance(pose.primary_roller_m[0])).applyMatrix4(root.matrixWorld);
+              bounds.union(new Box3().setFromCenterAndSize(point, size));
+            }
+            const ramp = sceneController.getModel('primaryRamps')?.object3D;
+            const current = mechanismPose(geometry, sceneDistance(frame.shift_m));
+            if (ramp && current) {
+              const rampBounds = new Box3().setFromObject(ramp);
+              const positions = geometry.mechanisms.poses.map(p => p.primary_ramp_shift_m);
+              for (const end of [Math.min(...positions), Math.max(...positions)])
+                bounds.union(rampBounds.clone().translate(new Vector3(0, 0,
+                  sceneDistance(current.primary_ramp_shift_m - end))));
+            }
+          }
+          if (!bounds.isEmpty()) {
+            if (previous?.controller === sceneController && previous.reset !== resetKey) sceneController.resetView();
+            sceneController.fitBounds(bounds.expandByScalar(geometry.beltHeight * 0.25));
+            fitted.current = { controller: sceneController, reset: resetKey, component };
+          }
+        }
+      }
       return;
     }
     const { beltMesh, cleanup } = setupBelt(sceneController);
@@ -111,7 +117,7 @@ export default function GeometryScene({
       beltZ,
     });
     return cleanup;
-  }, [sceneController, frame, geometry, component, models]);
+  }, [sceneController, frame, geometry, component, models, resetKey]);
   return (
     <div
       ref={containerRef}

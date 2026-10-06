@@ -238,14 +238,14 @@ function radialRollers(
   return group;
 }
 
-export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
+export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondary'): Model3DConfig[] {
   const spec = g.mechanisms;
   if (!spec) return [];
   const l = mechanismLayout(g),
     models: Model3DConfig[] = [];
   const fixed = metal(appearance.fixedSheave),
     moving = metal(appearance.movingSheave);
-  if (spec.primary) {
+  if (spec.primary && focus !== 'secondary') {
     const p = spec.primary,
       radius = sceneDistance(p.roller_radius_m),
       width = radius * 1.15;
@@ -253,7 +253,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
     const carrier = new THREE.Group(),
       weights = new THREE.Group(),
       ramps = new THREE.Group();
-    carrier.add(
+    if (!focus) carrier.add(
       ring(
         l.shaftP * 0.92,
         l.shaftP + l.wall,
@@ -278,10 +278,11 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
     const rampMaterial = metal(appearance.movingSheave),
       weightMaterial = metal(appearance.fixedSheave),
       rollerMaterial = metal(appearance.fixedSheave);
-    for (let i = 0; i < p.count; i++) {
+    for (let i = 0; i < (focus ? 1 : p.count); i++) {
       const angle = (i * Math.PI * 2) / p.count;
       const support = new THREE.Group();
       support.rotation.z = angle;
+      if (!focus) {
       support.add(
         beam(
           v(l.shaftP, l.carrierP - l.wall / 2),
@@ -300,6 +301,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
             fixed,
           ),
         );
+      }
       }
       const pivotPin = cylinder(radius * 0.32, width * 2.4, fixed);
       pivotPin.rotation.x = Math.PI / 2;
@@ -336,9 +338,15 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       const sheaveBack =
         (anchor.x - sheaveHub(g.primaryMinRadius, g)) * Math.tan(g.halfAngle) +
         (g.primaryMaxRadius + g.beltHeight * 0.12) * 0.055;
-      ramp.add(beam(v(anchor.x, sheaveBack), anchor, l.wall, moving));
+      if (!focus) ramp.add(beam(v(anchor.x, sheaveBack), anchor, l.wall, moving));
       ramps.add(ramp);
     }
+    models.push(
+      { id: 'primaryCarrier', parentId: 'primaryFixed', object3D: carrier },
+      { id: 'flyweights', parentId: 'primaryFixed', object3D: weights },
+      { id: 'primaryRamps', parentId: 'primaryMoving', object3D: ramps },
+    );
+    if (!focus) {
     const hub = new THREE.Group();
     hub.add(
       copies(
@@ -373,9 +381,6 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       ),
     );
     models.push(
-      { id: 'primaryCarrier', parentId: 'primaryFixed', object3D: carrier },
-      { id: 'flyweights', parentId: 'primaryFixed', object3D: weights },
-      { id: 'primaryRamps', parentId: 'primaryMoving', object3D: ramps },
       { id: 'primaryGuide', parentId: 'primaryMoving', object3D: hub },
       {
         id: 'primaryGuideRollers',
@@ -390,7 +395,8 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         ),
       },
     );
-    if (spec.primary_has_spring) {
+    }
+    if (!focus && spec.primary_has_spring) {
       const spring = new MechanismSpring(
         l.springP,
         l.wire,
@@ -404,19 +410,21 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       });
     }
   }
-  if (spec.secondary_helix_points_m.length && l.pathS.length > 1) {
+  if (focus !== 'primary' && spec.secondary_helix_points_m.length && l.pathS.length > 1) {
+    const sleeveBase = focus ? Math.min(...l.pathS.map(p => p.y)) - l.rollerS - l.clearance : l.baseS;
     const sleeve = copies(
       slottedSleeve(
         l.helixR,
         l.wall,
         l.pathS,
         l.rollerS + g.beltHeight * visual.slotClearance,
-        l.baseS,
+        sleeveBase,
         l.sleeveTop,
         visual.trackCount,
       ),
       metal(appearance.fixedSheave),
     );
+    if (!focus) {
     sleeve.add(
       ring(
         l.helixR - l.wall / 2,
@@ -453,8 +461,10 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       );
       sleeve.add(support);
     }
+    }
     const hubR = l.shaftS + l.wall * 1.25;
     const hub = new THREE.Group();
+    if (!focus) {
     hub.add(
       ring(
         l.shaftS + l.clearance * 0.2,
@@ -464,7 +474,9 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         moving,
       ),
     );
+    }
     const springRadius = (hubR + l.helixR - l.wall) / 2;
+    if (!focus) {
     hub.add(
       ring(
         l.shaftS + l.clearance * 0.2,
@@ -474,6 +486,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
         moving,
       ),
     );
+    }
     hub.add(
       radialRollers(
         l.helixR,
@@ -488,7 +501,7 @@ export function createMechanisms(g: SceneGeometry): Model3DConfig[] {
       { id: 'helix', parentId: 'secondaryFixed', object3D: sleeve },
       { id: 'helixFollowers', parentId: 'secondaryMoving', object3D: hub },
     );
-    if (spec.secondary_has_spring) {
+    if (!focus && spec.secondary_has_spring) {
       const spring = new MechanismSpring(
         springRadius,
         l.wire,
@@ -518,6 +531,9 @@ export function positionMechanisms(
   if (!pose) return;
   const l = mechanismLayout(g),
     primary = g.mechanisms?.primary;
+  const weights = controller.getModel('flyweights')?.object3D;
+  // An invalid contact must not leave a plausible-looking frozen arm on screen.
+  if (weights) weights.visible = !!pose.primary_roller_m;
   if (primary && pose.primary_roller_m) {
     const pivot = v(sceneDistance(primary.pivot_m[1]), l.pivotZ);
     const roller = v(

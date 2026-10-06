@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Group, Stack, TextInput, Textarea, Text } from '@mantine/core';
 import { Modal } from '@components/modal/Modal';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { FormError } from '@components/form/FormError';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
+import { overlayLayers } from '../../styles/theme';
 import { TuneEditor } from './TuneEditor';
 import {
   saveExperiment,
@@ -34,9 +35,27 @@ export function TuneDialog({
     ...(initial ?? surface.template),
     name: mode === 'edit' ? (initial?.name ?? '') : '',
   }));
+  const [baseline] = useState(() => JSON.stringify(value));
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [textEdited, setTextEdited] = useState(false);
   const [invalid, setInvalid] = useState(new Set<string>());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const dirty = JSON.stringify(value) !== baseline || (textEdited && invalid.size > 0);
+  const requestClose = () => {
+    if (busy) return;
+    if (dirty) setConfirmDiscard(true);
+    else onClose();
+  };
+  useEffect(() => {
+    if (!dirty) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [dirty]);
   const save = async () => {
     setError(null);
     if (!value.name.trim() || invalid.size) {
@@ -53,17 +72,19 @@ export function TuneDialog({
     }
   };
   return (
+    <>
     <Modal
       opened
-      onClose={() => {
-        if (!busy) onClose();
-      }}
+      onClose={requestClose}
+      closeOnEscape={!confirmDiscard && !busy}
       title={mode === 'edit' ? 'Edit tune' : 'Add tune'}
       size="min(1100px, 96vw)"
       closeOnClickOutside={false}
     >
       <QuantityValidationContext.Provider value={setInvalid}>
-        <Stack>
+        <Stack onInputCapture={(event) => {
+          if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) setTextEdited(true);
+        }}>
           <Text size="sm" c="dimmed">
             For {surface.cvt_name}
           </Text>
@@ -97,7 +118,7 @@ export function TuneDialog({
           </fieldset>
           {error && <FormError key={error}>{error}</FormError>}
           <Group justify="flex-end">
-            <Button variant="default" disabled={busy} onClick={onClose}>
+            <Button variant="default" disabled={busy} onClick={requestClose}>
               Cancel
             </Button>
             {onUse && (
@@ -119,5 +140,23 @@ export function TuneDialog({
         </Stack>
       </QuantityValidationContext.Provider>
     </Modal>
+    <Modal
+      opened={confirmDiscard}
+      onClose={() => setConfirmDiscard(false)}
+      title="Discard unsaved tune changes?"
+      closeOnClickOutside={false}
+      zIndex={overlayLayers.modalDropdown + 10}
+    >
+      <Stack>
+        <Text>Your changes have not been saved. Discarding them will leave the saved tune unchanged.</Text>
+        <Group justify="flex-end">
+          <Button data-autofocus variant="default" onClick={() => setConfirmDiscard(false)}>
+            Keep editing
+          </Button>
+          <Button color="red" onClick={onClose}>Discard changes</Button>
+        </Group>
+      </Stack>
+    </Modal>
+    </>
   );
 }

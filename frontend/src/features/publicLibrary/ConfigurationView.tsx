@@ -1,3 +1,4 @@
+import { physicalDetailPath } from '../physicalLibrary/links';
 import {
   Accordion,
   Paper,
@@ -249,7 +250,7 @@ export function ConfigurationView({
                   : 'Belt'}
             </Text>
             <ConfigurationLink
-              to={`/catalog/${reference.kind}/${reference.object_id}?revision=${reference.revision_id}`}
+              to={physicalDetailPath(reference.kind, reference.object_id, reference.revision_id)}
               from={document.name}
             >
               {reference.name}

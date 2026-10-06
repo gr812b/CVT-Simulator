@@ -41,7 +41,8 @@ from app.schemas.experiments import (
     TuneSurface,
 )
 from app.schemas.runs import RunStatusResponse
-from app.schemas.scene import ScenePreview
+from app.schemas.scene import TuneScenePreview
+from app.application.tune_preview import build_tune_preview
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -270,7 +271,7 @@ def choose_default(
     return set_default_tune(session, principal, cvt_revision_id, request)
 
 
-@router.post("/tuning/preview", response_model=ScenePreview)
+@router.post("/tuning/preview", response_model=TuneScenePreview)
 def preview_tune(
     request: TunePreviewRequest,
     session: Session = SessionDep,
@@ -280,6 +281,6 @@ def preview_tune(
     _, assembly, params = cvt_tuning(session, principal, request.cvt_revision_id)
     apply_values(assembly, params, request.values)
     try:
-        return container.gateway.tune_scene(assembly)
+        return build_tune_preview(container.gateway, assembly)
     except (ValueError, KeyError, TypeError) as error:
         raise ApiProblem(422, "tune_preview_invalid", str(error)) from error

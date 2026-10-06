@@ -87,3 +87,24 @@ class ForcePlayback(ApiModel):
     report_indices: list[int]
     tracks: list[ForceTrack]
     notes: list[str]
+
+
+class TuneProfileTrace(ApiModel):
+    """Samples of the actual CINDER profile, not a second UI interpolation."""
+
+    coordinates_m: list[float]
+    values_m: list[float]
+    # Tangent measured from the profile coordinate; complement for helix display.
+    slope_angles_rad: list[float]
+    used_start_m: float | None = None
+    used_end_m: float | None = None
+
+
+class TuneScenePreview(ScenePreview):
+    primary_profile: TuneProfileTrace | None = None
+    secondary_profile: TuneProfileTrace | None = None
+    # All following arrays have exactly one entry per SceneFrame.
+    primary_arm_angles_rad: list[float | None]
+    primary_contact_coordinates_m: list[float | None]
+    secondary_opening_m: list[float | None]
+    warnings: list[str]
