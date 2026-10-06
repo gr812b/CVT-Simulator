@@ -39,6 +39,23 @@ export function readAngleStages(profile: Ramp): AngleStages | null {
   return { start_angle_rad: start, stages };
 }
 
+/** Angle controls for any saved primary profile, without modifying the profile.
+ * A subsequent edit explicitly writes shared angles/automatic smooth joins.
+ * Custom curvature remains intact while the editor is merely opened/read.
+ */
+export function primaryAngleStages(profile: Ramp): AngleStages {
+  const simple = readAngleStages(profile);
+  if (simple) return simple;
+  let end = 0;
+  return {
+    start_angle_rad: endpointAngles(profile.segments[0])[0],
+    stages: profile.segments.map(segment => ({
+      end_m: end += segment.length_m,
+      angle_rad: endpointAngles(segment)[1],
+    })),
+  };
+}
+
 /** Shared endpoint angle and zero endpoint derivatives give a C3 join in CINDER. */
 export function writeAngleStages(value: AngleStages): Ramp {
   let x = 0, angle = value.start_angle_rad;

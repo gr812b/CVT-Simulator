@@ -6,7 +6,7 @@ import type { TuneProfileTrace } from './api';
 import { ProfileSketch } from './ProfileSketch';
 import {
   constantProfile, convertToAngleStages, displayAngle, endpointAngles, MAX_PROFILE_ANGLE,
-  MIN_HELIX_ANGLE, readAngleStages, readTravelStages, splitStage, storedAngle, writeAngleStages, writeTravelStages,
+  MIN_HELIX_ANGLE, primaryAngleStages, readAngleStages, readTravelStages, splitStage, storedAngle, writeAngleStages, writeTravelStages,
   type AngleStages, type Ramp, type RampField,
 } from './profileStages';
 
@@ -21,7 +21,8 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
   const total = value.segments.reduce((sum, segment) => sum + segment.length_m, 0);
   const used: [number, number] | undefined = helix && trace?.used_start_m != null && trace.used_end_m != null && trace.used_end_m > trace.used_start_m
     ? [trace.used_start_m, trace.used_end_m] : undefined;
-  const guided = used ? readTravelStages(value, used) : readAngleStages(value);
+  const savedStages = used ? readTravelStages(value, used) : readAngleStages(value);
+  const guided = helix ? savedStages : primaryAngleStages(value);
   const index = Math.min(selected, (guided?.stages.length ?? value.segments.length) - 1);
   const angleMin = helix ? MIN_HELIX_ANGLE : -MAX_PROFILE_ANGLE;
   const angleMax = MAX_PROFILE_ANGLE;
@@ -38,6 +39,9 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
       ? 'Helix angle is measured from the circumferential direction. Positions use the usable secondary opening, not the total machined profile length.'
       : 'Ramp angle describes the surface slope, not the flyweight arm angle. Positions are measured along the ramp’s axial coordinate; use the travel slider to see where the roller actually touches.'}</Text>
     <ProfileSketch trace={trace} profile={value} selected={index} onSelect={setSelected} contact={contact} helix={helix} ranges={ranges}/>
+    {!helix && !savedStages && <Text size="xs" c="dimmed">
+      The saved custom curvature is retained until you make a profile edit. Angle edits use shared endpoint angles and automatic smooth joins; the plot shows the actual current shape.
+    </Text>}
     {!guided && <Alert color="blue" title="Saved profile retained">
       This profile uses {used ? 'custom joins or a curve that crosses the usable opening boundaries' : 'a custom arc or custom smooth joins'}. Opening it does not change its shape. Angle-stage editing is an explicit conversion.
     </Alert>}
@@ -101,9 +105,14 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
     {helix && used && total > used[1] + 1e-8 && <Text size="xs" c="dimmed">The saved profile extends beyond the usable travel. Angle edits retain that extra length at the endpoint angle. The final stage angle is reached at 100% opening, not at the end of the extra material.</Text>}
     {!readOnly && <Group>
       {!guided && <Button variant="light" size="xs" disabled={!previewReady} onClick={() => setReplace('stages')}>Edit with angle stages</Button>}
-      <Button variant="subtle" size="xs" onClick={() => setReplace('constant')}>Use constant angle</Button>
+      <Button variant="subtle" size="xs" onClick={() => {
+        if (helix) { setReplace('constant'); return; }
+        const angle = displayAngle(endpointAngles(value.segments[0])[0], false);
+        onChange(constantProfile(total, Math.max(angleMin, Math.min(angleMax, angle))));
+        setShowStages(false); setSelected(0);
+      }}>Use constant angle</Button>
     </Group>}
-    {replace && <Paper withBorder p="md">
+    {helix && replace && <Paper withBorder p="md">
       <Stack>
         <Text fw={600}>Replace the profile shape?</Text>
         <Text>{replace === 'constant'

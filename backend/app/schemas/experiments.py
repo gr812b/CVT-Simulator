@@ -244,6 +244,7 @@ class ExperimentCopy(ExperimentModel):
 
 class ScalarTuneField(ExperimentModel):
     kind: Literal["number"]
+    subgroup: Literal["parameters", "ramp_position"] = "parameters"
     key: str
     label: str
     description: str

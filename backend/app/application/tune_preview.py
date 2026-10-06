@@ -1,8 +1,9 @@
 """Kinematic tune inspection. CINDER owns all geometry and contact selection.
 
-This intentionally does not compile the dynamic actuator map or run a simulation.
-A sampled valid contact prefix is useful while editing; a preview is not a claim
-that the full save/run construction audit has passed.
+The current assembly receives the same cached CINDER construction audit used by
+Save before a preview can authorize Save/Use. Invalid drafts can still have a
+partial drawing for editing; missing contact is never approval to use a tune.
+No dynamic simulation is run.
 """
 from __future__ import annotations
 
@@ -23,8 +24,29 @@ if TYPE_CHECKING:
     from app.application.cinder_gateway import CinderGateway
 
 
-def _profile_trace(profile: Any, *, used: tuple[float, float] | None = None):
-    coordinates = np.linspace(profile.x_min, profile.x_max, 161)
+def _profile_trace(
+    profile: Any,
+    *,
+    used: tuple[float, float] | None = None,
+    extra_coordinates: list[float] | None = None,
+):
+    # Include exact joins, usable endpoints and solved contact positions. A
+    # short transition must not disappear between uniform plotting samples.
+    knots = [profile.x_min, profile.x_max]
+    if used:
+        knots.extend(x for x in used if profile.x_min <= x <= profile.x_max)
+    continuity = getattr(profile, "junction_continuity", None)
+    if callable(continuity):
+        knots.extend(junction.coordinate for junction in continuity())
+    knots = sorted(set(knots))
+    segment_samples = [
+        float(x) for left, right in zip(knots, knots[1:])
+        for x in np.linspace(left, right, 17)
+    ]
+    coordinates = np.unique(np.concatenate((
+        np.linspace(profile.x_min, profile.x_max, 161), segment_samples,
+        [x for x in (extra_coordinates or []) if profile.x_min <= x <= profile.x_max],
+    )))
     samples = [profile.evaluate(float(x)) for x in coordinates]
     return TuneProfileTrace(
         coordinates_m=coordinates.tolist(),
@@ -36,32 +58,41 @@ def _profile_trace(profile: Any, *, used: tuple[float, float] | None = None):
 
 
 def _trace_primary(surface: Any, positions: list[float], warnings: list[str]):
-    """Follow the same initial branch as the solver; never jump to another root."""
+    """A visual contact prefix and its first failing closure, never another root.
+
+    This diagnostic trace does not replace the full CINDER construction audit.
+    The latter also checks derivative regularity, interference and map coverage.
+    """
     spec = surface.spec
-    inside = [x for x in positions if spec.axial_position_min <= x <= spec.axial_position_max]
+    inside = sorted(set(
+        x for x in positions if spec.axial_position_min <= x <= spec.axial_position_max
+    ))
+    outside = [x for x in positions if not spec.axial_position_min <= x <= spec.axial_position_max]
+    failed = min(outside) if outside else None
     if not inside:
-        warnings.append('The primary travel is outside the declared flyweight operating interval.')
-        return {}
-    # Start at the declared assembly position, including when it precedes visible
-    # travel. Intermediate points keep branch continuation adequately resolved.
+        warnings.append("The primary travel is outside the declared flyweight operating interval.")
+        return {}, failed
+    # Begin at the declared assembly position even if it precedes visible
+    # travel; CINDER must select and continue the assembled branch itself.
     grid = np.unique(np.concatenate((
-        np.linspace(spec.axial_position_min, max(inside), 129), inside,
+        np.linspace(spec.axial_position_min, max(inside), 257), inside,
     )))
     try:
         samples = surface.trace_contact_branch(grid, require_complete=False)
     except ValueError as error:
-        warnings.append(f'Primary contact preview unavailable: {error}')
-        return {}
+        warnings.append(f"Primary contact cannot be constructed: {error}")
+        return {}, min(positions)
     if len(samples) < len(grid):
-        failed = float(grid[len(samples)])
+        contact_failure = float(grid[len(samples)])
+        failed = contact_failure if failed is None else min(failed, contact_failure)
         warnings.append(
-            'The selected primary contact branch cannot be continued at '
-            f'{failed * 1000:.3g} mm closure. The flyweight is hidden beyond '
-            'the valid preview interval; no alternative contact branch is substituted.'
+            "The selected primary contact branch cannot be continued at "
+            f"{contact_failure * 1000:.3g} mm closure. Adjust the ramp shape or "
+            "its starting position; no alternative contact branch is substituted."
         )
-    if len(inside) != len(positions):
-        warnings.append('Part of the primary travel lies outside the flyweight operating interval.')
-    return {float(x): sample for x, sample in zip(grid, samples)}
+    if outside:
+        warnings.append("Part of the primary travel lies outside the flyweight operating interval.")
+    return {float(x): sample for x, sample in zip(grid, samples)}, failed
 
 
 def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePreview:
@@ -69,6 +100,12 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
     from cinder.model.cvt.actuation.fixed_pivot_flyweight import PivotedRollerFollowerGeometry
     from cinder.model.cvt.geometry import BeltPulleyGeometry
 
+    from app.application.input_validation import validate_assembly
+
+    gateway.validate_assembly_shape(assembly)
+    # This is the same pure, content-keyed audit used by experiment Save. Its
+    # result belongs to this request, not the previously displayed geometry.
+    validation = validate_assembly(assembly)
     preview = gateway.scene_preview(assembly['geometry'], frame_count=65)
     dimensions = gateway._scene_geometry_spec(assembly['geometry'])
     path = BeltPulleyGeometry(dimensions)
@@ -79,6 +116,7 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
     surface = None
     primary_trace = None
     contacts = {}
+    primary_failure = None
     primary_components = assembly['pulleys']['primary']['components']
     secondary_components = assembly['pulleys']['secondary']['components']
     flyweights = [c for c in primary_components if c['kind'] == 'fixed_pivot_roller_flyweight']
@@ -102,13 +140,15 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
                 for x, y in zip(primary_trace.coordinates_m, primary_trace.values_m)
             ],
         )
-        contacts = _trace_primary(
+        contacts, primary_failure = _trace_primary(
             surface, [p.primary_axial_coordinate.value for p in positions.values()], warnings
         )
         if contacts:
             coordinates = [p.contact_coordinate for p in contacts.values()]
-            primary_trace.used_start_m = min(coordinates)
-            primary_trace.used_end_m = max(coordinates)
+            primary_trace = _profile_trace(
+                spec.ramp_profile, used=(min(coordinates), max(coordinates)),
+                extra_coordinates=coordinates,
+            )
 
     secondary = _decode_pulley(
         assembly['pulleys']['secondary'], location='secondary'
@@ -167,7 +207,21 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
         poses=poses,
     )
     visible_contacts = [contacts.get(positions[f.shift_m].primary_axial_coordinate.value) for f in preview.frames]
+    # Fail closed even if a visual trace and the construction audit ever
+    # disagree. An invalid prefix is useful for editing, not for approval.
+    if primary_failure is not None:
+        validation["is_valid"] = False
+        validation["findings"].append({
+            "severity": "error",
+            "code": "actuation.primary_contact_incomplete",
+            "message": (
+                "Continuous primary roller contact is required through the full "
+                f"travel. Contact is unavailable near {primary_failure * 1000:.3g} mm closure."
+            ),
+            "location": "pulleys.primary",
+        })
     return TuneScenePreview(
+        validation=validation, primary_contact_failure_m=primary_failure,
         geometry=preview.geometry, frames=preview.frames,
         primary_profile=primary_trace, secondary_profile=secondary_trace,
         primary_arm_angles_rad=[p.angle if p else None for p in visible_contacts],

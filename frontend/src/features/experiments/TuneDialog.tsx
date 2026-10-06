@@ -6,6 +6,7 @@ import { FormError } from '@components/form/FormError';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import { overlayLayers } from '../../styles/theme';
 import { TuneEditor } from './TuneEditor';
+import { tuneGeometryBlocker, type TuneCheck } from './tunePreviewState';
 import {
   saveExperiment,
   message,
@@ -41,6 +42,11 @@ export function TuneDialog({
   const [invalid, setInvalid] = useState(new Set<string>());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [geometryCheck, setGeometryCheck] = useState<TuneCheck | null>(null);
+  // Compare the current draft key synchronously during render. Do not wait for
+  // the child's debounced request/effect to invalidate a previous approval.
+  const useBlocker = invalid.size ? 'Correct the highlighted inputs.' : tuneGeometryBlocker(value, geometryCheck);
+  const saveBlocker = !value.name.trim() ? 'Give this tune a name.' : useBlocker;
   const dirty = JSON.stringify(value) !== baseline || (textEdited && invalid.size > 0);
   const requestClose = () => {
     if (busy) return;
@@ -57,9 +63,10 @@ export function TuneDialog({
     return () => window.removeEventListener('beforeunload', beforeUnload);
   }, [dirty]);
   const save = async () => {
+    if (busy) return;
     setError(null);
-    if (!value.name.trim() || invalid.size) {
-      setError('Give this tune a name and correct the highlighted inputs.');
+    if (saveBlocker) {
+      setError(saveBlocker);
       return;
     }
     setBusy(true);
@@ -114,9 +121,10 @@ export function TuneDialog({
             disabled={busy}
             style={{ border: 0, padding: 0, margin: 0 }}
           >
-            <TuneEditor value={value} surface={surface} onChange={setValue} />
+            <TuneEditor value={value} surface={surface} onChange={setValue} onValidationChange={setGeometryCheck} />
           </fieldset>
           {error && <FormError key={error}>{error}</FormError>}
+          {useBlocker && <Text size="sm" c="dimmed" role="status">{useBlocker}</Text>}
           <Group justify="flex-end">
             <Button variant="default" disabled={busy} onClick={requestClose}>
               Cancel
@@ -124,16 +132,14 @@ export function TuneDialog({
             {onUse && (
               <Button
                 variant="light"
-                disabledReason={
-                  invalid.size ? 'Correct the highlighted inputs.' : undefined
-                }
+                disabledReason={useBlocker}
                 disabled={busy}
-                onClick={() => onUse(value)}
+                onClick={() => { if (!busy && !useBlocker) onUse(value); }}
               >
                 Use for this run only
               </Button>
             )}
-            <Button loading={busy} onClick={() => void save()}>
+            <Button loading={busy} disabledReason={saveBlocker} onClick={() => void save()}>
               Save tune
             </Button>
           </Group>

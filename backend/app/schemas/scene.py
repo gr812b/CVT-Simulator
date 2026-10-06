@@ -3,6 +3,7 @@
 from typing import Literal
 
 from .common import ApiModel
+from .projections import CaseValidation
 
 
 class MechanismPose(ApiModel):
@@ -101,6 +102,9 @@ class TuneProfileTrace(ApiModel):
 
 
 class TuneScenePreview(ScenePreview):
+    # Required: an older/unvalidated drawing must never enable Save or Use.
+    validation: CaseValidation
+    primary_contact_failure_m: float | None = None
     primary_profile: TuneProfileTrace | None = None
     secondary_profile: TuneProfileTrace | None = None
     # All following arrays have exactly one entry per SceneFrame.

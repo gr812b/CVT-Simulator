@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Box3, Vector3 } from 'three';
+import { Box3, Quaternion, Vector3 } from 'three';
+import { orientInspectionModels } from './inspectionFrame';
+import { InspectionOverlay } from './InspectionOverlay';
 import { mechanismLayout, mechanismPose } from './mechanisms';
 import { Alert } from '@mantine/core';
 import { useScene3D } from '@hooks/useScene3D';
@@ -32,13 +34,18 @@ export default function GeometryScene({
     () => sceneGeometry(preview.geometry),
     [preview.geometry],
   );
-  const models = useMemo(() => createCVTModels(geometry, component), [geometry, component]);
+  const models = useMemo(() => {
+    const built = createCVTModels(geometry, component);
+    return component ? orientInspectionModels(built, component, geometry.mechanisms?.poses[0]?.secondary_angle_rad ?? 0) : built;
+  }, [geometry, component]);
   const fitted = useRef<{ controller: unknown; reset: number; component?: string } | null>(null);
   // Landing scenes remain orbit-only. Tune inspection explicitly permits zoom/pan.
   const config = sceneConfiguration(false);
   config.renderOnDemand = true;
-  if (component === 'secondary' && config.camera)
-    config.camera.position = [3, 9, -16];
+  if (component) {
+    config.camera.position = [0, 0, 20];
+    config.camera.lookAt = [0, 0, 0];
+  }
   const { containerRef, sceneController, error } = useScene3D({
     sceneConfig: config,
     models,
@@ -63,7 +70,15 @@ export default function GeometryScene({
         const root = sceneController.getModel(`${component}Fixed`)?.object3D;
         if (root) {
           root.updateWorldMatrix(true, true);
-          const bounds = new Box3().setFromObject(root);
+          const bounds = new Box3();
+          if (component === 'primary') {
+            // Hidden arms have no contact pose; do not fit their construction
+            // placeholder. Ramp, pivot and the solved swing define the view.
+            for (const id of ['primaryRamps', 'primaryCarrier']) {
+              const object = sceneController.getModel(id)?.object3D;
+              if (object) bounds.union(new Box3().setFromObject(object));
+            }
+          } else bounds.setFromObject(root);
           if (component === 'primary' && geometry.mechanisms?.primary) {
             // Fit the solved swing envelope once, not just the initial arm pose.
             const layout = mechanismLayout(geometry);
@@ -80,9 +95,10 @@ export default function GeometryScene({
             if (ramp && current) {
               const rampBounds = new Box3().setFromObject(ramp);
               const positions = geometry.mechanisms.poses.map(p => p.primary_ramp_shift_m);
+              const worldRotation = root.getWorldQuaternion(new Quaternion());
               for (const end of [Math.min(...positions), Math.max(...positions)])
                 bounds.union(rampBounds.clone().translate(new Vector3(0, 0,
-                  sceneDistance(current.primary_ramp_shift_m - end))));
+                  sceneDistance(current.primary_ramp_shift_m - end)).applyQuaternion(worldRotation)));
             }
           }
           if (!bounds.isEmpty()) {
@@ -123,6 +139,7 @@ export default function GeometryScene({
       ref={containerRef}
       className={`${styles.scene3dViewer} ${component ? styles.componentPreview : ''} ${className ?? ''}`}
     >
+      {component && sceneController && frame && <InspectionOverlay controller={sceneController} mount={component} geometry={geometry} shift={sceneDistance(frame.shift_m)}/>}
       {error && (
         <Alert className={styles.sceneError} title="3D preview unavailable">
           {error}

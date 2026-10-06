@@ -77,6 +77,39 @@ def parameters(assembly, schema):
                 "default": component["geometry"]["ramp_profile"],
             },
         ]
+        # Tune intent is a signed displacement from the fixed pivot. The
+        # assembly still stores the absolute ramp reference in its own frame.
+        geometry = component["geometry"]
+        for axis, reference, pivot, label, description in (
+            (
+                "axial",
+                "ramp_reference_axial_position_m",
+                "pivot_axial_position_m",
+                "Axial offset from pivot",
+                "Ramp starting tip at fully open primary; positive in the local closing direction.",
+            ),
+            (
+                "radial",
+                "ramp_reference_radius_m",
+                "pivot_radius_m",
+                "Radial offset from pivot",
+                "Ramp starting tip at fully open primary; positive radially outwards from the pivot.",
+            ),
+        ):
+            result.append(
+                {
+                    "key": f"primary_ramp_{axis}_offset",
+                    "kind": "number",
+                    "label": label,
+                    "description": description,
+                    "group": "primary",
+                    "subgroup": "ramp_position",
+                    "unit": "m",
+                    "path": prefix + "/geometry/" + reference,
+                    "storage_offset": geometry[pivot],
+                    "default": geometry[reference] - geometry[pivot],
+                }
+            )
     coupling = assembly["pulleys"]["secondary"].get("helical_coupling")
     if coupling:
         result = [p for p in result if p["key"] != "secondary_helix_profile"]
@@ -251,6 +284,7 @@ def tune_surface(session, principal, cvt_revision_id):
             fields.append(
                 {
                     **common,
+                    "subgroup": param.get("subgroup", "parameters"),
                     "unit": unit,
                     "display_unit": display,
                     "display_scale": scale,
@@ -325,5 +359,7 @@ def apply_values(assembly, params, values):
             raise ApiProblem(
                 422, "tune_value", f"{param['label']} must be a piecewise ramp."
             )
+        if param["kind"] == "number" and "storage_offset" in param:
+            value += param["storage_offset"]
         parent_path, name = param["path"].rsplit("/", 1)
         pointer(assembly, parent_path)[name] = deepcopy(value)
