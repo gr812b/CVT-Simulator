@@ -1,6 +1,7 @@
 name: CI for CVT Simulator
 
 on:
+  workflow_call:
   pull_request:
     branches:
       - main
@@ -194,6 +195,13 @@ jobs:
           python -m app.scripts.init_database
           python -m app.scripts.init_database
 
+      - name: Verify concurrent queue ownership on PostgreSQL
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m pip install -r requirements-dev.txt
+          CVT_TEST_POSTGRES_URL="$CVT_DATABASE_URL" python -m pytest test/test_worker_queue_concurrency.py
+
   web-tests:
     name: Frontend Lint, Regression Tests & Build
     needs: backend-tests
@@ -260,10 +268,11 @@ jobs:
           lfs: true
 
       - name: Build backend image
-        run: docker build --pull -f backend/Dockerfile -t cinder-ci-backend .
+        run: docker build --pull --build-arg CVT_IMAGE_REVISION="$GITHUB_SHA" -f backend/Dockerfile -t cinder-ci-backend .
 
       - name: Check packaged CINDER and retained demo
         run: |
+          docker run --rm --network none -e EXPECTED_REVISION="$GITHUB_SHA" cinder-ci-backend python -c "import os; from app.core.deployment import image_revision; assert image_revision() == os.environ['EXPECTED_REVISION']; print('Image revision verified')"
           docker run --rm --network none cinder-ci-backend python -m app.scripts.check_cinder_install
           docker run --rm --network none cinder-ci-backend python -c "from app.application.demo import playback, scene; assert playback().result['metrics']['completed']; scene(); print('Retained demo and landing scene loaded')"
 

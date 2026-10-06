@@ -10,6 +10,7 @@ import sys
 import tempfile
 import threading
 import time
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import psutil
@@ -17,6 +18,7 @@ from sqlalchemy import update
 
 from app.application import jobs
 from app.application.auth import aware
+from app.core.deployment import ApiReadinessGate
 from app.core.settings import Settings
 from app.database.base import utc_now
 from app.database.maintenance import DatabaseNotReadyError, require_current_schema
@@ -296,6 +298,97 @@ def execute(factory, settings, run):
                 )
 
 
+def fail_claimed_run(factory, run):
+    """Release only this worker's claim, retaining any durable checkpoint."""
+    try:
+        with factory.begin() as session:
+            jobs.finish(
+                session,
+                run.id,
+                run.worker_token,
+                error={
+                    "code": "worker_failure",
+                    "message": "The worker could not finish this run. You can retry as a new run.",
+                },
+            )
+    except Exception:
+        # Deadline recovery remains the fallback if the database is unavailable.
+        LOG.exception("Run %s failure could not be persisted", run.id)
+
+
+def execute_submitted(factory, settings, run, accepted):
+    # ThreadPoolExecutor can enqueue work before failing to start a new thread.
+    # Do not start its child until submit() has returned successfully.
+    if accepted.result():
+        LOG.info("Executing run %s", run.id)
+        execute(factory, settings, run)
+
+
+def serve(factory, settings, stopping, *, once=False, ready=None):
+    """Claim on demand up to the cap, then drain accepted runs on shutdown.
+
+    Pool threads only supervise; each simulation still has its own bounded OS
+    process. There is no prefetched queue and no simulation process when idle.
+    """
+    pending = {}
+
+    def complete(future, run):
+        try:
+            future.result()
+        except Exception:
+            LOG.exception("Run %s failed outside child supervision", run.id)
+            fail_claimed_run(factory, run)
+
+    LOG.info("Worker started; maximum concurrent simulations: %s", settings.worker_max_concurrency)
+    with ThreadPoolExecutor(
+        max_workers=settings.worker_max_concurrency, thread_name_prefix="cinder-run"
+    ) as pool:
+        try:
+            while not stopping.is_set():
+                for future in list(pending):
+                    if future.done():
+                        complete(future, pending.pop(future))
+                if len(pending) >= settings.worker_max_concurrency:
+                    stopping.wait(settings.worker_poll_seconds)
+                    continue
+                if ready is not None and not ready():
+                    if once:
+                        break
+                    stopping.wait(settings.worker_poll_seconds)
+                    continue
+                with factory.begin() as session:
+                    # A signal can arrive while readiness or claim queries block.
+                    if stopping.is_set():
+                        break
+                    run = jobs.claim(session, settings)
+                    if stopping.is_set():
+                        session.rollback()
+                        break
+                if run is None:
+                    if once:
+                        break
+                    stopping.wait(settings.worker_poll_seconds)
+                    continue
+                accepted = Future()
+                try:
+                    future = pool.submit(execute_submitted, factory, settings, run, accepted)
+                    pending[future] = run
+                except BaseException:
+                    accepted.set_result(False)
+                    LOG.exception("Run %s could not be submitted to the worker pool", run.id)
+                    fail_claimed_run(factory, run)
+                    raise
+                else:
+                    accepted.set_result(True)
+                if once:
+                    break
+        finally:
+            if pending:
+                LOG.info("Waiting for %s accepted run(s) to finish", len(pending))
+            for future in as_completed(pending):
+                complete(future, pending[future])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -310,29 +403,35 @@ def main():
     settings = Settings.from_environment()
     engine = make_engine(settings.database_url)
     factory = make_session_factory(engine)
-    stopping = False
+    stopping = threading.Event()
 
     def stop(_signum, _frame):
-        nonlocal stopping
-        stopping = True
+        stopping.set()
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     try:
         try:
-            require_current_schema(engine)
+            gate = ApiReadinessGate(settings.worker_api_url) if settings.worker_api_url else None
+        except ValueError as exc:
+            parser.error(str(exc))
+        schema_checked = False
+
+        def ready():
+            nonlocal schema_checked
+            if gate is not None and not gate():
+                return False
+            if not schema_checked:
+                require_current_schema(engine)
+                schema_checked = True
+            return True
+
+        try:
+            if gate is None:
+                ready()
+            serve(factory, settings, stopping, once=args.once, ready=ready)
         except DatabaseNotReadyError as exc:
             parser.error(str(exc))
-        while not stopping:
-            with factory.begin() as session:
-                run = jobs.claim(session, settings)
-            if run:
-                LOG.info("Executing run %s", run.id)
-                execute(factory, settings, run)
-            elif not args.once:
-                time.sleep(settings.worker_poll_seconds)
-            if args.once:
-                break
     finally:
         engine.dispose()
 
