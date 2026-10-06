@@ -30,6 +30,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -69,6 +70,11 @@ class User(StringUUIDPrimaryKeyMixin, Base):
 
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    school: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
+    password_hash: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    auth_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
@@ -180,7 +186,7 @@ class VersionedDraftMixin(TimestampMixin, SoftDeleteMixin):
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     slug: Mapped[str | None] = mapped_column(String(180), nullable=True, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="private")
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="public")
     gallery_listed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     lifecycle_status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     catalog_status: Mapped[str] = mapped_column(String(32), nullable=False, default="user_created")
@@ -193,6 +199,56 @@ class VersionedDraftMixin(TimestampMixin, SoftDeleteMixin):
     draft_updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class Belt(StringUUIDPrimaryKeyMixin, VersionedDraftMixin, Base):
+    __tablename__ = "belts"
+
+    released_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    forked_from_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    versions: Mapped[list["BeltVersion"]] = relationship(
+        back_populates="belt", foreign_keys="BeltVersion.belt_id"
+    )
+    released_version: Mapped["BeltVersion | None"] = relationship(
+        foreign_keys=[released_version_id], post_update=True
+    )
+
+
+class BeltVersion(StringUUIDPrimaryKeyMixin, Base):
+    __tablename__ = "belt_versions"
+    __table_args__ = (UniqueConstraint("belt_id", "version_number"),)
+
+    belt_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("belts.id", ondelete="CASCADE"), index=True
+    )
+    version_number: Mapped[int] = mapped_column(Integer)
+    belt_payload: Mapped[JsonDict] = mapped_column(JsonPayload)
+    summary: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict)
+    payload_hash: Mapped[str] = mapped_column(String(64), index=True)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    payload_schema_name: Mapped[str] = mapped_column(String(120))
+    payload_schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    validation_status: Mapped[str] = mapped_column(String(32), default="valid")
+    validation_messages: Mapped[list[JsonDict]] = mapped_column(JSON, default=list)
+    created_by_user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    release_notes: Mapped[str | None] = mapped_column(Text)
+    visibility_at_release: Mapped[str] = mapped_column(String(20))
+    attribution_institution_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("institutions.id", ondelete="SET NULL")
+    )
+    attribution_label: Mapped[str | None] = mapped_column(String(200))
+    superseded_by_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="SET NULL")
+    )
+    deprecated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    belt: Mapped[Belt] = relationship(back_populates="versions", foreign_keys=[belt_id])
 
 
 class Engine(StringUUIDPrimaryKeyMixin, VersionedDraftMixin, Base):
@@ -298,6 +354,9 @@ class CVTDesignVersion(StringUUIDPrimaryKeyMixin, Base):
     )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     cinder_assembly: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
+    belt_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("belt_versions.id", ondelete="RESTRICT"), nullable=True
+    )
     tuning_schema: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
     summary: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
@@ -514,7 +573,7 @@ class LoadCase(StringUUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base)
     )
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     kind: Mapped[str] = mapped_column(String(80), nullable=False)
-    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="private")
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="public")
     payload: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
 
 
@@ -583,6 +642,10 @@ class RunCacheEntry(StringUUIDPrimaryKeyMixin, Base):
 
 class Run(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "runs"
+    __table_args__ = (
+        UniqueConstraint("account_id", "request_key", name="uq_runs_account_id_request_key"),
+        Index("ix_runs_queue", "status", "submitted_at"),
+    )
 
     account_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True
@@ -590,17 +653,17 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     created_by_user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    vehicle_assembly_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("vehicle_assembly_versions.id", ondelete="RESTRICT"), nullable=False
+    vehicle_assembly_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("vehicle_assembly_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    engine_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("engine_versions.id", ondelete="RESTRICT"), nullable=False
+    engine_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("engine_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    cvt_design_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("cvt_design_versions.id", ondelete="RESTRICT"), nullable=False
+    cvt_design_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cvt_design_versions.id", ondelete="RESTRICT"), nullable=True
     )
-    output_system_version_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("output_system_versions.id", ondelete="RESTRICT"), nullable=False
+    output_system_version_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("output_system_versions.id", ondelete="RESTRICT"), nullable=True
     )
     tune_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("tunes.id", ondelete="SET NULL"), nullable=True
@@ -635,6 +698,24 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     cache_entry_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("run_cache_entries.id", ondelete="SET NULL"), nullable=True
     )
+    name: Mapped[str] = mapped_column(
+        String(240), default="Simulation", server_default="Simulation"
+    )
+    source: Mapped[str] = mapped_column(String(20), default="library", server_default="library")
+    request_key: Mapped[str | None] = mapped_column(String(64))
+    request_hash: Mapped[str | None] = mapped_column(String(64))
+    parent_run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"))
+    provenance: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
+    runtime_identity: Mapped[JsonDict] = mapped_column(
+        JsonPayload, default=dict, server_default="{}"
+    )
+    execution_options: Mapped[JsonDict] = mapped_column(
+        JsonPayload, default=dict, server_default="{}"
+    )
+    worker_token: Mapped[str | None] = mapped_column(String(36))
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     cache_entry: Mapped[RunCacheEntry | None] = relationship(foreign_keys=[cache_entry_id])
     artifacts: Mapped[list["RunArtifact"]] = relationship(back_populates="run")
@@ -709,3 +790,22 @@ class FavoriteRun(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
+
+
+# Register authentication tables for Alembic and local create_all bootstrapping.
+from app.database.auth_models import (  # noqa: E402,F401
+    AuthSession,
+    PasswordResetToken,
+    AuthRateLimit,
+)
+from app.database.experiment_models import (  # noqa: E402,F401
+    Experiment,
+    ExperimentRevision,
+    RunNotification,
+)
+from app.database.publication_models import (  # noqa: E402,F401
+    ConfigurationCopy,
+    PhysicalPublication,
+)
+
+Index("uq_users_email_normalized", func.lower(User.email), unique=True)

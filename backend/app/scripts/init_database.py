@@ -8,10 +8,12 @@ Usage:
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from dataclasses import replace
 from pathlib import Path
 
 from app.core.settings import Settings
 from app.database.bootstrap import create_and_seed_database
+from app.database.maintenance import DatabaseNotReadyError, reset_sqlite_database
 
 
 def main() -> None:
@@ -22,26 +24,61 @@ def main() -> None:
         help="SQLAlchemy database URL. Defaults to CVT_DATABASE_URL or local SQLite.",
     )
     parser.add_argument(
+        "--development-fixtures",
+        action="store_true",
+        help="Also add two isolated passwordless local accounts and public setups (development only).",
+    )
+    parser.add_argument(
         "--preset-path",
         type=Path,
         default=None,
         help="Optional baseline preset JSON used to seed the demo objects.",
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Delete and reseed the local SQLite development database. Stop the API, all workers and database tools first.",
+    )
     args = parser.parse_args()
 
     settings = Settings.from_environment()
     if args.database_url is not None:
-        settings = Settings(
-            api_prefix=settings.api_prefix,
-            preset_directory=settings.preset_directory,
-            run_timeout_seconds=settings.run_timeout_seconds,
-            run_executor_mode=settings.run_executor_mode,
-            cors_origins=settings.cors_origins,
-            database_url=args.database_url,
-            database_echo=settings.database_echo,
-        )
+        settings = replace(settings, database_url=args.database_url)
+    if args.development_fixtures and settings.environment != "development":
+        parser.error("Development fixtures are unavailable in production.")
+    if args.reset:
+        from sqlalchemy.engine import make_url
+
+        url = make_url(settings.database_url)
+        if (
+            settings.environment != "development"
+            or url.get_backend_name() != "sqlite"
+            or not url.database
+            or url.database == ":memory:"
+            or url.query.get("uri")
+        ):
+            parser.error(
+                "--reset requires a plain file-backed SQLite URL in development mode (no URI options)."
+            )
+        database = Path(url.database).resolve()
+        try:
+            reset_sqlite_database(database)
+        except (DatabaseNotReadyError, OSError) as exc:
+            parser.error(str(exc))
+        print(f"Reset local development database: {database}")
     create_and_seed_database(settings, preset_path=args.preset_path)
-    print(f"Database created and seeded: {settings.database_url}")
+    if args.development_fixtures:
+        from app.database.development_fixtures import seed_development_fixtures
+        from app.database.session import make_engine, make_session_factory
+
+        engine = make_engine(settings.database_url)
+        try:
+            with make_session_factory(engine)() as session:
+                seed_development_fixtures(session)
+                session.commit()
+        finally:
+            engine.dispose()
+    print("Database created and seeded.")
 
 
 if __name__ == "__main__":

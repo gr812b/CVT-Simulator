@@ -9,22 +9,24 @@ from threading import RLock
 from uuid import uuid4
 
 from .architecture import analyze_architecture_workspace
+from .architecture_compare import compare_compiled_domains, match_target_shape
 from .cinder_adapter import (
     GeometryAnalysis,
     analyze_geometry,
     evaluate_response,
 )
-from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
-from .architecture_compare import compare_compiled_domains, match_target_shape
 from .inverse_design import (
     ForceTargetPoint,
+)
+from .inverse_design import (
     inverse_design_force_curve as solve_force_curve_inverse,
 )
-from .path_domain_packaging import compile_path_domain_cached_packaging
+from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
 from .path_domain import (
     CompiledPathDomain,
     ForceRequirement,
 )
+from .path_domain_packaging import compile_path_domain_cached_packaging
 from .path_domain_refinement import (
     condition_path_domain_refined,
     refresh_compiled_domain_views,
@@ -50,12 +52,14 @@ class PrimaryDesignError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class CachedPathDomain:
+    account_id: str | None
     domain_id: str
     compiled: CompiledPathDomain
 
 
 @dataclass(frozen=True, slots=True)
 class CachedConcreteAnalysis:
+    account_id: str | None
     analysis_id: str
     geometry: GeometryAnalysis
 
@@ -147,6 +151,7 @@ class FixedPivotPrimaryDesignService:
     def analyze_path_domain(
         self,
         *,
+        account_id: str | None = None,
         architecture: ArchitectureDesign,
         zones: tuple[PackagingZone, ...],
         shift_station_count: int = 9,
@@ -182,7 +187,9 @@ class FixedPivotPrimaryDesignService:
             ) from error
 
         domain_id = uuid4().hex
-        self._store_domain(CachedPathDomain(domain_id=domain_id, compiled=compiled))
+        self._store_domain(
+            CachedPathDomain(account_id=account_id, domain_id=domain_id, compiled=compiled)
+        )
         return {
             "domain_id": domain_id,
             "architecture": _architecture_document(architecture),
@@ -193,6 +200,7 @@ class FixedPivotPrimaryDesignService:
     def condition_path_domain(
         self,
         *,
+        account_id: str | None = None,
         domain_id: str,
         requirements: tuple[ForceRequirement, ...],
         max_tip_mass_per_flyweight_kg: float,
@@ -202,7 +210,7 @@ class FixedPivotPrimaryDesignService:
     ) -> dict[str, object]:
         """Condition a cached path graph on force points and one shared tip mass."""
 
-        cached = self._get_domain(domain_id)
+        cached = self._get_domain(domain_id, account_id)
         try:
             result = condition_path_domain_refined(
                 cached.compiled,
@@ -255,14 +263,15 @@ class FixedPivotPrimaryDesignService:
     def compare_path_domains(
         self,
         *,
+        account_id: str | None = None,
         domain_id_a: str,
         domain_id_b: str,
         atlas_path_count: int = 32,
         mass_mix_count: int = 7,
     ) -> dict[str, object]:
         """Compare two cached complete-path architecture domains without fixing mass or RPM."""
-        cached_a = self._get_domain(domain_id_a)
-        cached_b = self._get_domain(domain_id_b)
+        cached_a = self._get_domain(domain_id_a, account_id)
+        cached_b = self._get_domain(domain_id_b, account_id)
         try:
             result = compare_compiled_domains(
                 cached_a.compiled,
@@ -286,6 +295,7 @@ class FixedPivotPrimaryDesignService:
     def compare_path_domains_to_target(
         self,
         *,
+        account_id: str | None = None,
         domain_id_a: str,
         domain_id_b: str,
         target_points: list[tuple[float, float]],
@@ -294,8 +304,8 @@ class FixedPivotPrimaryDesignService:
         sample_count: int = 121,
     ) -> dict[str, object]:
         """Match a user-drawn normalized force shape against two complete-path domains."""
-        cached_a = self._get_domain(domain_id_a)
-        cached_b = self._get_domain(domain_id_b)
+        cached_a = self._get_domain(domain_id_a, account_id)
+        cached_b = self._get_domain(domain_id_b, account_id)
         try:
             return match_target_shape(
                 cached_a.compiled,
@@ -314,6 +324,7 @@ class FixedPivotPrimaryDesignService:
     def analyze_concrete(
         self,
         *,
+        account_id: str | None = None,
         architecture: ArchitectureDesign,
         ramp: RampDesign,
         sample_count: int = 161,
@@ -332,6 +343,7 @@ class FixedPivotPrimaryDesignService:
 
         analysis_id = uuid4().hex
         cached = CachedConcreteAnalysis(
+            account_id=account_id,
             analysis_id=analysis_id,
             geometry=geometry,
         )
@@ -417,10 +429,11 @@ class FixedPivotPrimaryDesignService:
     def evaluate_concrete_response(
         self,
         *,
+        account_id: str | None = None,
         analysis_id: str,
         operating: OperatingCondition,
     ) -> dict[str, object]:
-        cached = self._get(analysis_id)
+        cached = self._get(analysis_id, account_id)
         try:
             fields = evaluate_response(cached.geometry, operating)
         except (TypeError, ValueError, RuntimeError) as error:
@@ -471,10 +484,10 @@ class FixedPivotPrimaryDesignService:
             while len(self._domain_cache) > self._max_cached_domains:
                 self._domain_cache.popitem(last=False)
 
-    def _get_domain(self, domain_id: str) -> CachedPathDomain:
+    def _get_domain(self, domain_id: str, account_id: str | None) -> CachedPathDomain:
         with self._lock:
             cached = self._domain_cache.get(domain_id)
-            if cached is None:
+            if cached is None or cached.account_id != account_id:
                 raise PrimaryDesignError(
                     "DOMAIN_EXPIRED",
                     "The ramp-path domain is unavailable or has expired; analyze the architecture domain again.",
@@ -489,10 +502,10 @@ class FixedPivotPrimaryDesignService:
             while len(self._cache) > self._max_cached_analyses:
                 self._cache.popitem(last=False)
 
-    def _get(self, analysis_id: str) -> CachedConcreteAnalysis:
+    def _get(self, analysis_id: str, account_id: str | None) -> CachedConcreteAnalysis:
         with self._lock:
             cached = self._cache.get(analysis_id)
-            if cached is None:
+            if cached is None or cached.account_id != account_id:
                 raise PrimaryDesignError(
                     "ANALYSIS_EXPIRED",
                     "The concrete design analysis is no longer cached; analyze the geometry again.",

@@ -90,6 +90,13 @@ export function siToDisplay(valueSi: number, unit: DisplayUnit): number {
   return valueSi * SI_TO_DISPLAY[unit];
 }
 
+/** Scale for ordinary quantity controls; backend hints can provide other units. */
+export function displayScale(unit: string): number {
+  return Object.prototype.hasOwnProperty.call(SI_TO_DISPLAY, unit)
+    ? SI_TO_DISPLAY[unit as DisplayUnit]
+    : 1;
+}
+
 export function displayToSi(value: number, unit: DisplayUnit): number {
   return value / SI_TO_DISPLAY[unit];
 }

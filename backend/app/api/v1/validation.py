@@ -2,19 +2,29 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
-from app.api.v1.dependencies import get_container, get_database_session
+from app.api.v1.dependencies import (
+    get_container,
+    get_current_principal,
+    get_database_session,
+)
+from app.api.v1.runs import submit_direct
+from app.application import access
+from app.application.auth import Principal
 from app.application.cinder_gateway import (
     VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
 )
 from app.application.container import ApplicationContainer
+from app.application.default_setup import initial_validation_case
 from app.core.errors import ApiProblem
+from app.database.runs import get_database_run
 from app.database.validation import (
     create_validation_run,
     ensure_workspace,
     get_validation_run,
+    get_workspace,
     list_validation_runs,
     upsert_workspace,
 )
@@ -86,11 +96,18 @@ def _run_response(run) -> ValidationRunResponse:
 
 @router.get("/workspace", response_model=ValidationWorkspaceResponse)
 def validation_workspace(
-    account_id: str,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ValidationWorkspaceResponse:
     try:
-        workspace = ensure_workspace(session, account_id=account_id)
+        fallback = (
+            None
+            if get_workspace(session, account_id=principal.account_id)
+            else initial_validation_case(session, principal)
+        )
+        workspace = ensure_workspace(
+            session, account_id=principal.account_id, fallback_document=fallback
+        )
     except ValueError as error:
         raise ApiProblem(422, "validation_workspace_unavailable", str(error)) from error
     return _workspace_response(workspace)
@@ -100,13 +117,15 @@ def validation_workspace(
 def save_validation_workspace(
     request: ValidationWorkspaceUpdate,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ValidationWorkspaceResponse:
     # This is intentionally last-write-wins for the current two-user workflow.
     # Named/revisioned validation setups can replace this temporary singleton
     # without changing immutable run snapshots.
+    principal.require_write()
     workspace = upsert_workspace(
         session,
-        account_id=request.account_id,
+        account_id=principal.account_id,
         setup_document=request.setup_document,
         metrology=request.metrology,
         controller_templates=request.controller_templates,
@@ -122,25 +141,20 @@ def save_validation_workspace(
 )
 def create_validation_simulation_run(
     request: CreateRunRequest,
+    http: Request,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
+    session: Session = Depends(get_database_session),
 ) -> RunStatusResponse:
     """Run validation with the zero-clearance bilateral/slotted secondary helix."""
 
-    record = container.runs.submit(
-        request.simulation_case,
-        include_reported_segments=request.include_reported_segments,
-        include_raw_trace=request.include_raw_trace,
-        execution_profile=VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
-    )
-    return RunStatusResponse(
-        id=record.id,
-        status=record.status,
-        submitted_at=record.submitted_at,
-        started_at=record.started_at,
-        completed_at=record.completed_at,
-        error=record.error,
-        source="direct",
-        contract_hash=record.input_fingerprint,
+    return submit_direct(
+        request,
+        session,
+        principal,
+        container,
+        http,
+        VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
     )
 
 
@@ -148,20 +162,32 @@ def create_validation_simulation_run(
 def recent_validation_runs(
     limit: int = 20,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> list[ValidationRunSummary]:
-    return [_run_summary(run) for run in list_validation_runs(session, limit=limit)]
+    return [
+        _run_summary(run)
+        for run in list_validation_runs(session, account_id=principal.account_id, limit=limit)
+    ]
 
 
 @router.post("/runs", response_model=ValidationRunResponse)
 def save_validation_run(
     request: ValidationRunCreate,
+    container: ApplicationContainer = Depends(get_container),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ValidationRunResponse:
     if request.crop_end_s <= request.crop_start_s:
         raise ApiProblem(
-            422, "validation_crop_invalid", "crop_end_s must be greater than crop_start_s."
+            422,
+            "validation_crop_invalid",
+            "crop_end_s must be greater than crop_start_s.",
         )
-    run = create_validation_run(session, **request.model_dump())
+    principal.require_write()
+    if request.simulation_run_id:
+        linked_run = get_database_run(session, request.simulation_run_id)
+        access.owned(linked_run, principal)
+    run = create_validation_run(session, account_id=principal.account_id, **request.model_dump())
     return _run_response(run)
 
 
@@ -169,8 +195,10 @@ def save_validation_run(
 def validation_run(
     run_id: str,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ValidationRunResponse:
     run = get_validation_run(session, run_id=run_id)
+    access.owned(run, principal)
     if run is None:
         raise ApiProblem(
             404, "validation_run_not_found", f"Validation run {run_id!r} was not found."

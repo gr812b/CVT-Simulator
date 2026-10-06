@@ -1,31 +1,31 @@
 @mixin text-small {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 0.75rem;
 }
 
 @mixin text-medium {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 1rem;
 }
 
 @mixin text-tooltip {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 1rem;
     line-height: 1.4;
 }
 
 @mixin text-paragraph {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 1rem;
     line-height: 2rem;
 }
 
 @mixin text-paragraph-large {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 1.25rem;
     line-height: 1.6;
@@ -37,14 +37,14 @@
 }
 
 @mixin title-medium {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 500;
     font-size: 1.5rem;
     text-transform: uppercase;
 }
 
 @mixin title-large {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 600;
     font-size: 4rem;
     font-style: italic;
@@ -52,7 +52,7 @@
 }
 
 @mixin title-huge {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 600;
     font-size: 6rem;
     font-style: italic;
@@ -60,7 +60,7 @@
 }
 
 @mixin title-display {
-    font-family: "Roboto", sans-serif;
+    font-family: var(--mantine-font-family);
     font-weight: 600;
     font-size: 12rem;
     font-style: italic;

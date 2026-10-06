@@ -1,0 +1,13 @@
+.editorColumns {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(0, 3fr);
+  gap: var(--mantine-spacing-md);
+}
+.editorColumns > * {
+  min-width: 0;
+}
+@media (max-width: 42em) {
+  .editorColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

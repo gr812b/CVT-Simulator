@@ -1,6 +1,7 @@
 # Backend runtime dependencies.
-# Keep CINDER pinned exactly so persisted run provenance and cache identity are reproducible.
-cinder-cvt==1.1.4
+# Install from backend/ after CINDER 1.1.5 has been published to PyPI.
+# Production and contract generation use the same published distribution.
+cinder-cvt==1.1.5
 
 fastapi>=0.116,<1.0
 uvicorn[standard]>=0.35,<1.0
@@ -9,3 +10,8 @@ sqlalchemy>=2.0,<3.0
 alembic>=1.13,<2.0
 psycopg[binary]>=3.2,<4.0
 shapely>=2.1,<3.0
+pwdlib[argon2]>=0.3,<1.0
+email-validator>=2.2,<3.0
+jsonschema>=4.25,<5.0
+# Portable resident-memory monitoring for the worker, including macOS.
+psutil>=7.0,<8.0

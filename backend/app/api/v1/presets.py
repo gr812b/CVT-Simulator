@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-
 from app.api.v1.dependencies import get_container
 from app.application.container import ApplicationContainer
+from app.database.resolver import normalize_preset_case
 from app.schemas.presets import PresetListResponse, PresetResponse, PresetSummary
+from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/presets", tags=["presets"])
 
 
 @router.get("", response_model=PresetListResponse)
-def list_presets(container: ApplicationContainer = Depends(get_container)) -> PresetListResponse:
+def list_presets(
+    container: ApplicationContainer = Depends(get_container),
+) -> PresetListResponse:
     records = container.presets.list()
     return PresetListResponse(
         presets=[
@@ -32,5 +34,5 @@ def get_preset(
         id=item.id,
         name=item.name,
         description=item.description,
-        simulation_case=item.simulation_case,
+        simulation_case=normalize_preset_case(item.simulation_case),
     )

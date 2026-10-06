@@ -8,9 +8,9 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import router as v1_router
 from app.application.container import build_container
-from app.database.session import make_engine, make_session_factory
 from app.core.errors import ApiProblem
 from app.core.settings import Settings
+from app.database.session import make_engine, make_session_factory
 from app.schemas.common import HealthResponse
 
 
@@ -25,8 +25,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
     )
     app.state.container = build_container(settings)
+    app.state.settings = settings
     app.state.database_engine = make_engine(settings.database_url, echo=settings.database_echo)
     app.state.database_session_factory = make_session_factory(app.state.database_engine)
+
+    @app.middleware("http")
+    async def private_response_headers(request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith(settings.api_prefix):
+            response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "same-origin"
+        return response
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
@@ -37,8 +48,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(ApiProblem)
     async def handle_api_problem(_: Request, problem: ApiProblem) -> JSONResponse:
+        headers = {}
+        if problem.status_code == 429 and isinstance(problem.details, dict):
+            headers["Retry-After"] = str(problem.details.get("retry_after_seconds", 900))
         return JSONResponse(
             status_code=problem.status_code,
+            headers=headers,
             content={
                 "error": {
                     "code": problem.code,

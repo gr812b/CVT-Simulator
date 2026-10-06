@@ -18,6 +18,8 @@ from sqlalchemy.orm import Session
 from app.database.base import utc_now
 from app.database.hashing import canonical_json_hash
 from app.database.models import (
+    Belt,
+    BeltVersion,
     CVTDesign,
     CVTDesignVersion,
     Engine,
@@ -30,7 +32,7 @@ from app.database.models import (
 )
 
 JsonDict = dict[str, Any]
-ResourceName = Literal["engines", "cvt-designs", "output-systems", "vehicle-assemblies"]
+ResourceName = Literal["engines", "belts", "cvt-designs", "output-systems", "vehicle-assemblies"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +47,15 @@ class ResourceBinding:
 
 
 RESOURCE_BINDINGS: dict[str, ResourceBinding] = {
+    "belts": ResourceBinding(
+        name="belts",
+        object_model=Belt,
+        version_model=BeltVersion,
+        object_fk_name="belt_id",
+        object_relationship_name="belt",
+        payload_attr="belt_payload",
+        default_payload_schema_name="cinder_web.belt",
+    ),
     "engines": ResourceBinding(
         name="engines",
         object_model=Engine,
@@ -228,7 +239,7 @@ def fork_version(
         or f"Fork of {getattr(source, binding.object_relationship_name).name}",
         slug=data.get("slug"),
         description=data.get("description"),
-        visibility=data.get("visibility", "private"),
+        visibility=data.get("visibility", "public"),
         gallery_listed=False,
         lifecycle_status="active",
         catalog_status="user_created",
@@ -356,6 +367,8 @@ def _release_payload_object(
         "attribution_institution_id": data.get("attribution_institution_id"),
         "attribution_label": data.get("attribution_label"),
     }
+    if data.get("id"):
+        kwargs["id"] = data["id"]
     if binding.name == "cvt-designs":
         kwargs["tuning_schema"] = copy.deepcopy(data.get("tuning_schema") or {})
     version = binding.version_model(**kwargs)
@@ -393,6 +406,7 @@ def _release_vehicle_assembly(
         "assembly_payload": assembly_payload,
     }
     version = VehicleAssemblyVersion(
+        **({"id": data["id"]} if data.get("id") else {}),
         vehicle_assembly_id=obj.id,
         version_number=_next_version_number(session, binding=binding, object_id=obj.id),
         engine_version_id=engine_version_id,

@@ -1,37 +1,46 @@
-@use "./fonts";
-
-// Universal box-sizing border-box
+@use './fonts';
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
-
-// default button styling
-button {
-    background-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: none;
-    transition: 0.3s ease-in-out;
-    padding: 0;
-
-    &:hover {
-        cursor: pointer;
-    }
+body {
+  margin: 0;
+  min-width: 320px;
 }
-
-// default font styling
-label,
+button,
 input,
-span {
-    @include fonts.text-medium;
-    color: var(--text-color);
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 3px;
 }
 
-h1, h2, h3, h4, h5, h6, p, span, label {
-    margin: 0;
-    display: flex;
-    align-items: center;
+html {
+  scrollbar-gutter: stable;
+}
+
+.public-run-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8rem auto;
+  gap: 1rem;
+  align-items: center;
+}
+@media (max-width: 40em) {
+  .public-run-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .public-run-row > a {
+    grid-column: 1 / -1;
+  }
 }

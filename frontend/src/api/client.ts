@@ -1,5 +1,6 @@
-import createClient from 'openapi-fetch';
-import type { components, paths } from './generated/backend';
+import { api as client, dataOrThrow, ApiClientError } from './transport';
+export { ApiClientError } from './transport';
+import type { components } from './generated/backend';
 import type { CINDERSimulationCaseDocument } from './generated/simulationCase';
 import type { CINDERSimulationResultDocument } from './generated/simulationResult';
 
@@ -10,89 +11,58 @@ import type { CINDERSimulationResultDocument } from './generated/simulationResul
  */
 
 export type SimulationCaseDocument = CINDERSimulationCaseDocument;
+type Schema = components['schemas'];
+type CamelKey<S extends string> = S extends `${infer A}_${infer B}`
+  ? `${A}${Capitalize<CamelKey<B>>}`
+  : S;
+export type Camel<T> = { [K in keyof T as K extends string ? CamelKey<K> : K]: T[K] };
+type DeepCamel<T> = T extends readonly (infer E)[]
+  ? DeepCamel<E>[]
+  : T extends object
+  ? { [K in keyof T as K extends string ? CamelKey<K> : K]: DeepCamel<T[K]> }
+  : T;
 export type PresetSummary = components['schemas']['PresetSummary'];
 
-export type RunLifecycleStatus = 'queued' | 'validating' | 'running' | 'completed' | 'failed' | 'timed_out';
+export type RunLifecycleStatus = Schema['RunStatusResponse']['status'];
 
-export interface RunStatus {
-  id: string;
-  status: RunLifecycleStatus;
-  submittedAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-  error: ApiProblem | null;
-}
+export type RunStatus = Camel<
+  Required<
+    Pick<
+      Schema['RunStatusResponse'],
+      'id' | 'status' | 'submitted_at' | 'started_at' | 'completed_at' | 'error' | 'has_result' | 'outcome'
+    >
+  >
+>;
 
-export interface ApiProblem {
-  code: string;
-  message: string;
-  details?: unknown;
-}
+export type ApiProblem = Schema['ErrorBody'];
 
-export interface LoadedPreset {
-  id: string;
-  name: string;
-  description: string;
+export type LoadedPreset = Omit<Required<Camel<Schema['PresetResponse']>>, 'simulationCase'> & {
   simulationCase: SimulationCaseDocument;
-}
+};
 
-export interface ValidationFinding {
-  severity: 'error' | 'warning';
-  code: string;
-  message: string;
-  location: string;
-  documentPath?: string;
-}
+export type ValidationFinding = Camel<Schema['ValidationFinding']>;
 
-export interface SimulationCaseValidation {
-  isValid: boolean;
+export type SimulationCaseValidation = {
+  isValid: Schema['CaseValidation']['is_valid'];
   findings: ValidationFinding[];
-}
+};
 
-export type EditableValueKind = 'number' | 'integer' | 'boolean' | 'string' | 'enum' | 'object' | 'array';
-export type FieldExposure = 'design' | 'scenario' | 'advanced_execution';
+export type EditableValueKind = Schema['EditableField']['value_kind'];
+export type FieldExposure = Schema['EditableField']['exposure'];
 
-export interface EditableFieldDescriptor {
-  pathTemplate: string;
-  label: string;
-  description: string;
-  valueKind: EditableValueKind;
-  section: string;
-  dimension?: string;
-  canonicalUnit?: string;
-  required: boolean;
-  minimum?: number;
-  maximum?: number;
-  enumValues: string[];
-  when?: Record<string, string>;
-  exposure: FieldExposure;
-}
+export type EditableFieldDescriptor = Camel<Schema['EditableField']>;
 
-export interface ComponentParameterDescriptor {
-  key: string;
-  label: string;
-  canonicalUnit: string;
-  dimension?: string;
-  valueKind: 'number' | 'object';
-  required: boolean;
-  description: string;
-  minimum?: number;
-  maximum?: number;
-}
+export type ComponentParameterDescriptor = Camel<Schema['ComponentParameter']>;
 
-export interface ComponentDescriptor {
-  kind: string;
-  label: string;
-  description: string;
-  supportedMounts: string[];
+export type ComponentDescriptor = Omit<Camel<Schema['Component']>, 'parameters'> & {
   parameters: ComponentParameterDescriptor[];
-}
+};
 
-export interface EditorSchema {
+export type EditorSchema = {
   fields: EditableFieldDescriptor[];
-  supportedDiscriminators: Record<string, string[]>;
+  supportedDiscriminators: Schema['EditorDocument']['supported_discriminators'];
   components: ComponentDescriptor[];
-}
+};
 
 export type SimulationResult = CINDERSimulationResultDocument;
 export type ReportTable = SimulationResult['report_table'];
@@ -100,122 +70,102 @@ export type ReportColumn = ReportTable['columns'][number];
 export type SimulationTransition = SimulationResult['transitions'][number];
 
 export interface CompletedSimulationRun {
+  course: Schema['RunResultResponse']['course'];
+  sceneGeometry: Schema['SceneGeometry'];
   run: RunStatus;
   inputDocumentSnapshot: SimulationCaseDocument;
   result: SimulationResult;
 }
 
-export interface ProjectedField {
-  key: string;
-  label: string;
-  dimension: string;
-  canonicalUnit: string;
-  values: unknown;
-}
+export type DemoPlayback = Omit<Schema['DemoPlaybackResponse'], 'input_document_snapshot' | 'result'> & {
+  inputDocumentSnapshot: SimulationCaseDocument;
+  result: SimulationResult;
+};
 
-export interface ProjectedScalar {
-  key: string;
-  label: string;
-  dimension: string;
-  canonicalUnit: string;
-  value: number | null;
-}
-
-export interface GeometryStudyResult {
-  kind: 'geometry_design_response';
-  summary: { kind: 'geometry_summary'; scalars: ProjectedScalar[] };
-  path: { kind: 'geometry_path'; shape: number[]; axisKeys: string[]; columns: ProjectedField[] };
-  feasibility: {
-    isFeasible: boolean;
-    findings: Array<{ severity: 'error' | 'warning'; code: string; message: string; shiftM: number | null }>;
+export async function getDemoPlayback(signal?: AbortSignal): Promise<DemoPlayback> {
+  const data = dataOrThrow(await client.GET('/api/v1/demo', { signal }));
+  const { input_document_snapshot, result, ...metadata } = data;
+  return {
+    ...metadata,
+    inputDocumentSnapshot: input_document_snapshot as unknown as SimulationCaseDocument,
+    result: parseSimulationResult(result),
   };
 }
 
-export type GeometryEndpointRadiiRequest = components['schemas']['EndpointRadiiGeometryStudyRequest'];
+export type ProjectedField = Camel<Schema['ProjectedField']>;
 
-export type LibraryResource = 'engines' | 'cvt-designs' | 'output-systems' | 'vehicle-assemblies';
+export type ProjectedScalar = Camel<Schema['ProjectedScalar']>;
 
-export interface LibraryObjectSummary {
-  id: string;
-  resource: LibraryResource;
-  name: string;
-  description: string | null;
-  lifecycleStatus: string;
-  catalogStatus: string;
-  catalogPriority: number;
-  isDefault: boolean;
-  sourceLabel: string | null;
-  releasedVersionId: string | null;
-}
+export type GeometryStudyResult = DeepCamel<Schema['GeometryStudy']>;
 
-export interface TuneSummary {
-  id: string;
-  name: string;
-  notes: string | null;
-  values: Record<string, unknown>;
-  vehicleAssemblyId: string;
-  cvtDesignId: string;
-}
+export type GeometryEndpointRadiiRequest =
+  components['schemas']['EndpointRadiiGeometryStudyRequest'];
 
-export interface LoadCaseSummary {
-  id: string;
-  name: string;
-  kind: string;
-  visibility: string;
-}
+export type LibraryResource = Schema['LibraryObjectResponse']['resource'];
 
-export interface ExecutionPresetSummary {
-  id: string;
-  name: string;
-  kind: string;
-  isSystemDefault: boolean;
-}
+export type LibraryObjectSummary = Camel<
+  Pick<
+    Schema['LibraryObjectResponse'],
+    | 'id'
+    | 'resource'
+    | 'name'
+    | 'description'
+    | 'lifecycle_status'
+    | 'catalog_status'
+    | 'catalog_priority'
+    | 'is_default'
+    | 'source_label'
+    | 'released_version_id'
+  >
+>;
 
-export type TuneParameterGroup = 'primary' | 'ramp' | 'secondary' | 'helix';
-export type TuneParameterKind = 'number' | 'ramp';
+export type TuneSummary = Camel<
+  Pick<
+    Schema['TuneResponse'],
+    'id' | 'name' | 'notes' | 'values' | 'vehicle_assembly_id' | 'cvt_design_id'
+  >
+>;
 
-export interface TuneParameter {
-  key: string;
-  label: string;
-  description: string;
-  group: TuneParameterGroup;
-  kind: TuneParameterKind;
-  canonicalUnit: string;
-  dimension?: string;
-  minimum?: number;
-  maximum?: number;
-  defaultValue?: unknown;
-}
+export type LoadCaseSummary = Pick<
+  Schema['LoadCaseResponse'],
+  'id' | 'name' | 'kind' | 'visibility'
+>;
 
-export interface CvtDesignVersionSummary {
-  id: string;
-  objectId: string;
-  payload: Record<string, unknown>;
-  tuningSchema: { parameters: TuneParameter[] };
-}
+export type ExecutionPresetSummary = Camel<
+  Pick<Schema['ExecutionPresetResponse'], 'id' | 'name' | 'kind' | 'is_system_default'>
+>;
 
-export interface VehicleAssemblyVersionSummary {
-  id: string;
-  objectId: string;
-  assemblyPayload: {
-    engineVersionId: string;
-    cvtDesignVersionId: string;
-    outputSystemVersionId: string;
-  };
-}
+export type TuneParameterGroup = Schema['TuneParameter']['group'];
+export type TuneParameterKind = Schema['TuneParameter']['kind'];
 
-export interface LibraryRunSelection {
-  accountId: string;
-  createdByUserId: string | null;
-  vehicleAssemblyVersionId: string;
-  tuneId: string | null;
-  loadCaseId: string | null;
-  executionPresetId: string | null;
-}
+export type TuneParameter = Omit<
+  Schema['TuneParameter'],
+  'unit' | 'min' | 'max' | 'default' | 'description'
+> & {
+  description: NonNullable<Schema['TuneParameter']['description']>;
+  canonicalUnit: Schema['TuneParameter']['unit'];
+  minimum?: Schema['TuneParameter']['min'];
+  maximum?: Schema['TuneParameter']['max'];
+  defaultValue?: Schema['TuneParameter']['default'];
+};
+
+export type CvtDesignVersionSummary = Camel<
+  Pick<Schema['LibraryVersionResponse'], 'id' | 'object_id' | 'payload'>
+> & { tuningSchema: { parameters: TuneParameter[] } };
+
+export type VehicleAssemblyVersionSummary = Camel<
+  Pick<Schema['LibraryVersionResponse'], 'id' | 'object_id'>
+> & {
+  assemblyPayload: Camel<{
+    [K in 'engine_version_id' | 'cvt_design_version_id' | 'output_system_version_id']: NonNullable<
+      Schema['LibraryVersionResponse'][K]
+    >;
+  }>;
+};
+
+export type LibraryRunSelection = Camel<Required<Schema['ResolveLibrarySimulationCaseRequest']>>;
 
 export interface DefaultRunSetup {
-  accountId: string;
-  createdByUserId: string | null;
   vehicleAssemblies: LibraryObjectSummary[];
   selectedVehicleAssembly: LibraryObjectSummary;
   tunes: TuneSummary[];
@@ -230,44 +180,17 @@ export interface DefaultRunSetup {
   selection: LibraryRunSelection;
 }
 
-export interface RunPreview {
-  profileName: string;
-  profileVersion: number;
-  originalRowCount: number;
-  rowCount: number;
-  columns: Record<string, Array<number | null>>;
-}
 
 type JsonObject = Record<string, unknown>;
 
-export class ApiClientError extends Error {
-  public constructor(
-    message: string,
-    public readonly status?: number,
-    public readonly details?: unknown,
-  ) {
-    super(message);
-    this.name = 'ApiClientError';
-  }
-}
-
 export class SimulationRunError extends ApiClientError {
   public constructor(public readonly run: RunStatus) {
-    super(run.error?.message ?? `Simulation run ${run.status}.`, undefined, run.error);
+    const explanation = run.outcome?.message ?? 'The simulation stopped before completing.';
+    const action = run.outcome?.action ?? 'Open the run details to review its outcome.';
+    super(`${explanation} ${action} Run ID: ${run.id}`, undefined, run.error);
     this.name = 'SimulationRunError';
   }
 }
-
-const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
-const client = createClient<paths>({ baseUrl });
-
-/**
- * Local-development/demo IDs seeded by the backend database initializer.
- * These are explicitly test/demo defaults; real auth should replace only this
- * configuration boundary instead of leaking account/user IDs across the UI.
- */
-export const DEMO_ACCOUNT_ID = import.meta.env.VITE_DEMO_ACCOUNT_ID ?? '00000000-0000-4000-8000-000000000002';
-export const DEMO_USER_ID = import.meta.env.VITE_DEMO_USER_ID ?? '00000000-0000-4000-8000-000000000001';
 
 function object(value: unknown, name: string): JsonObject {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -306,38 +229,6 @@ function optionalNumber(value: unknown, name: string): number | undefined {
   return value === undefined ? undefined : number(value, name);
 }
 
-function failMessage(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'error' in error) {
-    const nested = (error as { error?: unknown }).error;
-    if (typeof nested === 'object' && nested !== null && 'message' in nested) {
-      const message = (nested as { message?: unknown }).message;
-      if (typeof message === 'string') return message;
-    }
-  }
-  return 'The backend rejected the request.';
-}
-
-function dataOrThrow<T>(response: { data?: T; error?: unknown; response: Response }): T {
-  if (response.error || response.data === undefined) {
-    throw new ApiClientError(failMessage(response.error), response.response.status, response.error);
-  }
-  return response.data;
-}
-
-async function apiJson<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers);
-  if (init.body !== undefined && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
-  const response = await fetch(`${baseUrl}${path}`, { ...init, headers });
-  const text = await response.text();
-  const payload = text.length > 0 ? JSON.parse(text) as unknown : null;
-  if (!response.ok) {
-    throw new ApiClientError(failMessage(payload), response.status, payload);
-  }
-  return payload as T;
-}
-
 function wireDocument(document: SimulationCaseDocument): JsonObject {
   return document as unknown as JsonObject;
 }
@@ -355,19 +246,21 @@ function parseProblem(raw: unknown): ApiProblem | null {
 function parseRunStatus(raw: unknown): RunStatus {
   const value = object(raw, 'run status');
   const status = string(value.status, 'run status.status') as RunLifecycleStatus;
-  if (!['queued', 'validating', 'running', 'completed', 'failed', 'timed_out'].includes(status)) {
+  if (!['queued', 'validating', 'running', 'completed', 'failed', 'timed_out', 'cancelled'].includes(status)) {
     throw new ApiClientError(`Unexpected run status '${status}'.`);
   }
   return {
     id: string(value.id, 'run status.id'),
     status,
+    hasResult: value.has_result === true,
     submittedAt: string(value.submitted_at, 'run status.submitted_at'),
     startedAt: value.started_at === null ? null : string(value.started_at, 'run status.started_at'),
-    completedAt: value.completed_at === null ? null : string(value.completed_at, 'run status.completed_at'),
+    completedAt:
+      value.completed_at === null ? null : string(value.completed_at, 'run status.completed_at'),
     error: parseProblem(value.error),
+    outcome: value.outcome == null ? null : object(value.outcome, 'run status.outcome') as Schema['RunOutcome'],
   };
 }
-
 
 function parseLibraryObject(raw: unknown): LibraryObjectSummary {
   const item = object(raw, 'library object');
@@ -379,13 +272,24 @@ function parseLibraryObject(raw: unknown): LibraryObjectSummary {
     id: string(item.id, 'library object.id'),
     resource,
     name: string(item.name, 'library object.name'),
-    description: item.description === null ? null : string(item.description, 'library object.description'),
-    lifecycleStatus: string(item.lifecycle_status, 'library object.lifecycle_status'),
-    catalogStatus: string(item.catalog_status, 'library object.catalog_status'),
+    description:
+      item.description === null ? null : string(item.description, 'library object.description'),
+    lifecycleStatus: string(
+      item.lifecycle_status,
+      'library object.lifecycle_status',
+    ) as LibraryObjectSummary['lifecycleStatus'],
+    catalogStatus: string(
+      item.catalog_status,
+      'library object.catalog_status',
+    ) as LibraryObjectSummary['catalogStatus'],
     catalogPriority: number(item.catalog_priority, 'library object.catalog_priority'),
     isDefault: boolean(item.is_default, 'library object.is_default'),
-    sourceLabel: item.source_label === null ? null : string(item.source_label, 'library object.source_label'),
-    releasedVersionId: item.released_version_id === null ? null : string(item.released_version_id, 'library object.released_version_id'),
+    sourceLabel:
+      item.source_label === null ? null : string(item.source_label, 'library object.source_label'),
+    releasedVersionId:
+      item.released_version_id === null
+        ? null
+        : string(item.released_version_id, 'library object.released_version_id'),
   };
 }
 
@@ -407,7 +311,7 @@ function parseLoadCase(raw: unknown): LoadCaseSummary {
     id: string(item.id, 'load case.id'),
     name: string(item.name, 'load case.name'),
     kind: string(item.kind, 'load case.kind'),
-    visibility: string(item.visibility, 'load case.visibility'),
+    visibility: string(item.visibility, 'load case.visibility') as LoadCaseSummary['visibility'],
   };
 }
 
@@ -442,12 +346,16 @@ function parseTuneParameter(raw: unknown): TuneParameter {
     minimum: optionalNumber(item.min, 'tuning parameter.min'),
     maximum: optionalNumber(item.max, 'tuning parameter.max'),
     defaultValue: item.default,
+    path: typeof item.path === 'string' ? item.path : undefined,
   };
 }
 
 function parseVehicleAssemblyVersion(raw: unknown): VehicleAssemblyVersionSummary {
   const item = object(raw, 'vehicle assembly version');
-  const payload = object(item.assembly_payload ?? item.payload ?? {}, 'vehicle assembly version.assembly_payload');
+  const payload = object(
+    item.assembly_payload ?? item.payload ?? {},
+    'vehicle assembly version.assembly_payload',
+  );
 
   // Vehicle-assembly versions pin engine/CVT/output versions as first-class
   // columns. Older/forked payloads may also echo those IDs inside the payload,
@@ -461,8 +369,14 @@ function parseVehicleAssemblyVersion(raw: unknown): VehicleAssemblyVersionSummar
     objectId: string(item.object_id, 'vehicle assembly version.object_id'),
     assemblyPayload: {
       engineVersionId: string(engineVersionId, 'vehicle assembly version.engine_version_id'),
-      cvtDesignVersionId: string(cvtDesignVersionId, 'vehicle assembly version.cvt_design_version_id'),
-      outputSystemVersionId: string(outputSystemVersionId, 'vehicle assembly version.output_system_version_id'),
+      cvtDesignVersionId: string(
+        cvtDesignVersionId,
+        'vehicle assembly version.cvt_design_version_id',
+      ),
+      outputSystemVersionId: string(
+        outputSystemVersionId,
+        'vehicle assembly version.output_system_version_id',
+      ),
     },
   };
 }
@@ -475,32 +389,36 @@ function parseCvtDesignVersion(raw: unknown): CvtDesignVersionSummary {
     objectId: string(item.object_id, 'CVT design version.object_id'),
     payload: object(item.cinder_assembly ?? item.payload, 'CVT design version.cinder_assembly'),
     tuningSchema: {
-      parameters: array(tuningSchema.parameters ?? [], 'CVT tuning_schema.parameters').map(parseTuneParameter),
+      parameters: array(tuningSchema.parameters ?? [], 'CVT tuning_schema.parameters').map(
+        parseTuneParameter,
+      ),
     },
   };
 }
 
-function pickPreferred<T extends { isDefault?: boolean; isSystemDefault?: boolean; name: string }>(items: T[]): T | null {
-  return items.find((item) => item.isDefault === true || item.isSystemDefault === true)
-    ?? items.find((item) => /flat launch|baseline|default/i.test(item.name))
-    ?? items[0]
-    ?? null;
+function pickPreferred<T extends { isDefault?: boolean; isSystemDefault?: boolean; name: string }>(
+  items: T[],
+): T | null {
+  return (
+    items.find((item) => item.isDefault === true || item.isSystemDefault === true) ??
+    items.find((item) => /flat launch|baseline|default/i.test(item.name)) ??
+    items[0] ??
+    null
+  );
 }
 
 function buildDefaultSelection(args: {
-  accountId: string;
-  createdByUserId: string | null;
   vehicleAssembly: LibraryObjectSummary;
   tune: TuneSummary | null;
   loadCase: LoadCaseSummary | null;
   executionPreset: ExecutionPresetSummary | null;
 }): LibraryRunSelection {
   if (args.vehicleAssembly.releasedVersionId === null) {
-    throw new ApiClientError(`Vehicle assembly '${args.vehicleAssembly.name}' has no released version.`);
+    throw new ApiClientError(
+      `Vehicle assembly '${args.vehicleAssembly.name}' has no released version.`,
+    );
   }
   return {
-    accountId: args.accountId,
-    createdByUserId: args.createdByUserId,
     vehicleAssemblyVersionId: args.vehicleAssembly.releasedVersionId,
     tuneId: args.tune?.id ?? null,
     loadCaseId: args.loadCase?.id ?? null,
@@ -515,13 +433,16 @@ function parseValidation(raw: unknown): SimulationCaseValidation {
     findings: array(report.findings, 'validation.findings').map((item) => {
       const finding = object(item, 'validation finding');
       const severity = string(finding.severity, 'finding.severity');
-      if (severity !== 'error' && severity !== 'warning') throw new ApiClientError('Unexpected finding severity.');
+      if (severity !== 'error' && severity !== 'warning')
+        throw new ApiClientError('Unexpected finding severity.');
       return {
         severity,
         code: string(finding.code, 'finding.code'),
         message: string(finding.message, 'finding.message'),
         location: string(finding.location, 'finding.location'),
-        ...(typeof finding.document_path === 'string' ? { documentPath: finding.document_path } : {}),
+        ...(typeof finding.document_path === 'string'
+          ? { documentPath: finding.document_path }
+          : {}),
       };
     }),
   };
@@ -551,7 +472,8 @@ function parseScalar(raw: unknown): ProjectedScalar {
 
 function parseGeometryStudy(raw: unknown): GeometryStudyResult {
   const study = object(raw, 'study');
-  if (study.kind !== 'geometry_design_response') throw new ApiClientError('Unexpected geometry study kind.');
+  if (study.kind !== 'geometry_design_response')
+    throw new ApiClientError('Unexpected geometry study kind.');
   const summary = object(study.summary, 'study.summary');
   const path = object(study.path, 'study.path');
   const feasibility = object(study.feasibility, 'study.feasibility');
@@ -563,8 +485,12 @@ function parseGeometryStudy(raw: unknown): GeometryStudyResult {
     },
     path: {
       kind: 'geometry_path',
-      shape: array(path.shape, 'study.path.shape').map((entry) => number(entry, 'study.path.shape value')),
-      axisKeys: array(path.axis_keys, 'study.path.axis_keys').map((entry) => string(entry, 'study.path.axis key')),
+      shape: array(path.shape, 'study.path.shape').map((entry) =>
+        number(entry, 'study.path.shape value'),
+      ),
+      axisKeys: array(path.axis_keys, 'study.path.axis_keys').map((entry) =>
+        string(entry, 'study.path.axis key'),
+      ),
       columns: array(path.columns, 'study.path.columns').map(parseField),
     },
     feasibility: {
@@ -572,7 +498,8 @@ function parseGeometryStudy(raw: unknown): GeometryStudyResult {
       findings: array(feasibility.findings, 'study.feasibility.findings').map((item) => {
         const finding = object(item, 'geometry finding');
         const severity = string(finding.severity, 'geometry finding.severity');
-        if (severity !== 'error' && severity !== 'warning') throw new ApiClientError('Unexpected geometry finding severity.');
+        if (severity !== 'error' && severity !== 'warning')
+          throw new ApiClientError('Unexpected geometry finding severity.');
         return {
           severity,
           code: string(finding.code, 'geometry finding.code'),
@@ -605,29 +532,42 @@ function parseEditorSchema(raw: unknown): EditorSchema {
         required: boolean(field.required, 'editor field.required'),
         minimum: optionalNumber(field.minimum, 'editor field.minimum'),
         maximum: optionalNumber(field.maximum, 'editor field.maximum'),
-        enumValues: Array.isArray(field.enum_values) ? field.enum_values.map((value) => string(value, 'editor field enum')) : [],
-        when: typeof field.when === 'object' && field.when !== null && !Array.isArray(field.when)
-          ? field.when as Record<string, string>
-          : undefined,
+        enumValues: Array.isArray(field.enum_values)
+          ? field.enum_values.map((value) => string(value, 'editor field enum'))
+          : [],
+        when:
+          typeof field.when === 'object' && field.when !== null && !Array.isArray(field.when)
+            ? (field.when as Record<string, string>)
+            : undefined,
         exposure: exposure as FieldExposure,
       };
     }),
-    supportedDiscriminators: object(document.supported_discriminators, 'editor schema.supported_discriminators') as Record<string, string[]>,
+    supportedDiscriminators: object(
+      document.supported_discriminators,
+      'editor schema.supported_discriminators',
+    ) as Record<string, string[]>,
     components: array(componentsDocument.components, 'component catalog.components').map((item) => {
       const component = object(item, 'component catalog entry');
       return {
         kind: string(component.kind, 'component.kind'),
         label: string(component.label, 'component.label'),
         description: string(component.description, 'component.description'),
-        supportedMounts: array(component.supported_mounts, 'component.supported_mounts').map((value) => string(value, 'supported mount')),
+        supportedMounts: array(component.supported_mounts, 'component.supported_mounts').map(
+          (value) => string(value, 'supported mount'),
+        ),
         parameters: array(component.parameters, 'component.parameters').map((parameterRaw) => {
           const parameter = object(parameterRaw, 'component parameter');
           return {
             key: string(parameter.key, 'component parameter.key'),
             label: string(parameter.label, 'component parameter.label'),
-            canonicalUnit: string(parameter.canonical_unit ?? parameter.unit, 'component parameter.canonical_unit'),
+            canonicalUnit: string(
+              parameter.canonical_unit ?? parameter.unit,
+              'component parameter.canonical_unit',
+            ),
             ...(typeof parameter.dimension === 'string' ? { dimension: parameter.dimension } : {}),
-            valueKind: (typeof parameter.value_kind === 'string' ? parameter.value_kind : 'number') as 'number' | 'object',
+            valueKind: (typeof parameter.value_kind === 'string'
+              ? parameter.value_kind
+              : 'number') as 'number' | 'object',
             required: boolean(parameter.required, 'component parameter.required'),
             description: string(parameter.description, 'component parameter.description'),
             minimum: optionalNumber(parameter.minimum, 'component parameter.minimum'),
@@ -645,103 +585,112 @@ function parseSimulationResult(raw: unknown): SimulationResult {
   return value as unknown as SimulationResult;
 }
 
-
-
-export async function listVehicleAssemblies(options: { publicOnly?: boolean } = {}): Promise<LibraryObjectSummary[]> {
-  const params = new URLSearchParams();
-  if (options.publicOnly ?? true) params.set('public_only', 'true');
-  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/vehicle-assemblies?${params.toString()}`);
-  return array(data.items, 'vehicle assemblies').map(parseLibraryObject)
-    .filter((item) => item.releasedVersionId !== null);
+export async function listVehicleAssemblies(
+  options: { publicOnly?: boolean } = {},
+): Promise<LibraryObjectSummary[]> {
+  const data = dataOrThrow(
+    await client.GET('/api/v1/library/{resource}', {
+      params: {
+        path: { resource: 'vehicle-assemblies' },
+        query: { public_only: options.publicOnly ?? false },
+      },
+    }),
+  );
+  return data.items.map(parseLibraryObject).filter((item) => item.releasedVersionId !== null);
 }
-
-export async function listTunes(options: { accountId?: string; vehicleAssemblyId?: string } = {}): Promise<TuneSummary[]> {
-  const params = new URLSearchParams();
-  if (options.accountId) params.set('account_id', options.accountId);
-  if (options.vehicleAssemblyId) params.set('vehicle_assembly_id', options.vehicleAssemblyId);
-  const query = params.toString();
-  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/tunes${query ? `?${query}` : ''}`);
-  return array(data.items, 'tunes').map(parseTune);
+export async function listTunes(
+  options: { vehicleAssemblyId?: string } = {},
+): Promise<TuneSummary[]> {
+  return dataOrThrow(
+    await client.GET('/api/v1/library/tunes', {
+      params: { query: { vehicle_assembly_id: options.vehicleAssemblyId } },
+    }),
+  ).items.map(parseTune);
 }
-
-export async function listLoadCases(options: { accountId?: string } = {}): Promise<LoadCaseSummary[]> {
-  const params = new URLSearchParams();
-  if (options.accountId) params.set('account_id', options.accountId);
-  const query = params.toString();
-  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/load-cases${query ? `?${query}` : ''}`);
-  return array(data.items, 'load cases').map(parseLoadCase);
+export async function listLoadCases(): Promise<LoadCaseSummary[]> {
+  return dataOrThrow(await client.GET('/api/v1/library/load-cases')).items.map(parseLoadCase);
 }
-
-export async function listExecutionPresets(options: { accountId?: string; includeSystem?: boolean } = {}): Promise<ExecutionPresetSummary[]> {
-  const params = new URLSearchParams();
-  if (options.accountId) params.set('account_id', options.accountId);
-  if (options.includeSystem !== undefined) params.set('include_system', String(options.includeSystem));
-  const query = params.toString();
-  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/execution-presets${query ? `?${query}` : ''}`);
-  return array(data.items, 'execution presets').map(parseExecutionPreset);
+export async function listExecutionPresets(
+  options: { includeSystem?: boolean } = {},
+): Promise<ExecutionPresetSummary[]> {
+  return dataOrThrow(
+    await client.GET('/api/v1/library/execution-presets', {
+      params: { query: { include_system: options.includeSystem } },
+    }),
+  ).items.map(parseExecutionPreset);
 }
-
-export async function getVehicleAssemblyVersion(versionId: string): Promise<VehicleAssemblyVersionSummary> {
-  const data = await apiJson<unknown>(`/api/v1/library/vehicle-assemblies/versions/${encodeURIComponent(versionId)}`);
-  return parseVehicleAssemblyVersion(data);
+export async function getVehicleAssemblyVersion(
+  versionId: string,
+): Promise<VehicleAssemblyVersionSummary> {
+  return parseVehicleAssemblyVersion(
+    dataOrThrow(
+      await client.GET('/api/v1/library/{resource}/versions/{version_id}', {
+        params: { path: { resource: 'vehicle-assemblies', version_id: versionId } },
+      }),
+    ),
+  );
 }
-
 export async function getCvtDesignVersion(versionId: string): Promise<CvtDesignVersionSummary> {
-  const data = await apiJson<unknown>(`/api/v1/library/cvt-designs/versions/${encodeURIComponent(versionId)}`);
-  return parseCvtDesignVersion(data);
+  return parseCvtDesignVersion(
+    dataOrThrow(
+      await client.GET('/api/v1/library/{resource}/versions/{version_id}', {
+        params: { path: { resource: 'cvt-designs', version_id: versionId } },
+      }),
+    ),
+  );
 }
-
-export async function updateTuneValues(tuneId: string, values: Record<string, unknown>): Promise<TuneSummary> {
-  const data = await apiJson<unknown>(`/api/v1/library/tunes/${encodeURIComponent(tuneId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ values }),
-  });
-  return parseTune(data);
-}
-
-export async function getDefaultRunSetup(): Promise<DefaultRunSetup> {
-  const accountId = DEMO_ACCOUNT_ID;
-  const createdByUserId = DEMO_USER_ID;
-  const vehicleAssemblies = await listVehicleAssemblies({ publicOnly: true });
-  const selectedVehicleAssembly = pickPreferred(vehicleAssemblies);
+export async function getDefaultRunSetup(preferredVehicleId?: string): Promise<DefaultRunSetup> {
+  const [owned, shared] = await Promise.all([
+    listVehicleAssemblies(),
+    listVehicleAssemblies({ publicOnly: true }),
+  ]);
+  const vehicleAssemblies = [
+    ...new Map([...owned, ...shared].map((item) => [item.id, item])).values(),
+  ];
+  const selectedVehicleAssembly = preferredVehicleId
+    ? vehicleAssemblies.find(item => item.id === preferredVehicleId) ?? null
+    : pickPreferred(vehicleAssemblies);
   if (selectedVehicleAssembly === null) {
-    throw new ApiClientError('No released public vehicle assembly is available. Seed the database first.');
+    throw new ApiClientError(
+      'No vehicle baseline is available yet. Your workspace is ready; an administrator can add the sample catalog.',
+    );
   }
-  return buildRunSetupForVehicle(vehicleAssemblies, selectedVehicleAssembly.id, accountId, createdByUserId);
+  return buildRunSetupForVehicle(vehicleAssemblies, selectedVehicleAssembly.id);
 }
 
 export async function buildRunSetupForVehicle(
   vehicleAssemblies: LibraryObjectSummary[],
   vehicleAssemblyId: string,
-  accountId = DEMO_ACCOUNT_ID,
-  createdByUserId: string | null = DEMO_USER_ID,
 ): Promise<DefaultRunSetup> {
-  const selectedVehicleAssembly = vehicleAssemblies.find((assembly) => assembly.id === vehicleAssemblyId) ?? null;
+  const selectedVehicleAssembly =
+    vehicleAssemblies.find((assembly) => assembly.id === vehicleAssemblyId) ?? null;
   if (selectedVehicleAssembly === null) {
     throw new ApiClientError('Selected vehicle assembly is not available.');
   }
   if (selectedVehicleAssembly.releasedVersionId === null) {
-    throw new ApiClientError(`Vehicle assembly '${selectedVehicleAssembly.name}' has no released version.`);
+    throw new ApiClientError(
+      `Vehicle assembly '${selectedVehicleAssembly.name}' has no released version.`,
+    );
   }
 
-  const vehicleAssemblyVersion = await getVehicleAssemblyVersion(selectedVehicleAssembly.releasedVersionId);
-  const cvtDesignVersion = await getCvtDesignVersion(vehicleAssemblyVersion.assemblyPayload.cvtDesignVersionId);
+  const vehicleAssemblyVersion = await getVehicleAssemblyVersion(
+    selectedVehicleAssembly.releasedVersionId,
+  );
+  const cvtDesignVersion = await getCvtDesignVersion(
+    vehicleAssemblyVersion.assemblyPayload.cvtDesignVersionId,
+  );
 
-  const [assemblyTunes, allTunes, loadCases, executionPresets] = await Promise.all([
-    listTunes({ accountId, vehicleAssemblyId: selectedVehicleAssembly.id }),
-    listTunes({ accountId }),
-    listLoadCases({ accountId }),
-    listExecutionPresets({ accountId, includeSystem: true }),
+  const [tunes, loadCases, executionPresets] = await Promise.all([
+    listTunes({ vehicleAssemblyId: selectedVehicleAssembly.id }),
+    listLoadCases(),
+    listExecutionPresets({ includeSystem: true }),
   ]);
 
-  const tunes = assemblyTunes.length > 0 ? assemblyTunes : allTunes;
   const selectedTune = pickPreferred(tunes);
   const selectedLoadCase = pickPreferred(loadCases);
   const selectedExecutionPreset = pickPreferred(executionPresets);
 
   return {
-    accountId,
-    createdByUserId,
     vehicleAssemblies,
     selectedVehicleAssembly,
     tunes,
@@ -754,8 +703,6 @@ export async function buildRunSetupForVehicle(
     cvtDesignVersion,
     tuningParameters: cvtDesignVersion.tuningSchema.parameters,
     selection: buildDefaultSelection({
-      accountId,
-      createdByUserId,
       vehicleAssembly: selectedVehicleAssembly,
       tune: selectedTune,
       loadCase: selectedLoadCase,
@@ -773,14 +720,28 @@ export function buildLibraryRunSelection(
     executionPresetId?: string | null;
   } = {},
 ): LibraryRunSelection {
-  const vehicleAssembly = setup.vehicleAssemblies.find((item) => item.id === (overrides.vehicleAssemblyId ?? setup.selectedVehicleAssembly.id));
-  if (vehicleAssembly === undefined) throw new ApiClientError('Selected vehicle assembly is not available.');
-  const tune = overrides.tuneId === null ? null : setup.tunes.find((item) => item.id === (overrides.tuneId ?? setup.selectedTune?.id));
-  const loadCase = overrides.loadCaseId === null ? null : setup.loadCases.find((item) => item.id === (overrides.loadCaseId ?? setup.selectedLoadCase?.id));
-  const executionPreset = overrides.executionPresetId === null ? null : setup.executionPresets.find((item) => item.id === (overrides.executionPresetId ?? setup.selectedExecutionPreset?.id));
+  const vehicleAssembly = setup.vehicleAssemblies.find(
+    (item) => item.id === (overrides.vehicleAssemblyId ?? setup.selectedVehicleAssembly.id),
+  );
+  if (vehicleAssembly === undefined)
+    throw new ApiClientError('Selected vehicle assembly is not available.');
+  const tune =
+    overrides.tuneId === null
+      ? null
+      : setup.tunes.find((item) => item.id === (overrides.tuneId ?? setup.selectedTune?.id));
+  const loadCase =
+    overrides.loadCaseId === null
+      ? null
+      : setup.loadCases.find(
+        (item) => item.id === (overrides.loadCaseId ?? setup.selectedLoadCase?.id),
+      );
+  const executionPreset =
+    overrides.executionPresetId === null
+      ? null
+      : setup.executionPresets.find(
+        (item) => item.id === (overrides.executionPresetId ?? setup.selectedExecutionPreset?.id),
+      );
   return buildDefaultSelection({
-    accountId: setup.accountId,
-    createdByUserId: setup.createdByUserId,
     vehicleAssembly,
     tune: tune ?? null,
     loadCase: loadCase ?? null,
@@ -788,42 +749,21 @@ export function buildLibraryRunSelection(
   });
 }
 
-export async function submitLibraryRun(selection: LibraryRunSelection): Promise<RunStatus> {
-  const data = await apiJson<unknown>('/api/v1/runs/from-library', {
-    method: 'POST',
-    body: JSON.stringify({
-      account_id: selection.accountId,
-      created_by_user_id: selection.createdByUserId,
-      vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
-      tune_id: selection.tuneId,
-      load_case_id: selection.loadCaseId,
-      execution_preset_id: selection.executionPresetId,
-      include_raw_trace: false,
-      include_reported_segments: false,
+export async function submitLibraryRun(selection: LibraryRunSelection, requestKey: string = crypto.randomUUID()): Promise<RunStatus> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/runs/from-library', {
+      body: {
+        request_key: requestKey,
+        vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
+        tune_id: selection.tuneId,
+        load_case_id: selection.loadCaseId,
+        execution_preset_id: selection.executionPresetId,
+        include_raw_trace: false,
+        include_reported_segments: false,
+      },
     }),
-  });
+  );
   return parseRunStatus(data);
-}
-
-export async function rerunSimulationRun(runId: string): Promise<RunStatus> {
-  const data = await apiJson<unknown>(`/api/v1/runs/${encodeURIComponent(runId)}/rerun`, {
-    method: 'POST',
-    body: JSON.stringify({ created_by_user_id: DEMO_USER_ID }),
-  });
-  return parseRunStatus(data);
-}
-
-export async function getRunPreview(runId: string): Promise<RunPreview> {
-  const data = await apiJson<unknown>(`/api/v1/runs/${encodeURIComponent(runId)}/preview`);
-  const envelope = object(data, 'run preview response');
-  const preview = object(envelope.preview, 'run preview');
-  return {
-    profileName: string(preview.profile_name, 'preview.profile_name'),
-    profileVersion: number(preview.profile_version, 'preview.profile_version'),
-    originalRowCount: number(preview.original_row_count, 'preview.original_row_count'),
-    rowCount: number(preview.row_count, 'preview.row_count'),
-    columns: object(preview.columns, 'preview.columns') as Record<string, Array<number | null>>,
-  };
 }
 
 export async function listPresets(): Promise<PresetSummary[]> {
@@ -831,13 +771,15 @@ export async function listPresets(): Promise<PresetSummary[]> {
 }
 
 export async function loadPreset(presetId: string): Promise<LoadedPreset> {
-  const data = dataOrThrow(await client.GET('/api/v1/presets/{preset_id}', {
-    params: { path: { preset_id: presetId } },
-  }));
+  const data = dataOrThrow(
+    await client.GET('/api/v1/presets/{preset_id}', {
+      params: { path: { preset_id: presetId } },
+    }),
+  );
   return {
     id: data.id,
     name: data.name,
-    description: data.description,
+    description: data.description ?? '',
     simulationCase: data.simulation_case as unknown as SimulationCaseDocument,
   };
 }
@@ -847,68 +789,96 @@ export async function getEditorSchema(): Promise<EditorSchema> {
   return parseEditorSchema(data.document);
 }
 
-export async function validateSimulationCase(document: SimulationCaseDocument): Promise<SimulationCaseValidation> {
-  const data = dataOrThrow(await client.POST('/api/v1/simulation-cases/validate', {
-    body: { simulation_case: wireDocument(document) },
-  }));
+export async function validateSimulationCase(
+  document: SimulationCaseDocument,
+): Promise<SimulationCaseValidation> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/simulation-cases/validate', {
+      body: { simulation_case: wireDocument(document) },
+    }),
+  );
   return parseValidation(data.validation);
 }
 
-export async function resolveSimulationCaseFromLibrarySelection(selection: LibraryRunSelection): Promise<SimulationCaseDocument> {
-  const data = await apiJson<unknown>('/api/v1/simulation-cases/resolve-from-library', {
-    method: 'POST',
-    body: JSON.stringify({
-      vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
-      tune_id: selection.tuneId,
-      load_case_id: selection.loadCaseId,
-      execution_preset_id: selection.executionPresetId,
+export async function resolveSimulationCaseFromLibrarySelection(
+  selection: LibraryRunSelection,
+): Promise<SimulationCaseDocument> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/simulation-cases/resolve-from-library', {
+      body: {
+        vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
+        tune_id: selection.tuneId,
+        load_case_id: selection.loadCaseId,
+        execution_preset_id: selection.executionPresetId,
+      },
     }),
-  });
+  );
   const envelope = object(data, 'resolved simulation-case response');
-  return object(envelope.simulation_case, 'resolved simulation_case') as unknown as SimulationCaseDocument;
+  return object(
+    envelope.simulation_case,
+    'resolved simulation_case',
+  ) as unknown as SimulationCaseDocument;
 }
 
-export async function runEndpointRadiiGeometryStudy(request: GeometryEndpointRadiiRequest): Promise<GeometryStudyResult> {
-  const data = dataOrThrow(await client.POST('/api/v1/studies/geometry/endpoint-radii', { body: request }));
+export async function runEndpointRadiiGeometryStudy(
+  request: GeometryEndpointRadiiRequest,
+): Promise<GeometryStudyResult> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/studies/geometry/endpoint-radii', { body: request }),
+  );
   return parseGeometryStudy(data.study);
 }
 
-export async function submitSimulationRun(document: SimulationCaseDocument): Promise<RunStatus> {
-  const data = dataOrThrow(await client.POST('/api/v1/runs', {
-    body: {
-      simulation_case: wireDocument(document),
-      include_raw_trace: false,
-      include_reported_segments: false,
-    },
-  }));
+export async function submitSimulationRun(document: SimulationCaseDocument, requestKey: string = crypto.randomUUID()): Promise<RunStatus> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/runs', {
+      body: {
+        request_key: requestKey,
+        simulation_case: wireDocument(document),
+        include_raw_trace: false,
+        include_reported_segments: false,
+      },
+    }),
+  );
   return parseRunStatus(data);
 }
 
-
-export async function submitValidationSimulationRun(document: SimulationCaseDocument): Promise<RunStatus> {
-  const data = await apiJson<unknown>('/api/v1/validation/simulation-runs', {
-    method: 'POST',
-    body: JSON.stringify({
-      simulation_case: wireDocument(document),
-      include_raw_trace: false,
-      include_reported_segments: false,
+export async function submitValidationSimulationRun(
+  document: SimulationCaseDocument,
+): Promise<RunStatus> {
+  const data = dataOrThrow(
+    await client.POST('/api/v1/validation/simulation-runs', {
+      body: {
+        request_key: crypto.randomUUID(),
+        simulation_case: wireDocument(document),
+        include_raw_trace: false,
+        include_reported_segments: false,
+      },
     }),
-  });
+  );
   return parseRunStatus(data);
 }
 
 export async function getSimulationRun(runId: string): Promise<RunStatus> {
-  return parseRunStatus(dataOrThrow(await client.GET('/api/v1/runs/{run_id}', {
-    params: { path: { run_id: runId } },
-  })));
+  return parseRunStatus(
+    dataOrThrow(
+      await client.GET('/api/v1/runs/{run_id}', {
+        params: { path: { run_id: runId } },
+      }),
+    ),
+  );
 }
 
 export async function getSimulationResult(runId: string): Promise<CompletedSimulationRun> {
-  const data = dataOrThrow(await client.GET('/api/v1/runs/{run_id}/result', {
-    params: { path: { run_id: runId } },
-  }));
+  const data = dataOrThrow(
+    await client.GET('/api/v1/runs/{run_id}/result', {
+      params: { path: { run_id: runId } },
+    }),
+  );
   return {
     run: parseRunStatus(data.run),
+    sceneGeometry: data.scene_geometry,
+    course: data.course,
     inputDocumentSnapshot: data.input_document_snapshot as unknown as SimulationCaseDocument,
     result: parseSimulationResult(data.result),
   };
@@ -917,143 +887,134 @@ export async function getSimulationResult(runId: string): Promise<CompletedSimul
 function sleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const timeout = window.setTimeout(resolve, milliseconds);
-    signal?.addEventListener('abort', () => {
-      window.clearTimeout(timeout);
-      reject(new DOMException('The simulation wait was cancelled.', 'AbortError'));
-    }, { once: true });
+    signal?.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeout);
+        reject(new DOMException('The simulation wait was cancelled.', 'AbortError'));
+      },
+      { once: true },
+    );
   });
 }
 
 /** Poll only honest run lifecycle states; the backend intentionally has no percentage estimate. */
 export async function waitForSimulationRun(
   runId: string,
-  options: { pollIntervalMs?: number; signal?: AbortSignal } = {},
+  options: { pollIntervalMs?: number; signal?: AbortSignal; allowPartial?: boolean } = {},
 ): Promise<RunStatus> {
   const pollIntervalMs = options.pollIntervalMs ?? 350;
   while (true) {
     const run = await getSimulationRun(runId);
     if (run.status === 'completed') return run;
-    if (run.status === 'failed' || run.status === 'timed_out') throw new SimulationRunError(run);
+    if (run.status === 'failed' || run.status === 'timed_out' || run.status === 'cancelled') {
+      if (options.allowPartial && run.hasResult) return run;
+      throw new SimulationRunError(run);
+    }
     await sleep(pollIntervalMs, options.signal);
   }
 }
 
 // CVT validation integrated V0 ---------------------------------------------
-export interface ValidationWorkspace {
-  id: string;
-  accountId: string;
-  setupDocument: SimulationCaseDocument;
-  metrology: Record<string, Record<string, unknown>>;
-  controllerTemplates: Array<Record<string, unknown>>;
-  workflowDefaults: Record<string, unknown>;
-  updatedAt: string;
-}
+export type ValidationWorkspace = Omit<
+  Camel<Schema['ValidationWorkspaceResponse']>,
+  'setupDocument'
+> & { setupDocument: SimulationCaseDocument };
 
-export interface ValidationRunSave {
-  accountId: string;
-  sourceFilename: string;
-  rawCsv: string;
-  cropStartS: number;
-  cropEndS: number;
-  channelConfig: Record<string, unknown>;
-  initialStateConfig: Record<string, unknown>;
-  workspaceSnapshot: Record<string, unknown> | ValidationWorkspace;
+export type ValidationRunSave = Omit<
+  Camel<Schema['ValidationRunCreate']>,
+  'resolvedDocument' | 'workspaceSnapshot'
+> & {
   resolvedDocument: SimulationCaseDocument;
-  simulationRunId: string | null;
-  resultSnapshot: Record<string, unknown>;
-  metrics: Record<string, unknown>;
-}
+  workspaceSnapshot: Schema['ValidationRunCreate']['workspace_snapshot'] | ValidationWorkspace;
+};
 
 function parseValidationWorkspace(raw: unknown): ValidationWorkspace {
   const item = object(raw, 'validation workspace');
   return {
     id: string(item.id, 'validation workspace.id'),
     accountId: string(item.account_id, 'validation workspace.account_id'),
-    setupDocument: object(item.setup_document, 'validation workspace.setup_document') as unknown as SimulationCaseDocument,
-    metrology: object(item.metrology ?? {}, 'validation workspace.metrology') as Record<string, Record<string, unknown>>,
-    controllerTemplates: array(item.controller_templates ?? [], 'validation workspace.controller_templates')
-      .map((entry) => object(entry, 'validation controller template')),
-    workflowDefaults: object(item.workflow_defaults ?? {}, 'validation workspace.workflow_defaults'),
+    setupDocument: object(
+      item.setup_document,
+      'validation workspace.setup_document',
+    ) as unknown as SimulationCaseDocument,
+    metrology: object(item.metrology ?? {}, 'validation workspace.metrology') as Record<
+      string,
+      Record<string, unknown>
+    >,
+    controllerTemplates: array(
+      item.controller_templates ?? [],
+      'validation workspace.controller_templates',
+    ).map((entry) => object(entry, 'validation controller template')),
+    workflowDefaults: object(
+      item.workflow_defaults ?? {},
+      'validation workspace.workflow_defaults',
+    ),
     updatedAt: string(item.updated_at, 'validation workspace.updated_at'),
   };
 }
 
-export async function getValidationWorkspace(accountId = DEMO_ACCOUNT_ID): Promise<ValidationWorkspace> {
-  const raw = await apiJson<unknown>(`/api/v1/validation/workspace?account_id=${encodeURIComponent(accountId)}`);
+export async function getValidationWorkspace(): Promise<ValidationWorkspace> {
+  const raw = dataOrThrow(await client.GET('/api/v1/validation/workspace'));
   return parseValidationWorkspace(raw);
 }
 
-export async function saveValidationWorkspace(workspace: ValidationWorkspace): Promise<ValidationWorkspace> {
-  const raw = await apiJson<unknown>('/api/v1/validation/workspace', {
-    method: 'PUT',
-    body: JSON.stringify({
-      account_id: workspace.accountId,
-      setup_document: wireDocument(workspace.setupDocument),
-      metrology: workspace.metrology,
-      controller_templates: workspace.controllerTemplates,
-      workflow_defaults: workspace.workflowDefaults,
+export async function saveValidationWorkspace(
+  workspace: ValidationWorkspace,
+): Promise<ValidationWorkspace> {
+  const raw = dataOrThrow(
+    await client.PUT('/api/v1/validation/workspace', {
+      body: {
+        setup_document: wireDocument(workspace.setupDocument),
+        metrology: workspace.metrology,
+        controller_templates: workspace.controllerTemplates,
+        workflow_defaults: workspace.workflowDefaults,
+      },
     }),
-  });
+  );
   return parseValidationWorkspace(raw);
 }
 
-export async function saveValidationRun(payload: ValidationRunSave): Promise<Record<string, unknown>> {
-  return object(await apiJson<unknown>('/api/v1/validation/runs', {
-    method: 'POST',
-    body: JSON.stringify({
-      account_id: payload.accountId,
-      source_filename: payload.sourceFilename,
-      raw_csv: payload.rawCsv,
-      crop_start_s: payload.cropStartS,
-      crop_end_s: payload.cropEndS,
-      channel_config: payload.channelConfig,
-      initial_state_config: payload.initialStateConfig,
-      workspace_snapshot: payload.workspaceSnapshot,
-      resolved_document: wireDocument(payload.resolvedDocument),
-      simulation_run_id: payload.simulationRunId,
-      result_snapshot: payload.resultSnapshot,
-      metrics: payload.metrics,
-    }),
-  }), 'validation run');
+export async function saveValidationRun(
+  payload: ValidationRunSave,
+): Promise<Record<string, unknown>> {
+  return object(
+    dataOrThrow(
+      await client.POST('/api/v1/validation/runs', {
+        body: {
+          source_filename: payload.sourceFilename,
+          raw_csv: payload.rawCsv,
+          crop_start_s: payload.cropStartS,
+          crop_end_s: payload.cropEndS,
+          channel_config: payload.channelConfig,
+          initial_state_config: payload.initialStateConfig,
+          workspace_snapshot: payload.workspaceSnapshot,
+          resolved_document: wireDocument(payload.resolvedDocument),
+          simulation_run_id: payload.simulationRunId,
+          result_snapshot: payload.resultSnapshot,
+          metrics: payload.metrics,
+        },
+      }),
+    ),
+    'validation run',
+  );
 }
 
 // CVT validation integrated V0.4 result retrieval -----------------------
-export interface ValidationMetric {
-  bias: number;
-  mae: number;
-  rmse: number;
-  maxAbs: number;
-  count: number;
-}
+export type ValidationMetric = {
+  [K in keyof Schema['ValidationMetric']]: NonNullable<Schema['ValidationMetric'][K]>;
+};
 
-export interface ValidationRunSummary {
-  id: string;
-  sourceFilename: string;
-  cropStartS: number;
-  cropEndS: number;
-  simulationRunId: string | null;
-  cinderCompleted: boolean;
-  terminationReason: string;
-  durationS: number;
-  createdAt: string;
-}
+export type ValidationRunSummary = Camel<Required<Schema['ValidationRunSummary']>>;
 
-export interface ValidationRunRecord {
-  id: string;
-  accountId: string;
-  sourceFilename: string;
-  rawCsv: string;
-  cropStartS: number;
-  cropEndS: number;
-  channelConfig: Record<string, unknown>;
-  initialStateConfig: Record<string, unknown>;
-  workspaceSnapshot: Record<string, unknown> & { workflowDefaults?: Record<string, unknown> };
+export type ValidationRunRecord = Omit<
+  Camel<Required<Schema['ValidationRunResponse']>>,
+  'resolvedDocument' | 'resultSnapshot' | 'metrics'
+> & {
   resolvedDocument: SimulationCaseDocument;
-  simulationRunId: string | null;
   resultSnapshot: SimulationResult;
   metrics: Record<string, ValidationMetric>;
-  createdAt: string;
-}
+};
 
 function validationMetricNumber(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
@@ -1082,12 +1043,22 @@ function parseValidationRunRecord(raw: unknown): ValidationRunRecord {
     cropEndS: number(item.crop_end_s, 'validation run.crop_end_s'),
     channelConfig: object(item.channel_config, 'validation run.channel_config'),
     initialStateConfig: object(item.initial_state_config, 'validation run.initial_state_config'),
-    workspaceSnapshot: object(item.workspace_snapshot, 'validation run.workspace_snapshot') as ValidationRunRecord['workspaceSnapshot'],
-    resolvedDocument: object(item.resolved_document, 'validation run.resolved_document') as unknown as SimulationCaseDocument,
-    simulationRunId: item.simulation_run_id === null || item.simulation_run_id === undefined
-      ? null
-      : string(item.simulation_run_id, 'validation run.simulation_run_id'),
-    resultSnapshot: object(item.result_snapshot, 'validation run.result_snapshot') as unknown as SimulationResult,
+    workspaceSnapshot: object(
+      item.workspace_snapshot,
+      'validation run.workspace_snapshot',
+    ) as ValidationRunRecord['workspaceSnapshot'],
+    resolvedDocument: object(
+      item.resolved_document,
+      'validation run.resolved_document',
+    ) as unknown as SimulationCaseDocument,
+    simulationRunId:
+      item.simulation_run_id === null || item.simulation_run_id === undefined
+        ? null
+        : string(item.simulation_run_id, 'validation run.simulation_run_id'),
+    resultSnapshot: object(
+      item.result_snapshot,
+      'validation run.result_snapshot',
+    ) as unknown as SimulationResult,
     metrics,
     createdAt: string(item.created_at, 'validation run.created_at'),
   };
@@ -1100,9 +1071,10 @@ function parseValidationRunSummary(raw: unknown): ValidationRunSummary {
     sourceFilename: string(item.source_filename, 'validation run summary.source_filename'),
     cropStartS: number(item.crop_start_s, 'validation run summary.crop_start_s'),
     cropEndS: number(item.crop_end_s, 'validation run summary.crop_end_s'),
-    simulationRunId: item.simulation_run_id === null || item.simulation_run_id === undefined
-      ? null
-      : string(item.simulation_run_id, 'validation run summary.simulation_run_id'),
+    simulationRunId:
+      item.simulation_run_id === null || item.simulation_run_id === undefined
+        ? null
+        : string(item.simulation_run_id, 'validation run summary.simulation_run_id'),
     cinderCompleted: item.cinder_completed === true,
     terminationReason: string(item.termination_reason, 'validation run summary.termination_reason'),
     durationS: number(item.duration_s, 'validation run summary.duration_s'),
@@ -1112,11 +1084,15 @@ function parseValidationRunSummary(raw: unknown): ValidationRunSummary {
 
 export async function listValidationRuns(limit = 20): Promise<ValidationRunSummary[]> {
   const bounded = Math.max(1, Math.min(100, Math.trunc(limit)));
-  const raw = await apiJson<unknown>(`/api/v1/validation/runs?limit=${bounded}`);
+  const raw = dataOrThrow(
+    await client.GET('/api/v1/validation/runs', { params: { query: { limit: bounded } } }),
+  );
   return array(raw, 'validation run summaries').map(parseValidationRunSummary);
 }
 
 export async function getValidationRun(runId: string): Promise<ValidationRunRecord> {
-  const raw = await apiJson<unknown>(`/api/v1/validation/runs/${encodeURIComponent(runId)}`);
+  const raw = dataOrThrow(
+    await client.GET('/api/v1/validation/runs/{run_id}', { params: { path: { run_id: runId } } }),
+  );
   return parseValidationRunRecord(raw);
 }

@@ -14,6 +14,7 @@ from typing import Literal
 from pydantic import Field
 
 from .common import ApiModel, JsonObject
+from .projections import TuningSchema
 
 LibraryResource = Literal[
     "engines",
@@ -22,7 +23,7 @@ LibraryResource = Literal[
     "vehicle-assemblies",
 ]
 
-Visibility = Literal["private", "unlisted", "public"]
+Visibility = Literal["public"]
 LifecycleStatus = Literal["active", "deprecated", "archived"]
 CatalogStatus = Literal[
     "user_created",
@@ -36,13 +37,11 @@ ValidationStatus = Literal["valid", "needs_migration", "deprecated", "unsupporte
 
 
 class CreateLibraryObjectRequest(ApiModel):
-    account_id: str
     name: str
     slug: str | None = None
     description: str | None = None
-    visibility: Visibility = "private"
+    visibility: Visibility = "public"
     gallery_listed: bool = False
-    catalog_status: CatalogStatus = "user_created"
     catalog_priority: int = 0
     is_default: bool = False
     source_label: str | None = None
@@ -57,7 +56,6 @@ class UpdateLibraryDraftRequest(ApiModel):
     description: str | None = None
     visibility: Visibility | None = None
     gallery_listed: bool | None = None
-    catalog_status: CatalogStatus | None = None
     catalog_priority: int | None = None
     is_default: bool | None = None
     source_label: str | None = None
@@ -67,7 +65,6 @@ class UpdateLibraryDraftRequest(ApiModel):
 
 
 class ReleaseLibraryObjectRequest(ApiModel):
-    created_by_user_id: str | None = None
     release_notes: str | None = None
     visibility_at_release: Visibility | None = None
     payload: JsonObject | None = None
@@ -78,7 +75,7 @@ class ReleaseLibraryObjectRequest(ApiModel):
     validation_messages: list[JsonObject] = Field(default_factory=list)
     attribution_institution_id: str | None = None
     attribution_label: str | None = None
-    tuning_schema: JsonObject | None = None
+    tuning_schema: TuningSchema | None = None
     engine_version_id: str | None = None
     cvt_design_version_id: str | None = None
     output_system_version_id: str | None = None
@@ -86,12 +83,10 @@ class ReleaseLibraryObjectRequest(ApiModel):
 
 
 class ForkLibraryVersionRequest(ApiModel):
-    account_id: str
     name: str | None = None
     slug: str | None = None
     description: str | None = None
-    visibility: Visibility = "private"
-    created_by_user_id: str | None = None
+    visibility: Visibility = "public"
 
 
 class ArchiveLibraryObjectRequest(ApiModel):
@@ -141,7 +136,7 @@ class LibraryVersionResponse(ApiModel):
     cinder_assembly: JsonObject | None = None
     output_boundary_template: JsonObject | None = None
     assembly_payload: JsonObject | None = None
-    tuning_schema: JsonObject | None = None
+    tuning_schema: TuningSchema | None = None
     summary: JsonObject
     payload_hash: str
     schema_version: int
@@ -190,7 +185,6 @@ class InstitutionListResponse(ApiModel):
 
 
 class CreateTuneRequest(ApiModel):
-    account_id: str
     vehicle_assembly_id: str
     cvt_design_id: str
     name: str
@@ -222,10 +216,9 @@ class TuneListResponse(ApiModel):
 
 
 class CreateLoadCaseRequest(ApiModel):
-    account_id: str
     name: str
     kind: str
-    visibility: Visibility = "private"
+    visibility: Visibility = "public"
     payload: JsonObject
 
 
@@ -253,18 +246,15 @@ class LoadCaseListResponse(ApiModel):
 
 
 class CreateExecutionPresetRequest(ApiModel):
-    account_id: str | None = None
     name: str
     kind: str = "simulation"
     payload: JsonObject
-    is_system_default: bool = False
 
 
 class UpdateExecutionPresetRequest(ApiModel):
     name: str | None = None
     kind: str | None = None
     payload: JsonObject | None = None
-    is_system_default: bool | None = None
 
 
 class ExecutionPresetResponse(ApiModel):

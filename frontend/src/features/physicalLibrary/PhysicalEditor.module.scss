@@ -1,0 +1,26 @@
+.form {
+  min-width: 0;
+}
+
+.actions {
+  position: sticky;
+  top: 72px;
+  z-index: 10;
+  background: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-md);
+}
+
+.working {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+@media (max-width: 48em) {
+  .actions {
+    position: static;
+  }
+}

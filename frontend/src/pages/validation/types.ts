@@ -1,4 +1,4 @@
-import type { SimulationCaseDocument } from '@api/client';
+import type { ValidationWorkspace, ValidationMetric } from '@api/client';
 
 export type ChannelRole = 'comparison' | 'boundary_input' | 'diagnostic' | 'unused';
 export type UncertaintyStatus = 'pending' | 'known' | 'not_applicable';
@@ -81,25 +81,18 @@ export interface ValidationWorkflowDefaults {
   };
 }
 
-export interface ValidationWorkspaceModel {
-  id: string;
-  accountId: string;
-  setupDocument: SimulationCaseDocument;
+/** Local editing metadata extends the generated workspace envelope. */
+export type ValidationWorkspaceModel = Omit<
+  ValidationWorkspace,
+  'metrology' | 'workflowDefaults'
+> & {
   metrology: Record<string, MeasurementMetadata>;
-  controllerTemplates: Array<Record<string, unknown>>;
   workflowDefaults: ValidationWorkflowDefaults;
-  updatedAt: string;
-}
+};
 
 export interface CropWindow {
   startS: number;
   endS: number;
 }
 
-export interface SignalMetric {
-  bias: number;
-  mae: number;
-  rmse: number;
-  maxAbs: number;
-  count: number;
-}
+export type SignalMetric = ValidationMetric;

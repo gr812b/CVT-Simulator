@@ -1,78 +1,62 @@
-@use '@styles/_fonts';
-@use '@styles/_colors';
-@use '@styles/_mixins';
-@use 'sass:map';
-
 .playback {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--background);
-    height: 100vh;
-    width: 100vw;
-    @include mixins.scrollbar;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: calc(var(--playbar-height, 100px) + 1rem);
+}
+.buttonsContainer {
+  padding: 0.5rem 0 1rem;
+}
+.sceneContainer {
+  height: clamp(340px, 45vh, 540px);
+  overflow: hidden;
+}
+.playbarContainer {
+  position: fixed;
+  left: var(--app-shell-navbar-offset, 0px);
+  right: var(--app-shell-aside-offset, 0px);
+  bottom: 0;
+  z-index: 110;
+  background: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+  padding-block: 0.3rem max(0.3rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -3px 18px #0003;
+}
+.emptyState {
+  padding: 2rem;
+}
+.plotContainer {
+  overflow-x: auto;
+}
 
-    .buttonsContainer {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-
-        .leftButtons,
-        .rightButtons {
-            display: flex;
-            flex-direction: row;
-        }
-
-        .navigateButton {
-            margin: 0.5rem;
-            margin-right: 0rem;
-        }
-
-        .rightButtons .navigateButton {
-            margin-right: 0.5rem;
-        }
-    }
-
-    .displayGrid {
-        flex-grow: 1;
-
-        // make grid of 2 columns and as many rows as needed
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: 1fr;
-        overflow-x: hidden;
-        padding-right: 1rem;
-
-        .sceneContainer {
-            grid-column: 1 / -1;
-            height: 60vh;
-            min-height: 31.25rem;
-            padding-left: 1rem;
-        }
-
-        .graphCategory {
-            grid-column: 1 / -1;
-            display: contents;
-
-            .categoryTitle {
-                grid-column: 1 / -1;
-                @include fonts.title-medium;
-                color: var(--text-color);
-                min-height: 4rem;
-                margin-left: 1rem;
-                border-bottom: 0.25rem solid currentColor;
-            }
-
-            .categoryGraphs {
-                grid-column: 1 / -1;
-                display: contents;
-            }
-        }
-    }
-
-    .playbarContainer {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-    }
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.visualPanel {
+  min-width: 0;
+}
+.analysisPanel {
+  min-width: 0;
+  container-type: inline-size;
+}
+.plotGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+}
+@container (min-width: 620px) {
+  .plotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 75em) {
+  .workspace {
+    grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.3fr);
+  }
+  .visualPanel {
+    position: sticky;
+    top: calc(var(--app-shell-header-offset, 0px) + 1rem);
+  }
 }

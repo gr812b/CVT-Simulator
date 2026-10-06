@@ -22,6 +22,7 @@ from app.database.models import (
     Tune,
     VehicleAssemblyVersion,
 )
+from app.database.tuning import readable_tuning_schema
 
 JsonDict = dict[str, Any]
 
@@ -141,13 +142,31 @@ def resolve_simulation_case(
         },
     }
 
-    # Match backend.app.database.runs.executable_contract for the current V1
-    # database schema/cache implementation. The aliases above ensure engine and
-    # output-system differences remain part of the cache key.
+    # Compatibility fingerprint for older callers. Durable M3 jobs compute their
+    # own hash from canonical host/shaft boundaries, execution and solver identity.
     document["contract_hash"] = canonical_json_hash(
         {key: copy.deepcopy(document[key]) for key in V1_EXECUTABLE_HASH_KEYS if key in document}
     )
     return document
+
+
+def normalize_preset_case(document: JsonDict) -> JsonDict:
+    """Translate a bundled V1 preset through the same adapter as stored designs."""
+    if "shaft_boundaries" in document:
+        return copy.deepcopy(document)
+    host, scenario = _current_host_and_scenario(document["scenario"])
+    return {
+        "schema_version": 1,
+        "document_type": CURRENT_SIMULATION_DOCUMENT_TYPE,
+        "assembly": _current_assembly_document(document["assembly"], document["execution"]),
+        "shaft_boundaries": {
+            "primary": _current_primary_boundary(document["input_boundary"]),
+            "secondary": _current_secondary_boundary(document["output_boundary"]),
+        },
+        "host": host,
+        "scenario": scenario,
+        "execution": _current_execution(document["execution"]),
+    }
 
 
 def _current_assembly_document(
@@ -176,6 +195,10 @@ def _current_assembly_document(
 
 def _normalize_contact(assembly: JsonDict, stored_execution: JsonDict) -> None:
     contact = assembly.setdefault("contact", {})
+    if "static_friction_coefficient" in contact and "kinetic_friction_coefficient" in contact:
+        # Current library revisions own contact properties. An old execution
+        # preset must never replace a user's saved hardware coefficients.
+        return
     traction = stored_execution.get("traction_law", {})
     if not isinstance(traction, dict):
         traction = {}
@@ -490,7 +513,7 @@ def _collect_version_warnings(
 def apply_tune(cinder_assembly: JsonDict, tuning_schema: JsonDict, values: JsonDict) -> None:
     """Apply tune values to the stored V1 assembly using its JSON-pointer schema."""
 
-    params = tuning_schema.get("parameters", [])
+    params = readable_tuning_schema(cinder_assembly, tuning_schema).get("parameters", [])
     path_by_key = {
         str(param["key"]): str(param["path"])
         for param in params

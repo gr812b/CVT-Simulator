@@ -8,14 +8,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# CINDER and all backend runtime dependencies come from the backend's pinned
-# requirements file. No repository-local CINDER source is copied into the image.
+# Install the pinned published CINDER distribution, not the source checkout.
 COPY backend/requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir -r /app/requirements.txt
+    && python -m pip install --no-cache-dir -r /app/requirements.txt \
+    && python -m pip check
 
 # Includes app/, presets/, and the rest of the runtime backend package.
 COPY backend /app
+RUN python -m app.scripts.check_cinder_install
 
 EXPOSE 8000
 

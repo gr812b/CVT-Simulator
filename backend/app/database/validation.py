@@ -207,7 +207,9 @@ def _upgrade_workspace(workspace: ValidationWorkspace) -> ValidationWorkspace:
     return workspace
 
 
-def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspace:
+def ensure_workspace(
+    session: Session, *, account_id: str, fallback_document: JsonDict | None = None
+) -> ValidationWorkspace:
     """Return the autosaved workspace, creating/upgrading it when necessary."""
 
     workspace = get_workspace(session, account_id=account_id)
@@ -215,6 +217,16 @@ def ensure_workspace(session: Session, *, account_id: str) -> ValidationWorkspac
         _upgrade_workspace(workspace)
         session.flush()
         return workspace
+
+    if fallback_document is not None:
+        return upsert_workspace(
+            session,
+            account_id=account_id,
+            setup_document=fallback_document,
+            metrology={},
+            controller_templates=[],
+            workflow_defaults=_default_workflow(fallback_document),
+        )
 
     assembly = session.scalar(
         select(VehicleAssembly)
@@ -307,12 +319,16 @@ def upsert_workspace(
 def list_validation_runs(
     session: Session,
     *,
+    account_id: str,
     limit: int = 20,
 ) -> list[ValidationRun]:
     bounded_limit = max(1, min(int(limit), 100))
     return list(
         session.scalars(
-            select(ValidationRun).order_by(ValidationRun.created_at.desc()).limit(bounded_limit)
+            select(ValidationRun)
+            .where(ValidationRun.account_id == account_id)
+            .order_by(ValidationRun.created_at.desc())
+            .limit(bounded_limit)
         )
     )
 

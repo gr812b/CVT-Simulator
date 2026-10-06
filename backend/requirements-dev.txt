@@ -1,5 +1,6 @@
 -r requirements.txt
 black>=24.0
 flake8>=7.0
+# Starlette's TestClient imports httpx2.
 httpx2
 pytest>=8.0

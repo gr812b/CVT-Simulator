@@ -51,7 +51,7 @@ jobs:
           python -m coverage report
 
   backend-tests:
-    name: Backend Lint & Contract Validation
+    name: Backend Lint, Contracts & Regression Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -72,23 +72,12 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install "black>=24" "flake8>=7"
 
-      - name: Verify backend uses packaged CINDER
+      - name: Verify backend uses the pinned published CINDER
         working-directory: ./backend
         run: |
           source venv/bin/activate
-          python - <<'PY'
-          import os
-          from pathlib import Path
-
-          import cinder
-
-          module_path = Path(cinder.__file__).resolve()
-          repo_path = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
-          local_cinder = (repo_path / "cvtModel").resolve()
-
-          assert local_cinder not in module_path.parents, module_path
-          print(f"Backend is using CINDER {cinder.__version__} from {module_path}")
-          PY
+          python -m pip check
+          python -m app.scripts.check_cinder_install
 
       - name: Validate database migrations
         working-directory: ./backend
@@ -114,6 +103,13 @@ jobs:
         run: |
           source venv/bin/activate
           python -m compileall -q app
+
+      - name: Run backend regression tests
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m pip install -r requirements-dev.txt
+          python -m pytest
 
       - name: Verify bundled tuned-launch preset
         working-directory: ./backend
@@ -142,8 +138,64 @@ jobs:
           path: backend/generated
           if-no-files-found: error
 
+  postgres-smoke:
+    name: PostgreSQL Migrations & Seed
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: cvt_simulator
+          POSTGRES_USER: cvt
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cvt -d cvt_simulator"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    # Isolated CI database and application settings; no real mail credentials.
+    env:
+      CVT_DATABASE_URL: postgresql+psycopg://cvt:ci-only-password@127.0.0.1:5432/cvt_simulator
+      CVT_ENVIRONMENT: production
+      CVT_WEB_URL: https://cinder.example
+      CVT_CORS_ORIGINS: https://cinder.example
+      CVT_MAIL_MODE: smtp
+      CVT_SMTP_HOST: smtp.example
+      CVT_SMTP_FROM: cinder@example.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up production Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend runtime dependencies
+        working-directory: ./backend
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip check
+          python -m app.scripts.check_cinder_install
+
+      - name: Migrate a fresh PostgreSQL database and verify repeatable seeding
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m alembic upgrade head
+          python -m app.scripts.init_database
+          python -m app.scripts.init_database
+
   web-tests:
-    name: Frontend Lint & Build
+    name: Frontend Lint, Regression Tests & Build
     needs: backend-tests
     runs-on: ubuntu-latest
 
@@ -154,7 +206,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -175,6 +227,18 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
+      - name: Run frontend helper checks
+        working-directory: ./frontend
+        run: npm run test:helpers
+
+      - name: Install test browser
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run saved-tune browser regressions
+        working-directory: ./frontend
+        run: npm run test:browser
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
@@ -185,3 +249,23 @@ jobs:
           name: frontend-build
           path: frontend/dist
           if-no-files-found: error
+
+  container-builds:
+    name: Production images (build only)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build backend image
+        run: docker build --pull -f backend/Dockerfile -t cinder-ci-backend .
+
+      - name: Check packaged CINDER and retained demo
+        run: |
+          docker run --rm --network none cinder-ci-backend python -m app.scripts.check_cinder_install
+          docker run --rm --network none cinder-ci-backend python -c "from app.application.demo import playback, scene; assert playback().result['metrics']['completed']; scene(); print('Retained demo and landing scene loaded')"
+
+      - name: Build frontend image
+        run: docker build --pull -f frontend/Dockerfile -t cinder-ci-frontend .

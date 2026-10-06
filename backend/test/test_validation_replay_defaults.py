@@ -4,7 +4,9 @@ from app.database.validation import (
     DEFAULT_REPLAY_GAIN_NM_S_PER_RAD,
     VALIDATION_ABSOLUTE_TOLERANCE,
     VALIDATION_MAX_STEP_S,
+    VALIDATION_MINIMUM_TRANSITIONS,
     VALIDATION_RELATIVE_TOLERANCE,
+    VALIDATION_TRANSITIONS_PER_SECOND,
     _apply_validation_integrator,
     _upgrade_workflow,
 )
@@ -67,6 +69,8 @@ def test_legacy_speed_tracker_workspace_migrates_to_replay() -> None:
         "relativeTolerance": VALIDATION_RELATIVE_TOLERANCE,
         "absoluteTolerance": VALIDATION_ABSOLUTE_TOLERANCE,
         "maxStepS": VALIDATION_MAX_STEP_S,
+        "minimumTransitions": VALIDATION_MINIMUM_TRANSITIONS,
+        "transitionsPerSecond": VALIDATION_TRANSITIONS_PER_SECOND,
     }
     assert "speedTracking" not in workflow
     assert "axialMode" not in workflow

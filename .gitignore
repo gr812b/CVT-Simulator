@@ -318,3 +318,35 @@ outputs/
 backend/generated/
 frontend/src/api/generated/
 .cinder_*_backups/
+# Local authentication configuration and mail outbox
+backend/.local/
+backend/.env
+frontend/.env.local
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Development caches, local runtime state and test reports
+build/
+dist/
+.venv/
+.vite/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+playwright-report/
+test-results/
+.local/
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+
+# Keep example configuration, not developer credentials.
+**/.env
+**/.env.*
+!**/.env.example

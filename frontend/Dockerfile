@@ -3,17 +3,19 @@
 # TypeScript client is generated before the Vite build. Generated contracts do
 # not need to be committed to the repository.
 
-FROM python:3.10-slim AS contracts
+FROM python:3.12-slim AS contracts
 
 WORKDIR /repo/backend
 COPY backend/requirements.txt ./requirements.txt
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/python -m pip install --upgrade pip \
-    && /opt/venv/bin/python -m pip install -r requirements.txt
+    && /opt/venv/bin/python -m pip install -r requirements.txt \
+    && /opt/venv/bin/python -m pip check
 COPY backend/ ./
-RUN /opt/venv/bin/python -m app.scripts.export_contract_artifacts --output-dir /contracts
+RUN /opt/venv/bin/python -m app.scripts.check_cinder_install \
+    && /opt/venv/bin/python -m app.scripts.export_contract_artifacts --output-dir /contracts
 
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 

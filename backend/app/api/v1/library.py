@@ -9,34 +9,33 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, Query, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.api.v1.dependencies import get_database_session
+from app.api.v1.dependencies import get_current_principal, get_database_session
+from app.application import access
+from app.application.auth import Principal
 from app.core.errors import ApiProblem
 from app.database import library as service
 from app.database.library import LibraryError
 from app.database.models import ExecutionPreset, LoadCase, Tune
+from app.database.tuning import readable_tuning_schema
 from app.schemas.library import (
     ArchiveLibraryObjectRequest,
     CreateExecutionPresetRequest,
+    CreateLibraryObjectRequest,
     CreateLoadCaseRequest,
     CreateTuneRequest,
-    CreateLibraryObjectRequest,
     DeprecateVersionRequest,
-    ForkLibraryVersionRequest,
     ExecutionPresetListResponse,
     ExecutionPresetResponse,
+    ForkLibraryVersionRequest,
     InstitutionListResponse,
     InstitutionResponse,
-    LoadCaseListResponse,
-    LoadCaseResponse,
     LibraryObjectDetailResponse,
     LibraryObjectListResponse,
     LibraryObjectResponse,
     LibraryResource,
     LibraryVersionResponse,
+    LoadCaseListResponse,
+    LoadCaseResponse,
     ReleaseLibraryObjectRequest,
     TuneListResponse,
     TuneResponse,
@@ -45,6 +44,9 @@ from app.schemas.library import (
     UpdateLoadCaseRequest,
     UpdateTuneRequest,
 )
+from fastapi import APIRouter, Body, Depends, Query, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/library", tags=["library"])
 
@@ -53,6 +55,7 @@ router = APIRouter(prefix="/library", tags=["library"])
 def list_institutions(
     query: str | None = Query(default=None),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> InstitutionListResponse:
     return InstitutionListResponse(
         items=[
@@ -63,14 +66,12 @@ def list_institutions(
 
 @router.get("/tunes", response_model=TuneListResponse)
 def list_tunes(
-    account_id: str | None = Query(default=None),
     vehicle_assembly_id: str | None = Query(default=None),
     include_deleted: bool = Query(default=False),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> TuneListResponse:
-    stmt = select(Tune)
-    if account_id is not None:
-        stmt = stmt.where(Tune.account_id == account_id)
+    stmt = select(Tune).where(Tune.account_id == principal.account_id)
     if vehicle_assembly_id is not None:
         stmt = stmt.where(Tune.vehicle_assembly_id == vehicle_assembly_id)
     if not include_deleted:
@@ -83,11 +84,12 @@ def list_tunes(
 def create_tune(
     request: CreateTuneRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
-    tune = Tune(**request.model_dump())
-    session.add(tune)
-    session.flush()
-    return _tune_response(tune)
+    principal.require_write()
+    raise ApiProblem(
+        410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes."
+    )
 
 
 @router.patch("/tunes/{tune_id}", response_model=TuneResponse)
@@ -95,25 +97,24 @@ def update_tune(
     tune_id: str,
     request: UpdateTuneRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
-    tune = session.get(Tune, tune_id)
-    if tune is None:
-        raise ApiProblem(404, "tune_not_found", f"No tune exists with id {tune_id!r}.")
-    for key, value in request.model_dump(exclude_unset=True).items():
-        setattr(tune, key, value)
-    session.flush()
-    return _tune_response(tune)
+    access.owned(session.get(Tune, tune_id), principal, write=True)
+    raise ApiProblem(
+        410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes."
+    )
 
 
 @router.get("/load-cases", response_model=LoadCaseListResponse)
 def list_load_cases(
-    account_id: str | None = Query(default=None),
     include_deleted: bool = Query(default=False),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LoadCaseListResponse:
-    stmt = select(LoadCase)
-    if account_id is not None:
-        stmt = stmt.where(LoadCase.account_id == account_id)
+    stmt = select(LoadCase).where(
+        (LoadCase.account_id == principal.account_id)
+        | ((LoadCase.visibility == "public") & LoadCase.deleted_at.is_(None))
+    )
     if not include_deleted:
         stmt = stmt.where(LoadCase.deleted_at.is_(None))
     stmt = stmt.order_by(LoadCase.updated_at.desc(), LoadCase.name.asc())
@@ -126,8 +127,10 @@ def list_load_cases(
 def create_load_case(
     request: CreateLoadCaseRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LoadCaseResponse:
-    load_case = LoadCase(**request.model_dump())
+    principal.require_write()
+    load_case = LoadCase(account_id=principal.account_id, **request.model_dump())
     session.add(load_case)
     session.flush()
     return _load_case_response(load_case)
@@ -138,8 +141,9 @@ def update_load_case(
     load_case_id: str,
     request: UpdateLoadCaseRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LoadCaseResponse:
-    load_case = session.get(LoadCase, load_case_id)
+    load_case = access.owned(session.get(LoadCase, load_case_id), principal, write=True)
     if load_case is None:
         raise ApiProblem(
             404, "load_case_not_found", f"No load case exists with id {load_case_id!r}."
@@ -152,19 +156,14 @@ def update_load_case(
 
 @router.get("/execution-presets", response_model=ExecutionPresetListResponse)
 def list_execution_presets(
-    account_id: str | None = Query(default=None),
     include_system: bool = Query(default=True),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ExecutionPresetListResponse:
-    stmt = select(ExecutionPreset)
-    if account_id is not None and include_system:
-        stmt = stmt.where(
-            (ExecutionPreset.account_id == account_id) | (ExecutionPreset.account_id.is_(None))
-        )
-    elif account_id is not None:
-        stmt = stmt.where(ExecutionPreset.account_id == account_id)
-    elif not include_system:
-        stmt = stmt.where(ExecutionPreset.account_id.is_not(None))
+    allowed = ExecutionPreset.account_id == principal.account_id
+    if include_system:
+        allowed = allowed | ExecutionPreset.account_id.is_(None)
+    stmt = select(ExecutionPreset).where(allowed)
     stmt = stmt.order_by(
         ExecutionPreset.is_system_default.desc(), ExecutionPreset.updated_at.desc()
     )
@@ -181,8 +180,12 @@ def list_execution_presets(
 def create_execution_preset(
     request: CreateExecutionPresetRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ExecutionPresetResponse:
-    preset = ExecutionPreset(**request.model_dump())
+    principal.require_write()
+    preset = ExecutionPreset(
+        account_id=principal.account_id, is_system_default=False, **request.model_dump()
+    )
     session.add(preset)
     session.flush()
     return _execution_preset_response(preset)
@@ -193,11 +196,14 @@ def update_execution_preset(
     preset_id: str,
     request: UpdateExecutionPresetRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> ExecutionPresetResponse:
-    preset = session.get(ExecutionPreset, preset_id)
+    preset = access.owned(session.get(ExecutionPreset, preset_id), principal, write=True)
     if preset is None:
         raise ApiProblem(
-            404, "execution_preset_not_found", f"No execution preset exists with id {preset_id!r}."
+            404,
+            "execution_preset_not_found",
+            f"No execution preset exists with id {preset_id!r}.",
         )
     for key, value in request.model_dump(exclude_unset=True).items():
         setattr(preset, key, value)
@@ -208,24 +214,34 @@ def update_execution_preset(
 @router.get("/{resource}", response_model=LibraryObjectListResponse)
 def list_library_objects(
     resource: LibraryResource,
-    account_id: str | None = Query(default=None),
     public_only: bool = Query(default=False),
     include_archived: bool = Query(default=False),
     include_deleted: bool = Query(default=False),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectListResponse:
     try:
         items = service.list_objects(
             session,
             resource=resource,
-            account_id=account_id,
+            account_id=None if public_only else principal.account_id,
             public_only=public_only,
             include_archived=include_archived,
             include_deleted=include_deleted,
         )
     except LibraryError as exc:
         raise _bad_request(exc) from exc
-    return LibraryObjectListResponse(items=[_object_response(resource, item) for item in items])
+    return LibraryObjectListResponse(
+        items=[
+            _read_object_response(resource, item, principal)
+            for item in items
+            if item.account_id == principal.account_id
+            or (
+                item.released_version is not None
+                and item.released_version.visibility_at_release == "public"
+            )
+        ]
+    )
 
 
 @router.post(
@@ -237,9 +253,15 @@ def create_library_object(
     resource: LibraryResource,
     request: CreateLibraryObjectRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectResponse:
     try:
-        obj = service.create_object(session, resource=resource, data=request.model_dump())
+        principal.require_write()
+        obj = service.create_object(
+            session,
+            resource=resource,
+            data={**request.model_dump(), "account_id": principal.account_id},
+        )
     except LibraryError as exc:
         raise _bad_request(exc) from exc
     return _object_response(resource, obj)
@@ -250,14 +272,17 @@ def get_library_object(
     resource: LibraryResource,
     object_id: str,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectDetailResponse:
     try:
-        obj = service.get_object(session, resource=resource, object_id=object_id)
+        obj = access.library_object(session, principal, resource, object_id)
     except LibraryError as exc:
         raise _not_found(exc) from exc
     versions = list(getattr(obj, "versions", []))
+    if obj.account_id != principal.account_id:
+        versions = [v for v in versions if access.version_is_shared(v, obj)]
     return LibraryObjectDetailResponse(
-        object=_object_response(resource, obj),
+        object=_read_object_response(resource, obj, principal),
         released_version=(
             _version_response(resource, obj.released_version)
             if obj.released_version is not None
@@ -273,7 +298,9 @@ def update_library_draft(
     object_id: str,
     request: UpdateLibraryDraftRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectResponse:
+    access.library_object(session, principal, resource, object_id, write=True)
     data = request.model_dump(exclude_unset=True)
     try:
         obj = service.update_draft(session, resource=resource, object_id=object_id, data=data)
@@ -288,13 +315,21 @@ def release_library_object(
     object_id: str,
     request: ReleaseLibraryObjectRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryVersionResponse:
+    obj = access.library_object(session, principal, resource, object_id, write=True)
+    release_data = {
+        **request.model_dump(exclude_none=True),
+        "created_by_user_id": principal.user_id,
+    }
+    if resource == "vehicle-assemblies":
+        access.check_assembly_release(session, principal, obj, release_data)
     try:
         version = service.release_object(
             session,
             resource=resource,
             object_id=object_id,
-            release_data=request.model_dump(exclude_none=True),
+            release_data=release_data,
         )
     except LibraryError as exc:
         raise _bad_request(exc) from exc
@@ -307,13 +342,19 @@ def fork_library_version(
     version_id: str,
     request: ForkLibraryVersionRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectResponse:
+    principal.require_write()
+    access.library_version(session, principal, resource, version_id)
     try:
         obj = service.fork_version(
             session,
             resource=resource,
             version_id=version_id,
-            data=request.model_dump(exclude_none=True),
+            data={
+                **request.model_dump(exclude_none=True),
+                "account_id": principal.account_id,
+            },
         )
     except LibraryError as exc:
         raise _bad_request(exc) from exc
@@ -326,7 +367,9 @@ def archive_library_object(
     object_id: str,
     request: ArchiveLibraryObjectRequest | None = Body(default=None),
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryObjectResponse:
+    access.library_object(session, principal, resource, object_id, write=True)
     lifecycle_status = request.lifecycle_status if request is not None else "archived"
     try:
         obj = service.archive_object(
@@ -345,9 +388,10 @@ def get_library_version(
     resource: LibraryResource,
     version_id: str,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryVersionResponse:
     try:
-        version = service.get_version(session, resource=resource, version_id=version_id)
+        version = access.library_version(session, principal, resource, version_id)
     except LibraryError as exc:
         raise _not_found(exc) from exc
     return _version_response(resource, version)
@@ -359,7 +403,20 @@ def deprecate_library_version(
     version_id: str,
     request: DeprecateVersionRequest,
     session: Session = Depends(get_database_session),
+    principal: Principal = Depends(get_current_principal),
 ) -> LibraryVersionResponse:
+    version = access.library_version(session, principal, resource, version_id, write=True)
+    if request.superseded_by_version_id:
+        successor = access.library_version(
+            session, principal, resource, request.superseded_by_version_id, write=True
+        )
+        binding = service.binding_for(resource)
+        if getattr(version, binding.object_fk_name) != getattr(successor, binding.object_fk_name):
+            raise ApiProblem(
+                422,
+                "version_parent_mismatch",
+                "The replacement must belong to the same object.",
+            )
     try:
         version = service.deprecate_version(
             session,
@@ -421,7 +478,11 @@ def _version_response(resource: str, version: Any) -> LibraryVersionResponse:
         version_number=version.version_number,
         payload=payload,
         **aliases,
-        tuning_schema=getattr(version, "tuning_schema", None),
+        tuning_schema=(
+            readable_tuning_schema(payload, version.tuning_schema)
+            if resource == "cvt-designs"
+            else None
+        ),
         summary=version.summary,
         payload_hash=version.payload_hash,
         schema_version=version.schema_version,
@@ -506,3 +567,12 @@ def _bad_request(exc: Exception) -> ApiProblem:
 
 def _not_found(exc: Exception) -> ApiProblem:
     return ApiProblem(404, "library_object_not_found", str(exc))
+
+
+def _read_object_response(resource: str, obj: Any, principal: Principal) -> LibraryObjectResponse:
+    response = _object_response(resource, obj)
+    if obj.account_id != principal.account_id:
+        response.draft_payload = None
+        response.draft_updated_at = None
+        response.source_notes = None
+    return response

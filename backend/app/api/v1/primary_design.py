@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-
-from app.api.v1.dependencies import get_container
+from app.api.v1.dependencies import get_container, get_current_principal
+from app.application.auth import Principal
 from app.application.container import ApplicationContainer
 from app.core.errors import ApiProblem
-from app.engineering.fixed_pivot_primary.inverse_design import ForceTargetPoint
 from app.engineering.fixed_pivot_primary import (
     ArchitectureDesign,
     ForceRequirement,
@@ -16,25 +14,27 @@ from app.engineering.fixed_pivot_primary import (
     PrimaryDesignError,
     RampDesign,
 )
+from app.engineering.fixed_pivot_primary.inverse_design import ForceTargetPoint
 from app.schemas.primary_design import (
     FixedPivotArchitectureAnalysisResponse,
     FixedPivotArchitectureAnalyzeRequest,
     FixedPivotConcreteAnalysisResponse,
     FixedPivotConcreteAnalyzeRequest,
     FixedPivotDefaultsResponse,
-    FixedPivotOperatingRequest,
-    FixedPivotOperatingResponse,
-    FixedPivotPathDomainRequest,
-    FixedPivotPathDomainResponse,
-    FixedPivotPathDomainConditionRequest,
-    FixedPivotPathDomainConditionResponse,
     FixedPivotInverseDesignRequest,
     FixedPivotInverseDesignResponse,
+    FixedPivotOperatingRequest,
+    FixedPivotOperatingResponse,
     FixedPivotPathDomainCompareRequest,
     FixedPivotPathDomainCompareResponse,
     FixedPivotPathDomainCompareTargetRequest,
     FixedPivotPathDomainCompareTargetResponse,
+    FixedPivotPathDomainConditionRequest,
+    FixedPivotPathDomainConditionResponse,
+    FixedPivotPathDomainRequest,
+    FixedPivotPathDomainResponse,
 )
+from fastapi import APIRouter, Depends
 
 router = APIRouter(
     prefix="/engineering/fixed-pivot-primary",
@@ -45,6 +45,7 @@ router = APIRouter(
 @router.get("/defaults", response_model=FixedPivotDefaultsResponse)
 def defaults(
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotDefaultsResponse:
     return FixedPivotDefaultsResponse(**container.primary_design.defaults())
 
@@ -56,6 +57,7 @@ def defaults(
 def analyze_architecture(
     request: FixedPivotArchitectureAnalyzeRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotArchitectureAnalysisResponse:
     architecture = ArchitectureDesign(**request.architecture.model_dump())
     zones = tuple(
@@ -84,6 +86,7 @@ def analyze_architecture(
 def analyze_path_domain(
     request: FixedPivotPathDomainRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotPathDomainResponse:
     architecture = ArchitectureDesign(**request.architecture.model_dump())
     zones = tuple(
@@ -95,6 +98,7 @@ def analyze_path_domain(
     )
     try:
         result = container.primary_design.analyze_path_domain(
+            account_id=principal.account_id,
             architecture=architecture,
             zones=zones,
             shift_station_count=request.shift_station_count,
@@ -116,12 +120,14 @@ def analyze_path_domain(
 def condition_path_domain(
     request: FixedPivotPathDomainConditionRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotPathDomainConditionResponse:
     requirements = tuple(
         ForceRequirement(**requirement.model_dump()) for requirement in request.requirements
     )
     try:
         result = container.primary_design.condition_path_domain(
+            account_id=principal.account_id,
             domain_id=request.domain_id,
             requirements=requirements,
             max_tip_mass_per_flyweight_kg=request.max_tip_mass_per_flyweight_kg,
@@ -139,11 +145,13 @@ def condition_path_domain(
 def analyze_concrete(
     request: FixedPivotConcreteAnalyzeRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotConcreteAnalysisResponse:
     architecture = ArchitectureDesign(**request.architecture.model_dump())
     ramp = RampDesign(**request.ramp.model_dump())
     try:
         result = container.primary_design.analyze_concrete(
+            account_id=principal.account_id,
             architecture=architecture,
             ramp=ramp,
             sample_count=request.sample_count,
@@ -157,6 +165,7 @@ def analyze_concrete(
 def concrete_response(
     request: FixedPivotOperatingRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotOperatingResponse:
     operating = OperatingCondition(
         tip_mass_per_flyweight_kg=request.tip_mass_per_flyweight_kg,
@@ -166,6 +175,7 @@ def concrete_response(
     )
     try:
         result = container.primary_design.evaluate_concrete_response(
+            account_id=principal.account_id,
             analysis_id=request.analysis_id,
             operating=operating,
         )
@@ -179,6 +189,7 @@ def concrete_response(
 def inverse_design_force_curve(
     request: FixedPivotInverseDesignRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotInverseDesignResponse:
     architecture = ArchitectureDesign(**request.architecture.model_dump())
     zones = tuple(
@@ -215,9 +226,11 @@ def inverse_design_force_curve(
 def compare_path_domains(
     request: FixedPivotPathDomainCompareRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotPathDomainCompareResponse:
     try:
         result = container.primary_design.compare_path_domains(
+            account_id=principal.account_id,
             domain_id_a=request.domain_id_a,
             domain_id_b=request.domain_id_b,
             atlas_path_count=request.atlas_path_count,
@@ -236,9 +249,11 @@ def compare_path_domains(
 def compare_path_domains_to_target(
     request: FixedPivotPathDomainCompareTargetRequest,
     container: ApplicationContainer = Depends(get_container),
+    principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotPathDomainCompareTargetResponse:
     try:
         result = container.primary_design.compare_path_domains_to_target(
+            account_id=principal.account_id,
             domain_id_a=request.domain_id_a,
             domain_id_b=request.domain_id_b,
             target_points=[

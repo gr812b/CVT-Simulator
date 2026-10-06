@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
 from .common import ApiModel
+from .primary_design_responses import (
+    ArchitectureAnalysis,
+    ArchitectureComparisonAnalysis,
+    ArchitectureTargetComparisonAnalysis,
+    ConcreteDesignAnalysis,
+    ConcreteDesignResponse,
+    ConditionedPathDomainAnalysis,
+    InverseDesignAnalysis,
+    PrimaryDesignDefaults,
+    PrimaryPathDomainAnalysis,
+)
 
 
 class FixedPivotArchitectureRequest(ApiModel):
@@ -114,68 +125,22 @@ class FixedPivotOperatingRequest(ApiModel):
     shift_acceleration_m_s2: float = 0.0
 
 
-class FixedPivotDefaultsResponse(ApiModel):
-    architecture: dict[str, Any]
-    ramp: dict[str, Any]
-    packaging_zones: list[dict[str, Any]]
-    operating: dict[str, float]
-    ui_limits: dict[str, list[float]]
+FixedPivotDefaultsResponse = PrimaryDesignDefaults
 
 
-class FixedPivotArchitectureAnalysisResponse(ApiModel):
-    architecture: dict[str, Any]
-    zones: list[dict[str, Any]]
-    validity: dict[str, Any]
-    limits: dict[str, float]
-    workspace: dict[str, Any]
-    boundaries: dict[str, Any]
-    zone_diagnostics: list[dict[str, Any]]
-    viewport: dict[str, float]
-    summary: dict[str, Any]
+FixedPivotArchitectureAnalysisResponse = ArchitectureAnalysis
 
 
-class FixedPivotPathDomainResponse(ApiModel):
-    domain_id: str
-    architecture: dict[str, Any]
-    zones: list[dict[str, Any]]
-    validity: dict[str, Any]
-    graph: dict[str, Any]
-    history: dict[str, Any]
-    representative_paths: list[dict[str, Any]]
-    domain_projection: dict[str, Any]
-    capability: dict[str, Any]
-    deferred_checks: list[str]
-    numerics: dict[str, Any]
+FixedPivotPathDomainResponse = PrimaryPathDomainAnalysis
 
 
-class FixedPivotPathDomainConditionResponse(ApiModel):
-    domain_id: str
-    validity: dict[str, Any]
-    requirements: list[dict[str, Any]]
-    mass: dict[str, Any]
-    graph: dict[str, Any]
-    domain_projection: dict[str, Any]
-    force_capability: dict[str, Any]
-    representative_solutions: list[dict[str, Any]]
-    summary: dict[str, Any]
+FixedPivotPathDomainConditionResponse = ConditionedPathDomainAnalysis
 
 
-class FixedPivotConcreteAnalysisResponse(ApiModel):
-    analysis_id: str
-    validity: dict[str, Any]
-    architecture: dict[str, Any]
-    ramp: dict[str, Any]
-    requested_travel_m: float
-    contact_valid_travel_m: float
-    geometry: dict[str, Any]
-    ramp_surface_open: dict[str, list[float]]
-    summary: dict[str, Any]
+FixedPivotConcreteAnalysisResponse = ConcreteDesignAnalysis
 
 
-class FixedPivotOperatingResponse(ApiModel):
-    analysis_id: str
-    operating: dict[str, float]
-    loads: dict[str, Any]
+FixedPivotOperatingResponse = ConcreteDesignResponse
 
 
 class ForceCurvePointRequest(ApiModel):
@@ -194,11 +159,7 @@ class FixedPivotInverseDesignRequest(ApiModel):
     sample_count: int = Field(default=181, ge=81, le=401)
 
 
-class FixedPivotInverseDesignResponse(ApiModel):
-    target: dict[str, Any]
-    solutions: list[dict[str, Any]]
-    diagnostics: list[dict[str, Any]]
-    summary: dict[str, Any]
+FixedPivotInverseDesignResponse = InverseDesignAnalysis
 
 
 class FixedPivotPathDomainCompareRequest(ApiModel):
@@ -208,12 +169,7 @@ class FixedPivotPathDomainCompareRequest(ApiModel):
     mass_mix_count: int = Field(default=7, ge=3, le=15)
 
 
-class FixedPivotPathDomainCompareResponse(ApiModel):
-    definition: dict[str, Any]
-    architecture_a: dict[str, Any]
-    architecture_b: dict[str, Any]
-    witnesses: dict[str, Any]
-    summary: dict[str, Any]
+FixedPivotPathDomainCompareResponse = ArchitectureComparisonAnalysis
 
 
 class ForceShapePointRequest(ApiModel):
@@ -230,9 +186,4 @@ class FixedPivotPathDomainCompareTargetRequest(ApiModel):
     sample_count: int = Field(default=121, ge=41, le=301)
 
 
-class FixedPivotPathDomainCompareTargetResponse(ApiModel):
-    definition: dict[str, Any]
-    target: dict[str, Any]
-    architecture_a: dict[str, Any] | None
-    architecture_b: dict[str, Any] | None
-    summary: dict[str, Any]
+FixedPivotPathDomainCompareTargetResponse = ArchitectureTargetComparisonAnalysis

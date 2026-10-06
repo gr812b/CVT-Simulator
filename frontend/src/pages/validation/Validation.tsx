@@ -6,7 +6,6 @@ import { SetupEditorModal } from '@components/validation/SetupEditorModal';
 import { ValidationTraceChart } from '@components/validation/ValidationTraceChart';
 import { useLoading } from '@contexts/LoadingContext';
 import {
-  DEMO_ACCOUNT_ID,
   getSimulationResult,
   getValidationWorkspace,
   listValidationRuns,
@@ -441,7 +440,7 @@ export const Validation = () => {
 
   useEffect(() => {
     setLoading(true, 'Loading validation setup…');
-    void getValidationWorkspace(DEMO_ACCOUNT_ID)
+    void getValidationWorkspace()
       .then((loaded) => {
         setWorkspace(loaded);
         setWorkspaceError(null);
@@ -615,8 +614,7 @@ export const Validation = () => {
       const document = resolveDocument(workspace, data, crop, channels);
       setLoading(true, 'Running CINDER validation case…');
       const submitted = await submitValidationSimulationRun(document);
-      const status = await waitForSimulationRun(submitted.id);
-      if (status.status !== 'completed') throw new Error(status.error?.message ?? `Simulation ${status.status}.`);
+      const status = await waitForSimulationRun(submitted.id, { allowPartial: true });
       const result = await getSimulationResult(submitted.id);
       setCompleted(result);
       if (!result.result.metrics.completed) {
@@ -624,7 +622,7 @@ export const Validation = () => {
           `CINDER terminated early after ${result.result.metrics.duration_s.toFixed(3)} s:
 
 `
-          + `${result.result.metrics.termination_reason}
+          + `${status.outcome?.message ?? 'The simulation stopped before completing.'}
 
 `
           + 'Continue anyway and save/open the partial result for debugging?',
@@ -646,7 +644,6 @@ export const Validation = () => {
       const resolvedInitialState = resolveInitialState(workspace, data, crop, channels);
       setLoading(true, 'Saving validation result…');
       const savedValidationRun = await saveValidationRun({
-        accountId: DEMO_ACCOUNT_ID,
         sourceFilename: data.filename,
         rawCsv: data.rawCsv,
         cropStartS: crop.startS,

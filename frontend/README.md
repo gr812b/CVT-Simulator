@@ -1,96 +1,108 @@
 # CVT Simulator frontend
 
-The frontend is a Vite/React single-page application using the database-backed CVT Simulator API. Normal runs resolve seeded/released library objects instead of posting raw CINDER documents from the UI.
+The frontend is a Vite/React application with Mantine controls, generated API
+contracts, and Three.js previews. It presents a public physical library, CVT-owned
+tunes, reusable load cases, a guided run builder, and stored results/playback.
+Sign in to save or copy items and submit simulations. Saved content is public;
+account email and credentials are private.
 
-## Local development
+## Development
 
-From `frontend/`:
+Use Node.js 22. First install the [backend dependencies](../backend/README.md)
+and start its API. From `frontend/`:
 
-```powershell
-Copy-Item .env.example .env
+```bash
 npm ci
 npm run dev
 ```
 
-`.env` points the Vite development server directly at the backend:
+Open `http://localhost:5173`. The Vite proxy forwards `/api` to port 8000.
+The default `VITE_API_BASE_URL` is empty, giving the browser same-origin cookies
+and CSRF handling. Copy [.env.example](.env.example) to `.env` only if overriding
+settings. API clients already include `/api/v1`; an override must be an origin
+such as `https://api.example.com`, not an origin with that prefix appended.
 
-```text
-VITE_API_BASE_URL=http://localhost:8000
-VITE_DEMO_USER_ID=00000000-0000-4000-8000-000000000001
-VITE_DEMO_ACCOUNT_ID=00000000-0000-4000-8000-000000000002
-```
+The backend worker must share the API's database to process new runs. `/demo`
+plays a retained recording and does not need a worker or account.
 
-The demo IDs are the explicit local-development rows seeded by `python -m app.scripts.init_database`. They are test/demo defaults only; real auth should replace that configuration boundary later.
+## Run and tune behavior
 
-The API client already names routes such as `/api/v1/library/*` and `/api/v1/runs/from-library`; do **not** add `/api/v1` to `VITE_API_BASE_URL`.
+Build a run selects a vehicle, CVT/belt, primary boundary, tune and load case.
+Saving a tune selects the returned ID, revision and values for the run. Saving
+setup changes or choosing another vehicle with the same CVT preserves that tune;
+changing the CVT requires a compatible tune. **Use for this run only** keeps the
+edit in the submitted configuration without saving a library tune.
 
+A run freezes its configuration when submitted. Later library edits cannot
+change that run. **New experiment from this run** reopens saved references and
+run-only overrides without creating library copies. **Rerun frozen inputs**
+submits another job from the saved input. Activity and run pages show persisted
+status, cancellation and completion notices.
 
-## Current product flow
+The tune preview samples contact while editing. Save performs independent full
+validation and can reject a draft that passed the sampled preview. Invalid,
+stale or incomplete previews must not enable submission.
 
-The app intentionally exposes a narrow V1 run setup:
+`primary_tip_mass` is a per-flyweight tip mass, excluding the arm/body and
+independent of flyweight count; its maximum is 500 g per tip. When scene metadata
+identifies a uniform arm plus concentrated tip, the illustrated tip-cylinder
+lengths scale with mass around a fixed centre. Legacy/other distributions retain
+the fallback illustration. Drawing dimensions do not alter solver geometry.
 
-```text
-seeded released Baja vehicle assembly (500 lb default or 400 lb lightweight)
-  -> selected tune
-  -> selected load case (flat, 20° hill, or 90 m flat into 30° hill)
-  -> selected execution preset
-  -> POST /api/v1/runs/from-library
-  -> GET /api/v1/runs/{run_id}/result for playback
-```
+## Generated contracts
 
-Engine and CVT hardware editing are hidden until dedicated database object editors exist. The current vehicle dropdown switches between seeded output-system masses only. The legacy direct `POST /runs` contract path remains backend/debug-only and is not part of the normal frontend flow.
+`npm run dev` and `npm run build` generate types from backend OpenAPI and CINDER's
+assembly, simulation-case and result schemas. The exporter uses `backend/venv`
+when present, `CINDER_BACKEND_PYTHON` when explicitly set, or system Python.
+To regenerate manually:
 
-Useful checks:
-
-```powershell
-npm run lint
-npm run build
-```
-
-API/CINDER TypeScript contracts are generated build artifacts and are not committed.
-`npm run dev` and `npm run build` refresh them automatically. The generator uses
-`backend/venv` when available (or `CINDER_BACKEND_PYTHON` / system Python) to
-export backend OpenAPI plus CINDER assembly, simulation-case, and
-simulation-result schemas before generating TypeScript.
-
-You can still regenerate explicitly when debugging the contract boundary:
-
-```powershell
+```bash
 npm run contracts:generate
 ```
 
-## Production container
+Generated files under `src/api/generated/` and `backend/generated/` are not
+committed. For Docker-only Python or pre-exported CI schemas, see the
+[backend contract-export instructions](../backend/README.md#linux-containers-on-windows-or-other-hosts).
+`CINDER_BACKEND_ARTIFACTS` can select a schema directory;
+`CINDER_SKIP_BACKEND_EXPORT=1` uses existing exported files without refreshing.
+Refresh them when the backend or model contracts change.
 
-The production image serves the static Vite build with nginx. It calls the backend through same-origin `/api/v1/*` requests, so no browser-visible backend hostname or CORS configuration is needed in the container deployment.
+Use feature clients and `api/transport.ts` for session/CSRF handling, shared
+`QuantityInput` controls for quantities, and `styles/theme.ts` for presentation.
+Do not duplicate generated request types or mechanics formulas in the UI.
 
-Build from the repository root:
+## Checks
 
-```powershell
-docker build -f frontend/Dockerfile -t cvt-simulator-frontend .
+From `frontend/` after `npm ci`:
+
+```bash
+npm run lint
+npm run build
+npm run test:helpers
+npx playwright install chromium
+npm run test:browser
 ```
 
-The frontend and backend containers must share a Docker network, and the backend container/service must be named `cvt-backend`:
+`npm test` runs both test groups after the browser is installed.
+`test/frontend_checks.mjs` covers pure helpers and JSX adapters; it is not a React
+browser test or a replacement for the TypeScript build.
+`test/run_builder_tune_browser.mjs` renders the real React/Mantine run builder and
+tune dialog with deterministic API/unrelated-editor adapters. It checks saved
+revision selection, public-tune copying, setup/CVT changes, rejected saves and
+run-only edits through preview/submission. Set `CHROMIUM_PATH` to an existing
+compatible executable if the managed browser is unavailable. These tests do not
+replace a real backend/CINDER acceptance run.
 
-```powershell
-docker network create cvt-simulator
+## Production
 
-docker run -d --name cvt-backend --network cvt-simulator -p 8000:8000 cvt-simulator-backend
+The image serves the Vite build with nginx and proxies `/api` to `cvt-backend`.
+Use the [root Compose deployment](../README.md#production-deployment) for the API,
+worker, PostgreSQL and networking. The frontend health endpoint is `/health`;
+`/docs` proxies the backend API reference.
 
-docker run --rm --name cvt-frontend --network cvt-simulator -p 8080:80 cvt-simulator-frontend
-```
-
-Open `http://localhost:8080`. The frontend health endpoint is available at `/health`; backend documentation is proxied at `/docs`.
-
-## Build-time API override
-
-The default container build intentionally leaves `VITE_API_BASE_URL` blank, which makes the browser use its own origin and nginx proxy `/api/v1/*` to `cvt-backend`.
-
-For a deployment where the API is deliberately hosted at a separate public origin, supply the origin at image-build time:
-
-```powershell
-docker build -f frontend/Dockerfile `
-  --build-arg VITE_API_BASE_URL=https://api.example.com `
-  -t cvt-simulator-frontend .
-```
-
-Do not use runtime environment variables for `VITE_API_BASE_URL`; Vite embeds `VITE_*` values while building the static files.
+Build from the repository root with
+`docker build -f frontend/Dockerfile -t cvt-simulator-frontend .`.
+For a deliberately separate API origin, add
+`--build-arg VITE_API_BASE_URL=https://api.example.com` and configure backend CORS
+for the frontend origin. Vite embeds this value at build time; changing a running
+container's environment does not rewrite the static bundle.

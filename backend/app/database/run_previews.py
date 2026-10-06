@@ -29,14 +29,14 @@ class PreviewProfile:
 
 DEFAULT_PREVIEW_PROFILE = PreviewProfile(
     name="default_run_preview",
-    version=1,
+    version=2,
     max_points=500,
     columns=(
         "time_s",
         "state.primary_angular_speed",
         "state.secondary_angular_speed",
         "state.shift_position",
-        "kinematics.ratio",
+        "geometry.effective_ratio_secondary_over_primary",
         "vehicle.speed",
         "vehicle.distance",
     ),

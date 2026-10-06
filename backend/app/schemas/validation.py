@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import Field
 
 from .common import ApiModel, JsonObject
+from .projections import ValidationMetric
 
 
 class ValidationWorkspaceResponse(ApiModel):
@@ -20,7 +21,6 @@ class ValidationWorkspaceResponse(ApiModel):
 
 
 class ValidationWorkspaceUpdate(ApiModel):
-    account_id: str
     setup_document: JsonObject
     metrology: JsonObject = Field(default_factory=dict)
     controller_templates: list[JsonObject] = Field(default_factory=list)
@@ -28,7 +28,6 @@ class ValidationWorkspaceUpdate(ApiModel):
 
 
 class ValidationRunCreate(ApiModel):
-    account_id: str
     source_filename: str
     raw_csv: str
     crop_start_s: float
@@ -39,10 +38,11 @@ class ValidationRunCreate(ApiModel):
     resolved_document: JsonObject
     simulation_run_id: str | None = None
     result_snapshot: JsonObject
-    metrics: JsonObject = Field(default_factory=dict)
+    metrics: dict[str, ValidationMetric] = Field(default_factory=dict)
 
 
 class ValidationRunResponse(ValidationRunCreate):
+    account_id: str
     id: str
     created_at: datetime
 

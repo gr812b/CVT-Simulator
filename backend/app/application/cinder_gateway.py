@@ -7,12 +7,13 @@ CINDER contracts and study requests, then returns JSON-safe public projections.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import Any
 
-import numpy as np
-
 import cinder
+import numpy as np
 from cinder.contracts import (
     SIMULATION_CASE_SCHEMA_VERSION,
     SIMULATION_RESULT_CONTRACT_VERSION,
@@ -31,6 +32,7 @@ from cinder.contracts import (
     public_conventions,
     simulation_case_document_json_schema,
     simulation_result_json_schema,
+    validate_assembly_document,
     validate_simulation_case_document,
 )
 from cinder.model.cvt.actuation import (
@@ -38,7 +40,9 @@ from cinder.model.cvt.actuation import (
     PulleyActuator,
 )
 from cinder.model.cvt.closure import ClosureUnknown, ClosureUnknowns
-from cinder.model.cvt.geometry import BeltSectionSpec
+from cinder.model.cvt.dynamics import TrialClosureSolveError
+from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltSectionSpec
+from cinder.results.fields import build_belt_path_domain
 from cinder.studies import (
     ActuationOperatingPoint,
     ActuationResponseAxis,
@@ -57,9 +61,24 @@ from cinder.studies import (
     solve_geometry_from_target_ratios,
     summarize_geometry_design,
 )
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import best_match
+
+from app.application.run_failures import RunFailure
+from app.application.scene_mass import flyweight_tip_mass_kg
+from app.schemas.scene import (
+    FlyweightScene,
+    MechanismPose,
+    MechanismScene,
+    SceneFrame,
+    SceneGeometry,
+    ScenePreview,
+)
 
 DEFAULT_EXECUTION_PROFILE = "default"
 VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE = "validation_slotted_secondary_helix"
+EXECUTION_POLICY_VERSION = 2
+DEFAULT_SECONDARY_HELIX_TOPOLOGY = "slotted_bilateral_zero_clearance"
 
 
 class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):
@@ -70,31 +89,76 @@ class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):
 
 
 def _apply_execution_profile(decoded: object, execution_profile: str) -> None:
-    """Apply backend-only execution policy without changing the frozen document."""
+    """Use the slotted secondary for ordinary runs and validation.
 
-    if execution_profile == DEFAULT_EXECUTION_PROFILE:
-        return
-    if execution_profile != VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE:
+    Older CINDER wheels expose only a unilateral helix law. The adapter uses
+    the existing signed zero-clearance law for them. Native topology choices
+    are respected when the installed CINDER document supports them.
+    """
+
+    if execution_profile not in {
+        DEFAULT_EXECUTION_PROFILE,
+        VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
+    }:
         raise ValueError(f"Unsupported execution profile: {execution_profile!r}.")
 
     plant = decoded.plant
     laws = []
-    changed = 0
+    helix_count = 0
     for law in plant.secondary_actuator.force_laws:
+        if not isinstance(law, HelicalTorqueReactionForce):
+            laws.append(law)
+            continue
+        helix_count += 1
         if isinstance(law, _BilateralHelicalTorqueReactionForce):
             laws.append(law)
-        elif isinstance(law, HelicalTorqueReactionForce):
-            laws.append(_BilateralHelicalTorqueReactionForce(spec=law.spec))
-            changed += 1
-        else:
+        elif execution_profile == DEFAULT_EXECUTION_PROFILE and hasattr(
+            law.spec, "contact_topology"
+        ):
+            # A native document may explicitly request unilateral hardware.
             laws.append(law)
+        else:
+            laws.append(_BilateralHelicalTorqueReactionForce(spec=law.spec))
 
-    if changed != 1:
+    if execution_profile == VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE and helix_count != 1:
         raise RuntimeError(
             "Validation slotted-helix profile expected exactly one secondary "
-            f"HelicalTorqueReactionForce; found {changed}."
+            f"HelicalTorqueReactionForce; found {helix_count}."
         )
     object.__setattr__(plant, "secondary_actuator", PulleyActuator(*laws))
+
+
+def _known_integration_failure(exc: Exception) -> RunFailure | None:
+    """Recognize specific solver/domain failures; never blame an arbitrary ValueError."""
+    message = str(exc)
+    if isinstance(exc, RuntimeError) and message.startswith(
+        (
+            "Unilateral pulley-mechanism contact became inadmissible: ",
+            "Unilateral pulley-mechanism contact became inadmissible in deadzone: ",
+        )
+    ):
+        return RunFailure(
+            "mechanism_contact_unsupported",
+            "The simulation encountered a pulley contact state that the selected "
+            "mechanism model cannot represent. Loss of contact or an opposite-flank "
+            "transition is unsupported for that mechanism.",
+        )
+    if isinstance(exc, (TrialClosureSolveError, FloatingPointError, np.linalg.LinAlgError)) or (
+        isinstance(exc, RuntimeError) and message.startswith("solve_ivp failed: ")
+    ):
+        return RunFailure(
+            "numerical_failure",
+            "The numerical solver could not advance the simulation reliably. "
+            "This does not establish that the vehicle could not complete the course.",
+        )
+    if isinstance(exc, RuntimeError) and message == (
+        "Hybrid integration exceeded maximum_transitions without reaching final time."
+    ):
+        return RunFailure(
+            "maximum_transitions",
+            "The simulation reached its limit on changes between operating modes.",
+        )
+    return None
 
 
 class CinderGateway:
@@ -108,6 +172,8 @@ class CinderGateway:
             "package_version": str(cinder.__version__),
             "simulation_case_schema_version": int(SIMULATION_CASE_SCHEMA_VERSION),
             "simulation_result_contract_version": int(SIMULATION_RESULT_CONTRACT_VERSION),
+            "execution_policy_version": EXECUTION_POLICY_VERSION,
+            "default_secondary_helix_topology": DEFAULT_SECONDARY_HELIX_TOPOLOGY,
         }
 
     def conventions(self) -> dict[str, Any]:
@@ -121,6 +187,37 @@ class CinderGateway:
 
     def assembly_json_schema(self) -> dict[str, Any]:
         return assembly_document_json_schema()
+
+    def inline_assembly_json_schema(self, definition: str | None = None) -> dict[str, Any]:
+        """Embed the canonical schema in OpenAPI without copying its fields."""
+        schema = self.assembly_json_schema()
+
+        def expand(value):
+            if isinstance(value, list):
+                return [expand(item) for item in value]
+            if not isinstance(value, dict):
+                return value
+            if "$ref" in value:
+                return expand(schema["$defs"][value["$ref"].rsplit("/", 1)[-1]])
+            return {
+                key: expand(item)
+                for key, item in value.items()
+                if key not in {"$defs", "$id", "$schema"}
+            }
+
+        return expand(schema if definition is None else schema["$defs"][definition])
+
+    def validate_assembly(self, document: Mapping[str, Any]) -> dict[str, Any]:
+        return validate_assembly_document(document).as_dict()
+
+    def validate_assembly_shape(self, document: dict[str, Any]) -> dict[str, Any]:
+        """Enforce the exact schema exported to the editor before persistence."""
+        json.dumps(document, allow_nan=False)
+        error = best_match(Draft202012Validator(self.assembly_json_schema()).iter_errors(document))
+        if error is not None:
+            path = "/" + "/".join(str(part) for part in error.absolute_path)
+            raise ValueError(f"{path}: {error.message}")
+        return document
 
     def simulation_case_json_schema(self) -> dict[str, Any]:
         return simulation_case_document_json_schema()
@@ -157,6 +254,497 @@ class CinderGateway:
             include_raw_trace=include_raw_trace,
         )
 
+    def run_checkpointed(self, document, *, checkpoint, course_policy=None, **options):
+        """Advance accepted chunks; reporting uses an independent solver instance.
+
+        Administrative checkpoints preserve hybrid modes and the live closure cache.
+        Only accepted states are saved. A killed process can lose its current chunk,
+        never corrupt the preceding atomic checkpoint.
+        """
+        from dataclasses import replace
+
+        from cinder.execution.hybrid import HybridEvent, HybridTransition
+        from cinder.execution.hybrid.hybrid import HybridIntegrationResult
+        from cinder.results import CVTIntegrationTrace, CVTResultBuilder
+
+        decoded = decode_simulation_case_document(document)
+        profile = options.get("execution_profile", DEFAULT_EXECUTION_PROFILE)
+        _apply_execution_profile(decoded, profile)
+        system = decoded.build_system()
+        reporter = decode_simulation_case_document(document)
+        _apply_execution_profile(reporter, profile)
+        builder = CVTResultBuilder(system=reporter.build_system())
+        policy = course_policy or {}
+        factor = None
+        secondary = document["shaft_boundaries"]["secondary"]
+        if document["host"]["kind"] == "secondary_shaft_angle" and "final_drive" in secondary:
+            drive = secondary["final_drive"]
+            factor = drive["wheel_radius_m"] / drive["reduction_ratio"]
+        start, end = decoded.time_span
+        time, state, mode = start, decoded.initial_state, decoded.initial_mode
+        peak = float(state[5]) * factor if factor else 0.0
+        progress_peak, progress_time = peak, start
+        finish = policy.get("finish_m")
+        rollback = policy.get("rollback_m")
+        no_progress = policy.get("no_progress_s")
+        if factor is not None and (finish is not None or rollback is not None):
+            base_host = system.host
+
+            class CourseHost:
+                # Delegate the existing host mechanics; add observation events only.
+                state_block = base_host.state_block
+                context = base_host.context
+                rhs = base_host.rhs
+
+                def events(self, **_):
+                    events = []
+                    if finish is not None:
+                        events.append(
+                            HybridEvent(
+                                "course_finish",
+                                lambda t, y: float(y[5]) * factor - finish,
+                                direction=1,
+                            )
+                        )
+                    if rollback is not None:
+                        events.append(
+                            HybridEvent(
+                                "rollback_limit",
+                                lambda t, y: float(y[5]) * factor - (peak - rollback),
+                                direction=-1,
+                            )
+                        )
+                    return events
+
+                def transition(self, *, fired_event_names, **_):
+                    for reason in ("course_finish", "rollback_limit"):
+                        if reason in fired_event_names:
+                            return HybridTransition(next_mode=None, reason=reason)
+                    return None
+
+            system.host = CourseHost()
+        integrator = replace(decoded.integrator_settings, retain_dense_output=True)
+        segments, transitions, reports = [], [], []
+        offsets = {}
+        integrated_keys = (
+            "observer.primary_shaft_angle",
+            "observer.primary_boundary_work",
+            "observer.secondary_boundary_work",
+            "observer.primary_slip_dissipation",
+            "observer.secondary_slip_dissipation",
+        )
+        projected = None
+        while time < end - 1e-10:
+            # Early launch gets an early checkpoint; subsequent chunks are 0.5 s.
+            next_time = min(end, time + (0.1 if time == start else 0.5))
+            if no_progress is not None:
+                next_time = min(next_time, progress_time + no_progress)
+            try:
+                trace = system.integrate_trace(
+                    time_span=(time, next_time),
+                    initial_state=state,
+                    initial_mode=mode,
+                    settings=integrator,
+                )
+            except Exception as exc:
+                failure = _known_integration_failure(exc)
+                if failure is not None:
+                    raise failure from exc
+                raise
+            time, state = trace.final_time, trace.final_state
+            mode = trace.segments[-1].mode
+            if trace.transitions and abs(trace.transitions[-1].time - time) < 1e-10:
+                transition = trace.transitions[-1].transition
+                if not transition.terminates:
+                    mode = transition.next_mode
+            part = builder.build(trace, settings=decoded.reporting_settings)
+            for segment in part.segments:
+                signals = dict(segment.signals)
+                for key in integrated_keys:
+                    if key in signals and key in offsets:
+                        signals[key] = replace(
+                            signals[key], values=signals[key].values + offsets[key]
+                        )
+                reports.append(replace(segment, signals=signals))
+            for key in integrated_keys:
+                if key in reports[-1].signals:
+                    offsets[key] = float(reports[-1].signals[key].values[-1])
+            segments.extend(trace.segments)
+            transitions.extend(trace.transitions)
+            reason = trace.termination_reason if not trace.completed else "checkpoint"
+            if factor is not None:
+                for segment in trace.segments:
+                    for t, x in zip(segment.time, segment.state[5] * factor):
+                        peak = max(peak, float(x))
+                        # 5 cm rejects numerical jitter without treating slow travel as stopped.
+                        if peak >= progress_peak + 0.05:
+                            progress_peak, progress_time = peak, float(t)
+                if (
+                    trace.completed
+                    and no_progress is not None
+                    and time >= progress_time + no_progress - 1e-9
+                ):
+                    reason = "no_forward_progress"
+            if trace.completed and len(transitions) >= integrator.maximum_transitions:
+                reason = "maximum_transitions"
+            if reason == "checkpoint" and time >= end - 1e-10:
+                reason = "time_limit" if finish is not None else "duration_reached"
+            complete = reason in ("course_finish", "duration_reached")
+            aggregate = replace(
+                part,
+                trace=CVTIntegrationTrace(
+                    HybridIntegrationResult(tuple(segments), tuple(transitions), complete, reason)
+                ),
+                segments=tuple(reports),
+                summary=replace(
+                    part.summary,
+                    duration=time - start,
+                    segment_count=len(segments),
+                    transition_count=len(transitions),
+                ),
+            )
+            projected = project_simulation_result(
+                aggregate,
+                include_reported_segments=options.get("include_reported_segments", False),
+                include_raw_trace=options.get("include_raw_trace", False),
+            )
+            checkpoint(projected)
+            if reason != "checkpoint":
+                break
+        return projected
+
+    def _scene_geometry_spec(self, geometry):
+        return self._geometry_context(geometry).build_geometry_spec(
+            primary_outer_radius_at_zero_shift=_number(
+                geometry, "primary_outer_radius_at_zero_shift_m"
+            ),
+            secondary_outer_radius_at_zero_shift=_number(
+                geometry, "secondary_outer_radius_at_zero_shift_m"
+            ),
+        )
+
+    def scene_preview(self, geometry: Mapping[str, Any], *, frame_count: int = 1) -> ScenePreview:
+        """Resolve a compact visual projection; no integration or job is involved.
+
+        Belt points evaluate CINDER's public cord-path expressions. Sheave
+        radius envelopes come from the same resolved spec as the studies.
+        """
+        spec = self._scene_geometry_spec(geometry)
+        dimensions = SceneGeometry(
+            belt_outer_width_m=spec.belt.outer_width,
+            belt_inner_width_m=spec.belt.inner_width,
+            belt_height_m=spec.belt.height,
+            cord_depth_from_outer_m=spec.belt.cord_depth_from_outer,
+            sheave_half_angle_rad=spec.sheave_half_angle,
+            center_distance_m=spec.center_distance,
+            primary_outer_radius_min_m=spec.primary_outer_radius_at_zero_shift,
+            primary_outer_radius_max_m=spec.primary_outer_radius_at_max_shift,
+            secondary_outer_radius_min_m=spec.secondary_outer_radius_at_max_shift,
+            secondary_outer_radius_max_m=spec.secondary_outer_radius_at_zero_shift,
+            deadzone_shift_m=spec.deadzone_shift,
+            max_shift_m=spec.max_shift,
+        )
+        model = BeltPulleyGeometry(spec)
+        domain = build_belt_path_domain(center_distance=spec.center_distance)
+        frames = []
+        for shift in np.linspace(0, spec.max_shift, frame_count):
+            pose = model.evaluate(float(shift))
+            signals = {
+                "geometry.primary_effective_radius": pose.primary.effective,
+                "geometry.secondary_effective_radius": pose.secondary.effective,
+                "geometry.primary_wrap_angle": pose.primary_wrap_angle,
+                "geometry.secondary_wrap_angle": pose.secondary_wrap_angle,
+            }
+            points, regions = [], []
+            # Preserve tangent boundaries and sample each wrap sufficiently even
+            # for a short primary contact arc. No closure is reimplemented here.
+            u = np.linspace(0, 1, 48, endpoint=False)
+            for region in domain.regions:
+                x = region.x.evaluate(coordinate=u, signals=signals)
+                y = region.y.evaluate(coordinate=u, signals=signals)
+                points.extend(zip(x.tolist(), y.tolist(), strict=True))
+                regions.extend([region.key] * len(u))
+            frames.append(
+                SceneFrame(
+                    shift_m=float(shift),
+                    primary_outer_radius_m=pose.primary.outer,
+                    secondary_outer_radius_m=pose.secondary.outer,
+                    belt_axial_position_m=-(
+                        spec.deadzone_shift / 2 + pose.belt_axial_coordinate.value
+                    ),
+                    belt_path_m=points,
+                    belt_regions=regions,
+                )
+            )
+        return ScenePreview(geometry=dimensions, frames=frames)
+
+    def tune_scene(self, assembly):
+        """Preview the initial mechanism contact without a full-travel audit.
+
+        This is a visual projection, not a substitute for save/run validation.
+        """
+        from cinder.contracts.document import (
+            _decode_flyweight_geometry,
+            _decode_pulley,
+        )
+        from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
+            PivotedRollerFollowerGeometry,
+        )
+
+        preview = self.scene_preview(assembly["geometry"])
+        primary = None
+        roller_point = None
+        for component in assembly["pulleys"]["primary"]["components"]:
+            if component["kind"] != "fixed_pivot_roller_flyweight":
+                continue
+            spec = _decode_flyweight_geometry(component["geometry"])
+            surface = PivotedRollerFollowerGeometry(spec)
+            contact = surface.contact_candidates(0)
+            if not contact:
+                raise ValueError(
+                    "The primary roller does not contact this ramp at its initial position."
+                )
+            roller = min(contact, key=lambda item: item.angle)
+            roller_point = (
+                roller.roller_center_axial_position,
+                roller.roller_center_radius,
+            )
+            primary = FlyweightScene(
+                count=component["mass_geometry"]["number_of_flyweights"],
+                tip_mass_per_flyweight_kg=flyweight_tip_mass_kg(component),
+                pivot_m=(spec.pivot_axial_position, spec.pivot_radius),
+                roller_radius_m=spec.roller_radius,
+                roller_side_sign=spec.roller_side_sign,
+                ramp_points_m=[
+                    surface.ramp_surface_point(contact_coordinate=float(x), axial_position=0)
+                    for x in np.linspace(spec.ramp_profile.x_min, spec.ramp_profile.x_max, 80)
+                ],
+            )
+        coupling = assembly["pulleys"]["secondary"].get("helical_coupling")
+        points, poses = [], []
+        secondary = _decode_pulley(
+            assembly["pulleys"]["secondary"], location="secondary"
+        ).helical_coupling
+        if coupling:
+            helix = secondary.profile
+            for q in np.linspace(helix.opening_travel_min, helix.opening_travel_max, 80):
+                theta = helix.evaluate(float(q)).theta
+                points.append(
+                    (
+                        helix.radius * float(np.cos(theta)),
+                        helix.radius * float(np.sin(theta)),
+                        float(q),
+                    )
+                )
+        dimensions = self._scene_geometry_spec(assembly["geometry"])
+        path = BeltPulleyGeometry(dimensions)
+        for shift in np.unique(
+            np.append(np.linspace(0, dimensions.max_shift, 65), dimensions.deadzone_shift)
+        ):
+            position = path.evaluate(float(shift))
+            local = position.secondary_axial_coordinate.value
+            angle = (
+                secondary.evaluate_from_local_coordinate(
+                    axial_position=local, d_axial_position_ds=0, d2_axial_position_ds2=0
+                ).theta
+                if secondary
+                else 0
+            )
+            poses.append(
+                MechanismPose(
+                    shift_m=float(shift),
+                    primary_roller_m=roller_point if shift == 0 else None,
+                    primary_ramp_shift_m=position.primary_axial_coordinate.value,
+                    secondary_axial_position_m=local,
+                    secondary_angle_rad=angle,
+                )
+            )
+        preview.geometry.mechanisms = MechanismScene(
+            primary=primary,
+            secondary_helix_points_m=points,
+            primary_has_spring=any(
+                c["kind"] == "axial_spring" for c in assembly["pulleys"]["primary"]["components"]
+            ),
+            secondary_has_spring=any(
+                c["kind"] == "axial_spring" for c in assembly["pulleys"]["secondary"]["components"]
+            ),
+            poses=poses,
+        )
+        return preview
+
+    def assembly_scene(self, assembly):
+        return self._assembly_scene(json.dumps(assembly, sort_keys=True))
+
+    @staticmethod
+    @lru_cache(maxsize=32)
+    def _assembly_scene(encoded):
+        from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
+            PivotedRollerFollowerGeometry,
+        )
+
+        assembly = json.loads(encoded)
+        preview = CinderGateway().scene_preview(assembly["geometry"])
+        spec = decode_assembly_document(assembly)
+        mechanism = next(
+            (
+                law.spec.mechanism_map
+                for law in spec.pulleys.primary.actuator.force_laws
+                if hasattr(getattr(law, "spec", None), "mechanism_map")
+            ),
+            None,
+        )
+        primary = None
+        if mechanism is not None and hasattr(mechanism, "contact_at"):
+            geometry = mechanism.geometry_spec
+            surface = PivotedRollerFollowerGeometry(geometry)
+            component = next(
+                component
+                for component in assembly["pulleys"]["primary"]["components"]
+                if component["kind"] == "fixed_pivot_roller_flyweight"
+            )
+            primary = FlyweightScene(
+                count=mechanism.mass_geometry.number_of_flyweights,
+                tip_mass_per_flyweight_kg=flyweight_tip_mass_kg(component),
+                pivot_m=(geometry.pivot_axial_position, geometry.pivot_radius),
+                roller_radius_m=geometry.roller_radius,
+                roller_side_sign=geometry.roller_side_sign,
+                ramp_points_m=[
+                    surface.ramp_surface_point(contact_coordinate=float(x), axial_position=0)
+                    for x in np.linspace(
+                        geometry.ramp_profile.x_min, geometry.ramp_profile.x_max, 80
+                    )
+                ],
+            )
+        coupling = spec.pulleys.secondary.helical_coupling
+        helix_points = []
+        if coupling:
+            profile = coupling.profile
+            for q in np.linspace(profile.opening_travel_min, profile.opening_travel_max, 80):
+                theta = profile.evaluate(float(q)).theta
+                helix_points.append(
+                    (
+                        profile.radius * float(np.cos(theta)),
+                        profile.radius * float(np.sin(theta)),
+                        float(q),
+                    )
+                )
+        poses = []
+        # Keep the seating transition as an exact interpolation knot; otherwise
+        # the preview moves the secondary slightly while still in the deadzone.
+        scene_shifts = np.unique(
+            np.append(
+                np.linspace(0, spec.geometry.spec.max_shift, 65),
+                spec.geometry.spec.deadzone_shift,
+            )
+        )
+        for shift in scene_shifts:
+            geometry = spec.geometry.evaluate(float(shift))
+            local = geometry.primary_axial_coordinate.value
+            roller = (
+                mechanism.contact_at(
+                    float(
+                        np.clip(
+                            local,
+                            mechanism.axial_position_min,
+                            mechanism.axial_position_max,
+                        )
+                    )
+                )
+                if primary
+                else None
+            )
+            angle = (
+                coupling.evaluate_from_local_coordinate(
+                    axial_position=geometry.secondary_axial_coordinate.value,
+                    d_axial_position_ds=0,
+                    d2_axial_position_ds2=0,
+                ).theta
+                if coupling
+                else 0
+            )
+            contact_point = (
+                surface.ramp_surface_point(
+                    contact_coordinate=roller.contact_coordinate, axial_position=local
+                )
+                if roller
+                else None
+            )
+            normal = (
+                (
+                    (roller.roller_center_axial_position - contact_point[0])
+                    / mechanism.geometry_spec.roller_radius,
+                    (roller.roller_center_radius - contact_point[1])
+                    / mechanism.geometry_spec.roller_radius,
+                )
+                if roller
+                else None
+            )
+            helix_local = (
+                coupling.evaluate_from_local_coordinate(
+                    axial_position=geometry.secondary_axial_coordinate.value,
+                    d_axial_position_ds=1.0,
+                    d2_axial_position_ds2=0.0,
+                )
+                if coupling
+                else None
+            )
+            poses.append(
+                MechanismPose(
+                    shift_m=float(shift),
+                    primary_contact_m=contact_point,
+                    primary_normal_axial_radial=normal,
+                    secondary_helix_dtheta_dx=helix_local.dtheta_ds if helix_local else None,
+                    primary_roller_m=(
+                        (
+                            roller.roller_center_axial_position,
+                            roller.roller_center_radius,
+                        )
+                        if roller
+                        else None
+                    ),
+                    primary_ramp_shift_m=local,
+                    secondary_axial_position_m=geometry.secondary_axial_coordinate.value,
+                    secondary_angle_rad=angle,
+                )
+            )
+
+        def movable_torque_fraction(pulley):
+            shares = [
+                law.spec.movable_member_torque_fraction
+                for law in pulley.actuator.force_laws
+                if hasattr(getattr(law, "spec", None), "movable_member_torque_fraction")
+            ]
+            # A rigidly guided pulley has symmetric face loading. A helical
+            # element can explicitly configure its movable member's torque share.
+            return sum(shares) if shares else 0.5
+
+        preview.geometry.mechanisms = MechanismScene(
+            primary=primary,
+            primary_movable_torque_fraction=movable_torque_fraction(spec.pulleys.primary),
+            secondary_movable_torque_fraction=movable_torque_fraction(spec.pulleys.secondary),
+            primary_has_spring=any(
+                component["kind"] == "axial_spring"
+                for component in assembly["pulleys"]["primary"]["components"]
+            ),
+            secondary_has_spring=any(
+                component["kind"] == "axial_spring"
+                for component in assembly["pulleys"]["secondary"]["components"]
+            ),
+            secondary_helix_points_m=helix_points,
+            poses=poses,
+        )
+        return preview
+
+    def force_playback(self, assembly, result, scene=None):
+        """Project retained signals and CINDER contact geometry; never integrate."""
+        from cinder.results.fields import build_belt_tension_field
+
+        from app.application.force_projection import project_forces
+
+        scene = scene or self.assembly_scene(assembly).geometry
+        tension = build_belt_tension_field(sheave_half_angle=scene.sheave_half_angle_rad)
+        return project_forces(result, scene, tension)
+
     def geometry_from_endpoint_radii(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         context = self._geometry_context(_mapping(payload.get("context"), "context"))
         design = solve_geometry_from_endpoint_radii(
@@ -191,10 +779,16 @@ class CinderGateway:
         axes_payload = payload.get("axes")
         if not isinstance(axes_payload, list):
             raise ValueError("axes must be an array.")
+        pulley = {
+            "input": PulleyLocation.PRIMARY,
+            "output": PulleyLocation.SECONDARY,
+        }.get(str(payload.get("pulley")))
+        if pulley is None:
+            raise ValueError("pulley must be 'input' or 'output'.")
 
         request = PulleyClampingForceStudyRequest(
             cvt=assembly,
-            pulley=PulleyLocation(str(payload["pulley"])),
+            pulley=pulley,
             point=ActuationOperatingPoint(
                 # This API remains a static clamping map; time is therefore
                 # explicitly fixed rather than hidden behind a context default.
@@ -207,7 +801,9 @@ class CinderGateway:
                         closure, "primary_angular_acceleration_rad_per_s2", default=0.0
                     ),
                     secondary_angular_acceleration=_number(
-                        closure, "secondary_angular_acceleration_rad_per_s2", default=0.0
+                        closure,
+                        "secondary_angular_acceleration_rad_per_s2",
+                        default=0.0,
                     ),
                     belt_acceleration=_number(closure, "belt_acceleration_m_per_s2", default=0.0),
                     shift_acceleration=_number(closure, "shift_acceleration_m_per_s2", default=0.0),

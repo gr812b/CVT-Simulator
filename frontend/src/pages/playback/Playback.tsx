@@ -1,151 +1,158 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './Playback.module.scss';
-import { Button } from '@components/button/Button';
-import { Graph2D } from '@components/graph2D/graph2D';
-import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
-import { Playbar } from '@components/playbar/Playbar';
-import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { useLoading } from '@contexts/LoadingContext';
-import { useSimulationRun } from '@contexts/SimulationRunContext';
-import { ReportReplayController } from '@utils/reportReplay';
-import { downloadReportTableCsv } from '@utils/csvExport';
-import { reportAxisTimes } from '@utils/reportTable';
-import { buildReportGraphs } from './reportGraphs';
-import Home from '@assets/icons/home.svg?react';
-import Edit from '@assets/icons/edit.svg?react';
-import Download from '@assets/icons/arrow_down_circle.svg?react';
-import PlayOutline from '@assets/icons/play_outline.svg?react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Alert,
+  Anchor,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { getSimulationResult, type CompletedSimulationRun } from '@api/client';
+import { ActionButton as Button } from '@components/button/ActionButton';
+import { PageLoading } from '@components/loadingOverlay/PageLoading';
+import { inspectRun, type RunInspection } from '../../features/results/api';
+import { RunStatusBadge } from '../../features/results/RunStatusBadge';
+import { RunOutcomeNotice } from '../../features/results/RunOutcomeNotice';
+import { describeRunOutcome } from '../../features/results/runOutcome';
+import { AuthorLink } from '../../features/community/AuthorLink';
+import { useRunActivity } from '../../features/experiments/RunActivity';
+import { isActive, message } from '../../features/experiments/api';
+import { SimulationPlayback } from './SimulationPlayback';
 
-const PlaybackContent = ({
-  run,
-}: {
-  run: NonNullable<ReturnType<typeof useSimulationRun>['completedRun']>;
-}) => {
-  const navigate = useNavigate();
-  const table = run.result.report_table;
-  const timeValues = useMemo(() => reportAxisTimes(table), [table]);
-  const replayController = useMemo(
-    () => new ReportReplayController(timeValues),
-    [timeValues],
-  );
-  const replayRef = useRef(replayController);
-  const categories = useMemo(() => buildReportGraphs(table), [table]);
-
+/** Both public and workspace URLs enter exactly the same result-loading path. */
+export function Playback() {
+  const { runId } = useParams();
+  const [params] = useSearchParams();
+  const id = runId ?? params.get('run');
+  const [result, setResult] = useState<CompletedSimulationRun | null>(null);
+  const [inspection, setInspection] = useState<RunInspection | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+  const { activity, dismiss } = useRunActivity();
+  const reading = useRef(new Set<string>());
   useEffect(() => {
-    replayRef.current = replayController;
-    return () => replayController.dispose();
-  }, [replayController]);
-
-  const pauseNavigate = useCallback((path: string) => {
-    replayRef.current.pause();
-    navigate(path);
-  }, [navigate]);
-
-  return (
-    <div className={styles.playback}>
-      <div className={styles.buttonsContainer}>
-        <div className={styles.leftButtons}>
-          <Button
-            text="Home"
-            icon={Home}
-            className={styles.navigateButton}
-            onClick={() => pauseNavigate('/')}
-          />
-          <Button
-            text="Tune Setup"
-            icon={Edit}
-            className={styles.navigateButton}
-            onClick={() => pauseNavigate('/input')}
-          />
-        </div>
-        <div className={styles.rightButtons}>
-          <Button
-            text="Download CSV"
-            icon={Download}
-            className={styles.navigateButton}
-            onClick={() => downloadReportTableCsv(table, 'playback_data')}
-          />
-        </div>
-      </div>
-
-      <div className={styles.displayGrid}>
-        <div className={styles.sceneContainer}>
-          <Scene3DViewer
-            replayController={replayController}
-            result={run.result}
-            document={run.inputDocumentSnapshot}
-          />
-        </div>
-        {categories.map((category) => (
-          <div key={category.title} className={styles.graphCategory}>
-            <h2 className={styles.categoryTitle}>{category.title}</h2>
-            <div className={styles.categoryGraphs}>
-              {category.graphs.map((graph) => (
-                <Graph2D
-                  key={graph.config.title}
-                  {...graph}
-                  replayController={replayController}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.playbarContainer}>
-        <Playbar replayController={replayController} times={timeValues} />
-      </div>
-    </div>
-  );
-};
-
-export const Playback = () => {
-  const navigate = useNavigate();
-  const { completedRun, restoreCompletedRun, rerunCompletedRun } = useSimulationRun();
-  const { isLoading, loadingMessage, setLoading } = useLoading();
-  const [restoreError, setRestoreError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (completedRun !== null) return;
-    setLoading(true, 'Restoring completed simulation...');
-    void restoreCompletedRun()
-      .then((run) => {
-        if (run === null) {
-          setRestoreError('No completed database-backed run is available in this browser session.');
-        }
-      })
-      .catch((error) => setRestoreError(error instanceof Error ? error.message : String(error)))
-      .finally(() => setLoading(false));
-  }, [completedRun, restoreCompletedRun, setLoading]);
-
-  const handleRegenerate = useCallback(async () => {
-    setLoading(true, 'Regenerating full result from frozen input...');
-    try {
-      await rerunCompletedRun();
-      setRestoreError(null);
-    } catch (error) {
-      setRestoreError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setLoading(false);
+    for (const notice of activity?.unread ?? []) {
+      if (notice.run.id !== id || reading.current.has(notice.id)) continue;
+      reading.current.add(notice.id);
+      void dismiss(notice.id).catch(() => reading.current.delete(notice.id));
     }
-  }, [rerunCompletedRun, setLoading]);
-
-  if (completedRun === null) {
+  }, [activity, dismiss, id]);
+  useEffect(() => {
+    let active = true;
+    setResult(null);
+    setInspection(null);
+    setError(null);
+    if (!id) {
+      setError('Choose a run to open its playback.');
+      return;
+    }
+    void inspectRun(id)
+      .then(async (inspection) => {
+        if (!active) return;
+        setInspection(inspection);
+        if (isActive(inspection.run) || !inspection.availability.full_result)
+          return;
+        const result = await getSimulationResult(id);
+        if (active) setResult(result);
+      })
+      .catch((cause) => {
+        if (active) setError(message(cause));
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, retry]);
+  if (error && !inspection)
     return (
-      <div className={styles.playback}>
-        <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-        <div className={styles.emptyState}>
-          <h1>Playback unavailable</h1>
-          <p>{restoreError ?? 'Looking for a completed simulation run...'}</p>
-          <button type="button" onClick={() => navigate('/input')}>Back to run setup</button>
-          <button type="button" onClick={() => void handleRegenerate()}>
-            <PlayOutline /> Regenerate result
-          </button>
-        </div>
-      </div>
+      <Container py="xl">
+        <Alert color="red" title="Playback unavailable">
+          {error}
+          <Group mt="md">
+            <Button onClick={() => setRetry((x) => x + 1)}>Try again</Button>
+            <Button
+              component={Link}
+              to={id ? `/runs/${id}` : '/catalog?kind=runs'}
+              variant="default"
+            >
+              View runs
+            </Button>
+          </Group>
+        </Alert>
+      </Container>
     );
-  }
-
-  return <PlaybackContent run={completedRun} />;
-};
+  if (!inspection) return <PageLoading message="Loading result playback…" />;
+  const outcome = describeRunOutcome(inspection.run, inspection);
+  const unavailable = isActive(inspection.run) || !inspection.availability.full_result;
+  return (
+    <>
+      <Container fluid py="md">
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Title order={1}>{inspection.run.name}</Title>
+            <RunStatusBadge run={inspection.run} outcome={outcome} />
+          </Group>
+          <Text size="sm">
+            By{' '}
+            <AuthorLink
+              name={inspection.run.author}
+              id={inspection.run.author_id}
+            />
+          </Text>
+          <Group gap="md">
+            {inspection.references
+              .filter((ref) => ref.href)
+              .map((ref) => (
+                <Anchor
+                  key={ref.kind}
+                  component={Link}
+                  to={ref.href!}
+                  size="sm"
+                >
+                  {ref.name}
+                  {ref.unsaved ? ' · modified for this run' : ''}
+                </Anchor>
+              ))}
+          </Group>
+          {!result && (
+            <RunOutcomeNotice outcome={outcome} availability={inspection.availability} />
+          )}
+          {outcome.category === 'success' && !inspection.availability.full_result && (
+            <Alert color="yellow" title="Full result unavailable" role="alert">
+              {inspection.availability.preview
+                ? 'A saved preview is available in the run details. Full playback and report exports are unavailable.'
+                : 'The full result is no longer available. Its summary and frozen inputs remain in the run details.'}
+            </Alert>
+          )}
+          {error && (
+            <Alert color="red" title="Playback could not be loaded" role="alert">
+              {error}
+              <Button mt="sm" onClick={() => setRetry((value) => value + 1)}>
+                Try again
+              </Button>
+            </Alert>
+          )}
+          {!result && (
+            <Button component={Link} to={`/runs/${inspection.run.id}`} variant="default" w="fit-content">
+              View run details
+            </Button>
+          )}
+        </Stack>
+      </Container>
+      {!result && !error && !unavailable && <PageLoading message="Loading saved trajectory…" />}
+      {result && <SimulationPlayback
+        forceSource={inspection.run.id}
+        result={result.result}
+        document={result.inputDocumentSnapshot}
+        sceneGeometry={result.sceneGeometry}
+        course={result.course}
+        live={isActive(inspection.run)}
+        outcome={outcome}
+        navigation={[
+          { label: 'Run details', to: `/runs/${inspection.run.id}` },
+        ]}
+      />}
+    </>
+  );
+}

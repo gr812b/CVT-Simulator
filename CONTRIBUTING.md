@@ -1,61 +1,31 @@
-# Contributing Guidelines
+# Contributing
 
-Thank you for your interest in contributing to our project! We welcome community contributions and value your feedback. Below are our guidelines for reporting issues and submitting changes.
+Report problems through [GitHub issues](https://github.com/gr812b/CVT-Simulator/issues)
+with reproduction steps, the affected page/API, expected behavior, and relevant
+logs or screenshots. Remove credentials, session/reset tokens and personal data
+from reports.
 
-## Reporting Issues
+Create a branch from the target development branch and keep changes focused.
+Follow the [backend](backend/README.md) and [frontend](frontend/README.md) setup
+instructions. Install through their requirements/package files and use the
+existing formatting and components.
 
-If you encounter bugs or have suggestions for improvements, please help us by opening an issue. When reporting an issue, include:
-- A clear description of the problem or feature request.
-- Steps to reproduce the issue (if applicable).
-- Any relevant screenshots or error logs.
+- Keep mechanics and public model contracts in CINDER; backend adapters compose
+  application inputs, and the frontend owns editing/display behavior.
+- Keep authentication, ownership and CSRF checks on writes. Saved revisions and
+  frozen run inputs must remain independent of later edits.
+- Add Alembic migrations for database schema changes. Do not use a database reset
+  as an upgrade path for user data.
+- Regenerate API contracts locally after backend changes, but do not commit
+  generated schemas/types, credentials, databases, caches or build output.
 
-You can [open a new issue](https://github.com/gr812b/CVT-Simulator/issues) to get started.
+Before submitting, run `python -m pytest`, `python -m flake8 app` and
+`python -m black --check app` from the backend environment. From `frontend/`, run
+`npm run lint`, `npm run build` and the relevant `npm run test:helpers` /
+`npm run test:browser` checks. The frontend guide describes browser installation.
+For CINDER changes, also follow its [package guide](cvtModel/docs/GETTING_STARTED.md)
+and run the relevant model tests.
 
-## Submitting Pull Requests
-
-We use a standard GitHub workflow for contributions. To submit a pull request:
-
-1. **Fork the Repository**  
-   Click the "Fork" button on our GitHub page to create a copy of the repository in your account.
-
-2. **Clone Your Fork**  
-   Clone your forked repository to your local machine:
-   ```bash
-   git clone https://github.com/your-username/your-repo.git
-   ```
-
-3. **Create a New Branch**  
-   Create a branch for your changes:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-4. **Make Your Changes**  
-   Implement your changes, keeping in line with the existing code style and conventions.
-
-5. **Commit Your Changes**  
-   Write clear and concise commit messages:
-   ```bash
-   git commit -m "Add a brief description of your changes"
-   ```
-
-6. **Push Your Branch**  
-   Push your changes to your fork:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. **Open a Pull Request**  
-   Navigate to the original repository and open a pull request. Our team will review your submission and provide feedback.
-
-## Code Style and Guidelines
-
-- Follow the existing code style and project conventions.
-- Write clear and meaningful commit messages.
-- Ensure your code is well-documented and tested where applicable.
-
-## Additional Resources
-
-For more detailed information on contributing, check out our [Developer Documentation](https://github.com/your-repo/docs) and the [Mozilla Science Lab article on CONTRIBUTING.md](https://mozillascience.github.io/working-open-workshop/contributing/).
-
-Thank you for helping to make this project better!
+In the pull request, explain the user-visible change, how it was checked, and
+any migration or deployment steps. Distinguish automated adapter tests from
+checks using the real application and model.

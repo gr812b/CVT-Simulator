@@ -1,88 +1,85 @@
-import { useEffect, useState } from 'react';
-import {
-  defaultDisplayUnit,
-  displayToSi,
-  siToDisplay,
-  type DisplayUnit,
-  type QuantityDimension,
-} from '@utils/units';
-import styles from './QuantityInput.module.scss';
+import { useContext, useEffect, useId, useState } from 'react';
+import { NumberInput } from '@mantine/core';
+import { QuantityValidationContext } from './validation';
+import { displayScale } from '@utils/units';
 
-export interface QuantityInputProps {
-  label: string;
-  valueSi: number;
-  dimension: QuantityDimension;
-  canonicalUnit: string;
-  displayUnit?: DisplayUnit;
-  description?: string;
-  disabled?: boolean;
-  minSi?: number;
-  step?: number | 'any';
-  onChangeSi: (valueSi: number) => void;
-}
-
-/** A display-unit input that always persists canonical SI through its callback. */
-export const QuantityInput = ({
+export function QuantityInput({
   label,
-  valueSi,
-  dimension,
-  canonicalUnit,
-  displayUnit = defaultDisplayUnit(dimension),
+  value,
+  onChange,
+  unit = '',
+  scale: requestedScale,
   description,
+  min,
+  max,
+  integer = false,
   disabled = false,
-  minSi,
-  step = 'any',
-  onChangeSi,
-}: QuantityInputProps) => {
-  const [text, setText] = useState(() => String(siToDisplay(valueSi, displayUnit)));
-  const [editing, setEditing] = useState(false);
-
+}: {
+  label: string;
+  value: number | null;
+  onChange: (value: number) => void;
+  unit?: string;
+  scale?: number;
+  description?: string;
+  min?: number;
+  max?: number;
+  integer?: boolean;
+  disabled?: boolean;
+}) {
+  const id = useId();
+  const scale = requestedScale ?? displayScale(unit);
+  const setInvalid = useContext(QuantityValidationContext);
+  const display = value === null ? '' : Number((value * scale).toPrecision(12));
+  const [working, setWorking] = useState<string | number>(display);
   useEffect(() => {
-    if (!editing) setText(String(siToDisplay(valueSi, displayUnit)));
-  }, [displayUnit, editing, valueSi]);
-
-  const commit = () => {
-    const shownValue = Number(text);
-    if (!Number.isFinite(shownValue)) {
-      setText(String(siToDisplay(valueSi, displayUnit)));
-      return;
-    }
-    const nextSi = displayToSi(shownValue, displayUnit);
-    if (minSi !== undefined && nextSi < minSi) {
-      setText(String(siToDisplay(valueSi, displayUnit)));
-      return;
-    }
-    onChangeSi(nextSi);
-    setText(String(siToDisplay(nextSi, displayUnit)));
-  };
-
+    setWorking(display);
+  }, [display]);
+  const valid =
+    typeof working === 'number' &&
+    Number.isFinite(working) &&
+    (min === undefined || working / scale >= min) &&
+    (max === undefined || working / scale <= max) &&
+    (!integer || Number.isInteger(working));
+  useEffect(() => {
+    setInvalid?.((previous) => {
+      const next = new Set(previous);
+      if (valid || disabled) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    return () =>
+      setInvalid?.((previous) => {
+        const next = new Set(previous);
+        next.delete(id);
+        return next;
+      });
+  }, [id, setInvalid, valid, disabled]);
   return (
-    <label className={styles.field} title={description}>
-      <span className={styles.label}>{label}</span>
-      {description && <span className={styles.description}>{description}</span>}
-      <span className={styles.control}>
-        <input
-          className={styles.input}
-          type="number"
-          value={text}
-          step={step}
-          disabled={disabled}
-          onFocus={() => setEditing(true)}
-          onChange={(event) => setText(event.target.value)}
-          onBlur={() => {
-            setEditing(false);
-            commit();
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === 'Escape') {
-              if (event.key === 'Escape') setText(String(siToDisplay(valueSi, displayUnit)));
-              event.currentTarget.blur();
-            }
-          }}
-        />
-        <span className={styles.unit}>{displayUnit || canonicalUnit}</span>
-      </span>
-      <span className={styles.canonical}>Stored as SI: {canonicalUnit}</span>
-    </label>
+    <NumberInput
+      id={id}
+      label={label}
+      description={description}
+      value={working}
+      disabled={disabled}
+      onChange={(next) => {
+        setWorking(next);
+        if (typeof next === 'number' && Number.isFinite(next))
+          onChange(next / scale);
+      }}
+      required
+      suffix={unit ? ` ${unit}` : undefined}
+      allowDecimal={!integer}
+      min={min === undefined ? undefined : min * scale}
+      max={max === undefined ? undefined : max * scale}
+      clampBehavior="none"
+      hideControls={!integer}
+      error={
+        !valid && !disabled
+          ? working === ''
+            ? 'Enter a value.'
+            : 'Check the allowed range.'
+          : undefined
+      }
+    />
   );
-};
+}

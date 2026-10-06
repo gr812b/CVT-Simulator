@@ -89,7 +89,7 @@ if (!allExist(inputPaths)) {
 rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 
-run(executable('openapi-typescript'), [inputs.openapi, '--output', outputs.backend]);
+run(executable('openapi-typescript'), [inputs.openapi, '--output', outputs.backend, '--default-non-nullable', 'false']);
 run(executable('json2ts'), [inputs.assembly, '--output', outputs.assembly, '--cwd', frontendRoot]);
 run(executable('json2ts'), [inputs.simulationCase, '--output', outputs.simulationCase, '--cwd', frontendRoot]);
 run(executable('json2ts'), [inputs.simulationResult, '--output', outputs.simulationResult, '--cwd', frontendRoot]);

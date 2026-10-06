@@ -1,0 +1,20 @@
+.summaryColumn {
+  position: sticky;
+  top: calc(var(--app-shell-header-height, 64px) + 1rem);
+}
+.summary {
+  overflow-wrap: anywhere;
+}
+.steps :global(.mantine-Stepper-stepLabel) {
+  white-space: normal;
+  line-height: 1.25;
+}
+@media (max-width: 62em) {
+  .summaryColumn {
+    position: static;
+    order: -1;
+  }
+  .steps :global(.mantine-Stepper-stepBody) {
+    display: none;
+  }
+}

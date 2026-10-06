@@ -11,40 +11,64 @@ interface UseScene3DReturn {
   containerRef: React.RefObject<HTMLDivElement | null>;
   sceneController: Scene3DController | null;
   isReady: boolean;
+  error: string | null;
 }
 
 /** Generic Three.js lifecycle. It has no CVT or backend knowledge. */
-export function useScene3D({ sceneConfig, models = [] }: UseScene3DOptions): UseScene3DReturn {
+export function useScene3D({
+  sceneConfig,
+  models = [],
+}: UseScene3DOptions): UseScene3DReturn {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [sceneController, setSceneController] = useState<Scene3DController | null>(null);
+  const [sceneController, setSceneController] =
+    useState<Scene3DController | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const addedModelIds = useRef(new Set<string>());
+  const [error, setError] = useState<string | null>(null);
+  const addedModels = useRef<Model3DConfig[]>([]);
 
   useEffect(() => {
     if (containerRef.current === null) return;
-    const controller = new Scene3DController({ ...sceneConfig, container: containerRef.current });
+    let controller: Scene3DController;
+    try {
+      controller = new Scene3DController({
+        ...sceneConfig,
+        container: containerRef.current,
+      });
+    } catch {
+      setError(
+        'The 3D preview needs WebGL. You can still explore the workspace and run data.',
+      );
+      return;
+    }
     setSceneController(controller);
     setIsReady(true);
-    const currentModelIds = addedModelIds.current;
+
     return () => {
       controller.dispose();
-      currentModelIds.clear();
+      addedModels.current = [];
       setSceneController(null);
       setIsReady(false);
     };
-  // A scene is intentionally constructed once per viewer mount.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // A scene is intentionally constructed once per viewer mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (sceneController === null) return;
-    models.forEach((model) => {
-      if (!addedModelIds.current.has(model.id)) {
-        sceneController.addModel(model);
-        addedModelIds.current.add(model.id);
-      }
-    });
+    const previous = addedModels.current;
+    if (
+      previous.length === models.length &&
+      previous.every((model, i) => model === models[i])
+    )
+      return;
+    // Children are removed before parents so reusing an ID cannot leave stale
+    // geometry attached after a study or result changes.
+    [...previous]
+      .reverse()
+      .forEach((model) => sceneController.removeModel(model.id));
+    models.forEach((model) => sceneController.addModel(model));
+    addedModels.current = models;
   }, [models, sceneController]);
 
-  return { containerRef, sceneController, isReady };
+  return { containerRef, sceneController, isReady, error };
 }

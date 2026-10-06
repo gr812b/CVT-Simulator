@@ -1,193 +1,257 @@
-import { useNavigate } from 'react-router-dom';
+import { Brand } from '@components/appShell/Brand';
+import { useAuth } from '@contexts/AuthContext';
+import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Anchor,
+  Button,
+  Center,
+  Container,
+  Group,
+  Loader,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import {
+  IconArrowRight,
+  IconBrandDiscord,
+  IconBrandGithub,
+  IconFileText,
+  IconMail,
+  IconPlayerPlay,
+} from '@tabler/icons-react';
+import { PublicHeader } from '@components/appShell/PublicHeader';
+import { PROJECT_CONTACT, PROJECT_LINKS } from '../../config/projectLinks';
 import styles from './Home.module.scss';
-import { Button } from '@components/button/Button';
-import cvt_model from '@assets/images/cvt_model.png';
-import Plus from '@assets/icons/plus.svg?react';
-import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
-import PlayOutline from '@assets/icons/play_outline.svg?react';
-import ChevronDown from '@assets/icons/chevron_down.svg?react';
 
-const GITHUB_URL = 'https://github.com/gr812b/CVT-Simulator';
-const PAPER_URL =
-    'https://github.com/gr812b/CVT-Simulator/blob/develop/docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf';
-const CURRENT_YEAR = new Date().getFullYear();
+const HomeCvtPreview = lazy(() => import('./HomeCvtPreview'));
+const external = { target: '_blank', rel: 'noopener noreferrer' } as const;
+
+const steps = [
+  {
+    number: '01',
+    title: 'Use your own vehicle and CVT',
+    text: 'Enter your vehicle, engine, belt and CVT dimensions, or start from the CINDER defaults. Save the parts you want to reuse.',
+  },
+  {
+    number: '02',
+    title: 'Choose a tune and load case',
+    text: 'Adjust the springs, flyweights and helix, then choose a saved road or build one with climbs, descents and whoops.',
+  },
+  {
+    number: '03',
+    title: 'Look inside the result',
+    text: 'Replay the motion with force vectors, inspect speed, ratio, torque and belt slip, and download the data for your own analysis.',
+  },
+];
 
 export const Home = () => {
-    const navigate = useNavigate();
-
-    return (
-        <div className={styles.home}>
-            <section className={styles.hero}>
-                <div className={styles.heroTop}>
-                    <div className={styles.heroContent}>
-                        <h1 className={styles.title}>
-                            <b>CVT</b>
-                            <b className={styles.titleAccent}>Launch</b>
-                            <b>Simulator</b>
-                        </h1>
-                        <p className={styles.description}>
-                            A dynamic drivetrain simulator for Baja SAE vehicles equipped with a CVT,
-                            gear reduction box, and wheels. Models a CH440 Kohler engine, external
-                            forces, torque transmission, slip&nbsp;vs.&nbsp;stick behaviour, and
-                            shifting dynamics. Based on an{' '}
-                            <a
-                                href={PAPER_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.inlineLink}
-                            >
-                                ongoing research paper
-                            </a>{' '}
-                            (WIP).
-                        </p>
-                    </div>
-
-                    <div className={styles.heroVisual}>
-                        <div className={styles.imageCard}>
-                            <img
-                                src={cvt_model}
-                                alt="Secondary CVT assembly — flyweights, spring, and ramps"
-                                className={styles.cvtImage}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className={styles.actions}>
-                    <Button
-                        text="View Demo"
-                        icon={PlayOutline}
-                        size="large"
-                        onClick={() => navigate('/demo')}
-                    />
-                    <Button
-                        text="New Simulation"
-                        icon={Plus}
-                        size="large"
-                        onClick={() => navigate('/input')}
-                    />
-                    <Button
-                        text="Load Simulation"
-                        icon={ArrowDownCircle}
-                        size="large"
-                        onClick={() => navigate('/dashboard')}
-                    />
-                    <Button
-                        text="Dyno Validation"
-                        icon={PlayOutline}
-                        size="large"
-                        onClick={() => navigate('/validation')}
-                    />
-                </div>
-
-                <div className={styles.scrollIndicator}>
-                    <ChevronDown className={styles.scrollChevron} />
-                </div>
-            </section>
-
-            <section className={styles.gettingStarted}>
-                <h2 className={styles.sectionTitle}>Getting Started</h2>
-                <div className={styles.steps}>
-                    <div className={styles.step}>
-                        <span className={styles.stepNumber}>01</span>
-                        <h3 className={styles.stepTitle}>Configure Parameters</h3>
-                        <p className={styles.stepText}>
-                            Click <strong>New Simulation</strong> to define your CVT parameters
-                            from scratch — spring rates, helix angle, flyweight mass, and throttle
-                            ramp profile. Or click <strong>Load Simulation</strong> to start from
-                            a previously saved or default parameter set.
-                        </p>
-                    </div>
-
-                    <div className={styles.stepDivider} />
-
-                    <div className={styles.step}>
-                        <span className={styles.stepNumber}>02</span>
-                        <h3 className={styles.stepTitle}>Run the Simulation</h3>
-                        <p className={styles.stepText}>
-                            Hit <strong>Run</strong> on the input page. The solver resolves torque
-                            transmission, slip&nbsp;vs.&nbsp;stick conditions, and CVT ratio
-                            shifting across the full launch event.
-                        </p>
-                    </div>
-
-                    <div className={styles.stepDivider} />
-
-                    <div className={styles.step}>
-                        <span className={styles.stepNumber}>03</span>
-                        <h3 className={styles.stepTitle}>Explore Results</h3>
-                        <p className={styles.stepText}>
-                            The playback view animates the 3D CVT model in real time alongside
-                            time-series graphs for vehicle speed, gear ratio, torque, and more.
-                            Export the full dataset to CSV for further analysis.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section className={styles.pitfalls}>
-                <h2 className={styles.sectionTitle}>Known Issues &amp; Disclaimers</h2>
-                <p className={styles.pitfallsIntro}>
-                    This tool is a work in progress — many features are still planned and some rough edges remain. Read below before diving in.
-                </p>
-                <ul className={styles.pitfallList}>
-                    <li className={styles.pitfallItem}>
-                        <span className={styles.pitfallLabel}>Slow model loading</span>
-                        <span className={styles.pitfallText}>
-                            The 3D CVT model on the Playback page can take a moment to load. Be patient — it will appear.
-                        </span>
-                    </li>
-                    <li className={styles.pitfallItem}>
-                        <span className={styles.pitfallLabel}>Solver progress bar</span>
-                        <span className={styles.pitfallText}>
-                            The loading bar may appear stuck at certain percentages. Some parts of the simulation are harder to resolve — give it time. The solver will automatically time out after 10 minutes. If that happens, try adjusting your input parameters. If you believe the case should work and it didn&apos;t, feel free to report it.
-                        </span>
-                    </li>
-                    <li className={styles.pitfallItem}>
-                        <span className={styles.pitfallLabel}>Inactive parameters</span>
-                        <span className={styles.pitfallText}>
-                            Some inputs currently have no effect on the simulation: <strong>Traction (%)</strong> and <strong>Total Distance</strong> are placeholders, and the <strong>Hill Incline</strong> setting is largely untested.
-                        </span>
-                    </li>
-                    <li className={styles.pitfallItem}>
-                        <span className={styles.pitfallLabel}>Fixed physical parameters</span>
-                        <span className={styles.pitfallText}>
-                            The vehicle&apos;s physical parameters (engine, drivetrain geometry, etc.) are based on a specific Baja SAE vehicle and are not yet editable. For now, only the tuning parameters visible on the input page can be changed — full physical parameter editing is planned for a future release.
-                        </span>
-                    </li>
-                    <li className={styles.pitfallItem}>
-                        <span className={styles.pitfallLabel}>Questions or bugs?</span>
-                        <span className={styles.pitfallText}>
-                            Reach out to Kai Arseneau — Discord: gr812b. Good luck!
-                        </span>
-                    </li>
-                </ul>
-            </section>
-
-            <footer className={styles.footer}>
-                <span className={styles.footerText}>
-                    &copy; {CURRENT_YEAR} McMaster Baja SAE &mdash; CVT Simulator. All rights reserved.
-                </span>
-                <div className={styles.footerLinks}>
-                    <a
-                        href={PAPER_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.footerLink}
-                    >
-                        Paper
-                    </a>
-                    <span className={styles.footerDot}>·</span>
-                    <a
-                        href={GITHUB_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.footerLink}
-                    >
-                        GitHub
-                    </a>
-                </div>
-            </footer>
-        </div>
-    );
+  const { session } = useAuth();
+  return (
+    <div className={styles.home}>
+      <Container size="xl">
+        <PublicHeader />
+        <main>
+          <section className={styles.hero} aria-labelledby="home-title">
+            <Stack gap="xl" className={styles.heroCopy}>
+              <Text className={styles.eyebrow}>
+                Rubber V-belt CVT simulation
+              </Text>
+              <Title id="home-title" className={styles.title}>
+                Understand
+                <br />
+                every <span>shift.</span>
+              </Title>
+              <Text size="lg" c="dimmed" maw={490}>
+                Simulate your vehicle and CVT with different tunes and road
+                loads. Replay the motion and inspect the forces, torque and belt
+                slip using the model described in the paper.
+              </Text>
+              <Group gap="sm">
+                <Button
+                  component={Link}
+                  to="/demo"
+                  size="md"
+                  leftSection={<IconPlayerPlay size={18} />}
+                >
+                  Explore the demo
+                </Button>
+                <Button
+                  component={Link}
+                  to={session ? '/input' : '/register'}
+                  size="md"
+                  variant="default"
+                  rightSection={<IconArrowRight size={18} />}
+                >
+                  {session ? 'Build a setup' : 'Create a free account'}
+                </Button>
+              </Group>
+            </Stack>
+            <figure className={styles.modelFigure}>
+              <div className={styles.model}>
+                <Suspense
+                  fallback={
+                    <Center h="100%">
+                      <Loader size="sm" aria-label="Loading 3D preview" />
+                    </Center>
+                  }
+                >
+                  <HomeCvtPreview />
+                </Suspense>
+              </div>
+              <figcaption>
+                <span className={styles.modelLabel}>McMaster 2025 CVT</span>
+                <span>Drag or use arrow keys to rotate</span>
+              </figcaption>
+            </figure>
+          </section>
+          <section className={styles.workflow} aria-labelledby="workflow-title">
+            <Group justify="space-between" align="end" mb="xl">
+              <div>
+                <Text className={styles.eyebrow} mb="sm">
+                  Using CINDER
+                </Text>
+                <Title id="workflow-title" order={2}>
+                  Set up a run, then explore what happened.
+                </Title>
+              </div>
+              <Anchor component={Link} to="/catalog">
+                Explore the public library →
+              </Anchor>
+            </Group>
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+              {steps.map((step) => (
+                <Paper
+                  key={step.number}
+                  withBorder
+                  p="xl"
+                  className={styles.step}
+                >
+                  <Text className={styles.stepNumber}>{step.number}</Text>
+                  <Title order={3} size="h4" mt="lg" mb="sm">
+                    {step.title}
+                  </Title>
+                  <Text c="dimmed">{step.text}</Text>
+                </Paper>
+              ))}
+            </SimpleGrid>
+            <Text c="dimmed" size="sm" mt="lg">
+              Saved configurations and runs are public on free accounts, so
+              examples are easy to explore and reuse.
+            </Text>
+          </section>
+          <section className={styles.research} aria-labelledby="research-title">
+            <Stack gap="md">
+              <Text className={styles.eyebrow}>The formulation</Text>
+              <Title id="research-title" order={2}>
+                The model behind the simulation.
+              </Title>
+              <Text c="dimmed" maw={570}>
+                The paper derives the coupled motion of the pulleys, belt and
+                clamping mechanisms, and explains the assumptions and numerical
+                checks. CINDER implements that formulation; this website gives
+                you a way to set up simulations and inspect their results.
+              </Text>
+              <Group mt="sm">
+                <Button
+                  component="a"
+                  href={PROJECT_LINKS.paper}
+                  {...external}
+                  variant="default"
+                  leftSection={<IconFileText size={18} />}
+                >
+                  Read the paper
+                </Button>
+                <Button
+                  component="a"
+                  href={PROJECT_LINKS.github}
+                  {...external}
+                  variant="subtle"
+                  leftSection={<IconBrandGithub size={18} />}
+                >
+                  View on GitHub
+                </Button>
+              </Group>
+            </Stack>
+            <Stack
+              component="aside"
+              gap="md"
+              className={styles.author}
+              aria-labelledby="author-title"
+            >
+              <Title id="author-title" order={2} size="h3">
+                About this project
+              </Title>
+              <Text c="dimmed">
+                This website is still a work in progress, and most of the
+                interface was built with AI, so there are almost certainly some
+                bugs. The CVT model itself is the part I’ve spent much more time
+                on, and the full derivation, assumptions, and checks are in the
+                paper.
+              </Text>
+              <Text c="dimmed">
+                Experimental validation is still to come, so if you have access
+                to a CVT dyno, test data, or anything else that could be useful,
+                definitely hit me up below.
+              </Text>
+              <Text c="dimmed">
+                Hopefully this makes the model a little easier to explore and
+                CVTs a little less of a black box. Everything is free to use,
+                and the source is on GitHub.
+              </Text>
+              <Text c="dimmed">
+                If you have questions, find something broken, want to talk about
+                the paper, or just have thoughts on the project, reach out.
+              </Text>
+              <Text size="sm">– Kai</Text>
+              <Group gap="lg" aria-label="Contact Kai">
+                <Anchor href={`mailto:${PROJECT_CONTACT.email}`} size="sm">
+                  <Group gap="xs" component="span">
+                    <IconMail size={17} aria-hidden="true" />
+                    <span>{PROJECT_CONTACT.email}</span>
+                  </Group>
+                </Anchor>
+                <Group gap="xs">
+                  <IconBrandDiscord size={17} aria-hidden="true" />
+                  <Text size="sm">Discord: {PROJECT_CONTACT.discord}</Text>
+                </Group>
+              </Group>
+            </Stack>
+          </section>
+        </main>
+        <Group
+          component="footer"
+          justify="space-between"
+          className={styles.footer}
+        >
+          <Group gap="md">
+            <Brand />
+            <Text size="sm" c="dimmed">
+              By Kai Arseneau
+            </Text>
+          </Group>
+          <Group gap="lg">
+            <Anchor href={PROJECT_LINKS.paper} {...external} size="sm">
+              Paper
+            </Anchor>
+            <Anchor href={PROJECT_LINKS.github} {...external} size="sm">
+              GitHub
+            </Anchor>
+            <Anchor href={PROJECT_LINKS.license} {...external} size="sm">
+              Source license
+            </Anchor>
+            <Anchor component={Link} to="/demo" size="sm">
+              Try the demo
+            </Anchor>
+            <Anchor href={PROJECT_LINKS.package} {...external} size="sm">
+              PyPI package
+            </Anchor>
+          </Group>
+        </Group>
+      </Container>
+    </div>
+  );
 };
