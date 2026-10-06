@@ -170,7 +170,12 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
         ComponentDescriptor(
             kind="helical_torque_reaction",
             label="Helical torque reaction",
-            description="Torque-reactive helix with torsional preload and movable-member torque fraction.",
+            description=(
+                "Torque-reactive helix with torsional preload and movable-member "
+                "torque fraction. Contact defaults to an ideal zero-clearance slot "
+                "supporting both flanks; contact_topology='unilateral' selects "
+                "single-flank support."
+            ),
             parameters=(
                 ComponentParameter(
                     "torsional_stiffness_Nm_per_rad",
