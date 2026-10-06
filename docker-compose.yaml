@@ -64,7 +64,8 @@ services:
     restart: unless-stopped
     environment: *backend-environment
     command: ["python", "-m", "app.scripts.run_worker"]
-    stop_grace_period: 135s
+    # Allow the 300-second run deadline plus child-process cleanup on shutdown.
+    stop_grace_period: 330s
     depends_on:
       cvt-backend:
         condition: service_healthy

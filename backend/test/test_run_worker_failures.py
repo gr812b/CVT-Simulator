@@ -17,7 +17,7 @@ from cinder.model.cvt.dynamics import TrialClosureSolveError  # noqa: E402
 from app.application import cinder_gateway, jobs  # noqa: E402
 from app.application.run_failures import RunFailure  # noqa: E402
 from app.scripts import run_child, run_worker  # noqa: E402
-from test.test_run_outcomes import sample_result  # noqa: E402
+from test_run_outcomes import sample_result  # noqa: E402
 
 
 @pytest.mark.parametrize(

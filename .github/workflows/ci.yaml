@@ -138,6 +138,62 @@ jobs:
           path: backend/generated
           if-no-files-found: error
 
+  postgres-smoke:
+    name: PostgreSQL Migrations & Seed
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: cvt_simulator
+          POSTGRES_USER: cvt
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cvt -d cvt_simulator"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    # Isolated CI database and application settings; no real mail credentials.
+    env:
+      CVT_DATABASE_URL: postgresql+psycopg://cvt:ci-only-password@127.0.0.1:5432/cvt_simulator
+      CVT_ENVIRONMENT: production
+      CVT_WEB_URL: https://cinder.example
+      CVT_CORS_ORIGINS: https://cinder.example
+      CVT_MAIL_MODE: smtp
+      CVT_SMTP_HOST: smtp.example
+      CVT_SMTP_FROM: cinder@example.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up production Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend runtime dependencies
+        working-directory: ./backend
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip check
+          python -m app.scripts.check_cinder_install
+
+      - name: Migrate a fresh PostgreSQL database and verify repeatable seeding
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m alembic upgrade head
+          python -m app.scripts.init_database
+          python -m app.scripts.init_database
+
   web-tests:
     name: Frontend Lint, Regression Tests & Build
     needs: backend-tests

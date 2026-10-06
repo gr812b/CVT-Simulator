@@ -78,7 +78,7 @@ def main() -> None:
                 session.commit()
         finally:
             engine.dispose()
-    print(f"Database created and seeded: {settings.database_url}")
+    print("Database created and seeded.")
 
 
 if __name__ == "__main__":

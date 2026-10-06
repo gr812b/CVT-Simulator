@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -278,7 +278,7 @@ def test_deprecated_versions_resolve_with_warnings_and_unsupported_versions_bloc
             {"code": "full_throttle_only", "message": "Use a throttle map when available."}
         ]
         engine_version.superseded_by_version_id = replacement.id
-        engine_version.deprecated_at = datetime.now(UTC)
+        engine_version.deprecated_at = datetime.now(timezone.utc)
         session.commit()
 
         document = resolve_simulation_case(
