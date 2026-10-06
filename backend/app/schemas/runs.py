@@ -18,6 +18,33 @@ RunStatus = Literal[
 RunSource = Literal["direct", "library", "experiment"]
 
 
+class RunOutcome(ApiModel):
+    """User-facing interpretation of stored execution and simulation evidence."""
+
+    category: Literal[
+        "pending",
+        "success",
+        "vehicle_stopped",
+        "model_limit",
+        "numerical_error",
+        "configuration_error",
+        "internal_error",
+        "service_error",
+        "cancelled",
+        "resource_limit",
+    ]
+    reason: str
+    severity: Literal["info", "success", "warning", "error"]
+    title: str
+    message: str
+    action: str | None = None
+    has_data: bool
+    partial: bool
+    reached_time_s: float | None = None
+    reached_distance_m: float | None = None
+    support_run_id: str
+
+
 class CreateRunRequest(ApiModel):
     request_key: str = Field(min_length=16, max_length=64)
     simulation_case: JsonObject
@@ -91,6 +118,7 @@ class RunStatusResponse(ApiModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error: ErrorBody | None = None
+    outcome: RunOutcome | None = None
     source: RunSource = "direct"
     contract_hash: str | None = None
     cache_entry_id: str | None = None

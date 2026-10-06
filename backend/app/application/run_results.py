@@ -12,6 +12,7 @@ from app.application import (
     experiments,
     jobs,
     physical_library,
+    run_outcomes,
 )
 from app.application.experiment_tuning import tune_surface
 from app.core.errors import ApiProblem
@@ -266,27 +267,12 @@ def availability(session, run):
             )
             .where(RunCacheEntry.id == run.cache_entry_id)
         ).first()
-    preview = bool(run.summary_series) or bool(
-        session.scalar(
-            select(RunArtifact.id)
-            .where(
-                or_(
-                    RunArtifact.run_id == run.id,
-                    (RunArtifact.cache_entry_id == run.cache_entry_id)
-                    & (RunArtifact.cache_entry_id.is_not(None)),
-                ),
-                RunArtifact.artifact_kind == "preview_series",
-                RunArtifact.inline_payload.is_not(None),
-            )
-            .limit(1)
-        )
-    )
-    metrics = (run.summary_scalars or {}).get("metrics", {})
+    outcome = run_outcomes.outcome(run)
     return ResultAvailability(
         full_result=bool(full and full[2]),
         full_result_hash=full[1] if full else None,
-        preview=preview,
-        partial=metrics.get("completed") is False,
+        preview=outcome.has_data,
+        partial=outcome.partial,
         original_row_count=(run.summary_series or {}).get("original_row_count"),
     )
 

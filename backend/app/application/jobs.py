@@ -13,7 +13,7 @@ from uuid import uuid4
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import object_session
 
-from app.application import access
+from app.application import access, run_outcomes
 from app.application.auth import aware
 from app.application.input_validation import validate_case
 from app.core.errors import ApiProblem
@@ -50,11 +50,13 @@ def status(run, *, include_provenance=True):
         )
     from app.application.authorship import author_name, public_author_id
 
+    outcome = run_outcomes.outcome(run)
     return RunStatusResponse(
         author=author_name(session, run.created_by_user_id),
         author_id=public_author_id(session, run.created_by_user_id),
         queue_position=position,
-        has_result=bool(run.summary_series),
+        has_result=outcome.has_data,
+        outcome=outcome,
         id=run.id,
         name=run.name,
         source=run.source,
@@ -311,10 +313,7 @@ def recover(session, settings, account_id=None):
             .execution_options(synchronize_session=False)
         ).rowcount:
             session.refresh(run)
-            if run.summary_series:
-                saved = artifacts.get_database_run_result(session, run.id)
-                saved["metrics"].update(completed=False, termination_reason=run.error["code"])
-                _save_result(session, run, saved)
+            _mark_saved_result_incomplete(session, run, run.error["code"])
             _notify(session, run)
     session.flush()
     session.expire_all()
@@ -385,6 +384,49 @@ def _save_result(session, run, result):
     run.summary_series = preview
 
 
+def _mark_saved_result_incomplete(session, run, reason):
+    """Keep the last checkpoint when final output cannot be saved or is absent.
+
+    This path updates only already-stored evidence. It must not rebuild the
+    rejected final result or depend on its full artifact remaining online.
+    Artifact hashes follow the updated terminal metadata; sample data is intact.
+    """
+    summary = copy.deepcopy(run.summary_scalars or {})
+    summary.setdefault("metrics", {}).update(completed=False, termination_reason=reason)
+    run.summary_scalars = summary
+    saved = list(session.scalars(select(RunArtifact).where(RunArtifact.run_id == run.id)))
+    full = next((item for item in saved if item.artifact_kind == "full_result"), None)
+    if full is None or full.inline_payload is None:
+        return
+    result = copy.deepcopy(full.inline_payload)
+    result.setdefault("metrics", {}).update(completed=False, termination_reason=reason)
+    replacement = artifacts.create_result_artifact(
+        run_id=run.id, cache_entry_id=None, result=result
+    )
+    full.inline_payload, full.content_hash, full.byte_size = (
+        replacement.inline_payload,
+        replacement.content_hash,
+        replacement.byte_size,
+    )
+    if run.summary_series:
+        preview = copy.deepcopy(run.summary_series)
+        preview["source_result_hash"] = full.content_hash
+        run.summary_series = preview
+    for item in saved:
+        if item.artifact_kind != "preview_series" or item.inline_payload is None:
+            continue
+        preview = copy.deepcopy(item.inline_payload)
+        preview["source_result_hash"] = full.content_hash
+        replacement = artifacts.create_preview_artifact(
+            run_id=run.id, cache_entry_id=None, preview=preview
+        )
+        item.inline_payload, item.content_hash, item.byte_size = (
+            replacement.inline_payload,
+            replacement.content_hash,
+            replacement.byte_size,
+        )
+
+
 def checkpoint(session, run_id, token, result):
     if not session.execute(
         update(Run)
@@ -413,15 +455,23 @@ def finish(session, run_id, token, *, result=None, error=None, terminal="failed"
     run = session.get(Run, run_id, populate_existing=True)
     if run.cancel_requested_at:
         error, terminal = None, "cancelled"
+    elif result is not None and error is None and terminal not in {"cancelled", "timed_out"}:
+        terminal, error = run_outcomes.result_completion(result)
+    elif terminal == "completed":
+        terminal = "failed"
+        error = error or {
+            "code": "incomplete_result",
+            "message": "The worker did not return a completed simulation result.",
+        }
     if result is not None:
-        if error or terminal == "cancelled":
+        if error or terminal in {"cancelled", "timed_out"}:
             result = copy.deepcopy(result)
             result["metrics"].update(
                 completed=False, termination_reason=(error or {}).get("code", terminal)
             )
         _save_result(session, run, result)
-        if error is None and terminal != "cancelled":
-            terminal = "completed"
+    elif error or terminal in {"failed", "cancelled", "timed_out"}:
+        _mark_saved_result_incomplete(session, run, (error or {}).get("code", terminal))
     run.status, run.error, run.completed_at, run.worker_token = (
         terminal,
         error,

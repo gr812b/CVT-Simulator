@@ -1,14 +1,18 @@
-import { runStatusColors } from '@styles/theme';
+import { runOutcomeColors, runStatusColors } from '@styles/theme';
 import { Badge, type BadgeProps } from '@mantine/core';
 import type { RunStatus } from '../experiments/api';
+import { describeRunOutcome, outcomeLabel, type RunOutcome } from './runOutcome';
 
 export function RunStatusBadge({
-  status,
+  run,
+  outcome: suppliedOutcome,
   ...props
-}: BadgeProps & { status: RunStatus['status'] }) {
+}: BadgeProps & { run: RunStatus; outcome?: RunOutcome }) {
+  const outcome = suppliedOutcome ?? describeRunOutcome(run);
   return (
-    <Badge variant="light" {...props} color={runStatusColors[status]}>
-      {status.replace(/_/g, ' ')}
+    <Badge variant="light" {...props} color={outcome.category === 'pending'
+      ? runStatusColors[run.status] : runOutcomeColors[outcome.category]}>
+      {outcomeLabel(outcome, run.status)}
     </Badge>
   );
 }

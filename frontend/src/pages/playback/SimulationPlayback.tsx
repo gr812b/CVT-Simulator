@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ResolvedSceneGeometry } from '@components/scene3DViewer/sceneSpec';
 import type { SimulationCaseDocument, SimulationResult } from '@api/client';
-import { Alert, Group, Paper, Stack } from '@mantine/core';
+import { Group, Paper, Stack } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { PlotWorkspace } from './PlotWorkspace';
 import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
@@ -15,6 +15,8 @@ import { reportAxisTimes } from '@utils/reportTable';
 import { buildReportGraphs } from './reportGraphs';
 import styles from './Playback.module.scss';
 import layout from '@components/appShell/PageGutter.module.scss';
+import { RunOutcomeNotice } from '../../features/results/RunOutcomeNotice';
+import { describeRunOutcome, type RunOutcome } from '../../features/results/runOutcome';
 
 /** Shared playback for owned results and the anonymous retained demo. */
 export function SimulationPlayback({
@@ -25,6 +27,7 @@ export function SimulationPlayback({
   course,
   navigation,
   live = false,
+  outcome,
 }: {
   forceSource?: string;
   result: SimulationResult;
@@ -33,6 +36,7 @@ export function SimulationPlayback({
   course: components['schemas']['RunResultResponse']['course'];
   navigation: { label: string; to: string }[];
   live?: boolean;
+  outcome?: RunOutcome;
 }) {
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -50,6 +54,13 @@ export function SimulationPlayback({
     return () => observer.disconnect();
   }, []);
   const table = result.report_table;
+  const displayedOutcome = outcome ?? (result.metrics.completed === false
+    ? describeRunOutcome({
+      id: forceSource ?? '',
+      status: live ? 'running' : 'completed',
+      has_result: true,
+      summary_scalars: { metrics: result.metrics },
+    }) : null);
   const timeValues = useMemo(() => reportAxisTimes(table), [table]);
   const replayController = useMemo(
     () => new ReportReplayController(timeValues),
@@ -70,18 +81,14 @@ export function SimulationPlayback({
   );
   return (
     <div ref={rootRef} className={`${styles.playback} ${layout.gutter}`}>
-      {result.metrics.completed === false && (
-        <Alert
-          color={live ? 'blue' : 'yellow'}
-          title={live ? 'Live progress' : 'Partial run'}
-          mt="md"
-        >
-          Saved through {result.metrics.duration_s.toFixed(2)} simulated
-          seconds.{' '}
-          {live
-            ? 'The simulation is still running.'
-            : `Stopped: ${result.metrics.termination_reason.replace(/_/g, ' ')}.`}
-        </Alert>
+      {displayedOutcome && displayedOutcome.category !== 'success' && (
+        <div style={{ marginTop: 'var(--mantine-spacing-md)' }}>
+          <RunOutcomeNotice
+            outcome={displayedOutcome}
+            availability={{ full_result: true, preview: true, partial: displayedOutcome.partial }}
+            showReference={Boolean(forceSource)}
+          />
+        </div>
       )}
       <Group justify="space-between" className={styles.buttonsContainer}>
         <Group gap="sm">

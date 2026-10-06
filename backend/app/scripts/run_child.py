@@ -58,6 +58,9 @@ def main():
     # Default SIGALRM terminates even while native solver code holds the GIL.
     signal.signal(signal.SIGALRM, signal.SIG_DFL)
     signal.setitimer(signal.ITIMER_REAL, remaining)
+    from app.application.run_failures import RunFailure
+
+    run_id = envelope.get("run_id", "unknown")
     phase = "resource_limits"
     try:
         apply_limits(envelope)
@@ -85,13 +88,34 @@ def main():
         else:
 
             def checkpoint(result):
-                encoded = json.dumps(result, allow_nan=False).encode("utf-8")
+                try:
+                    encoded = json.dumps(result, allow_nan=False).encode("utf-8")
+                except (TypeError, ValueError) as exc:
+                    raise RunFailure(
+                        "result_serialization_failed",
+                        "The simulation produced data that could not be saved. "
+                        "Any earlier saved checkpoint is still available.",
+                        phase="reporting",
+                    ) from exc
                 if len(encoded) > envelope["result_bytes"]:
-                    raise ValueError("Checkpoint exceeds the result storage limit.")
+                    raise RunFailure(
+                        "run_result_size_limit",
+                        "The result exceeded the storage limit. Reduce reporting "
+                        "detail or shorten the scenario.",
+                        phase="reporting",
+                    )
                 target = output_path.with_name("checkpoint.json")
                 temporary = target.with_suffix(".tmp")
-                temporary.write_bytes(encoded)
-                temporary.replace(target)
+                try:
+                    temporary.write_bytes(encoded)
+                    temporary.replace(target)
+                except OSError as exc:
+                    raise RunFailure(
+                        "checkpoint_persistence_failed",
+                        "The worker could not save the latest simulation data. "
+                        "Any earlier saved checkpoint is still available.",
+                        phase="reporting",
+                    ) from exc
 
             payload = {
                 "result": gateway.run_checkpointed(
@@ -102,40 +126,62 @@ def main():
                 )
             }
     except MemoryError:
-        LOG.exception("Memory budget exhausted during %s", phase)
+        LOG.exception("Run %s exhausted its memory budget during %s", run_id, phase)
         payload = {
             "error": {
                 "code": "run_memory_limit",
                 "message": "The simulation exceeded its memory budget. Shorten the scenario or reduce reporting detail.",
             }
         }
-    except Exception:
-        LOG.exception("Simulation child failed during %s", phase)
+    except RunFailure as exc:
+        cause = exc.__cause__ or exc
+        LOG.exception(
+            "Run %s stopped during %s [%s]: %s: %s",
+            run_id,
+            exc.phase,
+            exc.code,
+            type(cause).__name__,
+            cause,
+        )
+        payload = {"error": exc.as_error()}
+    except Exception as exc:
+        LOG.exception("Run %s failed during %s: %s: %s", run_id, phase, type(exc).__name__, exc)
         messages = {
-            "resource_limits": "The worker could not configure this system's resource limits. See the worker terminal for the startup error.",
-            "solver_import": "The simulation runtime could not start. Install the backend requirements in the worker's environment and see its terminal for details.",
-            "simulation": "The solver could not complete this input. Review the tune, road and numerical settings; the worker terminal contains the detailed error.",
+            "resource_limits": "The worker could not configure its execution limits. The service needs attention.",
+            "solver_import": "The simulation runtime could not start. The service needs attention.",
+            "simulation": "CINDER encountered an unexpected internal error. Use the run ID to report the problem.",
         }
         payload = {
             "error": {
                 "code": f"{phase}_failed",
                 "message": messages[phase],
+                "details": {"phase": phase},
             }
         }
-    encoded = json.dumps(payload, allow_nan=False).encode("utf-8")
-    if len(encoded) > envelope["result_bytes"]:
-        encoded = json.dumps(
-            {
-                "error": {
-                    "code": "run_result_size_limit",
-                    "message": "The result exceeded the storage limit. Reduce reporting detail or shorten the scenario.",
-                }
+    try:
+        encoded = json.dumps(payload, allow_nan=False).encode("utf-8")
+    except (TypeError, ValueError):
+        LOG.exception("Run %s result could not be serialized", run_id)
+        payload = {
+            "error": {
+                "code": "result_serialization_failed",
+                "message": "The simulation produced data that could not be saved. Any earlier saved checkpoint is still available.",
+                "details": {"phase": "reporting"},
             }
-        ).encode("utf-8")
+        }
+        encoded = json.dumps(payload).encode("utf-8")
+    if len(encoded) > envelope["result_bytes"]:
+        payload = {
+            "error": {
+                "code": "run_result_size_limit",
+                "message": "The result exceeded the storage limit. Reduce reporting detail or shorten the scenario.",
+            }
+        }
+        encoded = json.dumps(payload).encode("utf-8")
     temporary = output_path.with_suffix(".tmp")
     temporary.write_bytes(encoded)
     temporary.replace(output_path)
-    return 0
+    return 1 if "error" in payload else 0
 
 
 if __name__ == "__main__":

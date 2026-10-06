@@ -614,8 +614,7 @@ export const Validation = () => {
       const document = resolveDocument(workspace, data, crop, channels);
       setLoading(true, 'Running CINDER validation case…');
       const submitted = await submitValidationSimulationRun(document);
-      const status = await waitForSimulationRun(submitted.id);
-      if (status.status !== 'completed') throw new Error(status.error?.message ?? `Simulation ${status.status}.`);
+      const status = await waitForSimulationRun(submitted.id, { allowPartial: true });
       const result = await getSimulationResult(submitted.id);
       setCompleted(result);
       if (!result.result.metrics.completed) {
@@ -623,7 +622,7 @@ export const Validation = () => {
           `CINDER terminated early after ${result.result.metrics.duration_s.toFixed(3)} s:
 
 `
-          + `${result.result.metrics.termination_reason}
+          + `${status.outcome?.message ?? 'The simulation stopped before completing.'}
 
 `
           + 'Continue anyway and save/open the partial result for debugging?',

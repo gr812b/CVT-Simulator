@@ -155,7 +155,7 @@ export const message = (error: unknown) =>
     ? error.message
     : 'This operation could not be completed.';
 export const isActive = (run: RunStatus) =>
-  run.status === 'queued' || run.status === 'running';
+  run.status === 'queued' || run.status === 'validating' || run.status === 'running';
 
 export const setDefaultTune = async (surface: TuneSurface, tuneId: string) =>
   dataOrThrow(

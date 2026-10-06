@@ -10,8 +10,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "npm run test:helpers && npm run test:browser",
-    "test:helpers": "node test/frontend_checks.mjs",
-    "test:browser": "node test/run_builder_tune_browser.mjs",
+    "test:helpers": "node test/frontend_checks.mjs && node test/run_outcome_checks.mjs",
+    "test:browser": "node test/run_builder_tune_browser.mjs && node test/run_outcome_browser.mjs",
     "preview": "vite preview",
     "contracts:generate": "node scripts/generate-contracts.mjs"
   },

@@ -40,6 +40,7 @@ from cinder.model.cvt.actuation import (
     PulleyActuator,
 )
 from cinder.model.cvt.closure import ClosureUnknown, ClosureUnknowns
+from cinder.model.cvt.dynamics import TrialClosureSolveError
 from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltSectionSpec
 from cinder.results.fields import build_belt_path_domain
 from cinder.studies import (
@@ -63,6 +64,7 @@ from cinder.studies import (
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
+from app.application.run_failures import RunFailure
 from app.application.scene_mass import flyweight_tip_mass_kg
 from app.schemas.scene import (
     FlyweightScene,
@@ -75,6 +77,8 @@ from app.schemas.scene import (
 
 DEFAULT_EXECUTION_PROFILE = "default"
 VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE = "validation_slotted_secondary_helix"
+EXECUTION_POLICY_VERSION = 2
+DEFAULT_SECONDARY_HELIX_TOPOLOGY = "slotted_bilateral_zero_clearance"
 
 
 class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):
@@ -85,31 +89,76 @@ class _BilateralHelicalTorqueReactionForce(HelicalTorqueReactionForce):
 
 
 def _apply_execution_profile(decoded: object, execution_profile: str) -> None:
-    """Apply backend-only execution policy without changing the frozen document."""
+    """Use the slotted secondary for ordinary runs and validation.
 
-    if execution_profile == DEFAULT_EXECUTION_PROFILE:
-        return
-    if execution_profile != VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE:
+    Older CINDER wheels expose only a unilateral helix law. The adapter uses
+    the existing signed zero-clearance law for them. Native topology choices
+    are respected when the installed CINDER document supports them.
+    """
+
+    if execution_profile not in {
+        DEFAULT_EXECUTION_PROFILE,
+        VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
+    }:
         raise ValueError(f"Unsupported execution profile: {execution_profile!r}.")
 
     plant = decoded.plant
     laws = []
-    changed = 0
+    helix_count = 0
     for law in plant.secondary_actuator.force_laws:
+        if not isinstance(law, HelicalTorqueReactionForce):
+            laws.append(law)
+            continue
+        helix_count += 1
         if isinstance(law, _BilateralHelicalTorqueReactionForce):
             laws.append(law)
-        elif isinstance(law, HelicalTorqueReactionForce):
-            laws.append(_BilateralHelicalTorqueReactionForce(spec=law.spec))
-            changed += 1
-        else:
+        elif execution_profile == DEFAULT_EXECUTION_PROFILE and hasattr(
+            law.spec, "contact_topology"
+        ):
+            # A native document may explicitly request unilateral hardware.
             laws.append(law)
+        else:
+            laws.append(_BilateralHelicalTorqueReactionForce(spec=law.spec))
 
-    if changed != 1:
+    if execution_profile == VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE and helix_count != 1:
         raise RuntimeError(
             "Validation slotted-helix profile expected exactly one secondary "
-            f"HelicalTorqueReactionForce; found {changed}."
+            f"HelicalTorqueReactionForce; found {helix_count}."
         )
     object.__setattr__(plant, "secondary_actuator", PulleyActuator(*laws))
+
+
+def _known_integration_failure(exc: Exception) -> RunFailure | None:
+    """Recognize specific solver/domain failures; never blame an arbitrary ValueError."""
+    message = str(exc)
+    if isinstance(exc, RuntimeError) and message.startswith(
+        (
+            "Unilateral pulley-mechanism contact became inadmissible: ",
+            "Unilateral pulley-mechanism contact became inadmissible in deadzone: ",
+        )
+    ):
+        return RunFailure(
+            "mechanism_contact_unsupported",
+            "The simulation encountered a pulley contact state that the selected "
+            "mechanism model cannot represent. Loss of contact or an opposite-flank "
+            "transition is unsupported for that mechanism.",
+        )
+    if isinstance(exc, (TrialClosureSolveError, FloatingPointError, np.linalg.LinAlgError)) or (
+        isinstance(exc, RuntimeError) and message.startswith("solve_ivp failed: ")
+    ):
+        return RunFailure(
+            "numerical_failure",
+            "The numerical solver could not advance the simulation reliably. "
+            "This does not establish that the vehicle could not complete the course.",
+        )
+    if isinstance(exc, RuntimeError) and message == (
+        "Hybrid integration exceeded maximum_transitions without reaching final time."
+    ):
+        return RunFailure(
+            "maximum_transitions",
+            "The simulation reached its limit on changes between operating modes.",
+        )
+    return None
 
 
 class CinderGateway:
@@ -123,6 +172,8 @@ class CinderGateway:
             "package_version": str(cinder.__version__),
             "simulation_case_schema_version": int(SIMULATION_CASE_SCHEMA_VERSION),
             "simulation_result_contract_version": int(SIMULATION_RESULT_CONTRACT_VERSION),
+            "execution_policy_version": EXECUTION_POLICY_VERSION,
+            "default_secondary_helix_topology": DEFAULT_SECONDARY_HELIX_TOPOLOGY,
         }
 
     def conventions(self) -> dict[str, Any]:
@@ -288,12 +339,18 @@ class CinderGateway:
             next_time = min(end, time + (0.1 if time == start else 0.5))
             if no_progress is not None:
                 next_time = min(next_time, progress_time + no_progress)
-            trace = system.integrate_trace(
-                time_span=(time, next_time),
-                initial_state=state,
-                initial_mode=mode,
-                settings=integrator,
-            )
+            try:
+                trace = system.integrate_trace(
+                    time_span=(time, next_time),
+                    initial_state=state,
+                    initial_mode=mode,
+                    settings=integrator,
+                )
+            except Exception as exc:
+                failure = _known_integration_failure(exc)
+                if failure is not None:
+                    raise failure from exc
+                raise
             time, state = trace.final_time, trace.final_state
             mode = trace.segments[-1].mode
             if trace.transitions and abs(trace.transitions[-1].time - time) < 1e-10:

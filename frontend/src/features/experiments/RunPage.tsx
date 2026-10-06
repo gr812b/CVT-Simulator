@@ -21,6 +21,8 @@ import { cancelRun, isActive, message, rerun, type RunStatus } from './api';
 import { useRunActivity } from './RunActivity';
 import { inspectRun, renameRun, type RunInspection } from '../results/api';
 import { ResultDetails } from '../results/ResultDetails';
+import { RunOutcomeNotice } from '../results/RunOutcomeNotice';
+import { describeRunOutcome } from '../results/runOutcome';
 
 export function RunPage() {
   const { runId } = useParams();
@@ -89,6 +91,7 @@ export function RunPage() {
       setBusy(false);
     }
   };
+  const outcome = run ? describeRunOutcome(run, inspection ?? undefined) : null;
   return (
     <Container size="lg" py="lg">
       <Stack>
@@ -124,7 +127,7 @@ export function RunPage() {
               <Stack>
                 <Group justify="space-between">
                   <Title order={2}>{run.name}</Title>
-                  <RunStatusBadge status={run.status} />
+                  <RunStatusBadge run={run} outcome={outcome ?? undefined} />
                 </Group>
                 {inspection?.owned &&
                   (editingName ? (
@@ -201,10 +204,12 @@ export function RunPage() {
                         : 'This simulation is running. Its latest saved progress appears here.'}
                   </Alert>
                 )}
-                {run.error && (
-                  <Alert color="red" title="Run did not complete">
-                    {run.error.message}
-                  </Alert>
+                {outcome && !isActive(run) && (
+                  <RunOutcomeNotice
+                    outcome={outcome}
+                    availability={inspection?.availability}
+                    showReference={false}
+                  />
                 )}
                 <Group>
                   {(isActive(run) || inspection?.availability.full_result) && (
@@ -217,7 +222,7 @@ export function RunPage() {
                           : undefined
                       }
                     >
-                      Open result playback
+                      {outcome?.partial ? 'Open partial playback' : 'Open result playback'}
                     </Button>
                   )}
                   {inspection?.owned &&

@@ -189,12 +189,33 @@ Defaults allow 300 seconds of worker wall time, 300 seconds simulated duration,
 at the road end or stop on rollback/no progress. Actual configured limits are
 exposed through API metadata; change them consistently for API and worker.
 
+Ordinary runs and validation use a zero-clearance slotted secondary helix by
+default, supporting reaction through either slot flank. CINDER's native
+`contact_topology` field also permits explicit `unilateral` hardware. Older
+installed wheels use the application's slotted compatibility adapter during
+execution; the native package change applies the default during initial-state
+classification as well. Primary flyweight contact constraints still apply.
+The runtime identity records the execution policy and default helix topology,
+so new runs record which policy produced their data.
+
 Checkpoints preserve completed progress when a later timeout, cancellation or
 failure occurs. An interrupted worker is recovered after its deadline and grace
 period. An unfinished chunk can be lost, and failure before the first checkpoint
 leaves no trajectory. Checkpoints are viewable partial results, not resumable
 jobs; **Rerun frozen inputs** creates a new job. Worker logs contain the detailed
 startup/solver error. New jobs do not reuse the legacy global result cache.
+
+Run responses include a structured `outcome`: course completion or deliberate
+course stop, model limit, numerical error, configuration problem, internal or
+service error, cancellation, or resource limit. This is separate from the job's
+lifecycle status. A course rollback/no-progress stop is a completed computation
+with an incomplete course; an unfinished checkpoint or solver failure cannot be
+reported as a successful run. The UI shows the last saved time/road position,
+labels partial playback and exports, and explicitly identifies runs with no
+saved data. Only confirmed input errors ask the user to correct configuration;
+unexpected exceptions retain their detailed traceback in worker logs and show
+a run ID for investigation. A handled child error exits nonzero and returns a
+structured error envelope that the worker preserves.
 
 ## Contracts and checks
 

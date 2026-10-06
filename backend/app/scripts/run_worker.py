@@ -58,6 +58,45 @@ def stopped_error(returncode):
     return {"code": "worker_process_stopped", "message": message}
 
 
+def read_child_payload(output_path, *, returncode, result_bytes):
+    """Read the atomic completion envelope independently of the process exit code.
+
+    A handled failure exits nonzero and carries its own precise error. A lone
+    checkpoint is never proof of successful completion.
+    """
+    if not output_path.exists():
+        return None, stopped_error(returncode)
+    if output_path.stat().st_size > result_bytes:
+        return None, {
+            "code": "run_result_size_limit",
+            "message": "The result exceeded the storage limit. Any earlier saved checkpoint is still available.",
+        }
+    try:
+        payload = json.loads(output_path.read_text())
+        if not isinstance(payload, dict):
+            raise ValueError("Completion envelope must be an object.")
+        result, error = payload.get("result"), payload.get("error")
+        if result is not None and not isinstance(result, dict):
+            raise ValueError("Completion result must be an object.")
+        if error is not None and (
+            not isinstance(error, dict)
+            or not isinstance(error.get("code"), str)
+            or not isinstance(error.get("message"), str)
+        ):
+            raise ValueError("Completion error must contain a code and message.")
+        if result is None and error is None:
+            raise ValueError("Completion envelope contains no result or error.")
+    except (OSError, UnicodeError, ValueError):
+        LOG.exception("Could not read the simulation child's completion envelope")
+        return None, {
+            "code": "child_protocol_error",
+            "message": "The worker received an incomplete or unreadable response from the simulation. Any earlier saved checkpoint is still available.",
+        }
+    if error is None and returncode != 0:
+        error = stopped_error(returncode)
+    return result, error
+
+
 def execute(factory, settings, run):
     token = run.worker_token
     scenario = (run.provenance or {}).get("scenario", {})
@@ -83,6 +122,7 @@ def execute(factory, settings, run):
         input_path.write_text(
             json.dumps(
                 {
+                    "run_id": run.id,
                     "input": run.input_contract,
                     "course_policy": policy,
                     "options": run.execution_options,
@@ -197,17 +237,14 @@ def execute(factory, settings, run):
                     "code": "run_timeout",
                     "message": "The simulation exceeded its wall-clock time limit.",
                 }
-            elif error is None and child.returncode != 0:
-                error = stopped_error(child.returncode)
-            elif (
-                error is None
-                and output_path.exists()
-                and output_path.stat().st_size <= settings.run_max_result_bytes
-            ):
-                payload = json.loads(output_path.read_text())
-                result, error = payload.get("result", result), payload.get("error")
-            if result is None and error is None and not stopped_by_supervisor:
-                error = stopped_error(child.returncode)
+            elif error is None:
+                completed_result, error = read_child_payload(
+                    output_path,
+                    returncode=child.returncode,
+                    result_bytes=settings.run_max_result_bytes,
+                )
+                if completed_result is not None:
+                    result = completed_result
         except Exception:
             LOG.exception("Run %s could not execute", run.id)
             error = {
@@ -223,9 +260,10 @@ def execute(factory, settings, run):
                 stderr_thread.join(timeout=2)
             if error:
                 LOG.error(
-                    "Run %s failed: %s (child exit %s)",
+                    "Run %s failed: %s — %s (child exit %s)",
                     run.id,
                     error["code"],
+                    error["message"],
                     child.returncode if child else None,
                 )
                 if stderr_tail:

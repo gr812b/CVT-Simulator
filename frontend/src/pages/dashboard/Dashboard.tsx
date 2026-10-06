@@ -22,6 +22,7 @@ import {
   type RunStatus,
 } from '../../features/experiments/api';
 import { RunStatusBadge } from '../../features/results/RunStatusBadge';
+import { describeRunOutcome, outcomeProgress } from '../../features/results/runOutcome';
 
 const guide = [
   {
@@ -135,8 +136,13 @@ export function Dashboard() {
                             Queue position: {run.queue_position}
                           </Text>
                         )}
+                      {outcomeProgress(describeRunOutcome(run)) && (
+                        <Text size="xs" c="dimmed">
+                          {outcomeProgress(describeRunOutcome(run))}
+                        </Text>
+                      )}
                     </Stack>
-                    <RunStatusBadge status={run.status} />
+                    <RunStatusBadge run={run} />
                   </Group>
                 </Paper>
               ))}

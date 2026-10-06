@@ -26,6 +26,7 @@ import {
 } from './api';
 import { ResultChart } from './ResultChart';
 import { isActive, message } from '../experiments/api';
+import { describeRunOutcome } from './runOutcome';
 
 const exports: { kind: ExportKind; label: string; full: boolean }[] = [
   { kind: 'input', label: 'Canonical input JSON', full: false },
@@ -37,6 +38,7 @@ const exports: { kind: ExportKind; label: string; full: boolean }[] = [
 export function ResultDetails({ inspection }: { inspection: RunInspection }) {
   const { run, references, metrics, availability, warnings, transitions } =
     inspection;
+  const outcome = describeRunOutcome(run, inspection);
   const [busy, setBusy] = useState<ExportKind | 'input-view' | null>(null);
   const [input, setInput] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +114,8 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
                 }
                 onClick={() => void download(item.kind)}
               >
-                {item.label}
+                {outcome.partial && item.kind === 'result' ? 'Saved result JSON'
+                  : outcome.partial && item.kind === 'csv' ? 'Saved report CSV' : item.label}
               </Button>
             ))}
           </Group>
@@ -120,6 +123,7 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
             Exports preserve canonical units. Full result JSON includes every
             retained field; CSV contains every report column and row. Optional
             raw traces exist only if they were requested and retained.
+            {outcome.partial && ' This run’s exports stop at the last saved point.'}
           </Text>
           {error && (
             <Alert color="red" role="alert">
@@ -148,17 +152,15 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
           </Accordion>
         </Stack>
       </Paper>
-      {availability.partial && (
+      {availability.partial && isActive(run) && (
         <Alert
-          color={isActive(run) ? 'blue' : 'yellow'}
-          title={isActive(run) ? 'Live progress' : 'Partial result'}
+          color="blue"
+          title="Live progress"
         >
-          {isActive(run)
-            ? 'The simulation is still running. Charts and metrics update with its latest saved progress.'
-            : `The simulation stopped before completing the requested run. Metrics and playback cover the saved trajectory. Reason: ${inspection.termination_reason?.replace(/_/g, ' ') ?? 'unspecified'}.`}
+          The simulation is still running. Charts and metrics update with its latest saved progress.
         </Alert>
       )}
-      {run.status === 'completed' && !availability.full_result && (
+      {!isActive(run) && outcome.has_data && !availability.full_result && (
         <Alert color="yellow" title="Full result unavailable">
           This run’s full artifact is no longer available.{' '}
           {availability.preview
@@ -215,16 +217,14 @@ export function ResultDetails({ inspection }: { inspection: RunInspection }) {
           </Stack>
         </Paper>
       )}
-      {run.status === 'completed' && (
+      {!isActive(run) && (outcome.has_data || warnings.length > 0 || transitions.length > 0) && (
         <Paper withBorder p="lg">
           <Stack>
             <Title order={2} size="h3">
               Warnings & transitions
             </Title>
             <Text size="sm">
-              Termination:{' '}
-              {inspection.termination_reason?.replace(/_/g, ' ') ??
-                'not recorded'}
+              Outcome: {outcome.title}
             </Text>
             {warnings.length ? (
               warnings.map((warning, index) => (

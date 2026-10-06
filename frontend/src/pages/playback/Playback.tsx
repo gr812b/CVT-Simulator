@@ -14,6 +14,8 @@ import { ActionButton as Button } from '@components/button/ActionButton';
 import { PageLoading } from '@components/loadingOverlay/PageLoading';
 import { inspectRun, type RunInspection } from '../../features/results/api';
 import { RunStatusBadge } from '../../features/results/RunStatusBadge';
+import { RunOutcomeNotice } from '../../features/results/RunOutcomeNotice';
+import { describeRunOutcome } from '../../features/results/runOutcome';
 import { AuthorLink } from '../../features/community/AuthorLink';
 import { useRunActivity } from '../../features/experiments/RunActivity';
 import { isActive, message } from '../../features/experiments/api';
@@ -24,10 +26,8 @@ export function Playback() {
   const { runId } = useParams();
   const [params] = useSearchParams();
   const id = runId ?? params.get('run');
-  const [data, setData] = useState<{
-    result: CompletedSimulationRun;
-    inspection: RunInspection;
-  } | null>(null);
+  const [result, setResult] = useState<CompletedSimulationRun | null>(null);
+  const [inspection, setInspection] = useState<RunInspection | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const { activity, dismiss } = useRunActivity();
@@ -41,7 +41,8 @@ export function Playback() {
   }, [activity, dismiss, id]);
   useEffect(() => {
     let active = true;
-    setData(null);
+    setResult(null);
+    setInspection(null);
     setError(null);
     if (!id) {
       setError('Choose a run to open its playback.');
@@ -49,12 +50,12 @@ export function Playback() {
     }
     void inspectRun(id)
       .then(async (inspection) => {
-        if (isActive(inspection.run))
-          throw new Error(
-            'This run is still active. Open playback once it has stopped.',
-          );
+        if (!active) return;
+        setInspection(inspection);
+        if (isActive(inspection.run) || !inspection.availability.full_result)
+          return;
         const result = await getSimulationResult(id);
-        if (active) setData({ result, inspection });
+        if (active) setResult(result);
       })
       .catch((cause) => {
         if (active) setError(message(cause));
@@ -63,7 +64,7 @@ export function Playback() {
       active = false;
     };
   }, [id, retry]);
-  if (error)
+  if (error && !inspection)
     return (
       <Container py="xl">
         <Alert color="red" title="Playback unavailable">
@@ -81,15 +82,16 @@ export function Playback() {
         </Alert>
       </Container>
     );
-  if (!data) return <PageLoading message="Loading result playback…" />;
-  const { result, inspection } = data;
+  if (!inspection) return <PageLoading message="Loading result playback…" />;
+  const outcome = describeRunOutcome(inspection.run, inspection);
+  const unavailable = isActive(inspection.run) || !inspection.availability.full_result;
   return (
     <>
       <Container fluid py="md">
         <Stack gap="xs">
           <Group justify="space-between">
             <Title order={1}>{inspection.run.name}</Title>
-            <RunStatusBadge status={inspection.run.status} />
+            <RunStatusBadge run={inspection.run} outcome={outcome} />
           </Group>
           <Text size="sm">
             By{' '}
@@ -113,19 +115,44 @@ export function Playback() {
                 </Anchor>
               ))}
           </Group>
+          {!result && (
+            <RunOutcomeNotice outcome={outcome} availability={inspection.availability} />
+          )}
+          {outcome.category === 'success' && !inspection.availability.full_result && (
+            <Alert color="yellow" title="Full result unavailable" role="alert">
+              {inspection.availability.preview
+                ? 'A saved preview is available in the run details. Full playback and report exports are unavailable.'
+                : 'The full result is no longer available. Its summary and frozen inputs remain in the run details.'}
+            </Alert>
+          )}
+          {error && (
+            <Alert color="red" title="Playback could not be loaded" role="alert">
+              {error}
+              <Button mt="sm" onClick={() => setRetry((value) => value + 1)}>
+                Try again
+              </Button>
+            </Alert>
+          )}
+          {!result && (
+            <Button component={Link} to={`/runs/${inspection.run.id}`} variant="default" w="fit-content">
+              View run details
+            </Button>
+          )}
         </Stack>
       </Container>
-      <SimulationPlayback
+      {!result && !error && !unavailable && <PageLoading message="Loading saved trajectory…" />}
+      {result && <SimulationPlayback
         forceSource={inspection.run.id}
         result={result.result}
         document={result.inputDocumentSnapshot}
         sceneGeometry={result.sceneGeometry}
         course={result.course}
         live={isActive(inspection.run)}
+        outcome={outcome}
         navigation={[
           { label: 'Run details', to: `/runs/${inspection.run.id}` },
         ]}
-      />
+      />}
     </>
   );
 }

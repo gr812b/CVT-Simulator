@@ -20,6 +20,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getHistory, type HistoryQuery, type RunHistoryPage } from './api';
 import { isActive, message } from '../experiments/api';
+import { describeRunOutcome, outcomeDataMessage, outcomeProgress } from './runOutcome';
 
 const statuses: NonNullable<HistoryQuery['status']>[] = [
   'queued',
@@ -167,7 +168,7 @@ export function RunHistory({
                 clearable
                 data={statuses.map((value) => ({
                   value,
-                  label: value.replace(/_/g, ' '),
+                  label: value === 'completed' ? 'Finished (including early stops)' : value.replace(/_/g, ' '),
                 }))}
                 value={status ?? null}
                 onChange={(value) => update('status', value ?? '')}
@@ -257,7 +258,9 @@ export function RunHistory({
                 </Paper>
               ) : (
                 <Stack>
-                  {data.items.map(({ run, references }) => (
+                  {data.items.map(({ run, references }) => {
+                    const outcome = describeRunOutcome(run);
+                    return (
                     <Paper withBorder p="lg" key={run.id}>
                       <div className="public-run-row">
                         <div style={{ minWidth: 0 }}>
@@ -272,8 +275,17 @@ export function RunHistory({
                           <Text size="xs" c="dimmed" lineClamp={1}>
                             {references.map((ref) => ref.name).join(' · ')}
                           </Text>
+                          {!isActive(run) && outcome.category !== 'success' && (
+                            <Text size="sm" mt="xs">{outcome.message}</Text>
+                          )}
+                          {outcomeProgress(outcome) && (
+                            <Text size="xs" c="dimmed">{outcomeProgress(outcome)}</Text>
+                          )}
+                          {!isActive(run) && outcome.category !== 'success' && (
+                            <Text size="xs" c="dimmed">{outcomeDataMessage(outcome)}</Text>
+                          )}
                         </div>
-                        <RunStatusBadge status={run.status} />
+                        <RunStatusBadge run={run} />
                         <Button
                           component={Link}
                           to={`/runs/${run.id}`}
@@ -283,7 +295,8 @@ export function RunHistory({
                         </Button>
                       </div>
                     </Paper>
-                  ))}
+                    );
+                  })}
                 </Stack>
               )}
               {data.total > 24 && (

@@ -68,13 +68,23 @@ resume an interrupted solver. Reruns freeze the original input into a new job
 and record the installed execution identity. A worker whose runtime differs from
 the submitted identity fails rather than silently relabeling results.
 
+`run_outcomes.py` separates execution status from the simulated course outcome
+and the reason a run stopped. It derives saved progress from retained finite
+samples. Errors annotate existing checkpoints and preserve their data even
+when the final result cannot be stored. The child returns a safe error envelope
+with a nonzero exit; the worker reads that envelope before classifying the exit.
+Missing or unreadable completion output never turns a checkpoint into success.
+
 New jobs do not look up the legacy global run cache. Existing cache-linked
 artifacts remain readable. See [DATABASE.md](DATABASE.md) for persisted fields.
 
 ## Contracts and previews
 
 Runtime identity separates the CINDER package version, input schema version and
-result contract version. Keep these identities distinct in stored provenance.
+result contract version, plus the backend execution policy and default secondary
+helix topology. Ordinary runs use zero-clearance slotted support; native CINDER
+documents can explicitly select unilateral hardware. Keep these identities and
+the frozen input distinct in stored provenance.
 `app/scripts/export_contract_artifacts.py` exports backend OpenAPI and CINDER's
 assembly/input/result JSON schemas. Frontend types are generated from those
 artifacts; generated files are not committed.

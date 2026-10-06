@@ -27,3 +27,5 @@ class CinderRuntimeResponse(ApiModel):
     package_version: str
     simulation_case_schema_version: int
     simulation_result_contract_version: int
+    execution_policy_version: int
+    default_secondary_helix_topology: str

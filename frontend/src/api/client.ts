@@ -29,7 +29,7 @@ export type RunStatus = Camel<
   Required<
     Pick<
       Schema['RunStatusResponse'],
-      'id' | 'status' | 'submitted_at' | 'started_at' | 'completed_at' | 'error' | 'has_result'
+      'id' | 'status' | 'submitted_at' | 'started_at' | 'completed_at' | 'error' | 'has_result' | 'outcome'
     >
   >
 >;
@@ -185,7 +185,9 @@ type JsonObject = Record<string, unknown>;
 
 export class SimulationRunError extends ApiClientError {
   public constructor(public readonly run: RunStatus) {
-    super(run.error?.message ?? `Simulation run ${run.status}.`, undefined, run.error);
+    const explanation = run.outcome?.message ?? 'The simulation stopped before completing.';
+    const action = run.outcome?.action ?? 'Open the run details to review its outcome.';
+    super(`${explanation} ${action} Run ID: ${run.id}`, undefined, run.error);
     this.name = 'SimulationRunError';
   }
 }
@@ -256,6 +258,7 @@ function parseRunStatus(raw: unknown): RunStatus {
     completedAt:
       value.completed_at === null ? null : string(value.completed_at, 'run status.completed_at'),
     error: parseProblem(value.error),
+    outcome: value.outcome == null ? null : object(value.outcome, 'run status.outcome') as Schema['RunOutcome'],
   };
 }
 
@@ -898,13 +901,16 @@ function sleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
 /** Poll only honest run lifecycle states; the backend intentionally has no percentage estimate. */
 export async function waitForSimulationRun(
   runId: string,
-  options: { pollIntervalMs?: number; signal?: AbortSignal } = {},
+  options: { pollIntervalMs?: number; signal?: AbortSignal; allowPartial?: boolean } = {},
 ): Promise<RunStatus> {
   const pollIntervalMs = options.pollIntervalMs ?? 350;
   while (true) {
     const run = await getSimulationRun(runId);
     if (run.status === 'completed') return run;
-    if (run.status === 'failed' || run.status === 'timed_out' || run.status === 'cancelled') throw new SimulationRunError(run);
+    if (run.status === 'failed' || run.status === 'timed_out' || run.status === 'cancelled') {
+      if (options.allowPartial && run.hasResult) return run;
+      throw new SimulationRunError(run);
+    }
     await sleep(pollIntervalMs, options.signal);
   }
 }

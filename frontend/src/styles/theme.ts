@@ -130,3 +130,20 @@ export const runStatusColors: Record<
   timed_out: 'orange',
   cancelled: 'gray',
 };
+
+/** A processed job can still end at a vehicle, model, or solver limit. */
+export const runOutcomeColors: Record<
+  NonNullable<components['schemas']['RunStatusResponse']['outcome']>['category'],
+  string
+> = {
+  pending: 'blue',
+  success: 'teal',
+  vehicle_stopped: 'yellow',
+  model_limit: 'yellow',
+  numerical_error: 'red',
+  configuration_error: 'orange',
+  internal_error: 'red',
+  service_error: 'orange',
+  resource_limit: 'orange',
+  cancelled: 'gray',
+};

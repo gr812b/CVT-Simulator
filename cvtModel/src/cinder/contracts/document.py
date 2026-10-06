@@ -354,6 +354,7 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
             "torsional_stiffness_Nm_per_rad": spec.torsional_stiffness,
             "initial_twist_rad": spec.initial_twist,
             "movable_member_torque_fraction": spec.movable_member_torque_fraction,
+            "contact_topology": spec.contact_topology,
         }
     raise UnsupportedDesignDocumentError(
         f"Cannot encode unsupported pulley force law {type(force_law).__name__}."
@@ -415,9 +416,11 @@ def _compile_flyweight_geometry(
     geometry = json.loads(serialized)
     return CompiledPivotedRollerFollowerGeometry(
         _decode_flyweight_geometry(geometry),
-        _integer(geometry, "compilation_points")
-        if "compilation_points" in geometry
-        else 257,
+        (
+            _integer(geometry, "compilation_points")
+            if "compilation_points" in geometry
+            else 257
+        ),
     )
 
 
@@ -485,6 +488,11 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
                 initial_twist=_number(payload, "initial_twist_rad"),
                 movable_member_torque_fraction=_optional_number(
                     payload, "movable_member_torque_fraction", default=0.5
+                ),
+                contact_topology=(
+                    _string(payload, "contact_topology")
+                    if "contact_topology" in payload
+                    else "slotted"
                 ),
             )
         )

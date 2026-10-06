@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from math import cos, isclose, pi
 from pathlib import Path
 
@@ -273,7 +274,7 @@ def test_helix_same_element_can_be_mounted_on_either_pulley() -> None:
     assert resolved_force(primary=False) > 0.0
 
 
-def test_helix_contact_margin_rejects_opposite_flank_requirement() -> None:
+def test_helix_slot_supports_either_flank_without_changing_signed_forces() -> None:
     profile = HelixProfile(
         circumferential_profile=PiecewiseRamp(
             (linear_helix_segment(length=0.03, helix_angle_degrees=30.0),)
@@ -312,10 +313,39 @@ def test_helix_contact_margin_rejects_opposite_flank_requirement() -> None:
     )
     compressive = ClosureUnknowns(secondary_torque=20.0)
     opposite = ClosureUnknowns(secondary_torque=-100.0)
+    assert law.spec.contact_topology == "slotted"
     assert law.compressive_contact_margin(context=context, unknowns=compressive) > 0.0
-    assert law.compressive_contact_margin(context=context, unknowns=opposite) < 0.0
+    assert law.compressive_contact_margin(context=context, unknowns=opposite) > 0.0
     assert law.has_compressive_contact(context=context, unknowns=compressive)
-    assert not law.has_compressive_contact(context=context, unknowns=opposite)
+    assert law.has_compressive_contact(context=context, unknowns=opposite)
+
+    unilateral = HelicalTorqueReactionForce(
+        spec=replace(law.spec, contact_topology="unilateral")
+    )
+    assert unilateral.has_compressive_contact(context=context, unknowns=compressive)
+    assert not unilateral.has_compressive_contact(context=context, unknowns=opposite)
+    assert (
+        unilateral.compressive_contact_margin(context=context, unknowns=opposite) < 0.0
+    )
+
+    slot_element = law.evaluate_element(context)
+    single_element = unilateral.evaluate_element(context)
+    for unknowns in (compressive, opposite):
+        assert isclose(
+            slot_element.closing_force.evaluate(unknowns),
+            single_element.closing_force.evaluate(unknowns),
+        )
+        assert isclose(
+            slot_element.shaft_torque.evaluate(unknowns),
+            single_element.shaft_torque.evaluate(unknowns),
+        )
+    # The opposite flank transmits the opposite signed axial force. Taking an
+    # absolute value of the physical force would change the modeled mechanics.
+    assert (
+        slot_element.closing_force.evaluate(compressive)
+        * slot_element.closing_force.evaluate(opposite)
+        < 0.0
+    )
 
 
 def test_engagement_boundary_uses_explicit_one_sided_tangents() -> None:

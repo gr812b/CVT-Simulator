@@ -1,6 +1,7 @@
-import { runStatusColors } from '@styles/theme';
+import { runOutcomeColors, runStatusColors } from '@styles/theme';
 import { useAuth } from '@contexts/AuthContext';
 import { RunStatusBadge } from '../results/RunStatusBadge';
+import { describeRunOutcome, outcomeDataMessage, outcomeLabel, outcomeProgress } from '../results/runOutcome';
 import {
   createContext,
   useCallback,
@@ -158,14 +159,19 @@ export function RunActivityButton() {
               You're all caught up.
             </Text>
           )}
-          {activity?.unread.map((notice) => (
+          {activity?.unread.map((notice) => {
+            const outcome = describeRunOutcome(notice.run);
+            return (
             <Stack key={notice.id} gap="xs">
               <Group justify="space-between">
                 <Text size="sm" fw={600}>
                   {notice.run.name}
                 </Text>
-                <RunStatusBadge status={notice.run.status} />
+                <RunStatusBadge run={notice.run} />
               </Group>
+              <Text size="sm">{outcome.message}</Text>
+              {outcomeProgress(outcome) && <Text size="xs">{outcomeProgress(outcome)}</Text>}
+              <Text size="xs" c="dimmed">{outcomeDataMessage(outcome)}</Text>
               <Group>
                 <Button
                   size="xs"
@@ -193,7 +199,8 @@ export function RunActivityButton() {
                 </Button>
               </Group>
             </Stack>
-          ))}
+            );
+          })}
           <Text fw={700} mt="md">
             Recent runs
           </Text>
@@ -205,7 +212,7 @@ export function RunActivityButton() {
               variant="default"
               justify="space-between"
               onClick={() => setOpened(false)}
-              rightSection={<RunStatusBadge size="xs" status={run.status} />}
+              rightSection={<RunStatusBadge size="xs" run={run} />}
             >
               <Text truncate size="sm">
                 {run.name}
@@ -223,22 +230,21 @@ export function RunActivityBanner() {
   const [error, setError] = useState<string | null>(null);
   const notice = activity?.unread[0];
   if (!notice) return null;
+  const outcome = describeRunOutcome(notice.run);
+  const progress = outcomeProgress(outcome);
   return (
     <Alert
       mb="md"
-      color={runStatusColors[notice.run.status]}
-      title={`${notice.run.name} · ${notice.run.status}`}
+      color={runOutcomeColors[outcome.category]}
+      title={`${notice.run.name} · ${outcomeLabel(outcome, notice.run.status)}`}
       role="status"
     >
       <Group justify="space-between">
-        <Text size="sm">
-          {notice.run.status === 'completed'
-            ? 'Your result is ready.'
-            : (notice.run.error?.message ?? 'Your simulation has stopped.')}
-          {notice.run.has_result &&
-            notice.run.status !== 'completed' &&
-            ' Saved progress is available for playback.'}
-        </Text>
+        <Stack gap={4}>
+          <Text size="sm">{outcome.message}</Text>
+          {progress && <Text size="sm" fw={600}>{progress}</Text>}
+          <Text size="sm">{outcomeDataMessage(outcome)}</Text>
+        </Stack>
         <Group gap="xs">
           <Button
             component={Link}
