@@ -199,7 +199,7 @@ class PreviewChecks(unittest.TestCase):
         self.audit_inputs = []
         def audit(assembly):
             self.audit_inputs.append(copy.deepcopy(assembly))
-            return copy.deepcopy(self.report)
+            raise AssertionError("Editing must not run the full construction audit")
         modules = {}
         for name in ('cinder.contracts.document', 'cinder.model.cvt.actuation.fixed_pivot_flyweight',
                      'cinder.model.cvt.geometry', 'app.application.input_validation'):
@@ -213,17 +213,18 @@ class PreviewChecks(unittest.TestCase):
         ctx.start(); self.addCleanup(ctx.stop)
         Surface.fail_initial, Surface.fail_after = False, None
 
-    def test_valid_audit_and_complete_contact_are_returned_together(self):
+    def test_complete_preview_uses_only_the_quick_contact_trace(self):
         result = build_tune_preview(Gateway(), self.assembly)
         self.assertTrue(result.validation['is_valid'])
-        self.assertEqual(self.audit_inputs, [self.assembly])
+        self.assertEqual(self.audit_inputs, [])
         self.assertIsNone(result.primary_contact_failure_m)
         self.assertTrue(all(x is not None for x in result.primary_arm_angles_rad))
         self.assertIn(0., Surface.requested)
         self.assertIn(.02, Surface.requested)
-        self.assertGreaterEqual(len(Surface.requested), 257)
+        self.assertGreaterEqual(len(Surface.requested), 129)
+        self.assertLessEqual(len(Surface.requested), 129 + len(result.frames) + 1)
 
-    def test_late_contact_loss_is_invalid_even_with_optimistic_audit_double(self):
+    def test_late_contact_loss_disables_submission_without_a_full_audit(self):
         Surface.fail_after = .012
         result = build_tune_preview(Gateway(), self.assembly)
         self.assertFalse(result.validation['is_valid'])
@@ -269,18 +270,27 @@ class PreviewChecks(unittest.TestCase):
         self.assertFalse(result.validation['is_valid'])
         self.assertEqual(result.primary_contact_failure_m, 0.)
 
-    def test_full_visual_contact_does_not_override_failed_construction_audit(self):
-        self.report = {'is_valid': False, 'findings': [{'severity': 'error', 'code': 'bad_join',
-            'message': 'The ramp join is not C3.', 'location': 'primary'}]}
+    def test_editing_leaves_full_construction_validation_to_save(self):
+        # Even an audit failure is not computed in the preview. Save's own
+        # validation below remains authoritative and rejects that same draft.
         result = build_tune_preview(Gateway(), self.assembly)
-        self.assertFalse(result.validation['is_valid'])
+        self.assertTrue(result.validation['is_valid'])
         self.assertTrue(all(x is not None for x in result.primary_arm_angles_rad))
-        self.assertEqual(result.validation, self.report)
+        self.assertEqual(self.audit_inputs, [])
 
-    def test_warnings_alone_do_not_disable_valid_tune(self):
-        self.report['findings'] = [{'severity': 'warning', 'code': 'spring',
-            'message': 'Spring warning', 'location': 'primary'}]
-        self.assertTrue(build_tune_preview(Gateway(), self.assembly).validation['is_valid'])
+    def test_repeated_edits_do_not_schedule_full_audits(self):
+        for offset in (-.003, .001, .005):
+            self.assembly['pulleys']['primary']['components'][0]['geometry']['ramp_reference_axial_position_m'] = offset
+            self.assertTrue(build_tune_preview(Gateway(), self.assembly).validation['is_valid'])
+        self.assertEqual(self.audit_inputs, [])
+
+    def test_malformed_assembly_is_rejected_by_lightweight_shape_check(self):
+        class InvalidGateway(Gateway):
+            def validate_assembly_shape(self, document):
+                raise ValueError("Malformed assembly")
+        with self.assertRaisesRegex(ValueError, "Malformed assembly"):
+            build_tune_preview(InvalidGateway(), self.assembly)
+        self.assertEqual(self.audit_inputs, [])
 
     def test_primary_profile_is_sampled_at_exact_contact_coordinates(self):
         result = build_tune_preview(Gateway(), self.assembly)
@@ -331,6 +341,20 @@ class SaveAuditChecks(unittest.TestCase):
         self.assertEqual(error.exception.status, 422)
         self.assertEqual(calls, ['values', 'shape'])
         self.assertIn('No roller contact', str(error.exception))
+
+
+    def test_save_still_runs_full_audit_once_per_explicit_submission(self):
+        calls = []
+        service = source_functions('backend/app/application/experiments.py', ['validate_document'],
+            validate_scenario=lambda *_: None,
+            cvt_tuning=lambda *_: (NS(cvt_design_id='cvt'), {}, []),
+            apply_values=lambda *_: calls.append('values'),
+            CinderGateway=lambda: NS(validate_assembly_shape=lambda _: calls.append('shape')),
+            validate_assembly=lambda _: calls.append('full_audit') or {'is_valid': True, 'findings': []},
+            ApiProblem=ApiProblem)
+        self.assertEqual(service.validate_document(None, None,
+            NS(kind='tunes', cvt_revision_id='r', values={}), None), 'cvt')
+        self.assertEqual(calls, ['values', 'shape', 'full_audit'])
 
 
 if __name__ == '__main__':

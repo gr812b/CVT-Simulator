@@ -17,12 +17,14 @@ import {
 } from '@mantine/core';
 import {
   IconArrowRight,
+  IconBrandDiscord,
   IconBrandGithub,
   IconFileText,
+  IconMail,
   IconPlayerPlay,
 } from '@tabler/icons-react';
 import { PublicHeader } from '@components/appShell/PublicHeader';
-import { PROJECT_LINKS } from '../../config/projectLinks';
+import { PROJECT_CONTACT, PROJECT_LINKS } from '../../config/projectLinks';
 import styles from './Home.module.scss';
 
 const HomeCvtPreview = lazy(() => import('./HomeCvtPreview'));
@@ -181,30 +183,42 @@ export const Home = () => {
               aria-labelledby="author-title"
             >
               <Title id="author-title" order={2} size="h3">
-                A note from me
+                About this project
               </Title>
-              <Text>
-                Hey, I’m Kai. I worked on CVT tuning with McMaster Baja, and I
-                wanted a way to see what was actually going on inside these
-                things.
+              <Text c="dimmed">
+                This website is still a work in progress, and most of the
+                interface was built with AI, so there are almost certainly some
+                bugs. The CVT model itself is the part I’ve spent much more time
+                on, and the full derivation, assumptions, and checks are in the
+                paper.
               </Text>
               <Text c="dimmed">
-                This website and its interface were AI-generated, so there will
-                probably be bugs. The mathematical model behind it has had a lot
-                more scrutiny, with the derivation and mechanical and numerical
-                checks laid out in the paper. The reference acceleration case
-                had a final energy balance remainder of 4.9 × 10<sup>−5</sup>%.
-                That’s a consistency check, though—it doesn’t mean the model
-                matches a real CVT. Experimental validation is still to come,
-                and there are plenty of assumptions in the paper.
+                Experimental validation is still to come, so if you have access
+                to a CVT dyno, test data, or anything else that could be useful,
+                definitely hit me up below.
               </Text>
               <Text c="dimmed">
-                I’m hoping this helps other Baja members understand their CVTs a
-                bit better. The site is free to use, I’m not selling anything,
-                and the source is on GitHub. If something looks wrong, please
-                let me know.
+                Hopefully this makes the model a little easier to explore and
+                CVTs a little less of a black box. Everything is free to use,
+                and the source is on GitHub.
               </Text>
-              <Text size="sm">— Kai Arseneau</Text>
+              <Text c="dimmed">
+                If you have questions, find something broken, want to talk about
+                the paper, or just have thoughts on the project, reach out.
+              </Text>
+              <Text size="sm">– Kai</Text>
+              <Group gap="lg" aria-label="Contact Kai">
+                <Anchor href={`mailto:${PROJECT_CONTACT.email}`} size="sm">
+                  <Group gap="xs" component="span">
+                    <IconMail size={17} aria-hidden="true" />
+                    <span>{PROJECT_CONTACT.email}</span>
+                  </Group>
+                </Anchor>
+                <Group gap="xs">
+                  <IconBrandDiscord size={17} aria-hidden="true" />
+                  <Text size="sm">Discord: {PROJECT_CONTACT.discord}</Text>
+                </Group>
+              </Group>
             </Stack>
           </section>
         </main>

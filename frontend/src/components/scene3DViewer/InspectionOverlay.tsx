@@ -50,10 +50,19 @@ export function InspectionOverlay({ controller, mount, geometry, shift }: {
         dot.setAttribute('cx', String(x)); dot.setAttribute('cy', String(y));
         dot.setAttribute('r', foreshortened ? '3.5' : '2');
         const text = group.querySelector('text')!;
-        text.setAttribute('x', String(x + (foreshortened ? 10 : vector.x < -0.2 ? -5 : 5)));
-        text.setAttribute('y', String(y + (foreshortened ? 15 : vector.y > 0.2 ? -6 : 12)));
-        text.setAttribute('text-anchor', !foreshortened && vector.x < -0.2 ? 'end' : 'start');
+        // End-on axes share the origin in projection. Put their label below
+        // the triad rather than on top of the horizontal axis label.
+        text.setAttribute('x', String(foreshortened ? 64 : x + (vector.x < -0.2 ? -5 : 5)));
+        text.setAttribute('y', String(foreshortened ? 101 : y + (vector.y > 0.2 ? -6 : 12)));
+        text.setAttribute('text-anchor', foreshortened ? 'middle' : vector.x < -0.2 ? 'end' : 'start');
         text.textContent = axis.label + (foreshortened ? vector.z > 0 ? ' ⊙' : ' ⊗' : '');
+        // Long labels must remain inside the small corner viewport when an
+        // axis points left or is viewed end-on.
+        const width = text.getComputedTextLength();
+        const anchor = text.getAttribute('text-anchor');
+        const labelX = Number(text.getAttribute('x'));
+        const left = labelX - (anchor === 'end' ? width : anchor === 'middle' ? width / 2 : 0);
+        text.setAttribute('x', String(labelX + Math.max(0, 4 - left) - Math.max(0, left + width - 152)));
         group.style.opacity = String(vector.z < -0.1 ? 0.6 : 1);
       }
       const rect = markers.getBoundingClientRect();
@@ -95,14 +104,14 @@ export function InspectionOverlay({ controller, mount, geometry, shift }: {
         </text>
       </g>)}
     </svg>
+    {/* Compact CAD-style triad at the viewport edge. No opaque card over the mechanism. */}
     <svg ref={corner} viewBox="0 0 156 112" role="img" aria-label={`${mount} camera-following orientation axes`}
-      style={{ ...overlayStyle, left: 8, bottom: 8, width: 156, height: 112, borderRadius: 6, background: 'var(--mantine-color-body)' }}>
+      style={{ ...overlayStyle, right: 0, bottom: 0, width: 128, height: 92 }}>
       <title>{mount === 'primary' ? 'Axial and radial directions; across is normal to the ramp plane' : 'Axial is along the shaft; radial and tangent follow roller 1'}. A circled dot points toward you; a circled cross points away.</title>
-      <text x={8} y={14} fill="currentColor" fontSize={9} opacity={0.7}>{mount === 'primary' ? 'Ramp frame' : 'Roller 1 frame'}</text>
       {['axial', 'radial', 'third'].map(key => <g key={key} data-axis={key}>
         <line x1={64} y1={59} x2={64} y2={59} stroke="currentColor" strokeWidth={1.5}/>
         <circle cx={64} cy={59} r={2} fill="currentColor"/>
-        <text fontSize={10} fill="currentColor"/>
+        <text fontSize={12} fill="currentColor" stroke="var(--mantine-color-body)" strokeWidth={3} paintOrder="stroke"/>
       </g>)}
       <circle cx={64} cy={59} r={2} fill="currentColor"/>
     </svg>

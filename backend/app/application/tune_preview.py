@@ -1,9 +1,9 @@
 """Kinematic tune inspection. CINDER owns all geometry and contact selection.
 
-The current assembly receives the same cached CINDER construction audit used by
-Save before a preview can authorize Save/Use. Invalid drafts can still have a
-partial drawing for editing; missing contact is never approval to use a tune.
-No dynamic simulation is run.
+Editing uses only the sampled contact trace already needed by the drawing.
+Missing contact blocks Save/Use, but a complete preview is not a full construction
+audit. The existing save/run validators perform that expensive check only when
+the user submits the tune. No dynamic simulation is run here.
 """
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ def _trace_primary(surface: Any, positions: list[float], warnings: list[str]):
     # Begin at the declared assembly position even if it precedes visible
     # travel; CINDER must select and continue the assembled branch itself.
     grid = np.unique(np.concatenate((
-        np.linspace(spec.axial_position_min, max(inside), 257), inside,
+        np.linspace(spec.axial_position_min, max(inside), 129), inside,
     )))
     try:
         samples = surface.trace_contact_branch(grid, require_complete=False)
@@ -100,12 +100,11 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
     from cinder.model.cvt.actuation.fixed_pivot_flyweight import PivotedRollerFollowerGeometry
     from cinder.model.cvt.geometry import BeltPulleyGeometry
 
-    from app.application.input_validation import validate_assembly
-
     gateway.validate_assembly_shape(assembly)
-    # This is the same pure, content-keyed audit used by experiment Save. Its
-    # result belongs to this request, not the previously displayed geometry.
-    validation = validate_assembly(assembly)
+    # Preview feedback is derived from the same contact samples we render.
+    # Do not compile/audit the dynamic map here on every debounced edit. Save
+    # and run submission independently invoke their full CINDER validators.
+    validation = {"is_valid": True, "findings": []}
     preview = gateway.scene_preview(assembly['geometry'], frame_count=65)
     dimensions = gateway._scene_geometry_spec(assembly['geometry'])
     path = BeltPulleyGeometry(dimensions)
@@ -207,8 +206,15 @@ def build_tune_preview(gateway: CinderGateway, assembly: dict) -> TuneScenePrevi
         poses=poses,
     )
     visible_contacts = [contacts.get(positions[f.shift_m].primary_axial_coordinate.value) for f in preview.frames]
-    # Fail closed even if a visual trace and the construction audit ever
-    # disagree. An invalid prefix is useful for editing, not for approval.
+    # Every rendered pose must have contact. Keep this tied to the preview,
+    # not to a second, denser construction audit. A missing prefix stays hidden
+    # and disables submission; the full Save audit can still find other issues.
+    missing_pose = next((
+        pose.primary_ramp_shift_m for pose in poses
+        if primary is not None and pose.primary_roller_m is None
+    ), None)
+    if missing_pose is not None:
+        primary_failure = missing_pose if primary_failure is None else min(primary_failure, missing_pose)
     if primary_failure is not None:
         validation["is_valid"] = False
         validation["findings"].append({

@@ -19,6 +19,8 @@ const files = [
   'frontend/src/features/experiments/TuneEditor.tsx',
   'frontend/src/features/experiments/profileStages.ts',
   'frontend/src/features/experiments/tunePreviewState.ts',
+  'frontend/src/pages/home/Home.tsx',
+  'frontend/src/config/projectLinks.ts',
 ];
 for (const file of files) {
   const parsed = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
@@ -36,6 +38,9 @@ const react = {
     return [hookState[index], next => { hookState[index] = typeof next === 'function' ? next(hookState[index]) : next; }];
   },
   useEffect() {},
+  useRef(initial) { return { current: initial }; },
+  lazy() { return 'LazyPreview'; },
+  Suspense: 'Suspense',
 };
 const cache = new Map();
 function load(relative, extra = {}) {
@@ -58,6 +63,13 @@ function load(relative, extra = {}) {
     if (name.endsWith('styles/theme')) return { overlayLayers: { modalDropdown: 200 } };
     if (name === './TuneEditor') return { TuneEditor: 'TuneEditor' };
     if (name === './api') return { saveExperiment: async () => { saves++; return {}; }, message: String };
+    if (name === './mechanisms' || name === './sceneSpec') return {};
+    if (name === '@contexts/AuthContext') return { useAuth: () => ({ session: null }) };
+    if (name === 'react-router-dom') return { Link: 'Link' };
+    if (name === '@tabler/icons-react') return new Proxy({}, { get: (_, name) => name });
+    if (name === '@components/appShell/Brand') return { Brand: 'Brand' };
+    if (name === '@components/appShell/PublicHeader') return { PublicHeader: 'PublicHeader' };
+    if (name.endsWith('.module.scss')) return { default: new Proxy({}, { get: (_, name) => name }) };
     if (name === 'three') return {}; // Basis constants tested independently; no WebGL claim.
     if (name.startsWith('.')) {
       const candidate = path.resolve(path.dirname(filename), name);
@@ -83,7 +95,7 @@ test('no check means disabled, not optimistic approval', () => assert.ok(gate.tu
 test('completed valid current check enables actions', () => assert.equal(gate.tuneGeometryBlocker(tune, check(tune)), undefined));
 test('a changed ramp offset immediately invalidates old approval', () => {
   const next = { ...tune, values: { primary_ramp_axial_offset: -.04 } };
-  assert.equal(gate.tuneGeometryBlocker(next, check(tune)), 'Checking geometry…');
+  assert.equal(gate.tuneGeometryBlocker(next, check(tune)), 'Updating contact preview…');
 });
 test('a changed CVT revision invalidates old approval', () => assert.ok(gate.tuneGeometryBlocker({ ...tune, cvt_revision_id: 'r2' }, check(tune))));
 test('changing name/description does not need a geometry recomputation', () => {
@@ -243,4 +255,51 @@ test('inspection basis keeps a fixed-length tuple for Matrix4.set', () => {
   const errors = ts.getPreEmitDiagnostics(ts.createProgram([filename], options, host));
   assert.equal(errors.length, 0, errors.map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')).join('\n'));
 });
+
+const { InspectionOverlay } = load('frontend/src/components/scene3DViewer/InspectionOverlay.tsx');
+const overlay = InspectionOverlay({ controller: {}, mount: 'primary', geometry: {}, shift: 0 });
+test('orientation triad is compact, transparent and anchored to the bottom-right edge', () => {
+  const svg = find(overlay, node => node.type === 'svg' && node.props['aria-label'].includes('orientation'));
+  assert.ok(svg);
+  assert.equal(svg.props.style.right, 0); assert.equal(svg.props.style.bottom, 0);
+  assert.equal(svg.props.style.left, undefined);
+  assert.ok(svg.props.style.width <= 128); assert.ok(svg.props.style.height <= 92);
+  assert.equal(svg.props.style.background, undefined); assert.equal(svg.props.style.borderRadius, undefined);
+  assert.equal(svg.props.style.pointerEvents, 'none');
+});
+test('named mechanism reference points remain in their separate pointer-transparent overlay', () => {
+  const markers = find(overlay, node => node.type === 'svg' && node.props['aria-label'] === 'Mechanism reference points');
+  assert.ok(markers); assert.equal(markers.props.style.inset, 0);
+  assert.equal(markers.props.style.pointerEvents, 'none');
+  assert.match(text(markers), /Pivot/); assert.match(text(markers), /Ramp start/);
+});
+const { Home } = load('frontend/src/pages/home/Home.tsx');
+const homepage = Home();
+const about = find(homepage, node => node.props?.['aria-labelledby'] === 'author-title');
+const paragraphs = [
+  'This website is still a work in progress, and most of the interface was built with AI, so there are almost certainly some bugs. The CVT model itself is the part I’ve spent much more time on, and the full derivation, assumptions, and checks are in the paper.',
+  'Experimental validation is still to come, so if you have access to a CVT dyno, test data, or anything else that could be useful, definitely hit me up below.',
+  'Hopefully this makes the model a little easier to explore and CVTs a little less of a black box. Everything is free to use, and the source is on GitHub.',
+  'If you have questions, find something broken, want to talk about the paper, or just have thoughts on the project, reach out.',
+];
+test('About this project contains all four supplied paragraphs verbatim', () => {
+  assert.ok(about); assert.equal(text(find(about, node => node.props?.id === 'author-title')), 'About this project');
+  const actual = about.props.children.filter(node => node?.type === 'Text' && node.props.c === 'dimmed').map(text);
+  assert.equal(JSON.stringify(actual), JSON.stringify(paragraphs));
+  assert.doesNotMatch(text(about), /A note from me|4\.9|Hey, I’m Kai/);
+});
+test('project contact area displays the requested email and Discord handle', () => {
+  const contact = find(about, node => node.props?.['aria-label'] === 'Contact Kai');
+  assert.ok(contact); assert.match(text(contact), /kai@kaiarseneau\.dev/);
+  assert.match(text(contact).replace(/\s+/g, ' '), /Discord: Gr812b/);
+  assert.equal(find(contact, node => node.type === 'Anchor').props.href, 'mailto:kai@kaiarseneau.dev');
+  // A username is not a Discord user-ID URL: do not invent one.
+  assert.equal(find(contact, node => /discord/.test(node.props?.href ?? '')), undefined);
+});
+test('the model-paper, GitHub and demo links remain present', () => {
+  assert.ok(find(homepage, node => node.props?.href === 'https://doi.org/10.31224/8419'));
+  assert.ok(find(homepage, node => node.props?.href === 'https://github.com/gr812b/CVT-Simulator'));
+  assert.ok(find(homepage, node => node.props?.to === '/demo'));
+});
+
 console.log(JSON.stringify({ syntaxFiles:files.length, helperAndJsxAdapterTests:count, actualReactBrowserAndAppBuild:'NOT RUN' },null,2));

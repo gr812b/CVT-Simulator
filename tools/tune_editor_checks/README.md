@@ -1,117 +1,130 @@
-# Tune contact, placement and inspection refinements
+# Tune preview, placement and inspection checks
 
-Incremental patch base: `gr812b/CVT-Simulator`, `front-end-redo-setup`,
-`b14d382a2775922676f9c04e1a02df27dd257fd7` (the previously delivered tune UI).
-All ten existing files changed by this patch were checked against GitHub blob
-identities at that commit. This is not the earlier cumulative patch.
+## Current follow-up: quick previews, corner axes and the project note
 
-## Behaviour
+`CINDER_Quick_Preview_And_About.patch` targets `front-end-redo-setup` at
+`31d961e68f11402cf0d5e0fd3c596bcb724e2abe`, which contains the preceding tune
+refinement. All ten affected starting files were matched to their GitHub blob
+identities at this commit. It also applies after the earlier
+`CINDER_Tune_Refinements.patch` on `b14d382a2775922676f9c04e1a02df27dd257fd7`;
+do not apply it to that earlier commit without the refinement.
 
-The tune preview now carries the same content-keyed CINDER construction audit
-used by the existing save validator. Save and temporary-use actions require a
-successful result for the current CVT revision and values. They are disabled
-while checking, on request failure, on invalid numeric text, or when geometry
-fails. An older preview cannot authorize a changed draft. Partial diagnostic
-geometry may still be drawn to help repair an invalid draft; the first missing
-contact sample is marked. It is a sampled diagnostic, not a claimed exact
-analytic contact-loss boundary. The full construction audit remains decisive.
+### Editing versus saving
 
-Primary ramp-start axial and radial offsets are signed distances relative to
-the fixed pivot, in the fully open reference configuration. Positive radial is
-outward; positive axial follows the model's positive primary closing direction.
-They are persisted as tune values and resolved into the existing native ramp
-reference coordinates. Pivot, arm length and source CVT remain unchanged.
-Older tunes omitting these keys retain their original referenced placement.
-The starting tip is not an independently prescribed roller-contact point.
+The preview does **not** invoke `validate_assembly` or compile the dynamic map on
+each edit. It keeps the lightweight shape validation, CINDER's existing contact
+branch trace, and the profile/pose samples needed for the drawing. The contact
+trace is back to the previous 129 base samples, with exact visible positions and
+the travel endpoints included. Missing initial, interior or final contact still
+produces a partial drawing and disables Save and temporary use. The first failing
+sample is a diagnostic location, not an exact analytic contact-loss boundary.
 
-Focused scenes use a presentation-only rigid parent transform. Primary radial
-is up and its axial/radial profile plane faces the initial camera. The secondary
-shaft is upright and roller 1 faces the initial camera near the top of the slot.
-Ordinary orbiting therefore turns around that shaft. The labelled corner axes
-follow camera orientation; secondary radial/tangent axes refer to roller 1.
-Pivot/ramp-start or roller-1 markers explain the reference frame. Scrubbing does
-not re-fit the camera. Reset fits current geometry and restores the default view.
-Landing and playback transforms are unchanged.
+A complete preview enables submission, not an assertion that the full assembly
+has passed the construction audit. The **existing, independent save validator**
+still performs the full CINDER check before accepting a tune. Run submission also
+keeps its own full input validation. A problem not detected by the quick preview
+can therefore still be rejected on Save. Neither full validator was weakened or
+moved to the browser.
 
-The primary companion plot now shows evaluated CINDER ramp angle versus axial
-profile coordinate, with stage selection and a contact-position marker. The
-secondary plot continues to show helix angle versus actual usable opening.
-Exact joins, contact coordinates and usable endpoints, plus interior samples in
-short stages, are included in the backend traces. Primary angle controls no
-longer require a conversion-confirmation step. Opening does not change saved
-curvature; an actual profile edit writes shared endpoint angles with automatic
-smooth joins. The nonblocking description makes this conversion explicit.
+Current-draft and request-failure guards remain: a previous successful preview
+cannot enable a changed draft, and incomplete numeric text blocks both actions.
+The UI says "Updating contact preview…" instead of implying that it is running
+the full construction audit while you edit. Name/description edits do not change
+the preview input key.
 
-## Apply and rebuild
+### Inspection and homepage
 
-From the repository root, after saving/committing unrelated local work:
+The orientation triad is smaller and pinned to the bottom-right viewport edge.
+The opaque frame card and its header are removed. Axis labels stay inside the
+small SVG, and end-on labels appear below the triad instead of overlapping the
+horizontal label. The overlay never intercepts pointer/wheel gestures. The
+separate pivot/ramp-start and roller-1 labels remain, as do the default camera
+orientations, travel scrubbing, rotation, zoom and Reset behavior.
+
+The old "A note from me" section is now "About this project" with the four
+paragraphs supplied by Kai, unchanged. It includes the email link
+`mailto:kai@kaiarseneau.dev` and the Discord handle `Gr812b`. The handle is shown
+as text, not an invented Discord user-ID URL. Paper, repository and demo links
+remain unchanged.
+
+### Apply
+
+From the repository root:
 
 ```text
-git apply --check /path/to/CINDER_Tune_Refinements.patch
-git apply /path/to/CINDER_Tune_Refinements.patch
+git apply --check /path/to/CINDER_Quick_Preview_And_About.patch
+git apply /path/to/CINDER_Quick_Preview_And_About.patch
 cd frontend
 npm run build
 ```
 
-The normal prebuild regenerates API contracts from the updated backend. Do not
-hand-edit generated contracts. Restart backend and frontend together: the new
-preview validation field is required. A stale backend response is deliberately
-rejected rather than interpreted as approval to save.
+Restart backend and frontend after applying. This follow-up does not change the
+API response shape, dependencies or migrations. The normal frontend prebuild may
+regenerate contracts as usual. No database reset, record deletion, solver-equation
+change, deployment or remote Git write is included.
 
-No database migration/reset, record deletion, solver equation change, deployment
-or remote Git write is part of this patch.
+## Retained behavior from the preceding refinement
 
-## Focused checks executed during preparation
+Primary ramp-start offsets are signed axial/radial distances from the fixed
+pivot at fully open primary. They are saved as tune values and resolved into the
+model's native ramp-reference coordinates, not applied just to the drawing.
+Older tunes that omit them preserve their original placement. Moving the ramp
+start does not move the pivot or prescribe an independent roller-contact point.
 
-Run these independently from the repository root:
+The primary companion plot shows evaluated CINDER ramp angle versus axial ramp
+coordinate. The secondary uses helix angle versus actual usable opening. Exact
+joins, contact coordinates and usable endpoints, plus interior samples in short
+stages, remain included. Primary angle controls remain directly editable without
+a conversion-confirmation gate. Opening does not rewrite the profile; an actual
+profile edit writes shared endpoint angles and smooth joins. Unsaved-edit
+confirmation remains.
+
+## Executed focused checks
 
 ```text
 python tools/tune_editor_checks/backend_checks.py
 node tools/tune_editor_checks/frontend_checks.mjs
 ```
 
-Backend: **23 passing checks**, using actual adapter functions, NumPy and
-Pydantic, with explicit CINDER-geometry/audit and persistence test doubles.
-They cover signed-offset mapping and serialization, original placement,
-missing initial/late/endpoint contact, incomplete branches, interval coverage,
-exact trace sampling, required validation response, no input/cache mutation,
-and the existing save validator rejecting a failed audit independently.
-This does not execute the real CINDER contact solver or a database transaction.
+Backend: **25 passing checks**, using the production adapter functions, NumPy and
+Pydantic with explicit CINDER and persistence doubles. The audit double raises
+immediately if any edit preview tries to run the expensive construction check.
+Tests cover repeated edits without audits, the bounded preview grid, shape
+validation, missing initial/interior/endpoint contact, partial branches, coverage,
+offsets and serialization, traces, and the unchanged Save validator performing
+its full audit and rejecting a failed one independently of preview feedback.
 
-Frontend: **25 passing helper/JSX-adapter checks**, plus syntax/transpilation of
-all **9 changed TypeScript/TSX files**. They cover current-draft validation,
-late/stale reports, disabled Save/Use, invalid numeric drafts, custom primary
-editing, angle plots, stage selection, helix bounds and orientation matrices.
-A focused semantic check covers the fixed-arity Matrix4.set tuple signature.
-The JSX adapter is not React: these are not browser interaction tests or a
-substitute for a full TypeScript/application build.
+Frontend: **30 passing helper/JSX-adapter checks**, plus syntax/transpilation of
+**11 TypeScript/TSX files**. They cover current/stale/failed previews, Save/Use
+gating, numeric drafts, profile editing, angles, orientation bases, the compact
+transparent corner placement, preserved point labels, the exact four homepage
+paragraphs, both contact details and the existing public links. The JSX adapter
+is not real React, and transpilation is not a full TypeScript/application build.
 
-A final local check applies and reverses the patch against the verified source
-baseline, compares the resulting file bytes, and reruns the focused suites from
-the applied tree. No application or generated-contract build was possible in
-the preparation environment: the complete dependencies were unavailable and
-package/repository downloads from the execution container failed DNS resolution.
+An additional isolated Chromium DOM check rendered the actual overlay component
+with JSX/camera/math adapters: primary and secondary at desktop and mobile widths
+(four cases), with five viewing directions each. Corner bounds, readable label
+bounds, a transparent background and pointer pass-through passed. This is **not**
+a real CVT/WebGL scene test. Default primary/mobile and secondary/desktop overlay
+screenshots were inspected; the end-on label overlap found there was corrected.
 
-## Real-application acceptance checks still required
+The preparation checkout contains the relevant recovered files rather than the
+complete installed application. No full app build, real CINDER execution, live
+preview timing or authenticated end-to-end journey was run. No speed multiplier
+or absolute latency is claimed. Patch application/reversal and resulting-file
+comparisons are checked separately against the prior delivery's file identities.
 
-These were **not run** during patch preparation:
+## Real-application acceptance
 
-1. Build with real generated contracts and installed dependencies. Open a valid
-   tune; Save/Use stay disabled until the current audit completes. Make a late-
-   travel and an endpoint contact failure. Both actions stay disabled. Repair
-   the geometry; neither an old response nor a failed request enables actions.
-2. Change both signed ramp offsets, verify the pivot stays fixed, save/reopen,
-   and confirm the preview, retained values and resolved simulation input agree.
-   Check an older tune without these fields keeps its original placement.
-3. Inspect both initial views, pan/orbit/zoom, scrub all travel and verify camera
-   stability. Reset after changing the ramp size. Check corner axes and named
-   reference points while rotating and at end-on views. Verify landing/playback
-   scenes retain their existing orientation.
-4. Open a custom primary profile and close unchanged: no dirty prompt and no
-   profile rewrite. Edit an angle directly without a conversion dialog; inspect
-   the angle plot and sampled contact marker. Verify ordinary unsaved-edit
-   confirmation remains, including for incomplete numeric text.
+1. Change a ramp angle/offset repeatedly. Only the quick preview should run.
+   Introduce contact loss at the start, middle or end; the missing portion stays
+   hidden and Save/Use stay disabled. Restore contact and then Save: the full
+   construction check runs at this explicit submission, not at each edit.
+2. Check the compact axes in both mechanism previews while rotating and zooming,
+   including end-on views. Point labels and camera behavior should be unchanged.
+3. Verify "About this project", all four paragraphs, the email link and Discord
+   handle at desktop and mobile widths.
 
-Geometrical validity is not a promise of compressive actuator reaction throughout
-an arbitrary dynamic run. This patch prevents invalid geometry from being saved
-or selected; it does not replace CINDER's runtime contact-admissibility checks.
+A successful sampled contact preview is not proof of valid geometry between all
+samples or compressive contact forces throughout a dynamic run. Full construction
+validation and runtime contact-admissibility checks remain independent.

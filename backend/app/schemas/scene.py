@@ -102,7 +102,8 @@ class TuneProfileTrace(ApiModel):
 
 
 class TuneScenePreview(ScenePreview):
-    # Required: an older/unvalidated drawing must never enable Save or Use.
+    # Required sampled-preview feedback, not the expensive construction audit.
+    # A passing preview allows submission; Save/run still validate independently.
     validation: CaseValidation
     primary_contact_failure_m: float | None = None
     primary_profile: TuneProfileTrace | None = None

@@ -55,7 +55,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
       void previewTune(JSON.parse(encoded), controller.signal).then(next => {
         if (!controller.signal.aborted) {
           if (!next.validation || typeof next.validation.is_valid !== 'boolean' || !Array.isArray(next.validation.findings)) {
-            throw new Error('The backend did not return a geometry check. Restart the updated backend and retry.');
+            throw new Error('The backend did not return a contact-preview check. Restart the updated backend and retry.');
           }
           setResolved({ inputKey: encoded, attempt, preview: next });
           setFailure(null);
@@ -83,16 +83,16 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
   };
   const findings = validation?.findings.filter(finding => finding.severity === 'error') ?? [];
   return <Stack gap="lg">
-    {error && <Alert color="orange" title="Geometry could not be checked">
+    {error && <Alert color="orange" title="Contact preview unavailable">
       <Stack gap="xs"><Text size="sm">{error}{preview && ' The drawing shows the previous values.'}</Text>
-        <Button variant="light" size="xs" onClick={() => { setFailure(null); setAttempt(n => n + 1); }}>Retry geometry check</Button>
+        <Button variant="light" size="xs" onClick={() => { setFailure(null); setAttempt(n => n + 1); }}>Retry preview</Button>
       </Stack>
     </Alert>}
-    {loading && <Text role="status" size="sm" c="dimmed">Checking geometry…{stale && ' The drawing still shows the previous values.'}</Text>}
-    {validation && (!validation.is_valid || findings.length > 0) && <Alert color="red" title="Geometry needs attention">
+    {loading && <Text role="status" size="sm" c="dimmed">Updating contact preview…{stale && ' The drawing still shows the previous values.'}</Text>}
+    {validation && (!validation.is_valid || findings.length > 0) && <Alert color="red" title="Contact preview needs attention">
       {findings.length ? findings.map((finding, i) => <Text size="sm" key={i}>{finding.message}</Text>)
-        : <Text size="sm">This geometry did not pass the construction check.</Text>}
-      <Text size="sm" mt="xs">You can keep editing, but cannot save or use this tune until the geometry is valid.</Text>
+        : <Text size="sm">This preview does not have a complete contact path.</Text>}
+      <Text size="sm" mt="xs">You can keep editing, but cannot save or use this tune while the preview reports invalid contact.</Text>
     </Alert>}
     {current && preview?.warnings.length ? <Alert color="orange" title="Contact diagnostics">
       {preview.warnings.map((warning, i) => <Text size="sm" key={i}>{warning}</Text>)}
@@ -118,7 +118,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
       const placement = numbers.filter(field => field.subgroup === 'ramp_position');
       return <Paper key={mount} withBorder p="md" data-tune-mount={mount}>
         <Stack>
-          <Group justify="space-between"><Title order={3} tt="capitalize">{mount} tune</Title>{loading && <Loader size="xs" aria-label="Checking component geometry"/>}</Group>
+          <Group justify="space-between"><Title order={3} tt="capitalize">{mount} tune</Title>{loading && <Loader size="xs" aria-label="Updating component preview"/>}</Group>
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             <Stack>
               <SimpleGrid cols={{ base: 1, sm: 2, md: 1 }}>
@@ -158,7 +158,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
               {contactFailure != null && <Text size="xs" c="red">First unavailable contact sample: {contactFailure.toFixed(2)} mm closure. Save and Use remain disabled.</Text>}
               <Text size="xs" c="dimmed">{mount === 'primary'
                 ? 'Ramp angle and flyweight arm angle are different. The arm angle is measured from the positive axial direction at the fixed pivot.'
-                : 'The orientation indicator’s radial and tangent directions refer to the marked roller 1.'} This is a kinematic inspection; a valid geometry check does not guarantee compressive contact forces throughout a dynamic run.</Text>
+                : 'The orientation indicator’s radial and tangent directions refer to the marked roller 1.'} This is a quick, sampled contact preview. The full construction check runs when you save or submit a run; contact forces are checked during the simulation.</Text>
             </Stack>
           </SimpleGrid>
         </Stack>
