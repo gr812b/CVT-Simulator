@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING, Mapping
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.execution.hybrid.composed import ComposedCVTHybridSystem, ComposedCVTMode
-from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
 from cinder.model.cvt.contact import ContactInterface, ContactTractionLaw
+from cinder.model.cvt.closure import ClosureUnknowns
+from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
+from cinder.execution.hybrid.composed import ComposedCVTHybridSystem, ComposedCVTMode
 
-from .balances import add_balance_signals, reporting_unknowns
+from .inspection import CVTStateInspection, inspect_cvt_state
 from .fields import (
     BoundSpatialDomain,
     BoundSpatialField,
@@ -23,7 +24,6 @@ from .fields import (
     build_belt_tension_field,
     recover_belt_tension_boundaries,
 )
-from .inspection import CVTStateInspection, inspect_cvt_state
 from .trace import CVTIntegrationTrace
 
 if TYPE_CHECKING:
@@ -765,7 +765,6 @@ def _build_signals(
 
     if settings.include_actuation:
         _add_actuation_signals(add, inspections)
-        add_balance_signals(add, inspections)
     if settings.include_contact:
         _add_contact_signals(add, inspections, traction_law=traction_law)
     if settings.include_integrated_observers:
@@ -796,7 +795,7 @@ def _add_actuation_signals(add, inspections: tuple[CVTStateInspection, ...]) -> 
                         np.nan
                         if actuator is None
                         else actuator.resolve_total(
-                            reporting_unknowns(inspection)
+                            inspection.closure_unknowns or ClosureUnknowns.zeros()
                         )
                     )
                     for actuator, inspection in zip(available, inspections, strict=True)
@@ -830,7 +829,7 @@ def _add_actuation_signals(add, inspections: tuple[CVTStateInspection, ...]) -> 
                             np.nan
                             if actuator is None
                             else actuator.resolve_contributions(
-                                reporting_unknowns(inspection)
+                                inspection.closure_unknowns or ClosureUnknowns.zeros()
                             ).get(key, np.nan)
                         )
                         for actuator, inspection in zip(

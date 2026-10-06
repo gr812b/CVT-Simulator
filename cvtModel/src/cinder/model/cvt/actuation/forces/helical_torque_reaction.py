@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
-from typing import Literal
 
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
@@ -21,17 +20,11 @@ from ..types import (
 
 @dataclass(frozen=True, slots=True)
 class HelicalTorqueReactionSpec:
-    """Non-geometric constants and contact support of a helical reaction.
-
-    A zero-clearance slot supports either sign of reacted torque by changing
-    the loaded flank. Explicit ``unilateral`` support retains a single flank
-    and rejects a reaction that would require the opposing flank.
-    """
+    """Non-geometric constants of a helical torque reaction."""
 
     torsional_stiffness: float
     initial_twist: float
     movable_member_torque_fraction: float = 0.5
-    contact_topology: Literal["slotted", "unilateral"] = "slotted"
 
     def __post_init__(self) -> None:
         _require_nonnegative("torsional_stiffness", self.torsional_stiffness)
@@ -41,8 +34,6 @@ class HelicalTorqueReactionSpec:
             or not 0.0 <= self.movable_member_torque_fraction <= 1.0
         ):
             raise ValueError("movable_member_torque_fraction must lie in [0, 1].")
-        if self.contact_topology not in ("slotted", "unilateral"):
-            raise ValueError("contact_topology must be 'slotted' or 'unilateral'.")
 
 
 class HelicalTorqueReactionForce:
@@ -59,10 +50,6 @@ class HelicalTorqueReactionForce:
     and the local closing force is ``F_h = tau_h dtheta/dx``. The same
     ``I_M[alpha + theta_ddot]`` appears with opposite sign as a shaft inertial
     reaction, so the axial and rotational equations cannot silently diverge.
-
-    By default the member is captured in an ideal zero-clearance slot. A
-    negative ``tau_h`` loads its opposite flank and keeps the signed force
-    relation above. Finite backlash and flank-impact dynamics are not modeled.
     """
 
     def __init__(self, *, spec: HelicalTorqueReactionSpec) -> None:
@@ -151,16 +138,9 @@ class HelicalTorqueReactionForce:
         context: PulleyActuationContext,
         unknowns: ClosureUnknowns,
     ) -> float:
-        """Return the available-flank contact margin, in torque units.
+        """Return signed reacted torque on the selected helix flank."""
 
-        For a slot either flank can react the load, so the margin is the
-        magnitude of the signed reacted torque. An explicitly unilateral
-        mechanism retains the signed margin on its sole supported flank.
-        This admissibility check never changes the signed force contribution.
-        """
-
-        torque = float(self._terms(context).reacted_torque.evaluate(unknowns))
-        return abs(torque) if self._spec.contact_topology == "slotted" else torque
+        return float(self._terms(context).reacted_torque.evaluate(unknowns))
 
     def has_compressive_contact(
         self,

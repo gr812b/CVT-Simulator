@@ -318,15 +318,6 @@ def _assembly_definitions() -> dict[str, Any]:
                 "torsional_stiffness_Nm_per_rad": number,
                 "initial_twist_rad": number,
                 "movable_member_torque_fraction": number,
-                "contact_topology": {
-                    "type": "string",
-                    "enum": ["slotted", "unilateral"],
-                    "default": "slotted",
-                    "description": (
-                        "Slotted supports either helix flank with zero clearance; "
-                        "unilateral supports only the selected flank."
-                    ),
-                },
             },
             "additionalProperties": False,
         },
