@@ -16,9 +16,7 @@ def course_profile(case: dict, result: dict, provenance: dict | None = None):
     if not profile:
         return None
     if profile["kind"] == "constant_grade":
-        segments = [
-            {"start_distance_m": 0.0, "grade_angle_rad": profile["grade_angle_rad"]}
-        ]
+        segments = [{"start_distance_m": 0.0, "grade_angle_rad": profile["grade_angle_rad"]}]
     elif profile["kind"] == "piecewise_constant_grade":
         segments = profile["segments"]
     else:
@@ -41,15 +39,10 @@ def course_profile(case: dict, result: dict, provenance: dict | None = None):
     heights = [0.0]
     for left, right in zip(nodes, nodes[1:]):
         index = max(0, bisect_right(starts, left) - 1)
-        heights.append(
-            heights[-1] + (right - left) * math.sin(segments[index]["grade_angle_rad"])
-        )
+        heights.append(heights[-1] + (right - left) * math.sin(segments[index]["grade_angle_rad"]))
     origin = heights[nodes.index(0.0)]
     return CourseProfile(
         distance_column_key="vehicle.distance",
         name=provenance.get("scenario", {}).get("name", "Recorded road profile"),
-        points=[
-            CoursePoint(distance_m=x, elevation_m=y - origin)
-            for x, y in zip(nodes, heights)
-        ],
+        points=[CoursePoint(distance_m=x, elevation_m=y - origin) for x, y in zip(nodes, heights)],
     )

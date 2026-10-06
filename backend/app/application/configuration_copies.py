@@ -15,9 +15,7 @@ def begin_copy(session, principal, request, source):
     principal.require_write()
     fingerprint = canonical_json_hash({"source": source, **request.model_dump()})
     session.execute(
-        update(Account)
-        .where(Account.id == principal.account_id)
-        .values(updated_at=utc_now())
+        update(Account).where(Account.id == principal.account_id).values(updated_at=utc_now())
     )
     existing = session.scalar(
         select(ConfigurationCopy).where(
@@ -26,9 +24,7 @@ def begin_copy(session, principal, request, source):
         )
     )
     if existing and existing.request_hash != fingerprint:
-        raise ApiProblem(
-            409, "copy_request_conflict", "This request key belongs to another copy."
-        )
+        raise ApiProblem(409, "copy_request_conflict", "This request key belongs to another copy.")
     return existing, fingerprint
 
 

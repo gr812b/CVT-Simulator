@@ -63,6 +63,7 @@ from cinder.studies import (
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
+from app.application.scene_mass import flyweight_tip_mass_kg
 from app.schemas.scene import (
     FlyweightScene,
     MechanismPose,
@@ -121,9 +122,7 @@ class CinderGateway:
             "package": "cinder-cvt",
             "package_version": str(cinder.__version__),
             "simulation_case_schema_version": int(SIMULATION_CASE_SCHEMA_VERSION),
-            "simulation_result_contract_version": int(
-                SIMULATION_RESULT_CONTRACT_VERSION
-            ),
+            "simulation_result_contract_version": int(SIMULATION_RESULT_CONTRACT_VERSION),
         }
 
     def conventions(self) -> dict[str, Any]:
@@ -138,9 +137,7 @@ class CinderGateway:
     def assembly_json_schema(self) -> dict[str, Any]:
         return assembly_document_json_schema()
 
-    def inline_assembly_json_schema(
-        self, definition: str | None = None
-    ) -> dict[str, Any]:
+    def inline_assembly_json_schema(self, definition: str | None = None) -> dict[str, Any]:
         """Embed the canonical schema in OpenAPI without copying its fields."""
         schema = self.assembly_json_schema()
 
@@ -165,9 +162,7 @@ class CinderGateway:
     def validate_assembly_shape(self, document: dict[str, Any]) -> dict[str, Any]:
         """Enforce the exact schema exported to the editor before persistence."""
         json.dumps(document, allow_nan=False)
-        error = best_match(
-            Draft202012Validator(self.assembly_json_schema()).iter_errors(document)
-        )
+        error = best_match(Draft202012Validator(self.assembly_json_schema()).iter_errors(document))
         if error is not None:
             path = "/" + "/".join(str(part) for part in error.absolute_path)
             raise ValueError(f"{path}: {error.message}")
@@ -231,10 +226,7 @@ class CinderGateway:
         policy = course_policy or {}
         factor = None
         secondary = document["shaft_boundaries"]["secondary"]
-        if (
-            document["host"]["kind"] == "secondary_shaft_angle"
-            and "final_drive" in secondary
-        ):
+        if document["host"]["kind"] == "secondary_shaft_angle" and "final_drive" in secondary:
             drive = secondary["final_drive"]
             factor = drive["wheel_radius_m"] / drive["reduction_ratio"]
         start, end = decoded.time_span
@@ -344,9 +336,7 @@ class CinderGateway:
             aggregate = replace(
                 part,
                 trace=CVTIntegrationTrace(
-                    HybridIntegrationResult(
-                        tuple(segments), tuple(transitions), complete, reason
-                    )
+                    HybridIntegrationResult(tuple(segments), tuple(transitions), complete, reason)
                 ),
                 segments=tuple(reports),
                 summary=replace(
@@ -358,9 +348,7 @@ class CinderGateway:
             )
             projected = project_simulation_result(
                 aggregate,
-                include_reported_segments=options.get(
-                    "include_reported_segments", False
-                ),
+                include_reported_segments=options.get("include_reported_segments", False),
                 include_raw_trace=options.get("include_raw_trace", False),
             )
             checkpoint(projected)
@@ -378,9 +366,7 @@ class CinderGateway:
             ),
         )
 
-    def scene_preview(
-        self, geometry: Mapping[str, Any], *, frame_count: int = 1
-    ) -> ScenePreview:
+    def scene_preview(self, geometry: Mapping[str, Any], *, frame_count: int = 1) -> ScenePreview:
         """Resolve a compact visual projection; no integration or job is involved.
 
         Belt points evaluate CINDER's public cord-path expressions. Sheave
@@ -468,16 +454,13 @@ class CinderGateway:
             )
             primary = FlyweightScene(
                 count=component["mass_geometry"]["number_of_flyweights"],
+                tip_mass_per_flyweight_kg=flyweight_tip_mass_kg(component),
                 pivot_m=(spec.pivot_axial_position, spec.pivot_radius),
                 roller_radius_m=spec.roller_radius,
                 roller_side_sign=spec.roller_side_sign,
                 ramp_points_m=[
-                    surface.ramp_surface_point(
-                        contact_coordinate=float(x), axial_position=0
-                    )
-                    for x in np.linspace(
-                        spec.ramp_profile.x_min, spec.ramp_profile.x_max, 80
-                    )
+                    surface.ramp_surface_point(contact_coordinate=float(x), axial_position=0)
+                    for x in np.linspace(spec.ramp_profile.x_min, spec.ramp_profile.x_max, 80)
                 ],
             )
         coupling = assembly["pulleys"]["secondary"].get("helical_coupling")
@@ -487,9 +470,7 @@ class CinderGateway:
         ).helical_coupling
         if coupling:
             helix = secondary.profile
-            for q in np.linspace(
-                helix.opening_travel_min, helix.opening_travel_max, 80
-            ):
+            for q in np.linspace(helix.opening_travel_min, helix.opening_travel_max, 80):
                 theta = helix.evaluate(float(q)).theta
                 points.append(
                     (
@@ -501,9 +482,7 @@ class CinderGateway:
         dimensions = self._scene_geometry_spec(assembly["geometry"])
         path = BeltPulleyGeometry(dimensions)
         for shift in np.unique(
-            np.append(
-                np.linspace(0, dimensions.max_shift, 65), dimensions.deadzone_shift
-            )
+            np.append(np.linspace(0, dimensions.max_shift, 65), dimensions.deadzone_shift)
         ):
             position = path.evaluate(float(shift))
             local = position.secondary_axial_coordinate.value
@@ -527,12 +506,10 @@ class CinderGateway:
             primary=primary,
             secondary_helix_points_m=points,
             primary_has_spring=any(
-                c["kind"] == "axial_spring"
-                for c in assembly["pulleys"]["primary"]["components"]
+                c["kind"] == "axial_spring" for c in assembly["pulleys"]["primary"]["components"]
             ),
             secondary_has_spring=any(
-                c["kind"] == "axial_spring"
-                for c in assembly["pulleys"]["secondary"]["components"]
+                c["kind"] == "axial_spring" for c in assembly["pulleys"]["secondary"]["components"]
             ),
             poses=poses,
         )
@@ -563,15 +540,19 @@ class CinderGateway:
         if mechanism is not None and hasattr(mechanism, "contact_at"):
             geometry = mechanism.geometry_spec
             surface = PivotedRollerFollowerGeometry(geometry)
+            component = next(
+                component
+                for component in assembly["pulleys"]["primary"]["components"]
+                if component["kind"] == "fixed_pivot_roller_flyweight"
+            )
             primary = FlyweightScene(
                 count=mechanism.mass_geometry.number_of_flyweights,
+                tip_mass_per_flyweight_kg=flyweight_tip_mass_kg(component),
                 pivot_m=(geometry.pivot_axial_position, geometry.pivot_radius),
                 roller_radius_m=geometry.roller_radius,
                 roller_side_sign=geometry.roller_side_sign,
                 ramp_points_m=[
-                    surface.ramp_surface_point(
-                        contact_coordinate=float(x), axial_position=0
-                    )
+                    surface.ramp_surface_point(contact_coordinate=float(x), axial_position=0)
                     for x in np.linspace(
                         geometry.ramp_profile.x_min, geometry.ramp_profile.x_max, 80
                     )
@@ -581,9 +562,7 @@ class CinderGateway:
         helix_points = []
         if coupling:
             profile = coupling.profile
-            for q in np.linspace(
-                profile.opening_travel_min, profile.opening_travel_max, 80
-            ):
+            for q in np.linspace(profile.opening_travel_min, profile.opening_travel_max, 80):
                 theta = profile.evaluate(float(q)).theta
                 helix_points.append(
                     (
@@ -657,15 +636,15 @@ class CinderGateway:
                     shift_m=float(shift),
                     primary_contact_m=contact_point,
                     primary_normal_axial_radial=normal,
-                    secondary_helix_dtheta_dx=helix_local.dtheta_ds
-                    if helix_local
-                    else None,
+                    secondary_helix_dtheta_dx=helix_local.dtheta_ds if helix_local else None,
                     primary_roller_m=(
-                        roller.roller_center_axial_position,
-                        roller.roller_center_radius,
-                    )
-                    if roller
-                    else None,
+                        (
+                            roller.roller_center_axial_position,
+                            roller.roller_center_radius,
+                        )
+                        if roller
+                        else None
+                    ),
                     primary_ramp_shift_m=local,
                     secondary_axial_position_m=geometry.secondary_axial_coordinate.value,
                     secondary_angle_rad=angle,
@@ -684,12 +663,8 @@ class CinderGateway:
 
         preview.geometry.mechanisms = MechanismScene(
             primary=primary,
-            primary_movable_torque_fraction=movable_torque_fraction(
-                spec.pulleys.primary
-            ),
-            secondary_movable_torque_fraction=movable_torque_fraction(
-                spec.pulleys.secondary
-            ),
+            primary_movable_torque_fraction=movable_torque_fraction(spec.pulleys.primary),
+            secondary_movable_torque_fraction=movable_torque_fraction(spec.pulleys.secondary),
             primary_has_spring=any(
                 component["kind"] == "axial_spring"
                 for component in assembly["pulleys"]["primary"]["components"]
@@ -710,14 +685,10 @@ class CinderGateway:
         from app.application.force_projection import project_forces
 
         scene = scene or self.assembly_scene(assembly).geometry
-        tension = build_belt_tension_field(
-            sheave_half_angle=scene.sheave_half_angle_rad
-        )
+        tension = build_belt_tension_field(sheave_half_angle=scene.sheave_half_angle_rad)
         return project_forces(result, scene, tension)
 
-    def geometry_from_endpoint_radii(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def geometry_from_endpoint_radii(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         context = self._geometry_context(_mapping(payload.get("context"), "context"))
         design = solve_geometry_from_endpoint_radii(
             EndpointRadiiDesignRequest(
@@ -751,10 +722,16 @@ class CinderGateway:
         axes_payload = payload.get("axes")
         if not isinstance(axes_payload, list):
             raise ValueError("axes must be an array.")
+        pulley = {
+            "input": PulleyLocation.PRIMARY,
+            "output": PulleyLocation.SECONDARY,
+        }.get(str(payload.get("pulley")))
+        if pulley is None:
+            raise ValueError("pulley must be 'input' or 'output'.")
 
         request = PulleyClampingForceStudyRequest(
             cvt=assembly,
-            pulley=PulleyLocation(str(payload["pulley"])),
+            pulley=pulley,
             point=ActuationOperatingPoint(
                 # This API remains a static clamping map; time is therefore
                 # explicitly fixed rather than hidden behind a context default.
@@ -771,16 +748,10 @@ class CinderGateway:
                         "secondary_angular_acceleration_rad_per_s2",
                         default=0.0,
                     ),
-                    belt_acceleration=_number(
-                        closure, "belt_acceleration_m_per_s2", default=0.0
-                    ),
-                    shift_acceleration=_number(
-                        closure, "shift_acceleration_m_per_s2", default=0.0
-                    ),
+                    belt_acceleration=_number(closure, "belt_acceleration_m_per_s2", default=0.0),
+                    shift_acceleration=_number(closure, "shift_acceleration_m_per_s2", default=0.0),
                     primary_torque=_number(closure, "primary_torque_Nm", default=0.0),
-                    secondary_torque=_number(
-                        closure, "secondary_torque_Nm", default=0.0
-                    ),
+                    secondary_torque=_number(closure, "secondary_torque_Nm", default=0.0),
                     primary_normal_resultant=_number(
                         closure, "primary_normal_resultant_N", default=0.0
                     ),
@@ -819,17 +790,13 @@ class CinderGateway:
         )
 
     @staticmethod
-    def _project_geometry_design(
-        design: object, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def _project_geometry_design(design: object, payload: Mapping[str, Any]) -> dict[str, Any]:
         sample_count = int(payload.get("sample_count", 301))
         result: dict[str, Any] = {
             "contract_version": 1,
             "kind": "geometry_design_response",
             "summary": project_geometry_summary(summarize_geometry_design(design)),
-            "path": project_geometry_path(
-                sample_geometry_path(design, sample_count=sample_count)
-            ),
+            "path": project_geometry_path(sample_geometry_path(design, sample_count=sample_count)),
             "feasibility": project_geometry_feasibility(
                 evaluate_geometry_feasibility(
                     design,
@@ -845,9 +812,7 @@ class CinderGateway:
         sampling = payload.get("field_sampling")
         if sampling is not None:
             field = _mapping(sampling, "field_sampling")
-            primary_axis = np.asarray(
-                _number_list(field, "primary_outer_radius_m"), dtype=float
-            )
+            primary_axis = np.asarray(_number_list(field, "primary_outer_radius_m"), dtype=float)
             secondary_axis = np.asarray(
                 _number_list(field, "secondary_outer_radius_m"), dtype=float
             )

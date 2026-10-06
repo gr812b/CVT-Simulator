@@ -8,9 +8,7 @@ from pathlib import Path
 @lru_cache(maxsize=1)
 def school_catalog():
     return json.loads(
-        (Path(__file__).parents[1] / "data" / "baja_schools.json").read_text(
-            encoding="utf-8"
-        )
+        (Path(__file__).parents[1] / "data" / "baja_schools.json").read_text(encoding="utf-8")
     )
 
 

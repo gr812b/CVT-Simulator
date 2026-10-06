@@ -26,9 +26,7 @@ def reset_sqlite_database(database: Path) -> None:
     """
 
     database = database.resolve()
-    paths = tuple(
-        Path(str(database) + suffix) for suffix in ("", "-journal", "-wal", "-shm")
-    )
+    paths = tuple(Path(str(database) + suffix) for suffix in ("", "-journal", "-wal", "-shm"))
     for process in psutil.process_iter():
         try:
             if any(Path(file.path) in paths for file in process.open_files()):

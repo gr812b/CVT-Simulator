@@ -80,9 +80,7 @@ def main():
     if payload.get("error"):
         raise RuntimeError(payload["error"])
     result = payload["result"]
-    verify_result_contract(
-        result, expected_version=identity["simulation_result_contract_version"]
-    )
+    verify_result_contract(result, expected_version=identity["simulation_result_contract_version"])
     if result["metrics"]["completed"] is not True:
         raise RuntimeError("A partial simulation cannot replace the public demo")
     distance = next(
@@ -104,9 +102,7 @@ def main():
     )
     DEMO_PATH.parent.mkdir(parents=True, exist_ok=True)
     temporary = DEMO_PATH.with_suffix(".tmp")
-    temporary.write_bytes(
-        gzip.compress(demo.model_dump_json().encode("utf-8"), mtime=0)
-    )
+    temporary.write_bytes(gzip.compress(demo.model_dump_json().encode("utf-8"), mtime=0))
     temporary.replace(DEMO_PATH)
     from app.scripts.build_scenes import main as build_scenes
 

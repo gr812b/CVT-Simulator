@@ -25,9 +25,7 @@ from . import (
 )
 
 router = APIRouter(
-    responses={
-        code: {"model": ErrorResponse} for code in (400, 401, 403, 404, 409, 429)
-    }
+    responses={code: {"model": ErrorResponse} for code in (400, 401, 403, 404, 409, 429)}
 )
 router.include_router(auth.router)
 router.include_router(community.router)
@@ -39,12 +37,8 @@ router.include_router(metadata.router)
 router.include_router(library.router, dependencies=[Depends(get_current_principal)])
 router.include_router(physical_library.router)
 router.include_router(presets.router)
-router.include_router(
-    simulation_cases.router, dependencies=[Depends(get_current_principal)]
-)
+router.include_router(simulation_cases.router, dependencies=[Depends(get_current_principal)])
 router.include_router(studies.router, dependencies=[Depends(get_current_principal)])
-router.include_router(
-    primary_design.router, dependencies=[Depends(get_current_principal)]
-)
+router.include_router(primary_design.router, dependencies=[Depends(get_current_principal)])
 router.include_router(runs.router)
 router.include_router(validation.router, dependencies=[Depends(get_current_principal)])

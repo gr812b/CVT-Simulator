@@ -188,9 +188,7 @@ class FixedPivotPrimaryDesignService:
 
         domain_id = uuid4().hex
         self._store_domain(
-            CachedPathDomain(
-                account_id=account_id, domain_id=domain_id, compiled=compiled
-            )
+            CachedPathDomain(account_id=account_id, domain_id=domain_id, compiled=compiled)
         )
         return {
             "domain_id": domain_id,
@@ -364,15 +362,12 @@ class FixedPivotPrimaryDesignService:
             "roller_center_r_m": [point.roller_center_r_m for point in geometry.points],
             "contact_x_m": [point.contact_x_m for point in geometry.points],
             "contact_r_m": [point.contact_r_m for point in geometry.points],
-            "contact_coordinate_m": [
-                point.contact_coordinate_m for point in geometry.points
-            ],
+            "contact_coordinate_m": [point.contact_coordinate_m for point in geometry.points],
             "ramp_tangent_deg": [point.ramp_tangent_deg for point in geometry.points],
             "ramp_normal_x": [point.ramp_normal_x for point in geometry.points],
             "ramp_normal_r": [point.ramp_normal_r for point in geometry.points],
             "admissible": [
-                1 if point.angle_rad <= 0.5 * pi + 1.0e-10 else 0
-                for point in geometry.points
+                1 if point.angle_rad <= 0.5 * pi + 1.0e-10 else 0 for point in geometry.points
             ],
         }
         units = {
@@ -394,13 +389,10 @@ class FixedPivotPrimaryDesignService:
         # only the remaining margin toward the far end is a useful endpoint
         # manufacturing diagnostic.
         endpoint_margins = [
-            geometry.ramp.x_max - point.contact_coordinate_m
-            for point in geometry.points
+            geometry.ramp.x_max - point.contact_coordinate_m for point in geometry.points
         ]
         max_q = (
-            max(degrees(point.angle_rad) for point in geometry.points)
-            if geometry.points
-            else None
+            max(degrees(point.angle_rad) for point in geometry.points) if geometry.points else None
         )
 
         return {
@@ -587,9 +579,7 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
             }
 
     max_q_deg = (
-        max(degrees(point.angle_rad) for point in geometry.points)
-        if geometry.points
-        else None
+        max(degrees(point.angle_rad) for point in geometry.points) if geometry.points else None
     )
     if max_q_deg is not None and max_q_deg >= 88.0:
         warnings.append(
@@ -602,8 +592,7 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
 
     if geometry.points:
         endpoint_margin = min(
-            geometry.ramp.x_max - point.contact_coordinate_m
-            for point in geometry.points
+            geometry.ramp.x_max - point.contact_coordinate_m for point in geometry.points
         )
         if endpoint_margin < 1.0e-3:
             warnings.append(

@@ -42,6 +42,7 @@ JsonDict = dict[str, Any]
 
 SEED_USER_ID = "00000000-0000-4000-8000-000000000001"
 SEED_ACCOUNT_ID = "00000000-0000-4000-8000-000000000002"
+SEED_DISPLAY_NAME = "CINDER"
 SEED_ENGINE_ID = "00000000-0000-4000-8000-000000000010"
 SEED_ENGINE_VERSION_ID = "00000000-0000-4000-8000-000000000011"
 SEED_CVT_ID = "00000000-0000-4000-8000-000000000020"
@@ -125,7 +126,12 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     preset = _load_baseline_preset(preset_path)
     split = split_simulation_case_for_database(preset["simulation_case"])
 
-    if session.get(Account, SEED_ACCOUNT_ID) is not None:
+    seed_account = session.get(Account, SEED_ACCOUNT_ID)
+    if seed_account is not None:
+        seed_account.name = SEED_DISPLAY_NAME
+        seed_user = session.get(User, SEED_USER_ID)
+        if seed_user is not None:
+            seed_user.display_name = SEED_DISPLAY_NAME
         # A seed is additive. Never rewrite revisions, tunes or workspace data
         # that may already be referenced by a saved run or edited by a user.
         from app.database.physical_seed import seed_physical_catalog
@@ -145,9 +151,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     user = User(
         id=SEED_USER_ID,
         email="demo@mcmaster-baja.example",
-        display_name="Demo Baja User",
+        display_name=SEED_DISPLAY_NAME,
     )
-    account = Account(id=SEED_ACCOUNT_ID, name="Demo Baja Workspace", tier="free")
+    account = Account(id=SEED_ACCOUNT_ID, name=SEED_DISPLAY_NAME, tier="free")
     session.add_all(
         [
             user,
@@ -157,9 +163,7 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
     )
     session.flush()
 
-    mcmaster = session.scalar(
-        select(Institution).where(Institution.slug == "mcmaster-university")
-    )
+    mcmaster = session.scalar(select(Institution).where(Institution.slug == "mcmaster-university"))
     if mcmaster is not None:
         session.add(
             AccountInstitutionAffiliation(
@@ -438,9 +442,7 @@ def _seed_validation_workspace(session: Session) -> None:
     )
 
     existing = session.scalar(
-        select(ValidationWorkspace).where(
-            ValidationWorkspace.account_id == SEED_ACCOUNT_ID
-        )
+        select(ValidationWorkspace).where(ValidationWorkspace.account_id == SEED_ACCOUNT_ID)
     )
     if existing is not None:
         _upgrade_workspace(existing)
@@ -485,16 +487,12 @@ def split_simulation_case_for_database(simulation_case: JsonDict) -> JsonDict:
             "cvt_rotational_inertia_kg_m2"
         )
 
-    gearbox_inertia = secondary_inertias.pop(
-        "gearbox_input_rotational_inertia_kg_m2", None
-    )
+    gearbox_inertia = secondary_inertias.pop("gearbox_input_rotational_inertia_kg_m2", None)
     if gearbox_inertia is not None:
-        output_boundary.setdefault(
-            "direct_secondary_shaft_inertia_kg_m2", gearbox_inertia
-        )
+        output_boundary.setdefault("direct_secondary_shaft_inertia_kg_m2", gearbox_inertia)
     if "fixed_rotational_inertia_kg_m2" in secondary_inertias:
-        secondary_inertias["fixed_rotating_hardware_inertia_kg_m2"] = (
-            secondary_inertias.pop("fixed_rotational_inertia_kg_m2")
+        secondary_inertias["fixed_rotating_hardware_inertia_kg_m2"] = secondary_inertias.pop(
+            "fixed_rotational_inertia_kg_m2"
         )
     output_boundary.setdefault("drivetrain_loss_model", {"kind": "none"})
 
@@ -558,15 +556,12 @@ def _flat_then_hill_road_profile() -> JsonDict:
 def _seed_institutions(session: Session) -> None:
     for payload in INSTITUTION_SEEDS:
         if session.get(Institution, payload["id"]) is None:
-            session.add(
-                Institution(institution_type="university", is_verified=False, **payload)
-            )
+            session.add(Institution(institution_type="university", is_verified=False, **payload))
 
 
 def _load_baseline_preset(preset_path: Path | None) -> JsonDict:
     path = (
-        preset_path
-        or Path(__file__).resolve().parents[2] / "presets" / "baja-launch-baseline.json"
+        preset_path or Path(__file__).resolve().parents[2] / "presets" / "baja-launch-baseline.json"
     )
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -695,9 +690,7 @@ def _baseline_tuning_schema() -> JsonDict:
     }
 
 
-def _component_by_kind(
-    cinder_assembly: JsonDict, mount: str, kind: str
-) -> JsonDict | None:
+def _component_by_kind(cinder_assembly: JsonDict, mount: str, kind: str) -> JsonDict | None:
     components = cinder_assembly.get("pulleys", {}).get(mount, {}).get("components", [])
     if not isinstance(components, list):
         return None
@@ -712,9 +705,7 @@ def _extract_baseline_tune(cinder_assembly: JsonDict) -> JsonDict:
     input_ramp = _component_by_kind(cinder_assembly, "input", "centrifugal_ramp")
     input_spring = _component_by_kind(cinder_assembly, "input", "axial_spring")
     output_spring = _component_by_kind(cinder_assembly, "output", "axial_spring")
-    output_helix = _component_by_kind(
-        cinder_assembly, "output", "helical_torque_reaction"
-    )
+    output_helix = _component_by_kind(cinder_assembly, "output", "helical_torque_reaction")
 
     if input_ramp is not None:
         for source_key, tune_key in (
@@ -767,10 +758,7 @@ def _engine_summary(input_boundary: JsonDict) -> JsonDict:
     points = input_boundary.get("points", [])
     peak_torque = max((float(point["torque_Nm"]) for point in points), default=0.0)
     peak_power = max(
-        (
-            float(point["torque_Nm"]) * float(point["angular_speed_rad_per_s"])
-            for point in points
-        ),
+        (float(point["torque_Nm"]) * float(point["angular_speed_rad_per_s"]) for point in points),
         default=0.0,
     )
     return {"peak_torque_Nm": peak_torque, "peak_power_W": peak_power}

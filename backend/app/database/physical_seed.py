@@ -41,9 +41,7 @@ def sample_id(key: str) -> str:
         "vehicle:r1": SEED_OUTPUT_VERSION_ID,
         "vehicle:r2": SEED_OUTPUT_VERSION_ID,
     }
-    return aliases.get(
-        key, str(uuid5(NAMESPACE_URL, f"cinder-web:physical-samples:v1:{key}"))
-    )
+    return aliases.get(key, str(uuid5(NAMESPACE_URL, f"cinder-web:physical-samples:v1:{key}")))
 
 
 def seed_physical_catalog(session: Session) -> None:
@@ -66,9 +64,11 @@ def seed_physical_catalog(session: Session) -> None:
                 "id": object_id,
                 "account_id": SEED_ACCOUNT_ID,
                 "name": name,
-                "description": "Project baseline example."
-                if default
-                else "Illustrative variation for setup and revision workflows.",
+                "description": (
+                    "Project baseline example."
+                    if default
+                    else "Illustrative variation for setup and revision workflows."
+                ),
                 "visibility": "public",
                 "gallery_listed": False,
                 "catalog_status": "seeded_example",
@@ -149,9 +149,7 @@ def seed_physical_catalog(session: Session) -> None:
     # The legacy bootstrap and physical catalog reference the same hardware.
     from app.database.models import CVTDesignVersion
 
-    session.get(CVTDesignVersion, sample_id("cvt:r1")).belt_version_id = sample_id(
-        "belt:r1"
-    )
+    session.get(CVTDesignVersion, sample_id("cvt:r1")).belt_version_id = sample_id("belt:r1")
 
     # Retire former sample variants without invalidating existing run references.
     from sqlalchemy import select
@@ -170,8 +168,6 @@ def seed_physical_catalog(session: Session) -> None:
         setup.is_default = False
         setup.gallery_listed = False
         for publication in session.scalars(
-            select(PhysicalPublication).where(
-                PhysicalPublication.source_object_id == setup.id
-            )
+            select(PhysicalPublication).where(PhysicalPublication.source_object_id == setup.id)
         ):
             publication.gallery_listed = False

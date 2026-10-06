@@ -35,9 +35,7 @@ def seed_development_fixtures(session: Session) -> None:
             )
         session.flush()
         if session.get(AccountUser, (account_id, user_id)) is None:
-            session.add(
-                AccountUser(account_id=account_id, user_id=user_id, role="owner")
-            )
+            session.add(AccountUser(account_id=account_id, user_id=user_id, role="owner"))
             session.flush()
 
         def copy_component(resource: str, source_key: str, *, refs=None):
@@ -82,9 +80,7 @@ def seed_development_fixtures(session: Session) -> None:
 
         engine_id = copy_component("engines", "engine:r1")
         belt_id = copy_component("belts", "belt:r1")
-        cvt_id = copy_component(
-            "cvt-designs", "cvt:r1", refs={"belt_version_id": belt_id}
-        )
+        cvt_id = copy_component("cvt-designs", "cvt:r1", refs={"belt_version_id": belt_id})
         output_id = copy_component("output-systems", "vehicle:r2")
         setup_revision_id = copy_component(
             "vehicle-assemblies",

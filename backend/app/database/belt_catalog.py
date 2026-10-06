@@ -30,9 +30,7 @@ def seed_belt_catalog(session):
         notes = [
             f"Source sheet: {source['sheet']} row {number}, snapshot {source['retrieved_on']}."
         ]
-        notes.extend(
-            f"{headers[index]}: {row[index]}." for index in range(13, min(len(row), 19))
-        )
+        notes.extend(f"{headers[index]}: {row[index]}." for index in range(13, min(len(row), 19)))
         if len(row) > 19 and row[19]:
             notes.append(row[19])
         notes.append(

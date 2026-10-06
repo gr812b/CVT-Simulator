@@ -46,9 +46,7 @@ router = APIRouter(
 )
 
 
-def _set_cookie(
-    request: Request, response: Response, principal: Principal
-) -> AuthSessionResponse:
+def _set_cookie(request: Request, response: Response, principal: Principal) -> AuthSessionResponse:
     settings = request.app.state.settings
     response.set_cookie(
         settings.session_cookie_name,
@@ -66,9 +64,7 @@ def _set_cookie(
 def _remove_old_cookie_session(request: Request, session: Session) -> None:
     old = request.cookies.get(request.app.state.settings.session_cookie_name)
     if old:
-        session.execute(
-            delete(AuthSession).where(AuthSession.token_hash == digest(old))
-        )
+        session.execute(delete(AuthSession).where(AuthSession.token_hash == digest(old)))
 
 
 @router.post("/register", response_model=AuthSessionResponse, status_code=201)
@@ -178,9 +174,7 @@ def change_password(
         .execution_options(populate_existing=True)
     )
     if user.auth_version != principal.session.auth_version:
-        raise ApiProblem(
-            401, "session_expired", "Sign in again to change your password."
-        )
+        raise ApiProblem(401, "session_expired", "Sign in again to change your password.")
     if not verify_password(body.current_password, user.password_hash):
         raise ApiProblem(400, "password_incorrect", "Current password is incorrect.")
     invalidate_credentials(session, user, body.password)
@@ -202,16 +196,13 @@ def forgot_password(
     if user is not None and user.password_hash:
         token = secrets.token_urlsafe(32)
         settings = request.app.state.settings
-        session.execute(
-            delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id)
-        )
+        session.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id))
         session.add(
             PasswordResetToken(
                 token_hash=digest(token),
                 user_id=user.id,
                 auth_version=user.auth_version,
-                expires_at=utc_now()
-                + timedelta(seconds=settings.reset_lifetime_seconds),
+                expires_at=utc_now() + timedelta(seconds=settings.reset_lifetime_seconds),
             )
         )
         session.commit()
@@ -229,24 +220,16 @@ def reset_password(
 ) -> AuthMessageResponse:
     throttle_ip(request, "reset-password", limit=20)
     record = session.scalar(
-        select(PasswordResetToken).where(
-            PasswordResetToken.token_hash == digest(body.token)
-        )
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == digest(body.token))
     )
     invalid = ApiProblem(
         400,
         "reset_link_invalid",
         "This reset link is invalid or expired. Request a new link.",
     )
-    if (
-        record is None
-        or record.used_at is not None
-        or aware(record.expires_at) <= utc_now()
-    ):
+    if record is None or record.used_at is not None or aware(record.expires_at) <= utc_now():
         raise invalid
-    user = session.scalar(
-        select(User).where(User.id == record.user_id).with_for_update()
-    )
+    user = session.scalar(select(User).where(User.id == record.user_id).with_for_update())
     if user is None or user.auth_version != record.auth_version:
         raise invalid
     consumed = session.execute(
@@ -263,6 +246,4 @@ def reset_password(
         raise invalid
     invalidate_credentials(session, user, body.password)
     session.commit()
-    return AuthMessageResponse(
-        message="Password updated. Sign in with your new password."
-    )
+    return AuthMessageResponse(message="Password updated. Sign in with your new password.")

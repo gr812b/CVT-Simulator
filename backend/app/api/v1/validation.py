@@ -166,9 +166,7 @@ def recent_validation_runs(
 ) -> list[ValidationRunSummary]:
     return [
         _run_summary(run)
-        for run in list_validation_runs(
-            session, account_id=principal.account_id, limit=limit
-        )
+        for run in list_validation_runs(session, account_id=principal.account_id, limit=limit)
     ]
 
 
@@ -189,9 +187,7 @@ def save_validation_run(
     if request.simulation_run_id:
         linked_run = get_database_run(session, request.simulation_run_id)
         access.owned(linked_run, principal)
-    run = create_validation_run(
-        session, account_id=principal.account_id, **request.model_dump()
-    )
+    run = create_validation_run(session, account_id=principal.account_id, **request.model_dump())
     return _run_response(run)
 
 

@@ -10,10 +10,7 @@ from app.core.errors import ApiProblem
 def submission_attempt(http, session, principal, settings, key, payload):
     principal.require_write()
     try:
-        if (
-            len(json.dumps(payload, allow_nan=False).encode())
-            > settings.run_max_input_bytes
-        ):
+        if len(json.dumps(payload, allow_nan=False).encode()) > settings.run_max_input_bytes:
             raise ValueError("The submission exceeds the configured input-size limit.")
     except (TypeError, ValueError) as exc:
         raise ApiProblem(422, "invalid_submission", str(exc)) from exc

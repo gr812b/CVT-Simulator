@@ -102,9 +102,7 @@ def list_items(
         stmt = stmt.where(Experiment.cvt_object_id == cvt_object_id)
     items = [
         item_response(session, principal, obj)
-        for obj in session.scalars(
-            stmt.order_by(Experiment.updated_at.desc(), Experiment.id)
-        )
+        for obj in session.scalars(stmt.order_by(Experiment.updated_at.desc(), Experiment.id))
     ]
     return items
 
@@ -158,9 +156,7 @@ def validate_document(session, principal, document, settings):
     return cvt.cvt_design_id
 
 
-def save(
-    session, principal, settings, document, *, expected=None, object_id=None, note=""
-):
+def save(session, principal, settings, document, *, expected=None, object_id=None, note=""):
     principal.require_write()
     cvt_id = validate_document(session, principal, document, settings)
     payload = document.model_dump(mode="json")
@@ -205,9 +201,7 @@ def save(
                 "revision_conflict",
                 "A new item must not have an expected revision.",
             )
-        obj = Experiment(
-            account_id=principal.account_id, kind=document.kind, name=document.name
-        )
+        obj = Experiment(account_id=principal.account_id, kind=document.kind, name=document.name)
         session.add(obj)
         session.flush()
         number = 1
@@ -247,25 +241,23 @@ def archive(session, principal, object_id, expected, archived):
         .values(archived=archived, updated_at=utc_now())
         .execution_options(synchronize_session=False)
     ).rowcount:
-        raise ApiProblem(
-            409, "revision_conflict", "This item changed. Reopen it before archiving."
-        )
+        raise ApiProblem(409, "revision_conflict", "This item changed. Reopen it before archiving.")
     session.refresh(obj)
     return item_response(session, principal, obj)
 
 
 def configuration(session, principal, settings, selection):
     """Rebuild editor intent without invoking mechanics validation or writing data."""
-    setup, assembly, params = setup_tuning(
-        session, principal, selection.setup_revision_id
-    )
+    setup, assembly, params = setup_tuning(session, principal, selection.setup_revision_id)
     setup_document = document_for_revision(session, principal, "setups", setup.id)
     tune_revision = (
         get_revision(session, principal, selection.tune_revision_id, "tunes")
         if selection.tune_revision_id
-        else default_tune_revision(session, setup.cvt_design_version_id)
-        if selection.tune_values is None
-        else None
+        else (
+            default_tune_revision(session, setup.cvt_design_version_id)
+            if selection.tune_values is None
+            else None
+        )
     )
     scenario_revision = (
         get_revision(session, principal, selection.scenario_revision_id, "scenarios")
@@ -280,11 +272,7 @@ def configuration(session, principal, settings, selection):
             "This tune belongs to a different CVT version. Select its CVT or start a new tune for the selected CVT.",
         )
     values = (
-        selection.tune_values
-        if selection.tune_values is not None
-        else tune.values
-        if tune
-        else {}
+        selection.tune_values if selection.tune_values is not None else tune.values if tune else {}
     )
     scenario = selection.scenario or (
         DOCUMENT.validate_python(scenario_revision.document)
@@ -301,14 +289,12 @@ def configuration(session, principal, settings, selection):
     if selection.primary_boundary is not None:
         case["shaft_boundaries"]["primary"] = selection.primary_boundary.model_dump()
     if selection.vehicle_mass_kg is not None:
-        case["shaft_boundaries"]["secondary"]["vehicle"]["mass_kg"] = (
-            selection.vehicle_mass_kg
-        )
+        case["shaft_boundaries"]["secondary"]["vehicle"]["mass_kg"] = selection.vehicle_mass_kg
     road = apply_scenario(case, scenario, settings)
     provenance = {
-        "primary_boundary": selection.primary_boundary.model_dump()
-        if selection.primary_boundary
-        else None,
+        "primary_boundary": (
+            selection.primary_boundary.model_dump() if selection.primary_boundary else None
+        ),
         "setup_revision_id": setup.id,
         "setup_revision_number": setup.version_number,
         "setup_name": setup_document.name,
@@ -321,9 +307,7 @@ def configuration(session, principal, settings, selection):
         "tune_values": deepcopy(values),
         "tune_unsaved": tune is None or values != tune.values,
         "scenario_revision_id": scenario_revision.id if scenario_revision else None,
-        "scenario_revision_number": scenario_revision.number
-        if scenario_revision
-        else None,
+        "scenario_revision_number": scenario_revision.number if scenario_revision else None,
         "scenario": scenario.model_dump(mode="json"),
         "resolved_road": road.model_dump(mode="json"),
         "scenario_unsaved": scenario_revision is None

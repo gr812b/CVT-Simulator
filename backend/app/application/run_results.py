@@ -96,17 +96,14 @@ def references(run, session=None, principal=None):
     setup = None
     if setup_id:
         try:
-            setup = access.library_version(
-                session, principal, "vehicle-assemblies", setup_id
-            )
+            setup = access.library_version(session, principal, "vehicle-assemblies", setup_id)
         except ApiProblem:
             pass
     component_versions = {
         "cvt": (
             "cvt-designs",
             "cvts",
-            p.get("cvt_revision_id")
-            or (setup.cvt_design_version_id if setup else None),
+            p.get("cvt_revision_id") or (setup.cvt_design_version_id if setup else None),
         ),
         "engine": (
             "engines",
@@ -122,29 +119,23 @@ def references(run, session=None, principal=None):
         except ApiProblem:
             continue
         binding = library.binding_for(resource)
-        obj = session.get(
-            binding.object_model, getattr(version, binding.object_fk_name)
-        )
+        obj = session.get(binding.object_model, getattr(version, binding.object_fk_name))
         result.append(
             RunReference(
                 kind=kind,
-                name=(version.summary or {}).get("physical_metadata", {}).get("name")
-                or obj.name,
+                name=(version.summary or {}).get("physical_metadata", {}).get("name") or obj.name,
                 revision_id=version.id,
                 revision_number=version.version_number,
                 href=f"/library/{route}/{obj.id}?revision={version.id}",
             )
         )
         if kind == "cvt" and version.belt_version_id:
-            belt = access.library_version(
-                session, principal, "belts", version.belt_version_id
-            )
+            belt = access.library_version(session, principal, "belts", version.belt_version_id)
             obj = belt.belt
             result.append(
                 RunReference(
                     kind="belt",
-                    name=(belt.summary or {}).get("physical_metadata", {}).get("name")
-                    or obj.name,
+                    name=(belt.summary or {}).get("physical_metadata", {}).get("name") or obj.name,
                     revision_id=belt.id,
                     revision_number=belt.version_number,
                     href=f"/library/belts/{obj.id}?revision={belt.id}",
@@ -152,9 +143,7 @@ def references(run, session=None, principal=None):
             )
     for ref in result:
         if ref.kind == "setup" and setup:
-            ref.href = (
-                f"/library/setups/{setup.vehicle_assembly_id}?revision={setup.id}"
-            )
+            ref.href = f"/library/setups/{setup.vehicle_assembly_id}?revision={setup.id}"
             ref.revision_number = setup.version_number
         elif ref.kind in {"tune", "scenario"} and ref.revision_id:
             try:
@@ -167,9 +156,7 @@ def references(run, session=None, principal=None):
             except ApiProblem:
                 continue
             route = "tunes" if ref.kind == "tune" else "load-cases"
-            ref.href = (
-                f"/catalog/{route}/{revision.experiment_id}?revision={revision.id}"
-            )
+            ref.href = f"/catalog/{route}/{revision.experiment_id}?revision={revision.id}"
             ref.revision_number = revision.number
     return result
 
@@ -185,9 +172,7 @@ def metric_values(run):
 
 def history_item(run):
     return RunHistoryItem(
-        run=jobs.status(run, include_provenance=False).model_copy(
-            update={"summary_scalars": {}}
-        ),
+        run=jobs.status(run, include_provenance=False).model_copy(update={"summary_scalars": {}}),
         references=references(run),
         metrics=metric_values(run)[:6],
     )
@@ -210,18 +195,14 @@ def history(
     author_id=None,
 ):
     if since and until and since > until:
-        raise ApiProblem(
-            422, "date_range", "The start date must be before the end date."
-        )
+        raise ApiProblem(422, "date_range", "The start date must be before the end date.")
     if principal.account_id:
         jobs.recover(session, settings, principal.account_id)
     conditions = [Run.account_id == principal.account_id] if scope == "own" else []
     if author_id is not None:
         conditions.append(Run.created_by_user_id == author_id)
     if query.strip():
-        escaped = (
-            query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        )
+        escaped = query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         columns = (
             Run.name,
             Run.id,
@@ -229,9 +210,7 @@ def history(
             Run.provenance["tune_document"]["name"].as_string(),
             Run.provenance["scenario"]["name"].as_string(),
         )
-        conditions.append(
-            or_(*[column.ilike(f"%{escaped}%", escape="\\") for column in columns])
-        )
+        conditions.append(or_(*[column.ilike(f"%{escaped}%", escape="\\") for column in columns]))
     if status:
         conditions.append(Run.status == status)
     if source:
@@ -374,16 +353,12 @@ def experiment_draft(session, principal, settings, run_id):
         if revision_id is None:
             return None
         revision = experiments.get_revision(session, principal, revision_id, kind)
-        return experiments.detail(
-            session, principal, revision.experiment_id, revision.id
-        )
+        return experiments.detail(session, principal, revision.experiment_id, revision.id)
 
     return RunExperimentDraft(
         source_run_id=run.id,
         selection=selection,
-        setup=physical_library.selection_for_revision(
-            session, principal, "setups", version.id
-        ),
+        setup=physical_library.selection_for_revision(session, principal, "setups", version.id),
         surface=tune_surface(session, principal, version.cvt_design_version_id),
         tune=selected_experiment(selection.tune_revision_id, "tunes"),
         load_case=selected_experiment(selection.scenario_revision_id, "scenarios"),
@@ -486,10 +461,7 @@ def export(session, principal, run_id, kind):
         stream = io.StringIO(newline="")
         writer = csv.writer(stream)
         writer.writerow(
-            [
-                f"{column['key']} [{column['canonical_unit']}]"
-                for column in table["columns"]
-            ]
+            [f"{column['key']} [{column['canonical_unit']}]" for column in table["columns"]]
         )
         writer.writerows(
             [

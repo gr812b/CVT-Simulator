@@ -57,12 +57,7 @@ class Settings:
         from urllib.parse import urlsplit
 
         url = urlsplit(self.web_url)
-        if (
-            url.scheme not in {"http", "https"}
-            or not url.netloc
-            or url.query
-            or url.fragment
-        ):
+        if url.scheme not in {"http", "https"} or not url.netloc or url.query or url.fragment:
             raise ValueError("CVT_WEB_URL must be an absolute http(s) application URL.")
         if self.environment not in {"development", "production"}:
             raise ValueError("CVT_ENVIRONMENT must be development or production.")
@@ -96,9 +91,7 @@ class Settings:
             raise ValueError("road_max_grade_degrees must be below 90.")
         if self.environment == "production":
             if url.scheme != "https" or self.mail_mode != "smtp" or not self.smtp_host:
-                raise ValueError(
-                    "Production requires HTTPS CVT_WEB_URL and configured SMTP mail."
-                )
+                raise ValueError("Production requires HTTPS CVT_WEB_URL and configured SMTP mail.")
             if "*" in self.cors_origins:
                 raise ValueError("Production CORS origins must be explicit.")
 
@@ -126,19 +119,11 @@ class Settings:
             preset_directory=root / "presets",
             run_timeout_seconds=timeout,
             run_executor_mode=requested_mode,  # type: ignore[arg-type]
-            run_queue_timeout_seconds=float(
-                getenv("CVT_RUN_QUEUE_TIMEOUT_SECONDS", "3600")
-            ),
-            run_recovery_grace_seconds=float(
-                getenv("CVT_RUN_RECOVERY_GRACE_SECONDS", "15")
-            ),
+            run_queue_timeout_seconds=float(getenv("CVT_RUN_QUEUE_TIMEOUT_SECONDS", "3600")),
+            run_recovery_grace_seconds=float(getenv("CVT_RUN_RECOVERY_GRACE_SECONDS", "15")),
             run_submission_limit=int(getenv("CVT_RUN_SUBMISSION_LIMIT", "6")),
-            run_submission_window_seconds=int(
-                getenv("CVT_RUN_SUBMISSION_WINDOW_SECONDS", "60")
-            ),
-            run_max_duration_seconds=float(
-                getenv("CVT_RUN_MAX_DURATION_SECONDS", "300")
-            ),
+            run_submission_window_seconds=int(getenv("CVT_RUN_SUBMISSION_WINDOW_SECONDS", "60")),
+            run_max_duration_seconds=float(getenv("CVT_RUN_MAX_DURATION_SECONDS", "300")),
             run_max_report_samples=int(getenv("CVT_RUN_MAX_REPORT_SAMPLES", "40000")),
             run_max_input_bytes=int(getenv("CVT_RUN_MAX_INPUT_BYTES", "2000000")),
             run_max_result_bytes=int(getenv("CVT_RUN_MAX_RESULT_BYTES", "64000000")),
@@ -153,9 +138,7 @@ class Settings:
             database_echo=database_echo,
             environment=getenv("CVT_ENVIRONMENT", "development"),
             web_url=getenv("CVT_WEB_URL", "http://localhost:5173").rstrip("/"),
-            session_lifetime_seconds=int(
-                getenv("CVT_SESSION_LIFETIME_SECONDS", "604800")
-            ),
+            session_lifetime_seconds=int(getenv("CVT_SESSION_LIFETIME_SECONDS", "604800")),
             reset_lifetime_seconds=int(getenv("CVT_RESET_LIFETIME_SECONDS", "1800")),
             mail_mode=getenv("CVT_MAIL_MODE", "outbox"),
             mail_outbox=Path(getenv("CVT_MAIL_OUTBOX", ".local/mail")),

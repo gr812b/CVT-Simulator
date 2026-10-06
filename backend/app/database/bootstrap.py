@@ -23,9 +23,7 @@ def create_database(engine: Engine) -> None:
     Base.metadata.create_all(engine)
 
 
-def create_and_seed_database(
-    settings: Settings, *, preset_path: Path | None = None
-) -> None:
+def create_and_seed_database(settings: Settings, *, preset_path: Path | None = None) -> None:
     """Create tables and insert deterministic seed data."""
 
     engine = make_engine(settings.database_url, echo=settings.database_echo)
@@ -39,9 +37,7 @@ def create_and_seed_database(
         engine.dispose()
 
 
-def seed_existing_database(
-    session: Session, *, preset_path: Path | None = None
-) -> None:
+def seed_existing_database(session: Session, *, preset_path: Path | None = None) -> None:
     """Seed rows into an existing transactional session."""
 
     seed_database(session, preset_path=preset_path)

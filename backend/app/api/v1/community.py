@@ -29,9 +29,7 @@ def users(
     conditions = [User.password_hash.is_not(None)]
     if q.strip():
         pattern = (
-            "%"
-            + q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            + "%"
+            "%" + q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         )
         conditions.append(
             or_(
@@ -67,9 +65,7 @@ def users(
 
 @router.get("/users/{user_id}", response_model=PublicUser)
 def user_profile(user_id: str, session: Session = Depends(get_database_session)):
-    user = session.scalar(
-        select(User).where(User.id == user_id, User.password_hash.is_not(None))
-    )
+    user = session.scalar(select(User).where(User.id == user_id, User.password_hash.is_not(None)))
     if user is None:
         raise access.unavailable()
     return PublicUser(

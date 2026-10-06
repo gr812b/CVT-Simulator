@@ -42,13 +42,9 @@ def require_browser_request(request: Request) -> None:
     allowed = {*settings.cors_origins, f"{web.scheme}://{web.netloc}"}
     origin = request.headers.get("origin")
     if origin is not None and origin not in allowed:
-        raise ApiProblem(
-            403, "origin_not_allowed", "This request origin is not allowed."
-        )
+        raise ApiProblem(403, "origin_not_allowed", "This request origin is not allowed.")
     if request.headers.get("x-cinder-client") != "web":
-        raise ApiProblem(
-            403, "client_header_required", "The CINDER client header is required."
-        )
+        raise ApiProblem(403, "client_header_required", "The CINDER client header is required.")
 
 
 def get_current_principal(

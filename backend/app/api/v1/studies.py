@@ -75,15 +75,11 @@ def geometry_simple(
     scene = container.gateway.scene_preview(
         {
             **resolved.context.model_dump(),
-            "primary_outer_radius_at_zero_shift_m": (
-                resolved.primary_outer_radius_at_zero_shift_m
-            ),
+            "primary_outer_radius_at_zero_shift_m": (resolved.primary_outer_radius_at_zero_shift_m),
             "secondary_outer_radius_at_zero_shift_m": (
                 resolved.secondary_outer_radius_at_zero_shift_m
             ),
         },
         frame_count=21,
     )
-    return SimpleGeometryResponse(
-        study=study, resolved_context=resolved.context, scene=scene
-    )
+    return SimpleGeometryResponse(study=study, resolved_context=resolved.context, scene=scene)

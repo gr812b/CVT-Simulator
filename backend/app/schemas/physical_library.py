@@ -26,9 +26,7 @@ CinderAssembly = Annotated[
 
 
 class PhysicalModel(ApiModel):
-    model_config = ConfigDict(
-        extra="forbid", allow_inf_nan=False, str_strip_whitespace=True
-    )
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False, str_strip_whitespace=True)
 
 
 class PhysicalMetadata(PhysicalModel):
@@ -75,13 +73,9 @@ class BeltSection(PhysicalModel):
     def consistent_section(self):
         if self.inner_width_m >= self.outer_width_m:
             raise ValueError("Bottom width must be smaller than top width.")
-        expected = math.atan(
-            (self.outer_width_m - self.inner_width_m) / (2 * self.height_m)
-        )
+        expected = math.atan((self.outer_width_m - self.inner_width_m) / (2 * self.height_m))
         if not math.isclose(self.half_angle_rad, expected, rel_tol=1e-8, abs_tol=1e-10):
-            raise ValueError(
-                "Belt widths, height and half-angle must describe the same section."
-            )
+            raise ValueError("Belt widths, height and half-angle must describe the same section.")
         return self
 
 

@@ -48,8 +48,7 @@ def _bundle(session, principal, kind, revision_id):
                 "kind": component_kind,
                 "name": choice.name,
                 "revision_number": source.version_number if source else None,
-                "owned": parent is not None
-                and parent.account_id == principal.account_id,
+                "owned": parent is not None and parent.account_id == principal.account_id,
             }
         )
         choice.revision_id = None
@@ -119,11 +118,11 @@ def item(row):
     belt = (
         document.data
         if row.kind == "belts"
-        else document.data.belt.data
-        if row.kind == "cvts"
-        else document.data.cvt.data.belt.data
-        if row.kind == "setups"
-        else None
+        else (
+            document.data.belt.data
+            if row.kind == "cvts"
+            else document.data.cvt.data.belt.data if row.kind == "setups" else None
+        )
     )
     if belt:
         properties = [
@@ -212,9 +211,7 @@ def browse(session, *, kind=None, query="", limit=24, offset=0):
     if kind:
         conditions.append(model.kind == kind)
     if query.strip():
-        escaped = (
-            query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        )
+        escaped = query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         conditions.append(
             or_(
                 *[

@@ -2,6 +2,8 @@
 
 from typing import Literal
 
+from pydantic import Field
+
 from .common import ApiModel
 from .projections import CaseValidation
 
@@ -19,6 +21,8 @@ class MechanismPose(ApiModel):
 
 class FlyweightScene(ApiModel):
     count: int
+    # Optional for retained recordings and other mass-distribution models.
+    tip_mass_per_flyweight_kg: float | None = Field(default=None, ge=0)
     pivot_m: tuple[float, float]
     roller_radius_m: float
     roller_side_sign: int

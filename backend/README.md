@@ -1,107 +1,78 @@
 # CVT Simulator backend
 
-This service is an HTTP/application adapter around CINDER. It does not own CVT
-mechanics, formulas, parameter aliases, display-unit conversion, graph layout,
-or 3D geometry reconstruction.
+FastAPI provides authentication, the public configuration library, versioned
+tunes/load cases, and durable simulation jobs. CINDER supplies the mechanics,
+validation and result contracts. The backend freezes submitted inputs, runs them
+in a separate worker, and stores results for playback and export.
 
-## Boundary
-
-```text
-FastAPI routes → application services → cinder_gateway → CINDER public contracts
-```
-
-`app/application/cinder_gateway.py` is the only backend module with direct
-`cinder.*` imports. Routes and storage operate on plain JSON-safe public
-documents and projections.
-
-The database layer follows the same boundary. It stores user-facing, versioned
-objects that can resolve into CINDER's public simulation case, but it does not
-move mechanics into the backend:
-
-```text
-EngineVersion          → input_boundary
-CVTDesignVersion       → assembly
-OutputSystemVersion    → output_boundary template
-LoadCase               → scenario + output-boundary overrides
-ExecutionPreset        → execution
-Run                    → frozen full cinder_simulation_case snapshot + stored result
-```
-
-## M1 accounts and application foundation
-
-See [M1_APPLICATION_FOUNDATION.md](../docs/M1_APPLICATION_FOUNDATION.md) for local signup,
-password-reset mail, existing-user credential setup, ownership rules, deployment
-configuration, and coding standards. Private API routes require a session and CSRF
-header; old examples that submit account/user IDs must use the authenticated client.
-
-## M2 physical library
-
-See [M2_PHYSICAL_LIBRARY.md](../docs/M2_PHYSICAL_LIBRARY.md) for the engine, belt,
-CVT, and vehicle editors; immutable revisions and pinned updates; additive samples;
-optional development fixtures; measurement conventions; and verification record.
-Upgrade with `alembic upgrade head` before seeding an existing database.
-
-## M3 experiments and durable jobs
-
-See [M3_EXPERIMENTS_AND_JOBS.md](../docs/M3_EXPERIMENTS_AND_JOBS.md) for named tune/scenario
-revisions, the road editor contract, queue/notification behavior, resource limits,
-migration precautions and the verification record. Every simulation submission
-now requires an idempotency `request_key` and executes in a separate durable worker.
-
-## M4 results and public configurations
-
-See [M4_RESULTS_AND_PUBLIC_LIBRARY.md](../docs/M4_RESULTS_AND_PUBLIC_LIBRARY.md) for
-searchable run history, exact exports, frozen experiment copying, fixed publication
-bundles, explicit dependency consent and independent copies. Migration `20261004_0008`
-adds publication/copy history without modifying existing scientific records.
-
-The [demo and worker follow-up](../docs/DEMO_AND_WORKER_TROUBLESHOOTING.md) adds an
-anonymous recorded demo and portable memory monitoring. Install the updated
-requirements before restarting the worker; its new dependency is `psutil`.
-
-## CVT-owned tunes and component previews
-
-See [CVT_TUNES_AND_PLAYBACK_CURSOR.md](../docs/CVT_TUNES_AND_PLAYBACK_CURSOR.md)
-for the CVT-owned tune workflow, per-version defaults, shared editor and mechanism
-previews, and the playback cursor fix. Run `alembic upgrade head` before restarting
-this update: migration `20261005_0010` moves existing tunes to their CVT references
-and initializes defaults while retaining saved run inputs.
+See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), and
+[API acceptance checks](docs/BLACK_BOX_TESTING.md) for the application boundaries
+and maintenance workflows. Production Compose deployment is documented in the
+[root README](../README.md#production-deployment).
 
 ## Local development
 
-From `backend/`:
+Use Python 3.10 or newer. From `backend/`, create and activate a virtual environment:
 
 ```bash
 python -m venv venv
-venv\Scripts\activate             # macOS/Linux: source venv/bin/activate
+source venv/bin/activate
+```
+
+On Windows PowerShell, activation is `venv\Scripts\Activate.ps1` instead.
+Then install the checked-out branch's requirements and initialize its database:
+
+```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
-
 alembic upgrade head
 python -m app.scripts.init_database
 uvicorn app.main:app --reload
 ```
 
-On Linux/macOS, start `python -m app.scripts.run_worker` in another backend
-terminal with the same environment/database. On Windows, use the Docker setup
-below for both API and worker. Without a worker, simulations stay queued.
+`requirements-dev.txt` includes the runtime requirements and developer tools.
+`requirements.txt` is the authority for the CINDER dependency; install it from
+`backend/` rather than separately choosing a model source or package version.
+Reinstall requirements, or rebuild containers, after dependency changes.
 
-### Windows / Docker Desktop setup
+In another activated backend terminal on Linux/macOS, run:
 
-Start Docker Desktop with Linux containers enabled. Run the following commands
-from the **repository root**, where `backend/Dockerfile` exists. In PowerShell:
-
-```powershell
-cd F:\Code\Projects\CVT-Simulator
+```bash
+python -m app.scripts.run_worker
 ```
 
-In Command Prompt, use `cd /d F:\Code\Projects\CVT-Simulator` to change drives too.
-The remaining Docker commands work in either shell. The API and worker must share
-the same volume and database URL.
+API, worker, migration and initialization commands must use the same database and
+configuration. `--once` processes at most one queued job and is useful for a
+controlled local check. Native Windows cannot run the worker; use WSL or the
+Linux container setup below. Without a worker, accepted simulations remain queued.
 
-First setup:
+The API is at `http://localhost:8000`, its health check at `/api/v1/health`, and
+its current interactive reference at `/docs`. Start the frontend separately as
+shown in [frontend/README.md](../frontend/README.md).
 
-```powershell
+### Configuration
+
+Defaults use `sqlite:///./cvt_simulator_dev.db`, the web origin
+`http://localhost:5173`, and a local email outbox. SQLite and outbox paths are
+relative to the process working directory, so run local commands from `backend/`.
+
+[.env.example](.env.example) lists settings and limits. Python does **not** load
+that file automatically. Export needed values in every API/worker/migration shell,
+for example `export CVT_DATABASE_URL='sqlite:////absolute/path/cinder.db'` on
+Linux/macOS or `$env:CVT_DATABASE_URL = 'sqlite:///C:/path/cinder.db'` in PowerShell.
+Uvicorn also accepts `--env-file .env`, but that only configures the API process;
+the worker and command-line scripts still need the same environment.
+
+For PostgreSQL, use a `postgresql+psycopg://...` SQLAlchemy URL. Apply
+`alembic upgrade head` before initializing or starting an existing database.
+The initializer creates tables for disposable local databases but does not replace
+Alembic's schema upgrades. Database details are in [DATABASE.md](docs/DATABASE.md).
+
+### Linux containers on Windows or other hosts
+
+From the repository root, with Docker running in Linux-container mode:
+
+```text
 docker build -f backend/Dockerfile -t cinder-local .
 docker volume create cinder-local-data
 docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local alembic upgrade head
@@ -110,340 +81,145 @@ docker run -d --name cinder-local-api -p 8000:8000 -v cinder-local-data:/data -e
 docker run -d --name cinder-local-worker -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.run_worker
 ```
 
-After applying a code update, rebuild and recreate **both** containers. Restarting
-an old container does not install the new image. These commands preserve accounts
-and runs in the existing volume; retain your existing volume/database settings if
-you use different names.
+For an update, stop and remove both named application containers, rebuild the
+image, run migrations/initialization, and recreate both using the same volume.
+Removing the containers preserves `cinder-local-data`. Follow worker errors with
+`docker logs -f cinder-local-worker`; a stopped Docker Desktop engine must be
+started before these commands can work.
+
+The frontend can generate contracts from an installed local backend environment.
+For a Docker-only Python setup, export them from the image; this PowerShell example
+runs from the repository root:
 
 ```powershell
-docker stop cinder-local-api cinder-local-worker
-docker rm cinder-local-api cinder-local-worker
-docker build -f backend/Dockerfile -t cinder-local .
-docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local alembic upgrade head
-docker run --rm -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.init_database
-docker run -d --name cinder-local-api -p 8000:8000 -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local
-docker run -d --name cinder-local-worker -v cinder-local-data:/data -e CVT_DATABASE_URL=sqlite:////data/cinder.db cinder-local python -m app.scripts.run_worker
-```
-
-Normal reseeding adds missing defaults, including the demo course. It does not
-require `--reset`. The playback/force update introduces no new database migration.
-
-In a frontend terminal, with Node installed:
-
-```powershell
-cd F:\Code\Projects\CVT-Simulator\frontend
-npm ci
-npm run dev
-```
-
-Frontend startup regenerates API types using `backend/venv/Scripts/python.exe`
-(on Windows), so keep that virtual environment and its backend dependencies
-installed. Alternatively, export the contracts with Docker before starting the
-frontend; this PowerShell variant needs no host Python environment:
-
-```powershell
-cd F:\Code\Projects\CVT-Simulator
 New-Item -ItemType Directory -Force backend/generated | Out-Null
 docker run --rm --mount "type=bind,source=$($PWD.Path)/backend/generated,target=/contracts" cinder-local python -m app.scripts.export_contract_artifacts --output-dir /contracts
 cd frontend
 $env:CINDER_SKIP_BACKEND_EXPORT = "1"
+npm ci
 npm run dev
 ```
 
-Repeat the Docker export after backend/API changes if using that alternative.
-Open `http://localhost:5173` or `http://localhost:5173/demo` for anonymous playback.
+Repeat the export after backend or CINDER contract changes.
 
-Useful diagnostics (Ctrl+C exits log following):
+## Accounts and password-reset email
 
-```powershell
-docker ps -a
-docker logs --tail 100 cinder-local-api
-docker logs --tail 100 -f cinder-local-worker
-```
+Register a personal account through the app. The public **CINDER** sample account
+has no default login password. Account identity comes from a revocable browser
+session; authenticated mutations require the client and CSRF headers supplied by
+the frontend. Saved library items and run content are public, while credentials,
+email addresses and sessions remain private.
 
-A missing Docker engine pipe means Docker Desktop is not running. A missing
-`backend` path means the shell is not at the repository root. Child exit 125 logs
-the expected and observed parent IDs; rebuild/recreate the worker to install the
-PID-1 startup fix. No database reset is needed for that fix.
-
-`requirements.txt` installs the bundled `../cvtModel` source (currently
-CINDER 1.1.5.dev0) alongside backend dependencies. Run installation from
-`backend/`. This reporting update exposes signed sheave balances and solver
-accelerations; it does not change the integration equations. Local and Docker
-installations use the same source, and run provenance retains its package version.
-`requirements-dev.txt` extends that list with developer tooling. After pulling
-changes to `cvtModel/`, reinstall requirements or rebuild both containers.
-
-The API is served at `http://localhost:8000/api/v1`; Swagger UI is at
-`http://localhost:8000/docs`.
-
-## Database setup
-
-The database stores library objects, immutable experiment revisions and durable
-jobs. `POST /api/v1/experiments/runs` resolves the current experiment and freezes it;
-`POST /api/v1/runs/from-library` retains the legacy selection adapter. Both return
-202 after admission. A standalone worker persists summaries, previews and full
-results. Direct/debug and validation submissions use the same queue and limits.
-New jobs do not reuse the legacy global cache; existing artifacts stay readable.
-
-### Option A: local SQLite database
-
-Run initialization, the API and the worker from `backend/`, using the same
-`CVT_DATABASE_URL`. The default SQLite filename is relative to the working
-directory. The worker checks for missing tables/columns and an unreadable schema
-before claiming jobs; it prints the database location when setup is incomplete.
-
-```bash
-python -m app.scripts.init_database
-```
-
-This creates `./cvt_simulator_dev.db` and inserts deterministic public defaults:
-
-- a Baja SAE school catalog for signup and author filters;
-- one seed account (create your own account to sign in);
-- one Kohler CH440 (Baja Restricted) engine;
-- one McMaster 2025 CVT using the Enduro 100 belt;
-- one McMaster 500 lb vehicle setup and its output system;
-- manufacturer/series belt choices and baseline/paper-inspired CVT tunes;
-- flat, constant-angle, climb/descent and whoops load cases;
-- the 160 m McMaster demonstration course used by anonymous playback;
-- one execution preset.
-
-The demonstration course is 30 m flat, 30 m at +35°, 10 m flat, 30 m at −35°,
-10 m flat, 20 m at +20°, then 30 m flat. Distances are measured along the road;
-course mode stops at the finish. Its retained playback was produced by a real
-simulation with the same road definition as the seeded load case.
-
-Seeding adds missing samples and reconciles the curated default catalog. User
-objects and runs are retained. Optional `--development-fixtures` adds clearly
-labeled isolated accounts and queued/failed/cancelled examples; it never
-fabricates simulation results.
-
-Use a custom SQLite path if desired:
-
-```bash
-python -m app.scripts.init_database --database-url sqlite:///./scratch.db
-```
-
-For a disposable development database that needs a fresh start, **stop the API,
-every worker and any database browser first**, then run:
-
-```bash
-python -m app.scripts.init_database --reset
-python -m app.scripts.run_worker --once
-```
-
-This deletes accounts, saved configurations and runs, then recreates the seeded
-workspace. It removes the database together with SQLite's `-journal`, `-wal` and
-`-shm` files. Reset refuses when it detects an open database handle and prints its
-process ID. This check is best effort: OS permissions can hide handles, and a
-process could start after the check. Keep all clients stopped until seeding
-finishes. Never delete only a journal when trying to preserve existing data.
-
-`malformed database schema ... index ... already exists` during a SELECT indicates
-an unreadable SQLite schema; it does not by itself show that an Alembic migration
-tried to create the index twice. A later `no such table: runs` means that connection
-sees an uninitialized or incomplete database. These messages alone cannot tell
-whether the file was replaced or the configured path changed. The reset above is
-the supported recovery for disposable development data. Restart the API and the
-long-running worker only after it succeeds. No reset is needed for a healthy
-database just to install this maintenance fix.
-
-### Option B: Postgres
-
-```bash
-export CVT_DATABASE_URL='postgresql+psycopg://cvt:cvt@localhost:5432/cvt_simulator'
-alembic upgrade head
-python -m app.scripts.init_database
-```
-
-The app also reads these optional environment variables:
+Local development uses `CVT_MAIL_MODE=outbox`: no email is sent. After requesting
+a reset for a registered password-backed account, open the newest `.eml` file in
+`backend/.local/mail` with a mail reader. To decode the latest message from a
+backend terminal on any platform:
 
 ```text
-CVT_DATABASE_URL   SQLAlchemy URL, default sqlite:///./cvt_simulator_dev.db
-CVT_DATABASE_ECHO  set to 1/true/yes for SQL logging
+python -c "from pathlib import Path; from email import policy; from email.parser import BytesParser; p=max(Path('.local/mail').glob('*.eml'),key=lambda p:p.stat().st_mtime); print(BytesParser(policy=policy.default).parsebytes(p.read_bytes()).get_content())"
 ```
 
+Decode the MIME body rather than copying a possibly wrapped raw URL. The link
+uses `CVT_WEB_URL`, defaults to a 30-minute lifetime, and works once. A newer
+request invalidates earlier reset links. Unknown emails and passwordless accounts
+receive the same generic response without generating a message. If no file is
+created, check the account, the API's working directory, and `CVT_MAIL_OUTBOX`.
+In the local container setup the default outbox is inside the API container at
+`/app/.local/mail`; `docker cp cinder-local-api:/app/.local/mail ./local-mail`
+can retrieve it. Treat these files as temporary credentials.
 
-### Payload storage
+Production uses `CVT_MAIL_MODE=smtp` and requires an HTTPS `CVT_WEB_URL`.
+Configure `CVT_SMTP_HOST`, `CVT_SMTP_FROM`, the provider's credentials, and
+`CVT_SMTP_PORT`/`CVT_SMTP_SECURITY` (`587`/`starttls` or `465`/`tls`). Reset delivery
+runs as an API background task, independently of the simulation worker. A generic
+success response does not prove delivery; SMTP failures are logged by the API.
 
-Reusable design objects use a relational shell with JSON payload bodies:
-
-```text
-relational columns: ownership, visibility, lifecycle, catalog priority, released version
-JSONB payloads: input_boundary, cinder_assembly, output_boundary_template, load cases, runs
-```
-
-The SQLAlchemy payload type maps to PostgreSQL `JSONB` and falls back to regular
-`JSON` on SQLite so tests stay lightweight. This keeps CINDER-facing model
-fragments queryable and indexable on Postgres without over-normalizing every
-future actuator, engine-map, gearbox-loss, tire, or suspension variant.
-
-### Schema lifecycle
-
-Alembic owns production migrations:
+For an existing passwordless user, an operator who has verified ownership can
+provision a password interactively:
 
 ```bash
-alembic upgrade head
+python -m app.scripts.set_password existing-owner@example.com
 ```
 
-Back up first and stop/drain pre-M3 API processes for the first M3 upgrade. The M3
-downgrade refuses to delete history: restore the verified backup and compatible
-application instead. See the milestone document for the exact migration behavior.
+This prompts without putting the password in command history and revokes existing
+sessions/reset links. It does not create a new user. Registration and reset do
+not claim an existing passwordless account.
 
-For unit tests and disposable SQLite files, `app.database.bootstrap.create_database`
-uses the ORM metadata directly. Production databases should always advance through
-Alembic. Revision `20260907_0003` adds independent CINDER result-contract version
-tracking while preserving the existing input-schema column.
+## Samples and initialization
 
-## Database design notes
+The initializer seeds CINDER's public library: the Kohler CH440 (Baja Restricted)
+engine, McMaster 2025 CVT with Enduro 100 belt, McMaster 500 lb vehicle setup,
+belt catalog, baseline/paper-inspired tunes and an execution preset.
 
-The persistence model separates subscription/workspace concerns from Baja school
-affiliation:
+| Load case | Road definition |
+| --- | --- |
+| Flat | 200 m |
+| Uphill/downhill | Separate 200 m routes at +15°, +30°, −15° and −30° |
+| Climb and descent | 20 m flat, 90 m at +20°, 90 m at −20° |
+| Whoops | 5 m flat, eight 0.8 m-high waves at 4 m spacing, then flat to 200 m |
+| Demo | 160 m retained demonstration course |
 
-```text
-Account.tier                       billing/capabilities
-Institution                        school/university/company list
-AccountInstitutionAffiliation      optional self-reported school/team identity
-```
+Distances follow the road surface. Whoops affect grade load; they do not simulate
+suspension or jumps. The anonymous recording uses its frozen simulation input,
+which remains independent of later edits to saved samples.
 
-There is no institution validation in V1. Seeded institutions are just a
-convenient list for filters and attribution.
+Run `python -m app.scripts.init_database` after migrations to add/update built-in
+samples. Changed load cases receive new revisions. Old 5°/10° samples are archived
+from normal pickers, while prior references and runs remain readable. Repeating
+initialization does not duplicate those revisions or overwrite user copies.
+Optional `--development-fixtures` adds labeled local test accounts/items; those
+accounts are passwordless until provisioned.
 
-The drivetrain/gearbox side lives in `OutputSystemVersion.output_boundary_template`,
-not the CVT design. The current simplified output system supports fields like:
+For a disposable development SQLite database only, stop all API/worker/database
+clients and use `python -m app.scripts.init_database --reset`. This deletes its
+accounts, saved items and runs, including SQLite sidecar files. It refuses
+production, PostgreSQL and in-memory URLs. Open-handle detection is best effort;
+keep clients stopped until it finishes. A healthy database needs no reset for a
+normal sample update.
 
-```json
-{
-  "kind": "locked_final_drive_vehicle",
-  "final_drive": {
-    "reduction_ratio": 7.556,
-    "wheel_radius_m": 0.2794
-  },
-  "direct_secondary_shaft_inertia_kg_m2": 0.05,
-  "drivetrain_loss_model": {"kind": "none"}
-}
-```
+## Jobs, progress and failures
 
-That gives the future efficiency hook a clean home without prematurely creating a
-separate gearbox-library object. Later, the loss model can become
-`constant_efficiency`, `ratio_curve`, or a torque/speed map without changing CVT
-ownership.
+Submissions freeze validated inputs and return HTTP 202. The worker claims jobs
+from the database and runs CINDER in a bounded child process. One queued/running
+job is allowed per account. Reusing a request key with identical content returns
+the existing job; changed content with that key is rejected.
 
-## Production container
+Defaults allow 300 seconds of worker wall time, 300 seconds simulated duration,
+40,000 requested report samples and 4,096 MiB child memory. Course mode can finish
+at the road end or stop on rollback/no progress. Actual configured limits are
+exposed through API metadata; change them consistently for API and worker.
 
-Build from the repository root:
+Checkpoints preserve completed progress when a later timeout, cancellation or
+failure occurs. An interrupted worker is recovered after its deadline and grace
+period. An unfinished chunk can be lost, and failure before the first checkpoint
+leaves no trajectory. Checkpoints are viewable partial results, not resumable
+jobs; **Rerun frozen inputs** creates a new job. Worker logs contain the detailed
+startup/solver error. New jobs do not reuse the legacy global result cache.
 
-```bash
-docker build -f backend/Dockerfile -t cvt-simulator-api .
-docker run --rm -p 8000:8000 cvt-simulator-api
-```
+## Contracts and checks
 
-The container builds CINDER from `cvtModel/` in this checkout through the same
-`requirements.txt` used locally. Rebuild and recreate both API and worker
-containers together when that source changes.
-
-The backend preset files are copied with `backend/`; for example, the tuned
-launch preset is available at `/app/presets/baja-launch-baseline.json` inside
-the image.
-
-To confirm the image contains the expected preset:
-
-```bash
-docker run --rm cvt-simulator-api python -c "from pathlib import Path; print((Path('/app/presets') / 'baja-launch-baseline.json').is_file())"
-```
-
-## Black-box API testing
-
-The scripts below predate M3's required request keys, authentication and durable
-worker contract. They are not current passing coverage. Per the implementation
-baseline, adaptation and committed E2E/CI integration are deferred to M5; see the
-M3 verification record for the focused checks performed during implementation.
-
-A manual end-to-end test plan is included in [`docs/BLACK_BOX_TESTING.md`](docs/BLACK_BOX_TESTING.md). It covers seeded library data, draft/release/fork/archive flows, library-resolved runs, direct-run comparison, cache reuse, preview artifacts, and full-result eviction/regeneration expectations.
-
-For the automated version of the same flow, run:
-
-```bash
-python -m app.scripts.smoke_library_database
-```
-
-## Main endpoints
-
-```text
-GET  /api/v1/health
-GET  /api/v1/metadata/runtime
-GET  /api/v1/metadata/conventions
-GET  /api/v1/metadata/catalog
-GET  /api/v1/metadata/editor-schema
-GET  /api/v1/metadata/simulation-case-schema
-GET  /api/v1/presets
-GET  /api/v1/presets/{preset_id}
-GET  /api/v1/library/institutions
-GET  /api/v1/library/{engines|cvt-designs|output-systems|vehicle-assemblies}
-POST /api/v1/library/{engines|cvt-designs|output-systems|vehicle-assemblies}
-PATCH /api/v1/library/{resource}/{object_id}/draft
-POST /api/v1/library/{resource}/{object_id}/release
-POST /api/v1/library/{resource}/versions/{version_id}/fork
-POST /api/v1/library/{resource}/versions/{version_id}/deprecate
-POST /api/v1/library/{resource}/{object_id}/archive
-GET /api/v1/library/tunes                 legacy reads; POST/PATCH return 410
-GET/POST/PUT /api/v1/experiments/*         revisioned tunes and scenarios
-POST /api/v1/experiments/road/resolve
-POST /api/v1/experiments/preview
-POST /api/v1/experiments/runs             freeze and queue an experiment
-GET/POST/PATCH /api/v1/library/load-cases
-GET/POST/PATCH /api/v1/library/execution-presets
-POST /api/v1/simulation-cases/validate
-POST /api/v1/studies/geometry/endpoint-radii
-POST /api/v1/studies/geometry/target-ratios
-POST /api/v1/studies/actuation/clamping-response
-POST /api/v1/runs                         direct full-contract debug run
-POST /api/v1/runs/from-library            resolve released DB objects and persist run
-POST /api/v1/runs/{run_id}/rerun          rerun a persisted run from frozen input
-GET  /api/v1/runs                         list persisted library runs
-GET  /api/v1/runs/{run_id}
-GET  /api/v1/runs/{run_id}/input
-GET  /api/v1/runs/{run_id}/preview
-GET  /api/v1/runs/{run_id}/result
-GET  /api/v1/runs/{run_id}/forces          stopped runs only; projected contact vectors
-GET  /api/v1/demo                         retained anonymous playback
-GET  /api/v1/demo/forces                  anonymous projected contact vectors
-POST /api/v1/runs/{run_id}/cancel
-GET  /api/v1/runs/activity
-POST /api/v1/runs/notices/{notice_id}/read
-```
-
-Static engineering studies still return synchronously. Simulations all use the
-durable queue, with one queued/running job per account. Reruns create new records
-from frozen input. States are `queued`, `running`, `completed`, `failed`,
-`timed_out` and `cancelled`; the legacy `validating` transport value remains
-readable. There is no invented percentage progress.
-
-## Type generation
+Generate OpenAPI and CINDER assembly/input/result schemas with:
 
 ```bash
 python -m app.scripts.export_contract_artifacts --output-dir generated
 ```
 
-This writes:
+These are generated build artifacts. Frontend scripts consume them; do not
+commit generated TypeScript or create a parallel model schema.
 
-- `generated/openapi.json` for endpoint/request/response TypeScript types;
-- `generated/cinder_simulation_case.schema.json` for the canonical nested
-  `SimulationCaseDocument` TypeScript type.
-
-Use generated types in the frontend; do not create a parallel parameter map.
-
-## Tests and formatting
+From the activated backend environment:
 
 ```bash
 python -m pytest
-python -m app.scripts.smoke_library_database
-flake8 app test
-black --check app test
+python -m pytest test/test_library_api.py test/test_api_journeys.py test/test_tune_preview_adapter.py
+python -m pytest test/test_catalog_defaults.py test/test_scene_tip_mass.py test/test_tune_tip_mass_limits.py
+python -m flake8 app
+python -m black --check app
 ```
 
-`app.scripts.smoke_library_database` is an intentionally broad integration
-smoke test. It boots a temporary SQLite-backed API, seeds demo data, then walks
-through create/update/release/fork/deprecate/archive flows plus tune, load-case,
-and execution-preset creation.
+The preview adapter checks use explicit geometry/persistence doubles. The scene
+mass and tip-limit tests use actual CINDER. Editing uses a lightweight sampled
+contact preview; complete preview coverage enables submission but is not a full
+construction audit. Save and run admission retain independent CINDER validation.
+Manual application acceptance is described in
+[BLACK_BOX_TESTING.md](docs/BLACK_BOX_TESTING.md).

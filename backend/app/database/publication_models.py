@@ -20,16 +20,10 @@ from app.database.types import JsonPayload
 class PhysicalPublication(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "physical_publications"
     __table_args__ = (
-        UniqueConstraint(
-            "kind", "source_revision_id", name="uq_publication_source_revision"
-        ),
-        Index(
-            "ix_publications_gallery", "visibility", "gallery_listed", "published_at"
-        ),
+        UniqueConstraint("kind", "source_revision_id", name="uq_publication_source_revision"),
+        Index("ix_publications_gallery", "visibility", "gallery_listed", "published_at"),
     )
-    account_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("accounts.id"), index=True
-    )
+    account_id: Mapped[str] = mapped_column(String(36), ForeignKey("accounts.id"), index=True)
     kind: Mapped[str] = mapped_column(String(20))
     source_object_id: Mapped[str] = mapped_column(String(36), index=True)
     source_revision_id: Mapped[str] = mapped_column(String(36))
@@ -45,9 +39,7 @@ class PhysicalPublication(StringUUIDPrimaryKeyMixin, Base):
     tuning_schema: Mapped[dict] = mapped_column(JsonPayload)
     validation: Mapped[dict] = mapped_column(JsonPayload)
     snapshot_hash: Mapped[str] = mapped_column(String(64))
-    published_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     visibility: Mapped[str] = mapped_column(String(20))
     gallery_listed: Mapped[bool] = mapped_column(Boolean)
     access_version: Mapped[int] = mapped_column(Integer, default=1)
@@ -57,13 +49,9 @@ class PhysicalPublication(StringUUIDPrimaryKeyMixin, Base):
 class ConfigurationCopy(StringUUIDPrimaryKeyMixin, Base):
     __tablename__ = "configuration_copies"
     __table_args__ = (
-        UniqueConstraint(
-            "account_id", "request_key", name="uq_configuration_copy_request"
-        ),
+        UniqueConstraint("account_id", "request_key", name="uq_configuration_copy_request"),
     )
-    account_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("accounts.id"), index=True
-    )
+    account_id: Mapped[str] = mapped_column(String(36), ForeignKey("accounts.id"), index=True)
     request_key: Mapped[str] = mapped_column(String(64))
     request_hash: Mapped[str] = mapped_column(String(64))
     kind: Mapped[str] = mapped_column(String(20))
@@ -72,9 +60,5 @@ class ConfigurationCopy(StringUUIDPrimaryKeyMixin, Base):
         String(36), ForeignKey("physical_publications.id")
     )
     run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"))
-    scenario_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("experiments.id")
-    )
-    copied_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    scenario_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("experiments.id"))
+    copied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

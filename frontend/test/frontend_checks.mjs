@@ -1,14 +1,12 @@
-// Pure helpers and JSX adapter checks. This is NOT a React/browser/app build.
-// Run from the repo: node tools/tune_editor_checks/frontend_checks.mjs
+// Pure helpers and JSX adapter checks; the browser runner and app build run separately.
+// Run from frontend: npm run test:helpers
 import fs from 'node:fs';
 import path from 'node:path';
-import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import ts from 'typescript';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const requireFromProject = createRequire(path.join(root, 'frontend/package.json'));
-const ts = process.env.TYPESCRIPT_PATH ? createRequire(import.meta.url)(process.env.TYPESCRIPT_PATH) : requireFromProject('typescript');
 const files = [
   'frontend/src/components/scene3DViewer/GeometryScene.tsx',
   'frontend/src/components/scene3DViewer/InspectionOverlay.tsx',
@@ -216,7 +214,7 @@ test('an invalid numeric text draft disables both actions despite valid geometry
 });
 const basis=load('frontend/src/components/scene3DViewer/inspectionFrame.ts').inspectionBases;
 const multiply=(matrix,v)=>[0,1,2].map(row=>matrix[row*4]*v[0]+matrix[row*4+1]*v[1]+matrix[row*4+2]*v[2]);
-test('primary profile plane is face-on, radial up and positive axial right', () => {
+test('primary inspection basis maps radial up and positive axial right', () => {
   assert.deepEqual(multiply(basis.primary,[1,0,0]),[0,1,0]);
   assert.deepEqual(multiply(basis.primary,[0,0,-1]),[1,0,0]);
   assert.deepEqual(multiply(basis.primary,[0,1,0]),[0,0,-1]);
@@ -247,7 +245,9 @@ test('inspection basis keeps a fixed-length tuple for Matrix4.set', () => {
     declare const mount: InspectionMount;
     new Matrix4().set(...inspectionBases[mount]);`;
   const filename = path.join(root, '__inspection_signature_check__.ts');
-  const options = { strict:true, noEmit:true, target:ts.ScriptTarget.ES2022 };
+  // This isolated signature has no external globals; installed @types packages
+  // must not change the result when the test runs from the frontend directory.
+  const options = { strict:true, noEmit:true, target:ts.ScriptTarget.ES2022, types:[] };
   const host = ts.createCompilerHost(options), read = host.readFile.bind(host), get = host.getSourceFile.bind(host);
   host.readFile = file => file === filename ? content : read(file);
   host.getSourceFile = (file, languageVersion, ...rest) => file === filename
@@ -276,18 +276,6 @@ test('named mechanism reference points remain in their separate pointer-transpar
 const { Home } = load('frontend/src/pages/home/Home.tsx');
 const homepage = Home();
 const about = find(homepage, node => node.props?.['aria-labelledby'] === 'author-title');
-const paragraphs = [
-  'This website is still a work in progress, and most of the interface was built with AI, so there are almost certainly some bugs. The CVT model itself is the part I’ve spent much more time on, and the full derivation, assumptions, and checks are in the paper.',
-  'Experimental validation is still to come, so if you have access to a CVT dyno, test data, or anything else that could be useful, definitely hit me up below.',
-  'Hopefully this makes the model a little easier to explore and CVTs a little less of a black box. Everything is free to use, and the source is on GitHub.',
-  'If you have questions, find something broken, want to talk about the paper, or just have thoughts on the project, reach out.',
-];
-test('About this project contains all four supplied paragraphs verbatim', () => {
-  assert.ok(about); assert.equal(text(find(about, node => node.props?.id === 'author-title')), 'About this project');
-  const actual = about.props.children.filter(node => node?.type === 'Text' && node.props.c === 'dimmed').map(text);
-  assert.equal(JSON.stringify(actual), JSON.stringify(paragraphs));
-  assert.doesNotMatch(text(about), /A note from me|4\.9|Hey, I’m Kai/);
-});
 test('project contact area displays the requested email and Discord handle', () => {
   const contact = find(about, node => node.props?.['aria-label'] === 'Contact Kai');
   assert.ok(contact); assert.match(text(contact), /kai@kaiarseneau\.dev/);

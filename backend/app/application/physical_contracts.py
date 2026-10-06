@@ -51,8 +51,7 @@ def resolve_belt_section(request: BeltSectionSolveRequest) -> BeltSection:
     values = request.model_dump(exclude_none=True)
     missing = next(key for key in BeltSection.model_fields if key not in values)
     top, bottom, height, angle = (
-        values.get(key)
-        for key in ("outer_width_m", "inner_width_m", "height_m", "half_angle_rad")
+        values.get(key) for key in ("outer_width_m", "inner_width_m", "height_m", "half_angle_rad")
     )
     if missing == "half_angle_rad":
         values[missing] = math.atan((top - bottom) / (2 * height))
@@ -103,9 +102,7 @@ def with_belt(data: CvtData) -> CvtData:
             ),
         }
     )
-    result.assembly.setdefault("inertias", {})["belt_density_kg_per_m3"] = (
-        belt.density_kg_per_m3
-    )
+    result.assembly.setdefault("inertias", {})["belt_density_kg_per_m3"] = belt.density_kg_per_m3
     return result
 
 
@@ -122,9 +119,7 @@ def vehicle_from_boundary(boundary: dict) -> VehicleData:
     return VehicleData(
         **boundary["vehicle"],
         **boundary["final_drive"],
-        direct_secondary_shaft_inertia_kg_m2=boundary[
-            "direct_secondary_shaft_inertia_kg_m2"
-        ],
+        direct_secondary_shaft_inertia_kg_m2=boundary["direct_secondary_shaft_inertia_kg_m2"],
         **{
             key: boundary["road_load"][key]
             for key in (
@@ -141,15 +136,9 @@ def vehicle_boundary(data: VehicleData) -> dict:
     # Numerical regularization and gravity stay in the backend's supported
     # execution template, outside the ordinary physical editor.
     boundary = baseline_case()["shaft_boundaries"]["secondary"]
-    boundary["vehicle"] = data.model_dump(
-        include={"mass_kg", "wheel_rotational_inertia_kg_m2"}
-    )
-    boundary["final_drive"] = data.model_dump(
-        include={"reduction_ratio", "wheel_radius_m"}
-    )
-    boundary["direct_secondary_shaft_inertia_kg_m2"] = (
-        data.direct_secondary_shaft_inertia_kg_m2
-    )
+    boundary["vehicle"] = data.model_dump(include={"mass_kg", "wheel_rotational_inertia_kg_m2"})
+    boundary["final_drive"] = data.model_dump(include={"reduction_ratio", "wheel_radius_m"})
+    boundary["direct_secondary_shaft_inertia_kg_m2"] = data.direct_secondary_shaft_inertia_kg_m2
     boundary["road_load"].update(
         data.model_dump(
             include={
@@ -235,17 +224,13 @@ def validate_physical(document: PhysicalDocument) -> tuple[dict, dict | None]:
             "secondary": vehicle_boundary(document.data.vehicle),
         }
     report = validate_case(case)
-    return report, case if isinstance(document, SetupDocument) and report[
-        "is_valid"
-    ] else None
+    return report, case if isinstance(document, SetupDocument) and report["is_valid"] else None
 
 
 def import_engine_curve(request: CurveImportRequest) -> list[EnginePoint]:
     text = request.text.lstrip("\ufeff").strip()
     if not text:
-        raise ApiProblem(
-            422, "curve_empty", "Paste at least two speed and torque rows."
-        )
+        raise ApiProblem(422, "curve_empty", "Paste at least two speed and torque rows.")
     first = text.splitlines()[0]
     delimiter = "\t" if "\t" in first else ";" if ";" in first else ","
     rows = csv.reader(io.StringIO(text), delimiter=delimiter)
@@ -282,20 +267,17 @@ def import_engine_curve(request: CurveImportRequest) -> list[EnginePoint]:
             )
         points.append(
             EnginePoint(
-                angular_speed_rad_per_s=speed * math.pi / 30
-                if request.speed_unit == "rpm"
-                else speed,
-                torque_Nm=torque * 1.3558179483314
-                if request.torque_unit == "lb·ft"
-                else torque,
+                angular_speed_rad_per_s=(
+                    speed * math.pi / 30 if request.speed_unit == "rpm" else speed
+                ),
+                torque_Nm=torque * 1.3558179483314 if request.torque_unit == "lb·ft" else torque,
             )
         )
     if not 2 <= len(points) <= 1000:
         raise ApiProblem(422, "curve_size", "Import between 2 and 1,000 points.")
     points.sort(key=lambda point: point.angular_speed_rad_per_s)
     if any(
-        a.angular_speed_rad_per_s == b.angular_speed_rad_per_s
-        for a, b in zip(points, points[1:])
+        a.angular_speed_rad_per_s == b.angular_speed_rad_per_s for a, b in zip(points, points[1:])
     ):
         raise ApiProblem(
             422,

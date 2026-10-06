@@ -69,9 +69,7 @@ def origin(
     session: Session = SessionDep,
     principal: Principal = PrincipalDep,
 ):
-    obj = access.library_object(
-        session, principal, physical_library.RESOURCES[kind], object_id
-    )
+    obj = access.library_object(session, principal, physical_library.RESOURCES[kind], object_id)
     access.owned(obj, principal)
     row = session.scalar(
         select(ConfigurationCopy).where(
@@ -108,9 +106,7 @@ def detail(publication_id: str, session: Session = SessionDep):
     return service.detail(session, publication_id)
 
 
-@router.post(
-    "/{publication_id}/copy", response_model=ConfigurationCopyResult, status_code=201
-)
+@router.post("/{publication_id}/copy", response_model=ConfigurationCopyResult, status_code=201)
 def copy(
     publication_id: str,
     request: CopyConfiguration,

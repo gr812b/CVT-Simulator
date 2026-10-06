@@ -41,11 +41,7 @@ def resolve(request):
             "belt_section",
             "These dimensions must give a positive bottom width smaller than the top width.",
         )
-    active = (
-        request.active_travel_limit_m
-        if request.active_travel_limit_m is not None
-        else inner
-    )
+    active = request.active_travel_limit_m if request.active_travel_limit_m is not None else inner
     if active > inner:
         raise ApiProblem(
             422,

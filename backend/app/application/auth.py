@@ -58,9 +58,7 @@ class Principal:
 
     def require_write(self) -> None:
         if self.membership.role not in {"owner", "admin", "editor"}:
-            raise ApiProblem(
-                403, "write_access_required", "This workspace is read only."
-            )
+            raise ApiProblem(403, "write_access_required", "This workspace is read only.")
 
     def response(self) -> AuthSessionResponse:
         return AuthSessionResponse(
@@ -117,19 +115,13 @@ def create_session(session: Session, user: User, settings: Settings) -> Principa
 def get_principal(session: Session, token: str | None) -> Principal:
     if not token or len(token) > 128:
         raise ApiProblem(401, "authentication_required", "Sign in to continue.")
-    record = session.scalar(
-        select(AuthSession).where(AuthSession.token_hash == digest(token))
-    )
+    record = session.scalar(select(AuthSession).where(AuthSession.token_hash == digest(token)))
     if record is None or aware(record.expires_at) <= utc_now():
-        raise ApiProblem(
-            401, "session_expired", "Your session has expired. Sign in again."
-        )
+        raise ApiProblem(401, "session_expired", "Your session has expired. Sign in again.")
     user = session.get(User, record.user_id)
     membership = session.get(AccountUser, (record.account_id, record.user_id))
     if user is None or membership is None or user.auth_version != record.auth_version:
-        raise ApiProblem(
-            401, "session_expired", "Your session has expired. Sign in again."
-        )
+        raise ApiProblem(401, "session_expired", "Your session has expired. Sign in again.")
     return Principal(user, membership.account, membership, record, token)
 
 
@@ -137,6 +129,4 @@ def invalidate_credentials(session: Session, user: User, password: str) -> None:
     user.password_hash = passwords.hash(password)
     user.auth_version += 1
     session.execute(delete(AuthSession).where(AuthSession.user_id == user.id))
-    session.execute(
-        delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id)
-    )
+    session.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id))

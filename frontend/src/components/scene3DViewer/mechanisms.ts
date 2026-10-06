@@ -10,6 +10,8 @@ import {
   MechanismSpring,
   metal,
   positionBeam,
+  profileSolid,
+  rampBackingRadius,
   rampSolid,
   ring,
   slottedSleeve,
@@ -21,6 +23,32 @@ const layouts = new WeakMap<SceneGeometry, ReturnType<typeof resolveLayout>>();
 
 export function sheaveHub(minimum: number, geometry: SceneGeometry): number {
   return Math.max(minimum - geometry.beltHeight, minimum * 0.14);
+}
+
+/** Illustrative tip collars: 150 g per flyweight is the length reference.
+ * Both cylinders grow equally outwards from fixed inner faces, leaving the
+ * roller/arm lane clear. Their common axis, radius and combined centre stay
+ * fixed; each cylinder's material length is exactly proportional to tip mass.
+ * Recorded scenes without an identified tip mass retain the original drawing.
+ */
+export function primaryTipDimensions(
+  rollerRadius: number,
+  tipMassPerFlyweightKg?: number | null,
+) {
+  const legacyLength = rollerRadius * 0.45;
+  const legacyCentre = rollerRadius * 1.15 * 0.85;
+  const identified = tipMassPerFlyweightKg != null &&
+    Number.isFinite(tipMassPerFlyweightKg) && tipMassPerFlyweightKg >= 0;
+  const length = identified
+    ? rollerRadius * 0.8 * (tipMassPerFlyweightKg / 0.15)
+    : legacyLength;
+  return {
+    radius: rollerRadius * 1.25,
+    length,
+    centreAcross: identified
+      ? legacyCentre - legacyLength / 2 + length / 2
+      : legacyCentre,
+  };
 }
 
 export function mechanismPose(geometry: SceneGeometry, shift: number) {
@@ -249,6 +277,13 @@ export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondar
     const p = spec.primary,
       radius = sceneDistance(p.roller_radius_m),
       width = radius * 1.15;
+    const tipDimensions = primaryTipDimensions(radius, p.tip_mass_per_flyweight_kg);
+    const armThickness = radius * 0.26,
+      lugThickness = radius * 0.32,
+      lugRadius = radius * 0.58;
+    // Fixed cheeks sit outside the moving arm plates, with a visible clearance.
+    const lugAcross = width * 0.68 + armThickness / 2 + l.clearance * 0.35 + lugThickness / 2;
+    const carrierZ = l.carrierP - l.wall / 2;
     const pivot = v(sceneDistance(p.pivot_m[1]), l.pivotZ);
     const carrier = new THREE.Group(),
       weights = new THREE.Group(),
@@ -257,8 +292,8 @@ export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondar
       ring(
         l.shaftP * 0.92,
         l.shaftP + l.wall,
-        l.carrierP - l.wall,
-        l.carrierP,
+        carrierZ - l.wall * 0.8,
+        carrierZ + l.wall * 0.8,
         fixed,
       ),
     );
@@ -269,41 +304,55 @@ export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondar
           l.back - sceneDistance(axial) - l.p0,
         ),
     );
+    const rampDepth = l.wall * 1.8;
     const rampGeometry = rampSolid(
       rampPoints,
       p.roller_side_sign,
-      l.wall * 1.8,
+      rampDepth,
       width,
     );
+    const heel = rampBackingRadius(rampPoints, p.roller_side_sign, rampDepth);
+    const backingSide = Math.sign(heel - rampPoints[0].x);
     const rampMaterial = metal(appearance.movingSheave),
       weightMaterial = metal(appearance.fixedSheave),
-      rollerMaterial = metal(appearance.fixedSheave);
+      rollerMaterial = metal(appearance.shaft);
     for (let i = 0; i < (focus ? 1 : p.count); i++) {
       const angle = (i * Math.PI * 2) / p.count;
       const support = new THREE.Group();
       support.rotation.z = angle;
       if (!focus) {
-      support.add(
-        beam(
-          v(l.shaftP, l.carrierP - l.wall / 2),
-          v(pivot.x, l.carrierP - l.wall / 2),
-          l.wall,
-          fixed,
-        ),
-      );
-      for (const side of [-1, 1]) {
-        const across = side * width * 0.9;
-        support.add(
-          beam(
-            v(pivot.x, l.carrierP - l.wall / 2, across),
-            v(pivot.x, pivot.z, across),
-            l.wall * 0.7,
-            fixed,
-          ),
-        );
+        // A broad spider arm joins both pivot cheeks to the fixed shaft boss.
+        // Its chamfered outline is packaging only; the pivot remains unchanged.
+        const rootR = l.shaftP * 0.88,
+          tipR = pivot.x + lugRadius * 1.25,
+          rootHalf = width * 0.7,
+          tipHalf = lugAcross + lugThickness / 2 + l.wall * 0.45,
+          corner = l.wall * 0.55;
+        const spoke = new THREE.Mesh(profileSolid(new THREE.Shape([
+          new THREE.Vector2(rootR, -rootHalf),
+          new THREE.Vector2(tipR - corner, -tipHalf),
+          new THREE.Vector2(tipR, -tipHalf + corner),
+          new THREE.Vector2(tipR, tipHalf - corner),
+          new THREE.Vector2(tipR - corner, tipHalf),
+          new THREE.Vector2(rootR, rootHalf),
+        ]), l.wall * 1.6), fixed);
+        spoke.rotation.x = -Math.PI / 2;
+        spoke.position.z = carrierZ;
+        support.add(spoke);
+        const cheek = new THREE.Shape();
+        cheek.moveTo(pivot.x - lugRadius * 1.2, carrierZ);
+        cheek.lineTo(pivot.x + lugRadius * 1.2, carrierZ);
+        cheek.lineTo(pivot.x + lugRadius, pivot.z);
+        cheek.absarc(pivot.x, pivot.z, lugRadius, 0, -Math.PI, true);
+        cheek.closePath();
+        const cheekGeometry = profileSolid(cheek, lugThickness);
+        for (const side of [-1, 1]) {
+          const lug = new THREE.Mesh(cheekGeometry, fixed);
+          lug.position.y = side * lugAcross;
+          support.add(lug);
+        }
       }
-      }
-      const pivotPin = cylinder(radius * 0.32, width * 2.4, fixed);
+      const pivotPin = cylinder(radius * 0.32, 2 * (lugAcross + lugThickness / 2) + radius * 0.16, rollerMaterial);
       pivotPin.rotation.x = Math.PI / 2;
       pivotPin.position.copy(pivot);
       support.add(pivotPin);
@@ -314,14 +363,22 @@ export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondar
         const arm = beam(
           pivot,
           pivot.clone().add(v(0, -1)),
-          radius * 0.42,
+          radius * 0.75,
           weightMaterial,
+          armThickness,
         );
         arm.name = side < 0 ? 'arm-left' : 'arm-right';
         weight.add(arm);
-        const tip = cylinder(radius * 1.25, radius * 0.45, weightMaterial);
+        // The round pivot bosses are rotationally symmetric about their pins;
+        // batch them with the stationary hardware instead of adding draw calls.
+        const pivotBoss = cylinder(radius * 0.53, armThickness, fixed);
+        pivotBoss.rotation.x = Math.PI / 2;
+        pivotBoss.position.copy(pivot).y = side * width * 0.68;
+        support.add(pivotBoss);
+        const tip = cylinder(tipDimensions.radius, tipDimensions.length, weightMaterial);
         tip.name = side < 0 ? 'weight-left' : 'weight-right';
         tip.rotation.x = Math.PI / 2;
+        tip.visible = tipDimensions.length > 0;
         weight.add(tip);
       }
       const roller = cylinder(radius, width, rollerMaterial);
@@ -332,13 +389,30 @@ export function createMechanisms(g: SceneGeometry, focus?: 'primary' | 'secondar
       const ramp = new THREE.Group();
       ramp.rotation.z = angle;
       ramp.add(new THREE.Mesh(rampGeometry, rampMaterial));
-      // The support sits behind the cam face, beyond the flyweight sweep.
-      const end = rampPoints.at(-1)!;
-      const anchor = v(end.x + p.roller_side_sign * l.wall, end.y);
-      const sheaveBack =
-        (anchor.x - sheaveHub(g.primaryMinRadius, g)) * Math.tan(g.halfAngle) +
-        (g.primaryMaxRadius + g.beltHeight * 0.12) * 0.055;
-      if (!focus) ramp.add(beam(v(anchor.x, sheaveBack), anchor, l.wall, moving));
+      if (!focus) {
+        // Continue the solid heel into a mounting web and broad foot. Both stay
+        // behind the complete cam profile, away from the contact/arm sweep.
+        const sheaveBack = (r: number) =>
+          (r - sheaveHub(g.primaryMinRadius, g)) * Math.tan(g.halfAngle) +
+          (g.primaryMaxRadius + g.beltHeight * 0.12) * 0.055;
+        const inner = heel - backingSide * rampDepth * 0.65;
+        const top = Math.max(...rampPoints.map((point) => point.y));
+        const web = new THREE.Shape([
+          new THREE.Vector2(inner, sheaveBack(inner)),
+          new THREE.Vector2(heel, sheaveBack(heel)),
+          new THREE.Vector2(heel, top),
+          new THREE.Vector2(inner, top),
+        ]);
+        ramp.add(new THREE.Mesh(profileSolid(web, width), rampMaterial));
+        const footInner = heel - backingSide * rampDepth * 1.15;
+        const foot = new THREE.Shape([
+          new THREE.Vector2(footInner, sheaveBack(footInner)),
+          new THREE.Vector2(heel, sheaveBack(heel)),
+          new THREE.Vector2(heel, sheaveBack(heel) + l.wall * 0.7),
+          new THREE.Vector2(footInner, sheaveBack(footInner) + l.wall * 0.7),
+        ]);
+        ramp.add(new THREE.Mesh(profileSolid(foot, width * 1.6), rampMaterial));
+      }
       ramps.add(ramp);
     }
     models.push(
@@ -541,6 +615,10 @@ export function positionMechanisms(
       l.back - sceneDistance(pose.primary_roller_m[0]),
     );
     const width = sceneDistance(primary.roller_radius_m) * 1.15;
+    const tipDimensions = primaryTipDimensions(
+      sceneDistance(primary.roller_radius_m),
+      primary.tip_mass_per_flyweight_kg,
+    );
     controller.getModel('flyweights')?.object3D.children.forEach((group) => {
       for (const [name, side] of [
         ['arm-left', -1],
@@ -559,7 +637,7 @@ export function positionMechanisms(
         ['weight-right', 1],
       ] as const) {
         group.getObjectByName(name)!.position.copy(roller).y =
-          side * width * 0.85;
+          side * tipDimensions.centreAcross;
       }
     });
   }

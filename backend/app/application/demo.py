@@ -52,9 +52,7 @@ def playback():
         return DemoPlaybackResponse(
             **displayed,
             course=course_profile(demo.input_document_snapshot, demo.result),
-            scene_geometry=saved_scene(
-                "demo", demo.input_document_snapshot["assembly"]
-            ).geometry,
+            scene_geometry=saved_scene("demo", demo.input_document_snapshot["assembly"]).geometry,
         )
     except (OSError, ValueError, EOFError) as exc:
         raise ApiProblem(
@@ -68,9 +66,7 @@ def playback():
 @lru_cache(maxsize=1)
 def scene():
     """Fixed, anonymous landing example independent of the retained run."""
-    return saved_scene(
-        "landing", assembly_with_matching_belt(baseline_case()["assembly"])
-    )
+    return saved_scene("landing", assembly_with_matching_belt(baseline_case()["assembly"]))
 
 
 @lru_cache(maxsize=1)

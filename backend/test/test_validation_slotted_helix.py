@@ -11,6 +11,7 @@ from app.application.cinder_gateway import (
     VALIDATION_SLOTTED_SECONDARY_HELIX_PROFILE,
     _apply_execution_profile,
 )
+from app.database.resolver import normalize_preset_case
 
 ROOT = Path(__file__).resolve().parents[1]
 PRESET = ROOT / "presets" / "baja-launch-baseline.json"
@@ -18,7 +19,7 @@ PRESET = ROOT / "presets" / "baja-launch-baseline.json"
 
 def _decoded():
     payload = json.loads(PRESET.read_text(encoding="utf-8"))
-    return decode_simulation_case_document(payload["simulation_case"])
+    return decode_simulation_case_document(normalize_preset_case(payload["simulation_case"]))
 
 
 def _secondary_helix(decoded) -> HelicalTorqueReactionForce:

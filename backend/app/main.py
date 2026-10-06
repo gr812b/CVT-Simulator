@@ -26,9 +26,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.container = build_container(settings)
     app.state.settings = settings
-    app.state.database_engine = make_engine(
-        settings.database_url, echo=settings.database_echo
-    )
+    app.state.database_engine = make_engine(settings.database_url, echo=settings.database_echo)
     app.state.database_session_factory = make_session_factory(app.state.database_engine)
 
     @app.middleware("http")
@@ -52,9 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def handle_api_problem(_: Request, problem: ApiProblem) -> JSONResponse:
         headers = {}
         if problem.status_code == 429 and isinstance(problem.details, dict):
-            headers["Retry-After"] = str(
-                problem.details.get("retry_after_seconds", 900)
-            )
+            headers["Retry-After"] = str(problem.details.get("retry_after_seconds", 900))
         return JSONResponse(
             status_code=problem.status_code,
             headers=headers,

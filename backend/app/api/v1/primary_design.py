@@ -123,8 +123,7 @@ def condition_path_domain(
     principal: Principal = Depends(get_current_principal),
 ) -> FixedPivotPathDomainConditionResponse:
     requirements = tuple(
-        ForceRequirement(**requirement.model_dump())
-        for requirement in request.requirements
+        ForceRequirement(**requirement.model_dump()) for requirement in request.requirements
     )
     try:
         result = container.primary_design.condition_path_domain(
@@ -138,9 +137,7 @@ def condition_path_domain(
         )
     except PrimaryDesignError as error:
         status = 404 if error.code == "DOMAIN_EXPIRED" else 422
-        raise ApiProblem(
-            status, error.code.lower(), str(error), error.details
-        ) from error
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotPathDomainConditionResponse(**result)
 
 
@@ -184,9 +181,7 @@ def concrete_response(
         )
     except PrimaryDesignError as error:
         status = 404 if error.code == "ANALYSIS_EXPIRED" else 422
-        raise ApiProblem(
-            status, error.code.lower(), str(error), error.details
-        ) from error
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotOperatingResponse(**result)
 
 
@@ -243,9 +238,7 @@ def compare_path_domains(
         )
     except PrimaryDesignError as error:
         status = 404 if error.code == "DOMAIN_EXPIRED" else 422
-        raise ApiProblem(
-            status, error.code.lower(), str(error), error.details
-        ) from error
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotPathDomainCompareResponse(**result)
 
 
@@ -264,8 +257,7 @@ def compare_path_domains_to_target(
             domain_id_a=request.domain_id_a,
             domain_id_b=request.domain_id_b,
             target_points=[
-                (point.shift_fraction, point.relative_force)
-                for point in request.target_points
+                (point.shift_fraction, point.relative_force) for point in request.target_points
             ],
             atlas_path_count=request.atlas_path_count,
             mass_mix_count=request.mass_mix_count,
@@ -273,7 +265,5 @@ def compare_path_domains_to_target(
         )
     except PrimaryDesignError as error:
         status = 404 if error.code == "DOMAIN_EXPIRED" else 422
-        raise ApiProblem(
-            status, error.code.lower(), str(error), error.details
-        ) from error
+        raise ApiProblem(status, error.code.lower(), str(error), error.details) from error
     return FixedPivotPathDomainCompareTargetResponse(**result)

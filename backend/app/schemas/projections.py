@@ -15,9 +15,7 @@ class EditableField(TypedDict):
     path_template: str
     label: str
     description: str
-    value_kind: Literal[
-        "number", "integer", "boolean", "string", "enum", "object", "array"
-    ]
+    value_kind: Literal["number", "integer", "boolean", "string", "enum", "object", "array"]
     section: str
     dimension: NotRequired[str]
     canonical_unit: NotRequired[str]

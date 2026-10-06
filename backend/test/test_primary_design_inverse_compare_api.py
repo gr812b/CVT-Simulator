@@ -1,30 +1,11 @@
+"""HTTP argument conversion and response shapes, with explicit service doubles."""
+
 from __future__ import annotations
 
-from pathlib import Path
-
-from fastapi.testclient import TestClient
-
-from app.core.settings import Settings
 from app.engineering.fixed_pivot_primary.service import FixedPivotPrimaryDesignService
-from app.main import create_app
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
-def _client() -> TestClient:
-    return TestClient(
-        create_app(
-            Settings(
-                preset_directory=ROOT / "presets",
-                run_timeout_seconds=30.0,
-                run_executor_mode="inline",
-                cors_origins=(),
-            )
-        )
-    )
-
-
-def test_inverse_design_api_wires_force_target_points(monkeypatch) -> None:
+def test_inverse_design_api_wires_force_target_points(signed_in, monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     def fake_inverse(self, **kwargs):
@@ -42,11 +23,25 @@ def test_inverse_design_api_wires_force_target_points(monkeypatch) -> None:
             },
             "solutions": [],
             "diagnostics": [],
-            "summary": {"method": "api-wiring-test"},
+            "summary": {
+                "method": "api-wiring-test",
+                "candidate_pair_count": 0,
+                "geometry_candidate_count": 0,
+                "certified_solution_count": 0,
+                "best_rms_error_N": None,
+                "best_max_error_N": None,
+                "target_integrated_force_Nm": 0.0,
+                "maximum_integrated_force_Nm": 0.0,
+                "capacity_q_min_deg": -30.0,
+                "capacity_q_max_deg": 90.0,
+                "fixed_tip_mass_per_flyweight_kg": kwargs["fixed_tip_mass_per_flyweight_kg"],
+                "max_tip_mass_per_flyweight_kg": kwargs["max_tip_mass_per_flyweight_kg"],
+                "force_definition": "Adapter fixture; no mechanics are sampled.",
+            },
         }
 
     monkeypatch.setattr(FixedPivotPrimaryDesignService, "inverse_design_force_curve", fake_inverse)
-    client = _client()
+    client = signed_in
     defaults = client.get("/api/v1/engineering/fixed-pivot-primary/defaults").json()
     response = client.post(
         "/api/v1/engineering/fixed-pivot-primary/inverse-design",
@@ -71,7 +66,7 @@ def test_inverse_design_api_wires_force_target_points(monkeypatch) -> None:
     assert captured["max_tip_mass_per_flyweight_kg"] == 0.35
 
 
-def test_compare_target_api_wires_relative_force_shape(monkeypatch) -> None:
+def test_compare_target_api_wires_relative_force_shape(signed_in, monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     def fake_compare(self, **kwargs):
@@ -79,7 +74,13 @@ def test_compare_target_api_wires_relative_force_shape(monkeypatch) -> None:
         captured.update(kwargs)
         points = kwargs["target_points"]
         return {
-            "definition": {"mass_scale_agnostic": True, "method": "continuous-inverse"},
+            "definition": {
+                "mass_scale_agnostic": True,
+                "method": "continuous-inverse",
+                "normalization": "test response",
+                "distance": "test response",
+                "sampling_note": "Adapter fixture; no mechanics are sampled.",
+            },
             "target": {
                 "shift_fraction": [point[0] for point in points],
                 "normalized_shape": [point[1] / 100.0 for point in points],
@@ -89,13 +90,18 @@ def test_compare_target_api_wires_relative_force_shape(monkeypatch) -> None:
             },
             "architecture_a": None,
             "architecture_b": None,
-            "summary": {"method": "api-wiring-test"},
+            "summary": {
+                "a_rms_shape_error": None,
+                "b_rms_shape_error": None,
+                "a_max_shape_error": None,
+                "b_max_shape_error": None,
+            },
         }
 
     monkeypatch.setattr(
         FixedPivotPrimaryDesignService, "compare_path_domains_to_target", fake_compare
     )
-    client = _client()
+    client = signed_in
     response = client.post(
         "/api/v1/engineering/fixed-pivot-primary/architecture/path-domain/compare-target",
         json={

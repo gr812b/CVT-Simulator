@@ -54,13 +54,21 @@ def parameters(assembly, schema):
             {
                 "key": "primary_tip_mass" if tip_model else "primary_flyweight_mass",
                 "kind": "number",
-                "label": "Replaceable tip mass" if tip_model else "Mass per flyweight",
-                "description": "Changes the tip and its mass moments, retaining the arm/body."
-                if tip_model
-                else "Scales mass and moments together at unchanged mass distribution.",
+                "label": (
+                    "Replaceable tip mass per flyweight" if tip_model else "Mass per flyweight"
+                ),
+                "description": (
+                    (
+                        "Mass at each flyweight tip, up to 500 g. "
+                        "Changes the tip and its mass moments, retaining the arm/body."
+                    )
+                    if tip_model
+                    else "Scales mass and moments together at unchanged mass distribution."
+                ),
                 "group": "primary",
                 "unit": "kg",
                 "minimum": 0.000001,
+                "maximum": 0.5 if tip_model else None,
                 "path": prefix + "/mass_geometry/mass_per_flyweight_kg",
                 "mass_geometry_path": prefix + "/mass_geometry",
                 "tip_body_mass": body if tip_model else None,
@@ -130,9 +138,7 @@ def parameters(assembly, schema):
 
 def cvt_tuning(session, principal, cvt_revision_id):
     cvt = access.library_version(session, principal, "cvt-designs", cvt_revision_id)
-    assembly = _current_assembly_document(
-        cvt.cinder_assembly, baseline_case()["execution"]
-    )
+    assembly = _current_assembly_document(cvt.cinder_assembly, baseline_case()["execution"])
     return cvt, assembly, parameters(assembly, cvt.tuning_schema)
 
 
@@ -164,17 +170,13 @@ def ensure_default_tune(session, cvt):
         )
         session.add(reference)
         session.flush()
-        assembly = _current_assembly_document(
-            cvt.cinder_assembly, baseline_case()["execution"]
-        )
+        assembly = _current_assembly_document(cvt.cinder_assembly, baseline_case()["execution"])
         document = {
             "kind": "tunes",
             "name": reference.name,
             "notes": "",
             "cvt_revision_id": cvt.id,
-            "values": {
-                p["key"]: p["default"] for p in parameters(assembly, cvt.tuning_schema)
-            },
+            "values": {p["key"]: p["default"] for p in parameters(assembly, cvt.tuning_schema)},
         }
         revision = ExperimentRevision(
             experiment_id=reference.id,
@@ -209,19 +211,11 @@ def set_default_tune(session, principal, cvt_revision_id, request):
     from app.application import experiments
 
     cvt = access.library_version(session, principal, "cvt-designs", cvt_revision_id)
-    access.library_object(
-        session, principal, "cvt-designs", cvt.cvt_design_id, write=True
-    )
+    access.library_object(session, principal, "cvt-designs", cvt.cvt_design_id, write=True)
     tune = experiments.get_item(session, principal, request.tune_id)
     revision = session.get(ExperimentRevision, tune.current_revision_id)
-    if (
-        tune.archived
-        or tune.kind != "tunes"
-        or revision.document["cvt_revision_id"] != cvt.id
-    ):
-        raise ApiProblem(
-            422, "tune_cvt_mismatch", "Choose an active tune for this CVT version."
-        )
+    if tune.archived or tune.kind != "tunes" or revision.document["cvt_revision_id"] != cvt.id:
+        raise ApiProblem(422, "tune_cvt_mismatch", "Choose an active tune for this CVT version.")
     from sqlalchemy import update
 
     changed = session.execute(
@@ -242,9 +236,7 @@ def set_default_tune(session, principal, cvt_revision_id, request):
 
 
 def setup_tuning(session, principal, setup_revision_id):
-    setup = access.library_version(
-        session, principal, "vehicle-assemblies", setup_revision_id
-    )
+    setup = access.library_version(session, principal, "vehicle-assemblies", setup_revision_id)
     _, assembly, params = cvt_tuning(session, principal, setup.cvt_design_version_id)
     return setup, assembly, params
 
@@ -255,8 +247,7 @@ def tune_surface(session, principal, cvt_revision_id):
     fields = []
     for param in params:
         common = {
-            key: param.get(key, "")
-            for key in ("key", "label", "description", "group", "kind")
+            key: param.get(key, "") for key in ("key", "label", "description", "group", "kind")
         }
         if param["kind"] == "ramp":
             path = param["path"]
@@ -296,9 +287,7 @@ def tune_surface(session, principal, cvt_revision_id):
     from app.application import experiments
 
     revision = default_tune_revision(session, cvt.id)
-    default = experiments.detail(
-        session, principal, revision.experiment_id, revision.id
-    )
+    default = experiments.detail(session, principal, revision.experiment_id, revision.id)
     template = default.document.model_copy(deep=True)
     template.values = {**{p["key"]: p["default"] for p in params}, **template.values}
     return TuneSurface(
@@ -330,9 +319,7 @@ def apply_values(assembly, params, values):
                 or not isinstance(value, (float, int))
                 or not math.isfinite(value)
             ):
-                raise ApiProblem(
-                    422, "tune_value", f"{param['label']} must be a finite number."
-                )
+                raise ApiProblem(422, "tune_value", f"{param['label']} must be a finite number.")
             if (param.get("minimum") is not None and value < param["minimum"]) or (
                 param.get("maximum") is not None and value > param["maximum"]
             ):
@@ -356,9 +343,7 @@ def apply_values(assembly, params, values):
                         if "moment" in name:
                             mass[name] *= ratio
         elif not isinstance(value, dict) or value.get("kind") != "piecewise_ramp":
-            raise ApiProblem(
-                422, "tune_value", f"{param['label']} must be a piecewise ramp."
-            )
+            raise ApiProblem(422, "tune_value", f"{param['label']} must be a piecewise ramp.")
         if param["kind"] == "number" and "storage_offset" in param:
             value += param["storage_offset"]
         parent_path, name = param["path"].rsplit("/", 1)

@@ -72,7 +72,9 @@ class User(StringUUIDPrimaryKeyMixin, Base):
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     school: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
     password_hash: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    auth_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
@@ -235,9 +237,7 @@ class BeltVersion(StringUUIDPrimaryKeyMixin, Base):
     created_by_user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL")
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     release_notes: Mapped[str | None] = mapped_column(Text)
     visibility_at_release: Mapped[str] = mapped_column(String(20))
     attribution_institution_id: Mapped[str | None] = mapped_column(
@@ -698,14 +698,20 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     cache_entry_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("run_cache_entries.id", ondelete="SET NULL"), nullable=True
     )
-    name: Mapped[str] = mapped_column(String(240), default="Simulation", server_default="Simulation")
+    name: Mapped[str] = mapped_column(
+        String(240), default="Simulation", server_default="Simulation"
+    )
     source: Mapped[str] = mapped_column(String(20), default="library", server_default="library")
     request_key: Mapped[str | None] = mapped_column(String(64))
     request_hash: Mapped[str | None] = mapped_column(String(64))
     parent_run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"))
     provenance: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
-    runtime_identity: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
-    execution_options: Mapped[JsonDict] = mapped_column(JsonPayload, default=dict, server_default="{}")
+    runtime_identity: Mapped[JsonDict] = mapped_column(
+        JsonPayload, default=dict, server_default="{}"
+    )
+    execution_options: Mapped[JsonDict] = mapped_column(
+        JsonPayload, default=dict, server_default="{}"
+    )
     worker_token: Mapped[str | None] = mapped_column(String(36))
     heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -787,8 +793,19 @@ class FavoriteRun(Base):
 
 
 # Register authentication tables for Alembic and local create_all bootstrapping.
-from app.database.auth_models import AuthSession, PasswordResetToken, AuthRateLimit  # noqa: E402,F401
-from app.database.experiment_models import Experiment, ExperimentRevision, RunNotification  # noqa: E402,F401
-from app.database.publication_models import ConfigurationCopy, PhysicalPublication  # noqa: E402,F401
+from app.database.auth_models import (  # noqa: E402,F401
+    AuthSession,
+    PasswordResetToken,
+    AuthRateLimit,
+)
+from app.database.experiment_models import (  # noqa: E402,F401
+    Experiment,
+    ExperimentRevision,
+    RunNotification,
+)
+from app.database.publication_models import (  # noqa: E402,F401
+    ConfigurationCopy,
+    PhysicalPublication,
+)
 
 Index("uq_users_email_normalized", func.lower(User.email), unique=True)

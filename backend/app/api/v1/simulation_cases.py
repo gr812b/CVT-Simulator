@@ -34,9 +34,7 @@ def validate_simulation_case(
     )
 
 
-@router.post(
-    "/resolve-from-library", response_model=ResolveLibrarySimulationCaseResponse
-)
+@router.post("/resolve-from-library", response_model=ResolveLibrarySimulationCaseResponse)
 def resolve_from_library_selection(
     request: ResolveLibrarySimulationCaseRequest,
     session: Session = Depends(get_database_session),

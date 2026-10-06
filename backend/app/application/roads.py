@@ -26,18 +26,18 @@ def feature_templates():
             "kind": "slope",
             "name": "Climb",
             "length_m": 20,
-            "angle_rad": math.radians(10),
+            "angle_rad": math.radians(20),
         },
         {
             "id": "descent",
             "kind": "slope",
             "name": "Descent",
             "length_m": 20,
-            "angle_rad": math.radians(-10),
+            "angle_rad": math.radians(-20),
         },
         {"id": "crest", "kind": "crest", "length_m": 20, "height_m": 2},
         {"id": "dip", "kind": "dip", "length_m": 20, "height_m": 2},
-        {"id": "whoops", "kind": "whoops", "height_m": 0.4, "spacing_m": 6, "count": 5},
+        {"id": "whoops", "kind": "whoops", "height_m": 0.8, "spacing_m": 4, "count": 8},
         {
             "id": "points",
             "kind": "points",
@@ -53,7 +53,7 @@ def default_scenario():
     return ScenarioDocument(
         kind="scenarios",
         name="Flat road",
-        road=SpatialRoad(features=[feature_templates()[0]]),
+        road=SpatialRoad(features=[{**feature_templates()[0], "length_m": 200}]),
     )
 
 
@@ -120,9 +120,7 @@ def _local_points(feature):
             (0, 0),
             (
                 feature.length_m,
-                feature.length_m * math.sin(feature.angle_rad)
-                if feature.kind == "slope"
-                else 0,
+                feature.length_m * math.sin(feature.angle_rad) if feature.kind == "slope" else 0,
             ),
         ]
     count = feature.count if feature.kind == "whoops" else 1
@@ -158,19 +156,14 @@ def resolve_road(road: SpatialRoad, settings: Settings) -> RoadResolution:
                     "road_grade",
                     f"Section {feature.name or feature.kind} exceeds the {settings.road_max_grade_degrees:g}° grade limit.",
                 )
-            segments.append(
-                {"start_distance_m": distance + x, "grade_angle_rad": math.asin(ratio)}
-            )
+            segments.append({"start_distance_m": distance + x, "grade_angle_rad": math.asin(ratio)})
             points.append({"distance_m": distance + x, "elevation_m": elevation + y})
         distance += local[-1][0]
         elevation += local[-1][1]
     points.append({"distance_m": distance, "elevation_m": elevation})
     if road.endpoint == "flat":
         segments.append({"start_distance_m": distance, "grade_angle_rad": 0})
-    if (
-        len(segments) > settings.road_max_segments
-        or distance > settings.road_max_distance_m
-    ):
+    if len(segments) > settings.road_max_segments or distance > settings.road_max_distance_m:
         raise ApiProblem(
             422, "road_limit", "Road exceeds the configured segment or distance limit."
         )
@@ -205,10 +198,7 @@ def validate_scenario(scenario: ScenarioDocument, settings: Settings):
             422, "report_limit", "Increase the reporting step or shorten the duration."
         )
     road = resolve_road(scenario.road, settings)
-    if (
-        scenario.stops.mode == "course"
-        and scenario.initial.vehicle_distance_m >= road.length_m
-    ):
+    if scenario.stops.mode == "course" and scenario.initial.vehicle_distance_m >= road.length_m:
         raise ApiProblem(
             422,
             "course_start",
@@ -233,9 +223,7 @@ def apply_scenario(case, scenario: ScenarioDocument, settings: Settings):
     }
     case["scenario"] = {
         "time_span_s": [0, scenario.duration_s],
-        "initial_cvt_state": scenario.initial.model_dump(
-            exclude={"vehicle_distance_m"}
-        ),
+        "initial_cvt_state": scenario.initial.model_dump(exclude={"vehicle_distance_m"}),
     }
     controls = scenario.execution
     case["execution"]["integrator"].update(

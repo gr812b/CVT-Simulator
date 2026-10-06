@@ -79,9 +79,7 @@ def list_database_runs(
     if account_id is not None:
         stmt = stmt.where(Run.account_id == account_id)
     if vehicle_assembly_version_id is not None:
-        stmt = stmt.where(
-            Run.vehicle_assembly_version_id == vehicle_assembly_version_id
-        )
+        stmt = stmt.where(Run.vehicle_assembly_version_id == vehicle_assembly_version_id)
     stmt = stmt.order_by(Run.submitted_at.desc()).limit(limit)
     return list(session.scalars(stmt).all())
 
@@ -184,9 +182,7 @@ def _preview_artifact_for_run(session: Session, run: Run) -> RunArtifact | None:
 def _json_byte_size(payload: JsonDict) -> int:
     """Return the serialized UTF-8 size for an inline JSON artifact."""
 
-    return len(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    )
+    return len(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
 
 def summary_scalars(result: JsonDict) -> JsonDict:
@@ -198,9 +194,7 @@ def summary_scalars(result: JsonDict) -> JsonDict:
     }
 
 
-def _preview_series(
-    result: JsonDict, *, source_result_hash: str | None = None
-) -> JsonDict:
+def _preview_series(result: JsonDict, *, source_result_hash: str | None = None) -> JsonDict:
     return build_run_preview(
         result,
         profile=DEFAULT_PREVIEW_PROFILE,

@@ -12,18 +12,14 @@ from app.schemas.projections import CaseValidation
 
 
 class ExperimentModel(ApiModel):
-    model_config = ConfigDict(
-        extra="forbid", allow_inf_nan=False, str_strip_whitespace=True
-    )
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False, str_strip_whitespace=True)
 
 
 Name = Annotated[str, Field(min_length=1, max_length=240)]
 Positive = Annotated[float, Field(gt=0)]
 CinderRamp = Annotated[
     JsonObject,
-    WithJsonSchema(
-        CinderGateway().inline_assembly_json_schema("assemblyPiecewiseRamp")
-    ),
+    WithJsonSchema(CinderGateway().inline_assembly_json_schema("assemblyPiecewiseRamp")),
 ]
 TuneValues = dict[str, float | CinderRamp]
 ExperimentKind = Literal["tunes", "scenarios"]
@@ -72,12 +68,8 @@ class PointsFeature(RoadFeatureBase):
     @model_validator(mode="after")
     def ordered_points(self):
         if self.points[0].distance_m != 0 or self.points[0].elevation_m != 0:
-            raise ValueError(
-                "Each section starts at local distance 0 and relative elevation 0."
-            )
-        if any(
-            b.distance_m <= a.distance_m for a, b in zip(self.points, self.points[1:])
-        ):
+            raise ValueError("Each section starts at local distance 0 and relative elevation 0.")
+        if any(b.distance_m <= a.distance_m for a, b in zip(self.points, self.points[1:])):
             raise ValueError("Point distances must increase strictly within a section.")
         return self
 
@@ -101,9 +93,7 @@ class SpatialRoad(ExperimentModel):
 
 
 class InitialConditions(ExperimentModel):
-    primary_angular_speed_rad_per_s: float = Field(
-        default=188.49555921538757, ge=0, le=2000
-    )
+    primary_angular_speed_rad_per_s: float = Field(default=188.49555921538757, ge=0, le=2000)
     secondary_angular_speed_rad_per_s: float = Field(default=0, ge=-2000, le=2000)
     belt_speed_m_per_s: float = Field(default=0, ge=-100, le=100)
     shift_position_m: float = Field(default=0, ge=0, le=1)
@@ -144,9 +134,7 @@ class TuneDocument(ExperimentModel):
     values: TuneValues = Field(default_factory=dict)
 
 
-ExperimentDocument = Annotated[
-    TuneDocument | ScenarioDocument, Field(discriminator="kind")
-]
+ExperimentDocument = Annotated[TuneDocument | ScenarioDocument, Field(discriminator="kind")]
 
 
 class ResolvedRoadSegment(ExperimentModel):
@@ -319,9 +307,7 @@ class SpeedReference(ExperimentModel):
         if self.points[0].time_s != 0 or any(
             b.time_s <= a.time_s for a, b in zip(self.points, self.points[1:])
         ):
-            raise ValueError(
-                "Speed profile must start at zero with strictly increasing times."
-            )
+            raise ValueError("Speed profile must start at zero with strictly increasing times.")
         return self
 
 

@@ -104,7 +104,6 @@ export const Home = () => {
               </div>
               <figcaption>
                 <span className={styles.modelLabel}>McMaster 2025 CVT</span>
-                <span>Simplified illustration — not the original CAD</span>
                 <span>Drag or use arrow keys to rotate</span>
               </figcaption>
             </figure>

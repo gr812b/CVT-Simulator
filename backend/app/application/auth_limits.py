@@ -38,8 +38,7 @@ def throttle(
         count = session.scalar(statement)
         session.execute(
             delete(AuthRateLimit).where(
-                AuthRateLimit.expires_at
-                < datetime.fromtimestamp(now - 3600, timezone.utc)
+                AuthRateLimit.expires_at < datetime.fromtimestamp(now - 3600, timezone.utc)
             )
         )
     if count > limit:

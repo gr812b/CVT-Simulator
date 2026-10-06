@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from sqlalchemy import inspect, select
@@ -27,14 +29,24 @@ from app.database.hashing import canonical_json_hash
 from app.database.resolver import resolve_simulation_case
 from app.database.seed import (
     SEED_ASSEMBLY_VERSION_ID,
+    SEED_CVT_ID,
+    SEED_CVT_VERSION_ID,
     SEED_EXECUTION_PRESET_ID,
+    SEED_ENGINE_ID,
     SEED_ENGINE_VERSION_ID,
     SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
     SEED_LOAD_CASE_ID,
+    SEED_OUTPUT_VERSION_ID,
     SEED_TUNE_ID,
     seed_database,
 )
 from app.database.session import make_engine, make_session_factory
+
+
+@pytest.fixture
+def baseline_case():
+    path = Path(__file__).resolve().parents[1] / "presets" / "baja-launch-baseline.json"
+    return json.loads(path.read_text())["simulation_case"]
 
 
 def build_session():
@@ -72,45 +84,53 @@ def test_database_schema_contains_design_and_run_tables() -> None:
     }.issubset(tables)
 
 
-def test_seed_data_splits_cinder_contract_ownership_correctly() -> None:
+def test_seed_data_splits_cinder_contract_ownership_correctly(baseline_case) -> None:
     _, session = build_session()
     try:
         seed_database(session)
         session.commit()
 
-        assert session.scalar(select(Account).where(Account.name == "Demo Baja Workspace"))
+        assert session.scalar(select(Account).where(Account.name == "CINDER"))
         assert session.scalar(select(Institution).where(Institution.slug == "mcmaster-university"))
         assert session.scalars(select(Institution)).all()
 
-        engine_version = session.scalar(select(EngineVersion))
+        engine_version = session.get(EngineVersion, SEED_ENGINE_VERSION_ID)
         assert engine_version is not None
-        assert engine_version.input_boundary["equivalent_rotational_inertia_kg_m2"] == 0.1
+        assert engine_version.input_boundary == baseline_case["input_boundary"]
 
-        cvt_version = session.scalar(select(CVTDesignVersion))
+        cvt_version = session.get(CVTDesignVersion, SEED_CVT_VERSION_ID)
         assert cvt_version is not None
         primary = cvt_version.cinder_assembly["inertias"]["primary"]
         secondary = cvt_version.cinder_assembly["inertias"]["secondary"]
         assert "engine_rotational_inertia_kg_m2" not in primary
         assert "gearbox_input_rotational_inertia_kg_m2" not in secondary
-        assert primary["rotating_hardware_inertia_kg_m2"] == 0.005
-        assert secondary["fixed_rotating_hardware_inertia_kg_m2"] == 0.1
+        assert cvt_version.cinder_assembly["inertias"] == baseline_case["assembly"]["inertias"]
+        assert "fixed_rotating_hardware_inertia_kg_m2" in primary
+        assert "movable_sheave_rotational_inertia_kg_m2" in primary
+        assert "fixed_rotating_hardware_inertia_kg_m2" in secondary
+        assert "movable_sheave_rotational_inertia_kg_m2" in secondary
 
-        output_version = session.scalar(select(OutputSystemVersion))
+        output_version = session.get(OutputSystemVersion, SEED_OUTPUT_VERSION_ID)
         assert output_version is not None
         assert (
-            output_version.output_boundary_template["direct_secondary_shaft_inertia_kg_m2"] == 0.05
+            output_version.output_boundary_template["direct_secondary_shaft_inertia_kg_m2"]
+            == baseline_case["output_boundary"]["direct_secondary_shaft_inertia_kg_m2"]
         )
         assert output_version.output_boundary_template["drivetrain_loss_model"] == {"kind": "none"}
 
         tune = session.get(Tune, SEED_TUNE_ID)
         load_case = session.get(LoadCase, SEED_LOAD_CASE_ID)
-        assert tune is not None and tune.values
+        assert tune is not None
+        assert tune.cvt_design_id == SEED_CVT_ID
+        # This compatibility row adds no overrides to the current fixed-pivot
+        # baseline. User-facing tunes have immutable ExperimentRevision records.
+        assert tune.values == {}
         assert load_case is not None and load_case.payload["scenario"]["time_span_s"] == [0.0, 30.0]
     finally:
         session.close()
 
 
-def test_resolver_builds_frozen_simulation_case_from_released_versions() -> None:
+def test_resolver_builds_frozen_simulation_case_from_released_versions(baseline_case) -> None:
     _, session = build_session()
     try:
         seed_database(session)
@@ -124,14 +144,26 @@ def test_resolver_builds_frozen_simulation_case_from_released_versions() -> None
             execution_preset_id=SEED_EXECUTION_PRESET_ID,
         )
 
-        assert document["document_type"] == "cinder_simulation_case"
+        assert document["document_type"] == "cinder_composed_simulation_case"
         assert document["assembly"]["document_type"] == "cinder_cvt_assembly"
-        assert document["input_boundary"]["equivalent_rotational_inertia_kg_m2"] == 0.1
-        assert document["output_boundary"]["direct_secondary_shaft_inertia_kg_m2"] == 0.05
-        assert document["output_boundary"]["drivetrain_loss_model"] == {"kind": "none"}
-        assert document["scenario"]["initial_state"]["shift_position_m"] == 0.0
+        assert (
+            document["shaft_boundaries"]["primary"]["equivalent_rotational_inertia_kg_m2"]
+            == baseline_case["input_boundary"]["equivalent_rotational_inertia_kg_m2"]
+        )
+        assert (
+            document["shaft_boundaries"]["secondary"]["direct_secondary_shaft_inertia_kg_m2"]
+            == baseline_case["output_boundary"]["direct_secondary_shaft_inertia_kg_m2"]
+        )
+        assert document["input_boundary"] == document["shaft_boundaries"]["primary"]
+        assert document["output_boundary"] == document["shaft_boundaries"]["secondary"]
+        assert "drivetrain_loss_model" not in document["shaft_boundaries"]["secondary"]
+        assert document["scenario"]["initial_cvt_state"]["shift_position_m"] == 0.0
+        assert document["host"]["initial_state"]["secondary_shaft_angle_rad"] == 0.0
         assert "contract_hash" in document
-        assert document["database_resolution"]["tune_snapshot"]
+        assert (
+            document["database_resolution"]["tune_snapshot"]
+            == session.get(Tune, SEED_TUNE_ID).values
+        )
 
         assembly_version = session.get(VehicleAssemblyVersion, SEED_ASSEMBLY_VERSION_ID)
         assert assembly_version is not None
@@ -191,10 +223,8 @@ def test_seed_data_marks_default_catalog_entries_and_schema_metadata() -> None:
         seed_database(session)
         session.commit()
 
-        engine = session.scalar(select(Engine).where(Engine.slug == "demo-briggs-10hp"))
-        cvt_design = session.scalar(
-            select(CVTDesign).where(CVTDesign.slug == "demo-baja-rubber-v-belt-cvt")
-        )
+        engine = session.get(Engine, SEED_ENGINE_ID)
+        cvt_design = session.get(CVTDesign, SEED_CVT_ID)
         assert engine is not None
         assert cvt_design is not None
         assert engine.lifecycle_status == "active"

@@ -89,7 +89,8 @@ export function TuneDialog({
       closeOnClickOutside={false}
     >
       <QuantityValidationContext.Provider value={setInvalid}>
-        <Stack onInputCapture={(event) => {
+        {/* Bubbling keeps dirty tracking in the same update as the field edit. */}
+        <Stack onInput={(event) => {
           if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) setTextEdited(true);
         }}>
           <Text size="sm" c="dimmed">

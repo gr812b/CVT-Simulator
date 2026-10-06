@@ -84,8 +84,7 @@ def _revision(session, principal, kind, revision_id):
 def _version_metadata(session, principal, kind, version):
     parent = _parent(session, kind, version)
     metadata = version.summary.get("physical_metadata") or {
-        field: getattr(parent, field, None) or ""
-        for field in PhysicalMetadata.model_fields
+        field: getattr(parent, field, None) or "" for field in PhysicalMetadata.model_fields
     }
     metadata = copy.deepcopy(metadata)
     return metadata
@@ -97,19 +96,13 @@ def document_for_revision(
     version = _revision(session, principal, kind, revision_id)
     metadata = _version_metadata(session, principal, kind, version)
     if kind == "engines":
-        data = EngineData.model_validate(
-            _current_primary_boundary(version.input_boundary)
-        )
+        data = EngineData.model_validate(_current_primary_boundary(version.input_boundary))
     elif kind == "belts":
         data = BeltData.model_validate(version.belt_payload)
     elif kind == "cvts":
-        assembly = _current_assembly_document(
-            version.cinder_assembly, baseline_case()["execution"]
-        )
+        assembly = _current_assembly_document(version.cinder_assembly, baseline_case()["execution"])
         if version.belt_version_id:
-            belt = choice_for_revision(
-                session, principal, "belts", version.belt_version_id
-            )
+            belt = choice_for_revision(session, principal, "belts", version.belt_version_id)
         else:
             belt = BeltChoice(
                 name=f"Belt for {metadata['name']}",
@@ -120,12 +113,8 @@ def document_for_revision(
     else:
         output = session.get(OutputSystemVersion, version.output_system_version_id)
         data = SetupData(
-            engine=choice_for_revision(
-                session, principal, "engines", version.engine_version_id
-            ),
-            cvt=choice_for_revision(
-                session, principal, "cvts", version.cvt_design_version_id
-            ),
+            engine=choice_for_revision(session, principal, "engines", version.engine_version_id),
+            cvt=choice_for_revision(session, principal, "cvts", version.cvt_design_version_id),
             vehicle=vehicle_from_boundary(output.output_boundary_template),
         )
     return DOCUMENTS[kind](kind=kind, data=data, **metadata)
@@ -133,9 +122,7 @@ def document_for_revision(
 
 def choice_for_revision(session, principal, kind, revision_id):
     document = document_for_revision(session, principal, kind, revision_id)
-    return CHOICES[kind](
-        revision_id=revision_id, **document.model_dump(exclude={"kind"})
-    )
+    return CHOICES[kind](revision_id=revision_id, **document.model_dump(exclude={"kind"}))
 
 
 def template_for_library(session, principal, kind):
@@ -144,16 +131,12 @@ def template_for_library(session, principal, kind):
 
     document = template_document(kind)
     if kind == "setups":
-        document.data.cvt = choice_for_revision(
-            session, principal, "cvts", sample_id("cvt:r1")
-        )
+        document.data.cvt = choice_for_revision(session, principal, "cvts", sample_id("cvt:r1"))
         document.data.engine = choice_for_revision(
             session, principal, "engines", sample_id("engine:r1")
         )
     elif kind == "cvts":
-        document.data.belt = choice_for_revision(
-            session, principal, "belts", sample_id("belt:r1")
-        )
+        document.data.belt = choice_for_revision(session, principal, "belts", sample_id("belt:r1"))
     return document
 
 
@@ -182,9 +165,7 @@ def item_response(obj, kind, principal) -> PhysicalItem:
     )
 
 
-def list_items(
-    session, principal, kind, scope="own", include_archived=False, author_id=None
-):
+def list_items(session, principal, kind, scope="own", include_archived=False, author_id=None):
     binding = library.binding_for(RESOURCES[kind])
     model = binding.object_model
     own = model.account_id == principal.account_id
@@ -195,17 +176,11 @@ def list_items(
         model.deleted_at.is_(None), model.released_version_id.is_not(None)
     )
     statement = statement.where(
-        own
-        if scope == "own"
-        else samples
-        if scope == "samples"
-        else model.visibility == "public"
+        own if scope == "own" else samples if scope == "samples" else model.visibility == "public"
     )
     if author_id is not None:
         version = binding.version_model
-        statement = statement.join(
-            version, model.released_version_id == version.id
-        ).where(
+        statement = statement.join(version, model.released_version_id == version.id).where(
             version.created_by_user_id == author_id,
             model.visibility == "public",
         )
@@ -249,9 +224,7 @@ def _lock_current(session, principal, kind, object_id, expected):
     return obj
 
 
-def _save_choice(
-    session, principal, kind, choice, *, duplicate=False, tuning_schema=None
-):
+def _save_choice(session, principal, kind, choice, *, duplicate=False, tuning_schema=None):
     document = DOCUMENTS[kind](kind=kind, **choice.model_dump(exclude={"revision_id"}))
     parent = source = None
     if choice.revision_id:
@@ -262,11 +235,7 @@ def _save_choice(
         # authorized, immutable revision; fork only an explicitly changed child.
         if normalize_document(original) == normalize_document(document):
             return choice
-    own = (
-        parent is not None
-        and parent.account_id == principal.account_id
-        and not duplicate
-    )
+    own = parent is not None and parent.account_id == principal.account_id and not duplicate
     obj, _ = save_document(
         session,
         principal,
@@ -338,13 +307,8 @@ def save_document(
     previous = None
     if object_id:
         obj = _lock_current(session, principal, kind, object_id, expected)
-        previous = session.get(
-            library.binding_for(resource).version_model, obj.released_version_id
-        )
-        if (
-            previous
-            and document_for_revision(session, principal, kind, previous.id) == document
-        ):
+        previous = session.get(library.binding_for(resource).version_model, obj.released_version_id)
+        if previous and document_for_revision(session, principal, kind, previous.id) == document:
             return obj, False
     else:
         if expected is not None:
@@ -415,11 +379,11 @@ def save_document(
             source = _revision(session, principal, kind, forked_from)
         release["tuning_schema"] = readable_tuning_schema(
             document.data.assembly,
-            tuning_schema
-            if tuning_schema is not None
-            else source.tuning_schema
-            if source
-            else _default_tuning_schema(),
+            (
+                tuning_schema
+                if tuning_schema is not None
+                else source.tuning_schema if source else _default_tuning_schema()
+            ),
         )
         obj.draft_payload = {
             "cinder_assembly": document.data.assembly,
@@ -485,11 +449,7 @@ def available_updates(session, principal, document):
         current = _revision(session, principal, kind, choice.revision_id)
         parent = _parent(session, kind, current)
         latest_id = parent.released_version_id
-        if (
-            not latest_id
-            or latest_id == current.id
-            or parent.lifecycle_status == "archived"
-        ):
+        if not latest_id or latest_id == current.id or parent.lifecycle_status == "archived":
             continue
         try:
             latest = _revision(session, principal, kind, latest_id)
@@ -543,9 +503,7 @@ def detail(session, principal, kind, object_id, revision_id=None):
     selection = selection_for_revision(session, principal, kind, selected)
     document = selection.document
     history = []
-    for item in sorted(
-        obj.versions, key=lambda entry: entry.version_number, reverse=True
-    ):
+    for item in sorted(obj.versions, key=lambda entry: entry.version_number, reverse=True):
         try:
             _revision(session, principal, kind, item.id)
         except ApiProblem:
@@ -619,11 +577,7 @@ def differences(before: Any, after: Any, path="") -> list[PhysicalDifference]:
             for key in sorted(before.keys() | after.keys())
             for change in differences(before.get(key), after.get(key), f"{path}/{key}")
         ]
-    if (
-        isinstance(before, list)
-        and isinstance(after, list)
-        and len(before) == len(after)
-    ):
+    if isinstance(before, list) and isinstance(after, list) and len(before) == len(after):
         return [
             change
             for index, (left, right) in enumerate(zip(before, after))
@@ -631,11 +585,7 @@ def differences(before: Any, after: Any, path="") -> list[PhysicalDifference]:
         ]
 
     def display(value):
-        return (
-            "—"
-            if value is None
-            else json.dumps(value, ensure_ascii=False, sort_keys=True)
-        )
+        return "—" if value is None else json.dumps(value, ensure_ascii=False, sort_keys=True)
 
     return [PhysicalDifference(path=path, before=display(before), after=display(after))]
 
@@ -648,8 +598,7 @@ def update_preview(session, principal, kind, object_id, component, target_revisi
         (
             item
             for item in current.updates
-            if item.component == component
-            and item.available_revision_id == target_revision_id
+            if item.component == component and item.available_revision_id == target_revision_id
         ),
         None,
     )
@@ -660,22 +609,14 @@ def update_preview(session, principal, kind, object_id, component, target_revisi
             "This update is no longer available. Refresh the item.",
         )
     document = current.document.model_copy(deep=True)
-    kind_for_component = {"engine": "engines", "cvt": "cvts", "belt": "belts"}[
-        component
-    ]
-    replacement = choice_for_revision(
-        session, principal, kind_for_component, target_revision_id
-    )
+    kind_for_component = {"engine": "engines", "cvt": "cvts", "belt": "belts"}[component]
+    replacement = choice_for_revision(session, principal, kind_for_component, target_revision_id)
     if component == "engine" and isinstance(document, SetupDocument):
         document.data.engine = replacement
     elif component == "cvt" and isinstance(document, SetupDocument):
         document.data.cvt = replacement
     elif component == "belt":
-        cvt = (
-            document.data.cvt.data
-            if isinstance(document, SetupDocument)
-            else document.data
-        )
+        cvt = document.data.cvt.data if isinstance(document, SetupDocument) else document.data
         cvt.belt = replacement
     document = normalize_document(document)
     changes = differences(current.document.model_dump(), document.model_dump())
@@ -684,9 +625,7 @@ def update_preview(session, principal, kind, object_id, component, target_revisi
 
 def archive(session, principal, kind, object_id, request):
     """Archive discovery without changing public immutable snapshot URLs."""
-    obj = _lock_current(
-        session, principal, kind, object_id, request.expected_revision_id
-    )
+    obj = _lock_current(session, principal, kind, object_id, request.expected_revision_id)
     obj.lifecycle_status = "archived" if request.archived else "active"
     session.execute(
         update(PhysicalPublication)

@@ -18,9 +18,7 @@ def readable_tuning_schema(assembly: dict, schema: dict) -> dict:
         path = parameter.get("path")
         if not isinstance(path, str) or not path.startswith("/"):
             continue
-        parts = [
-            part.replace("~1", "/").replace("~0", "~") for part in path.split("/")[1:]
-        ]
+        parts = [part.replace("~1", "/").replace("~0", "~") for part in path.split("/")[1:]]
         if len(parts) > 1 and parts[0] == "pulleys":
             current_mount = {"input": "primary", "output": "secondary"}.get(parts[1])
             pulleys = assembly.get("pulleys", {})

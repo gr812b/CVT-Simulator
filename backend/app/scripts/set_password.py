@@ -16,15 +16,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("email", help="Existing user whose identity you have verified")
     args = parser.parse_args()
-    factory = make_session_factory(
-        make_engine(Settings.from_environment().database_url)
-    )
+    factory = make_session_factory(make_engine(Settings.from_environment().database_url))
     with factory.begin() as session:
         user = find_user(session, args.email.strip().lower(), lock=True)
         if user is None:
-            parser.error(
-                "No existing user has that email. Register a new account in the app."
-            )
+            parser.error("No existing user has that email. Register a new account in the app.")
         password = getpass("New password (8–128 characters): ")
         if not 8 <= len(password) <= 128:
             parser.error("Password must contain 8–128 characters.")

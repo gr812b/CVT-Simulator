@@ -33,9 +33,7 @@ CatalogStatus = Literal[
     "admin_curated",
     "community",
 ]
-ValidationStatus = Literal[
-    "valid", "needs_migration", "deprecated", "unsupported", "invalid"
-]
+ValidationStatus = Literal["valid", "needs_migration", "deprecated", "unsupported", "invalid"]
 
 
 class CreateLibraryObjectRequest(ApiModel):

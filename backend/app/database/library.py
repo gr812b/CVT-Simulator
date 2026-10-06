@@ -32,9 +32,7 @@ from app.database.models import (
 )
 
 JsonDict = dict[str, Any]
-ResourceName = Literal[
-    "engines", "belts", "cvt-designs", "output-systems", "vehicle-assemblies"
-]
+ResourceName = Literal["engines", "belts", "cvt-designs", "output-systems", "vehicle-assemblies"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,9 +159,7 @@ def create_object(session: Session, *, resource: str, data: JsonDict) -> Any:
     return obj
 
 
-def update_draft(
-    session: Session, *, resource: str, object_id: str, data: JsonDict
-) -> Any:
+def update_draft(session: Session, *, resource: str, object_id: str, data: JsonDict) -> Any:
     """Update mutable object metadata and draft payload.
 
     ``data`` is expected to come from a request body dumped with
@@ -193,9 +189,7 @@ def release_object(
     obj = get_object(session, resource=resource, object_id=object_id)
 
     if resource == "vehicle-assemblies":
-        version = _release_vehicle_assembly(
-            session, binding=binding, obj=obj, data=release_data
-        )
+        version = _release_vehicle_assembly(session, binding=binding, obj=obj, data=release_data)
     else:
         payload, normalized_release_data = _payload_release_body(
             resource=resource,
@@ -301,15 +295,11 @@ def deprecate_version(
     return version
 
 
-def list_institutions(
-    session: Session, *, query: str | None = None
-) -> list[Institution]:
+def list_institutions(session: Session, *, query: str | None = None) -> list[Institution]:
     stmt = select(Institution)
     if query:
         pattern = f"%{query.lower()}%"
-        stmt = stmt.where(
-            Institution.name.ilike(pattern) | Institution.slug.ilike(pattern)
-        )
+        stmt = stmt.where(Institution.name.ilike(pattern) | Institution.slug.ilike(pattern))
     stmt = stmt.order_by(Institution.name.asc())
     return list(session.scalars(stmt).all())
 
@@ -337,9 +327,7 @@ def _payload_release_body(
             payload = explicit_payload
         elif isinstance(draft, dict) and "cinder_assembly" in draft:
             payload = copy.deepcopy(draft["cinder_assembly"])
-            data.setdefault(
-                "tuning_schema", copy.deepcopy(draft.get("tuning_schema") or {})
-            )
+            data.setdefault("tuning_schema", copy.deepcopy(draft.get("tuning_schema") or {}))
         else:
             payload = draft
     else:
@@ -398,26 +386,18 @@ def _release_vehicle_assembly(
 ) -> Any:
     draft = copy.deepcopy(obj.draft_payload or {})
     engine_version_id = data.get("engine_version_id") or draft.get("engine_version_id")
-    cvt_design_version_id = data.get("cvt_design_version_id") or draft.get(
-        "cvt_design_version_id"
-    )
+    cvt_design_version_id = data.get("cvt_design_version_id") or draft.get("cvt_design_version_id")
     output_system_version_id = data.get("output_system_version_id") or draft.get(
         "output_system_version_id"
     )
-    if (
-        not engine_version_id
-        or not cvt_design_version_id
-        or not output_system_version_id
-    ):
+    if not engine_version_id or not cvt_design_version_id or not output_system_version_id:
         raise LibraryError(
             "Vehicle assembly releases require engine_version_id, "
             "cvt_design_version_id, and output_system_version_id."
         )
     assembly_payload = copy.deepcopy(data.get("assembly_payload"))
     if assembly_payload is None:
-        assembly_payload = copy.deepcopy(
-            draft.get("assembly_payload") or data.get("payload") or {}
-        )
+        assembly_payload = copy.deepcopy(draft.get("assembly_payload") or data.get("payload") or {})
 
     payload_for_hash = {
         "engine_version_id": engine_version_id,
@@ -436,8 +416,7 @@ def _release_vehicle_assembly(
         summary=copy.deepcopy(data.get("summary") or {}),
         payload_hash=canonical_json_hash(payload_for_hash),
         schema_version=1,
-        payload_schema_name=data.get("payload_schema_name")
-        or binding.default_payload_schema_name,
+        payload_schema_name=data.get("payload_schema_name") or binding.default_payload_schema_name,
         payload_schema_version=data.get("payload_schema_version", 1),
         validation_status=data.get("validation_status", "valid"),
         validation_messages=copy.deepcopy(data.get("validation_messages") or []),
@@ -452,9 +431,7 @@ def _release_vehicle_assembly(
     return version
 
 
-def _next_version_number(
-    session: Session, *, binding: ResourceBinding, object_id: str
-) -> int:
+def _next_version_number(session: Session, *, binding: ResourceBinding, object_id: str) -> int:
     fk_column = getattr(binding.version_model, binding.object_fk_name)
     stmt = select(binding.version_model).where(fk_column == object_id)
     existing = list(session.scalars(stmt).all())

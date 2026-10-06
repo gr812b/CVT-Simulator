@@ -103,9 +103,7 @@ def project_forces(result, scene, tension):
             body,
             "spring",
             [
-                sample((v, 0, 0))
-                if (v := value(prefix + "axial_spring", i)) is not None
-                else None
+                sample((v, 0, 0)) if (v := value(prefix + "axial_spring", i)) is not None else None
                 for i in range(len(times))
             ],
         )
@@ -115,9 +113,11 @@ def project_forces(result, scene, tension):
             body,
             "shaft",
             [
-                sample((v * torque_share(body), 0, 0))
-                if (v := value(f"contact.{body}_transmitted_torque", i)) is not None
-                else None
+                (
+                    sample((v * torque_share(body), 0, 0))
+                    if (v := value(f"contact.{body}_transmitted_torque", i)) is not None
+                    else None
+                )
                 for i in range(len(times))
             ],
             "N·m",
@@ -125,11 +125,7 @@ def project_forces(result, scene, tension):
 
     primary = scene.mechanisms.primary if scene.mechanisms else None
     if primary:
-        fly_keys = [
-            k
-            for k in columns
-            if k.startswith("actuation.primary.fixed_pivot_flyweight_")
-        ]
+        fly_keys = [k for k in columns if k.startswith("actuation.primary.fixed_pivot_flyweight_")]
         for j in range(primary.count):
             samples = []
             for i in range(len(times)):
@@ -138,9 +134,7 @@ def project_forces(result, scene, tension):
                     pose(i, "primary_normal_axial_radial", 0),
                     pose(i, "primary_normal_axial_radial", 1),
                 )
-                axial = (
-                    sum(parts) / primary.count if parts and None not in parts else None
-                )
+                axial = sum(parts) / primary.count if parts and None not in parts else None
                 radius, position = (
                     pose(i, "primary_contact_m", 1),
                     pose(i, "primary_contact_m", 0),
@@ -160,9 +154,7 @@ def project_forces(result, scene, tension):
                     and position is not None
                     else None
                 )
-            track(
-                f"primary.ramp.{j}", f"Ramp contact {j + 1}", "primary", "ramp", samples
-            )
+            track(f"primary.ramp.{j}", f"Ramp contact {j + 1}", "primary", "ramp", samples)
 
     if scene.mechanisms and scene.mechanisms.secondary_helix_points_m:
         r = math.hypot(*scene.mechanisms.secondary_helix_points_m[0][:2])
@@ -229,24 +221,19 @@ def project_forces(result, scene, tension):
                 for samples in sector_samples:
                     samples.append(None)
                 continue
-            signals = {
-                k: v if (v := value(k, i)) is not None else float("nan")
-                for k in columns
-            }
+            signals = {k: v if (v := value(k, i)) is not None else float("nan") for k in columns}
             tensile = np.asarray(expression.evaluate(coordinate=u, signals=signals))
             offset = float(np.sum(tensile * w)) - n * math.sin(beta) / wrap
             normal_density = (tensile - offset) / math.sin(beta)
             # Pressure below zero is not an admissible contact vector.
-            if not np.all(np.isfinite(normal_density)) or np.min(
-                normal_density
-            ) < -1e-6 * max(1, abs(n)):
+            if not np.all(np.isfinite(normal_density)) or np.min(normal_density) < -1e-6 * max(
+                1, abs(n)
+            ):
                 for samples in sector_samples:
                     samples.append(None)
                 continue
             alpha = (math.pi - phi_p) / 2
-            start = (
-                math.pi / 2 + alpha if body == "primary" else 3 * math.pi / 2 - alpha
-            )
+            start = math.pi / 2 + alpha if body == "primary" else 3 * math.pi / 2 - alpha
             for j in range(sectors):
                 sl = slice(j * 8, (j + 1) * 8)
                 phase = start + (j + 0.5) / sectors * wrap
@@ -271,6 +258,4 @@ def project_forces(result, scene, tension):
                 )
         for j, samples in enumerate(sector_samples):
             track(f"{body}.belt.{j}", f"Belt sector {j + 1}", body, "belt", samples)
-    return ForcePlayback(
-        times_s=times, report_indices=indices, tracks=tracks, notes=notes
-    )
+    return ForcePlayback(times_s=times, report_indices=indices, tracks=tracks, notes=notes)

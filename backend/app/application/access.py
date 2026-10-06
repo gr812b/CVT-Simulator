@@ -11,17 +11,11 @@ from app.database.models import ExecutionPreset, LoadCase, Tune
 
 
 def unavailable() -> ApiProblem:
-    return ApiProblem(
-        404, "resource_not_found", "The requested resource was not found."
-    )
+    return ApiProblem(404, "resource_not_found", "The requested resource was not found.")
 
 
 def owned(item: Any, principal: Principal, *, write: bool = False) -> Any:
-    if (
-        item is None
-        or item.account_id != principal.account_id
-        or getattr(item, "deleted_at", None)
-    ):
+    if item is None or item.account_id != principal.account_id or getattr(item, "deleted_at", None):
         raise unavailable()
     if write:
         principal.require_write()
@@ -43,10 +37,7 @@ def library_object(
     if item is None or item.deleted_at is not None:
         raise unavailable()
     if item.account_id != principal.account_id:
-        if (
-            item.visibility not in {"public", "unlisted"}
-            or not item.released_version_id
-        ):
+        if item.visibility not in {"public", "unlisted"} or not item.released_version_id:
             raise unavailable()
         library_version(session, principal, resource, item.released_version_id)
     return item
@@ -85,13 +76,9 @@ def library_version(
         raise unavailable()
     if resource == "vehicle-assemblies":
         for key, kind in COMPONENTS:
-            library_version(
-                session, principal, kind, getattr(version, key), shared=shared
-            )
+            library_version(session, principal, kind, getattr(version, key), shared=shared)
     if resource == "cvt-designs" and version.belt_version_id:
-        library_version(
-            session, principal, "belts", version.belt_version_id, shared=shared
-        )
+        library_version(session, principal, "belts", version.belt_version_id, shared=shared)
     return version
 
 
@@ -102,9 +89,7 @@ COMPONENTS = (
 )
 
 
-def check_assembly_release(
-    session: Session, principal: Principal, obj: Any, data: dict
-) -> None:
+def check_assembly_release(session: Session, principal: Principal, obj: Any, data: dict) -> None:
     shared = (data.get("visibility_at_release") or obj.visibility) != "private"
     draft = obj.draft_payload or {}
     for key, resource in COMPONENTS:

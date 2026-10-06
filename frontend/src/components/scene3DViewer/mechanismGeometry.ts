@@ -18,8 +18,9 @@ export function beam(
   b: THREE.Vector3,
   width: number,
   material: THREE.Material,
+  thickness = width,
 ): THREE.Mesh {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, width, 1), material);
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, thickness, 1), material);
   positionBeam(mesh, a, b);
   return mesh;
 }
@@ -76,31 +77,48 @@ function normalAt(points: THREE.Vector2[], index: number): THREE.Vector2 {
   return new THREE.Vector2(-tangent.y, tangent.x);
 }
 
-/** Extrude the contact profile away from the roller into a solid ramp. */
+/** A closed plate in the radial/axial plane, centred across the mechanism.
+ * Rotate instead of swapping axes so the outward triangle winding is retained.
+ */
+export function profileSolid(shape: THREE.Shape, width: number): THREE.BufferGeometry {
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: width,
+    bevelEnabled: false,
+    steps: 1,
+  });
+  geometry.rotateX(Math.PI / 2);
+  geometry.translate(0, width / 2, 0);
+  return geometry;
+}
+
+/** The physical profile is a graph over axial position. Put its backing heel
+ * wholly on the material side, including for reversed ramps/contact sides.
+ */
+export function rampBackingRadius(
+  points: THREE.Vector2[],
+  side: number,
+  depth: number,
+): number {
+  const direction = side * Math.sign(points.at(-1)!.y - points[0].y);
+  return direction * (Math.max(...points.map((p) => direction * p.x)) + depth);
+}
+
+/** Retain every contact sample while filling the cam out to a solid heel.
+ * The unmodified curve is one boundary of the extrusion; only its backing
+ * material changes. A radial heel also avoids offset-curve folds on tight bends.
+ */
 export function rampSolid(
   points: THREE.Vector2[],
   side: number,
   depth: number,
   width: number,
 ): THREE.BufferGeometry {
-  const back = points.map((p, i) =>
-    p.clone().addScaledVector(normalAt(points, i), -side * depth),
-  );
-  const shape = new THREE.Shape([...points, ...back.reverse()]);
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: width,
-    bevelEnabled: false,
-    steps: 1,
-  });
-  const position = geometry.getAttribute('position');
-  for (let i = 0; i < position.count; i++) {
-    const radial = position.getX(i),
-      axial = position.getY(i),
-      across = position.getZ(i);
-    position.setXYZ(i, radial, across - width / 2, axial);
-  }
-  geometry.computeVertexNormals();
-  return geometry;
+  const heel = rampBackingRadius(points, side, depth);
+  return profileSolid(new THREE.Shape([
+    ...points,
+    new THREE.Vector2(heel, points.at(-1)!.y),
+    new THREE.Vector2(heel, points[0].y),
+  ]), width);
 }
 
 function slotOutline(path: THREE.Vector2[], radius: number): THREE.Vector2[] {

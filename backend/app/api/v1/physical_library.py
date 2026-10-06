@@ -55,9 +55,7 @@ def template(
     principal=Depends(get_public_reader),
     session: Session = Depends(get_database_session),
 ):
-    return PhysicalTemplateResponse(
-        document=service.template_for_library(session, principal, kind)
-    )
+    return PhysicalTemplateResponse(document=service.template_for_library(session, principal, kind))
 
 
 @router.post(
@@ -85,9 +83,7 @@ def belt_section(request: BeltSectionSolveRequest):
 )
 def validate(request: PhysicalValidateRequest):
     validation, resolved = validate_physical(request.document)
-    return PhysicalValidationResponse(
-        validation=validation, resolved_simulation_case=resolved
-    )
+    return PhysicalValidationResponse(validation=validation, resolved_simulation_case=resolved)
 
 
 @router.get("/items/{kind}", response_model=PhysicalListResponse)
@@ -100,9 +96,7 @@ def list_items(
     principal: Principal = Depends(get_public_reader),
 ):
     return PhysicalListResponse(
-        items=service.list_items(
-            session, principal, kind, scope, include_archived, author_id
-        )
+        items=service.list_items(session, principal, kind, scope, include_archived, author_id)
     )
 
 
@@ -171,9 +165,7 @@ def copy_revision(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ):
-    obj = service.duplicate_revision(
-        session, principal, kind, revision_id, request.name
-    )
+    obj = service.duplicate_revision(session, principal, kind, revision_id, request.name)
     return service.detail(session, principal, kind, obj.id)
 
 
@@ -185,9 +177,7 @@ def restore(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ):
-    access.library_object(
-        session, principal, service.RESOURCES[kind], object_id, write=True
-    )
+    access.library_object(session, principal, service.RESOURCES[kind], object_id, write=True)
     old = service.detail(session, principal, kind, object_id, request.revision_id)
     obj, changed = service.save_document(
         session,
@@ -214,15 +204,11 @@ def compare(
     left = service.detail(session, principal, kind, object_id, from_revision_id)
     right = service.detail(session, principal, kind, object_id, to_revision_id)
     return PhysicalCompareResponse(
-        differences=service.differences(
-            left.document.model_dump(), right.document.model_dump()
-        )
+        differences=service.differences(left.document.model_dump(), right.document.model_dump())
     )
 
 
-@router.get(
-    "/items/{kind}/{object_id}/update-preview", response_model=PhysicalUpdatePreview
-)
+@router.get("/items/{kind}/{object_id}/update-preview", response_model=PhysicalUpdatePreview)
 def update_preview(
     kind: PhysicalKind,
     object_id: str,
@@ -255,6 +241,4 @@ def archive(
 
 def _check_kind(kind, request):
     if request.document.kind != kind:
-        raise ApiProblem(
-            422, "physical_kind_mismatch", "The document kind must match its library."
-        )
+        raise ApiProblem(422, "physical_kind_mismatch", "The document kind must match its library.")

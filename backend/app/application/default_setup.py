@@ -20,15 +20,12 @@ def initial_validation_case(session: Session, principal: Principal) -> dict:
             VehicleAssembly.deleted_at.is_(None),
             VehicleAssembly.released_version_id.is_not(None),
         )
-        .order_by(
-            VehicleAssembly.is_default.desc(), VehicleAssembly.catalog_priority.desc()
-        )
+        .order_by(VehicleAssembly.is_default.desc(), VehicleAssembly.catalog_priority.desc())
     )
     load = session.scalar(
         select(LoadCase)
         .where(
-            (LoadCase.account_id == principal.account_id)
-            | (LoadCase.visibility == "public"),
+            (LoadCase.account_id == principal.account_id) | (LoadCase.visibility == "public"),
             LoadCase.deleted_at.is_(None),
         )
         .order_by(LoadCase.created_at, LoadCase.id)

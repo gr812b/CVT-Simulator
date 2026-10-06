@@ -1,67 +1,87 @@
-# Phase-2 backend architecture
+# Backend architecture
 
-## Ownership
+The backend connects a browser-facing application to CINDER and durable SQL
+storage. Local setup and operational commands are in the
+[backend README](../README.md).
 
-- **CINDER** owns CVT documents, decoding, validation, simulations, studies,
-  metrics, and SI projections.
-- **Backend** owns HTTP, Pydantic envelopes, preset/run storage, worker process
-  lifecycle, and API error boundaries.
-- **Frontend** owns document editing, display units, chart selection/styling,
-  and 3D presentation.
+## Responsibilities
 
-The backend intentionally contains no graph manifest, unit conversion registry,
-CVT calculation, or parameter-alias mapping.
+| Layer | Owns |
+| --- | --- |
+| CINDER | Model documents, mechanics, validation, simulation/study execution and model result contracts |
+| Backend | Sessions and ownership, saved revisions, input composition, job admission/worker lifecycle, artifacts and HTTP errors |
+| Frontend | Editing, display units, charts, navigation and scene presentation |
 
-## Persistence seam
+`app/application/cinder_gateway.py` provides the main CINDER boundary. The
+specialized fixed-pivot design study also has a CINDER adapter under
+`app/engineering/fixed_pivot_primary/`. Routes use application services rather
+than constructing a solver. Scene/force projections present resolved geometry and
+retained results; presentation meshes are not simulation inputs.
 
-`PresetStore` and `RunStore` are protocols. Phase 2 supplies `JsonPresetStore`
-and `InMemoryRunStore`; a database can later replace only those implementations.
-Every run retains an immutable `input_document_snapshot` and SHA-256 fingerprint
-alongside the result/error snapshot, so saved runs remain reproducible even when
-a user later edits a CVT, engine, or belt design.
+`app/application/container.py` composes the gateway, design-study service and
+JSON preset store. SQLAlchemy sessions provide persistent application state;
+production runs are not kept in a process-local `RunStore`.
 
-## Worker model
+## Authentication and saved content
 
-The production default is a spawned local process. The parent can kill it after
-`CVT_RUN_TIMEOUT_SECONDS` (default `120`). Tests select the inline executor.
-No continuous progress is fabricated because CINDER does not expose meaningful
-integrator progress yet.
+Registration creates a user and personal account. Browser cookies carry random
+session tokens; the database stores their hashes and expiry. Authenticated writes
+check a session-derived CSRF token and `X-Cinder-Client: web`. Auth mutations also
+check the supplied browser origin. Password changes/reset revoke prior sessions
+and reset links. Password-reset mail is delivered by an API background task, not
+the simulation worker.
 
+Public readers can inspect saved physical items, tunes, load cases and runs.
+Ownership still controls edits, copies into a user's workspace, submissions and
+cancellation. Public authorship excludes credentials and email addresses.
+Physical items and experiments have immutable revisions. A run uses the chosen
+revisions and explicit temporary overrides; subsequent edits do not mutate it.
 
-## CINDER package and result-contract boundary
+## Simulation lifecycle
 
-The backend depends on an immutable PyPI release of `cinder-cvt`, pinned in
-`requirements.txt`. `app/application/cinder_gateway.py` remains the only
-module that imports CINDER directly. The gateway exposes the installed package
-version, simulation-input schema version, and simulation-result contract version
-as runtime identity.
-
-These are intentionally separate concepts:
-
-```text
-CINDER package version              implementation/provenance of the mechanics package
-simulation case schema version      schema of the frozen input document
-simulation result contract version  schema of the projected result artifact
+```mermaid
+flowchart TD
+  API[Validate and admit request] --> Queue[(SQL job and frozen input)]
+  Queue --> Worker[Worker claims job]
+  Worker --> Child[Bounded CINDER child]
+  Child --> Artifacts[(Checkpoints and result artifacts)]
+  Artifacts --> Playback[Playback and exports]
 ```
 
-A result-contract change therefore does not require changing how the mechanical
-solver is called. Database-backed runs record all three identities, and cache
-lookups include them. The projected result's own `contract_version` is checked
-before it is persisted, preventing a result from being stored under the wrong
-version metadata.
+`app/application/jobs.py` admits requests into the database queue. Submission
+requires an idempotency key and permits one queued/running job per account.
+The same key and payload return the accepted job; a changed payload conflicts.
+Preflight is synchronous, but integration occurs only in the worker's child.
+Experiment, legacy library, direct/debug and validation simulation submissions
+share this queue. Static engineering studies are separate synchronous requests.
 
-The backend does not reinterpret new result fields. Additions such as compact
-CINDER domains/fields are part of the JSON-safe result projection returned by
-`CinderGateway.run_simulation()` and are persisted/passed through as ordinary
-result artifact data.
+`app/scripts/run_worker.py` claims work with a worker token and launches
+`run_child.py`. Deadlines, memory and result-size limits bound the child. Writes
+are fenced by the worker token so an obsolete worker cannot replace newer state.
+Cancellation stops/reaps the child before releasing its active slot. Deadline
+recovery handles orphaned jobs; retries are explicit new runs.
 
-CINDER exposes `SIMULATION_CASE_SCHEMA_VERSION` and
-`SIMULATION_RESULT_CONTRACT_VERSION` directly. The backend pins one exact CINDER
-package version and does not carry compatibility aliases for older package
-contracts.
+The child advances CINDER in accepted chunks and writes checkpoints. The parent
+stores the latest valid result and preview together. Failed, timed-out or
+cancelled runs may therefore retain playable partial data. Checkpoints do not
+resume an interrupted solver. Reruns freeze the original input into a new job
+and record the installed execution identity. A worker whose runtime differs from
+the submitted identity fails rather than silently relabeling results.
 
-CINDER also owns machine-readable JSON Schema for its assembly, simulation-case,
-and simulation-result documents. `export_contract_artifacts` writes those
-schemas together with backend OpenAPI as ephemeral build artifacts. Frontend
-TypeScript generation consumes them directly; the backend does not re-declare
-CINDER result/domain/field structures.
+New jobs do not look up the legacy global run cache. Existing cache-linked
+artifacts remain readable. See [DATABASE.md](DATABASE.md) for persisted fields.
+
+## Contracts and previews
+
+Runtime identity separates the CINDER package version, input schema version and
+result contract version. Keep these identities distinct in stored provenance.
+`app/scripts/export_contract_artifacts.py` exports backend OpenAPI and CINDER's
+assembly/input/result JSON schemas. Frontend types are generated from those
+artifacts; generated files are not committed.
+
+Tune editing uses sampled contact and geometry projections for responsiveness.
+A complete preview allows Save to be attempted; it does not establish that the
+full construction audit has passed. Saving and run admission perform independent
+validation. Stale or incomplete previews must not validate an edited draft.
+Per-tip scene mass metadata is optional: unsupported distributions and older
+recordings retain the fallback illustration without inventing an inferred mass.

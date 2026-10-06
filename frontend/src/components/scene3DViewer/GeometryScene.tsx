@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Box3, Quaternion, Vector3 } from 'three';
 import { orientInspectionModels } from './inspectionFrame';
 import { InspectionOverlay } from './InspectionOverlay';
-import { mechanismLayout, mechanismPose } from './mechanisms';
+import { mechanismLayout, mechanismPose, primaryTipDimensions } from './mechanisms';
 import { Alert } from '@mantine/core';
 import { useScene3D } from '@hooks/useScene3D';
 import { createCVTModels, fitCVT, positionCVT } from './proceduralModels';
@@ -43,7 +43,8 @@ export default function GeometryScene({
   const config = sceneConfiguration(false);
   config.renderOnDemand = true;
   if (component) {
-    config.camera.position = [0, 0, 20];
+    // A slight primary angle makes the tip cylinders' added length visible.
+    config.camera.position = component === 'primary' ? [6, 4, 20] : [0, 0, 20];
     config.camera.lookAt = [0, 0, 0];
   }
   const { containerRef, sceneController, error } = useScene3D({
@@ -83,12 +84,13 @@ export default function GeometryScene({
             // Fit the solved swing envelope once, not just the initial arm pose.
             const layout = mechanismLayout(geometry);
             const radius = sceneDistance(geometry.mechanisms.primary.roller_radius_m);
-            const size = new Vector3(radius * 3, radius * 3, radius * 3);
+            const tip = primaryTipDimensions(radius, geometry.mechanisms.primary.tip_mass_per_flyweight_kg);
+            const size = new Vector3(radius * 3, Math.max(radius * 3, 2 * tip.centreAcross + tip.length), radius * 3);
             for (const pose of geometry.mechanisms.poses) {
               if (!pose.primary_roller_m) continue;
               const point = new Vector3(sceneDistance(pose.primary_roller_m[1]), 0,
-                layout.back - sceneDistance(pose.primary_roller_m[0])).applyMatrix4(root.matrixWorld);
-              bounds.union(new Box3().setFromCenterAndSize(point, size));
+                layout.back - sceneDistance(pose.primary_roller_m[0]));
+              bounds.union(new Box3().setFromCenterAndSize(point, size).applyMatrix4(root.matrixWorld));
             }
             const ramp = sceneController.getModel('primaryRamps')?.object3D;
             const current = mechanismPose(geometry, sceneDistance(frame.shift_m));

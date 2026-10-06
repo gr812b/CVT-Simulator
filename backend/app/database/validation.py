@@ -90,9 +90,7 @@ def _default_workflow(resolved: JsonDict) -> JsonDict:
         },
         "manualInitialState": {
             "primaryAngularSpeedRadPerS": initial["primary_angular_speed_rad_per_s"],
-            "secondaryAngularSpeedRadPerS": initial[
-                "secondary_angular_speed_rad_per_s"
-            ],
+            "secondaryAngularSpeedRadPerS": initial["secondary_angular_speed_rad_per_s"],
             "beltSpeedMPerS": initial["belt_speed_m_per_s"],
             "shiftPositionM": initial["shift_position_m"],
             "shiftSpeedMPerS": initial["shift_speed_m_per_s"],
@@ -150,9 +148,7 @@ def _upgrade_workflow(workflow: JsonDict | None, setup_document: JsonDict) -> Js
     rpm_defaults = rpm_defaults_raw if isinstance(rpm_defaults_raw, dict) else {}
     active_dataset_raw = raw.get("activeDataset")
     active_dataset = (
-        copy.deepcopy(active_dataset_raw)
-        if isinstance(active_dataset_raw, dict)
-        else None
+        copy.deepcopy(active_dataset_raw) if isinstance(active_dataset_raw, dict) else None
     )
 
     upgraded = {
@@ -245,9 +241,7 @@ def ensure_workspace(
         )
     )
     if assembly is None or assembly.released_version_id is None:
-        raise ValueError(
-            "No released vehicle assembly is available to initialize validation."
-        )
+        raise ValueError("No released vehicle assembly is available to initialize validation.")
 
     tune = session.scalar(
         select(Tune)

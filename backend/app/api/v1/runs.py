@@ -40,9 +40,7 @@ SessionDep = Depends(get_database_session)
 ContainerDep = Depends(get_container)
 
 
-def submit_direct(
-    request, session, principal, container, http, execution_profile="default"
-):
+def submit_direct(request, session, principal, container, http, execution_profile="default"):
     previous = submission_attempt(
         http,
         session,
@@ -178,9 +176,7 @@ def activity(
 
 
 @router.post("/notices/{notice_id}/read", status_code=204)
-def read_notice(
-    notice_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
-):
+def read_notice(notice_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep):
     notice = access.owned(session.get(RunNotification, notice_id), principal)
     if notice.user_id != principal.user_id:
         raise access.unavailable()
@@ -200,9 +196,7 @@ def get_run(
 
 
 @router.post("/{run_id}/cancel", response_model=RunStatusResponse)
-def cancel(
-    run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep
-):
+def cancel(run_id: str, principal: Principal = PrincipalDep, session: Session = SessionDep):
     return jobs.status(jobs.cancel(session, principal, run_id))
 
 
@@ -252,13 +246,9 @@ def rerun(
 
 
 @router.get("/{run_id}/input", response_model=RunInputResponse)
-def input_document(
-    run_id: str, principal=PublicReaderDep, session: Session = SessionDep
-):
+def input_document(run_id: str, principal=PublicReaderDep, session: Session = SessionDep):
     run = access.public_run(session, run_id)
-    return RunInputResponse(
-        run=jobs.status(run), input_document_snapshot=run.input_contract
-    )
+    return RunInputResponse(run=jobs.status(run), input_document_snapshot=run.input_contract)
 
 
 @router.get("/{run_id}/preview", response_model=RunPreviewResponse)
@@ -301,9 +291,7 @@ def result(
     result_document = artifacts.get_database_run_result(session, run_id)
     return RunResultResponse(
         course=course_profile(run.input_contract, result_document, run.provenance),
-        scene_geometry=container.gateway.assembly_scene(
-            run.input_contract["assembly"]
-        ).geometry,
+        scene_geometry=container.gateway.assembly_scene(run.input_contract["assembly"]).geometry,
         run=jobs.status(run),
         input_document_snapshot=run.input_contract,
         result=result_document,

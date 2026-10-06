@@ -1,34 +1,81 @@
-# Git
+# Both Dockerfiles use the repository root as their build context.
+# Keep the application and CINDER install inputs; omit development material.
 .git/
-.gitattributes
 .github/
+.gitattributes
 .gitignore
 .pre-commit-config.yaml
 
-# Documentation
+# Repository documentation and retained research data
 docs/
-CodeOfConduct.md
-CONTRIBUTING.md
-ExceptionsGranted.md
-INSTALL.md
-LICENSE
+results/
+refs/
+experimental-data/
+tools/
 README.md
+INSTALL.md
+CONTRIBUTING.md
+CodeOfConduct.md
+LICENSE
+start.ps1
 !cvtModel/README.md
 !cvtModel/LICENSE
-refs/
+cvtModel/docs/
+cvtModel/examples/
+cvtModel/test/
+cvtModel/tools/
+cvtModel/launchTools/
+cvtModel/validation/
+cvtModel/generated_graphs/
+cvtModel/ramp_plots/
+cvtModel/theta_ramp_plots/
 
-# Data and scripts
-experimental-data/
-start.ps1
+# Tests and developer-only backend files are not runtime inputs.
+backend/test/
+backend/docs/
+backend/requirements-dev.txt
+frontend/test/
 
-# Build outputs
-*.csv
-__pycache__/
-node_modules/
-dist/
-build/
+# Local configuration and runtime data
+**/.env
+**/.env.*
+!**/.env.example
+**/.local/
+**/*.db
+**/*.db-*
+**/*.sqlite
+**/*.sqlite-*
+**/*.sqlite3
+**/*.sqlite3-*
+**/*.log
 
-# Local/generated contract and environment artifacts
+# Dependencies, caches and build/test output
 **/venv/
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.vite/
+**/.coverage
+**/.coverage.*
+**/coverage/
+**/htmlcov/
+**/dist/
+**/build/
+**/outputs/
+**/artifacts/
+**/.cinder_*_backups/
+**/black_box_api_artifacts/
+**/playwright-report/
+**/test-results/
+**/.vscode/
+**/.idea/
+**/.DS_Store
+
+# Contracts are generated from the installed backend/CINDER during the build.
 backend/generated/
 frontend/src/api/generated/

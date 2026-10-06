@@ -73,9 +73,7 @@ def execute(factory, settings, run):
     # Start the local budget before the DB round trip, so delay cannot extend it.
     reference = time.monotonic()
     with factory() as session:
-        remaining = (
-            aware(run.deadline_at) - jobs.database_now(session)
-        ).total_seconds()
+        remaining = (aware(run.deadline_at) - jobs.database_now(session)).total_seconds()
     deadline_monotonic = reference + max(0, remaining)
     with tempfile.TemporaryDirectory(prefix="cinder-job-") as directory:
         input_path, output_path = (

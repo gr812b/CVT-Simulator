@@ -73,19 +73,14 @@ def status(run, *, include_provenance=True):
         parent_run_id=run.parent_run_id,
         provenance=(run.provenance or {}) if include_provenance else {},
         runtime_identity=run.runtime_identity or {},
-        cancel_requested_at=aware(run.cancel_requested_at)
-        if run.cancel_requested_at
-        else None,
+        cancel_requested_at=aware(run.cancel_requested_at) if run.cancel_requested_at else None,
         deadline_at=aware(run.deadline_at) if run.deadline_at else None,
     )
 
 
 def validate_limits(case, settings):
     try:
-        if (
-            len(json.dumps(case, allow_nan=False).encode())
-            > settings.run_max_input_bytes
-        ):
+        if len(json.dumps(case, allow_nan=False).encode()) > settings.run_max_input_bytes:
             raise ValueError("Input document is too large.")
         span = case["scenario"]["time_span_s"]
         duration = span[1] - span[0]
@@ -111,14 +106,8 @@ def validate_limits(case, settings):
         if not 1 <= integrator["maximum_transitions"] <= 2000:
             raise ValueError("Maximum transitions must be between 1 and 2000.")
         if integrator.get("retain_dense_output"):
-            raise ValueError(
-                "Retaining dense solver output is disabled for queued jobs."
-            )
-        road = (
-            case.get("shaft_boundaries", {})
-            .get("secondary", {})
-            .get("road_profile", {})
-        )
+            raise ValueError("Retaining dense solver output is disabled for queued jobs.")
+        road = case.get("shaft_boundaries", {}).get("secondary", {}).get("road_profile", {})
         if len(road.get("segments", [])) > settings.road_max_segments:
             raise ValueError("Road profile exceeds the segment limit.")
     except (KeyError, TypeError, ValueError, OverflowError) as exc:
@@ -127,9 +116,7 @@ def validate_limits(case, settings):
 
 def existing_request(session, principal, request_key, request_payload):
     row = session.scalar(
-        select(Run).where(
-            Run.account_id == principal.account_id, Run.request_key == request_key
-        )
+        select(Run).where(Run.account_id == principal.account_id, Run.request_key == request_key)
     )
     if row and row.request_hash != canonical_json_hash(request_payload):
         raise ApiProblem(
@@ -141,21 +128,17 @@ def existing_request(session, principal, request_key, request_payload):
 
 
 def check_available(session, account_id, settings):
-    active = session.scalar(
-        select(Run).where(Run.account_id == account_id, Run.status.in_(ACTIVE))
-    )
+    active = session.scalar(select(Run).where(Run.account_id == account_id, Run.status.in_(ACTIVE)))
     if active:
         now = database_now(session)
         expired = (
             active.status == "queued"
-            and aware(active.submitted_at)
-            + timedelta(seconds=settings.run_queue_timeout_seconds)
+            and aware(active.submitted_at) + timedelta(seconds=settings.run_queue_timeout_seconds)
             < now
         ) or (
             active.status == "running"
             and active.deadline_at is not None
-            and aware(active.deadline_at)
-            + timedelta(seconds=settings.run_recovery_grace_seconds)
+            and aware(active.deadline_at) + timedelta(seconds=settings.run_recovery_grace_seconds)
             < now
         )
         if not expired:
@@ -201,18 +184,14 @@ def submit(
         )
     # Acquire the write lock only after potentially expensive validation.
     session.execute(
-        update(Account)
-        .where(Account.id == principal.account_id)
-        .values(updated_at=utc_now())
+        update(Account).where(Account.id == principal.account_id).values(updated_at=utc_now())
     )
     existing = existing_request(session, principal, request_key, request_payload)
     if existing:
         return existing
     recover(session, settings, principal.account_id)
     active = session.scalar(
-        select(Run).where(
-            Run.account_id == principal.account_id, Run.status.in_(ACTIVE)
-        )
+        select(Run).where(Run.account_id == principal.account_id, Run.status.in_(ACTIVE))
     )
     if active:
         raise ApiProblem(
@@ -227,8 +206,7 @@ def submit(
         .select_from(Run)
         .where(
             Run.account_id == principal.account_id,
-            Run.submitted_at
-            > now - timedelta(seconds=settings.run_submission_window_seconds),
+            Run.submitted_at > now - timedelta(seconds=settings.run_submission_window_seconds),
         )
     )
     if count >= settings.run_submission_limit:
@@ -296,9 +274,7 @@ def _notify(session, run):
     for user_id in session.scalars(
         select(AccountUser.user_id).where(AccountUser.account_id == run.account_id)
     ):
-        session.add(
-            RunNotification(account_id=run.account_id, user_id=user_id, run_id=run.id)
-        )
+        session.add(RunNotification(account_id=run.account_id, user_id=user_id, run_id=run.id))
 
 
 def recover(session, settings, account_id=None):
@@ -310,16 +286,10 @@ def recover(session, settings, account_id=None):
     now = database_now(session)
     expired = (
         (Run.status == "running")
-        & (
-            Run.deadline_at
-            < now - timedelta(seconds=settings.run_recovery_grace_seconds)
-        )
+        & (Run.deadline_at < now - timedelta(seconds=settings.run_recovery_grace_seconds))
     ) | (
         (Run.status == "queued")
-        & (
-            Run.submitted_at
-            < now - timedelta(seconds=settings.run_queue_timeout_seconds)
-        )
+        & (Run.submitted_at < now - timedelta(seconds=settings.run_queue_timeout_seconds))
     )
     stmt = select(Run).where(expired)
     if account_id:
@@ -330,9 +300,7 @@ def recover(session, settings, account_id=None):
             "completed_at": now,
             "worker_token": None,
             "error": {
-                "code": "worker_interrupted"
-                if run.status == "running"
-                else "queue_timeout",
+                "code": "worker_interrupted" if run.status == "running" else "queue_timeout",
                 "message": "The worker did not finish within its deadline. You can retry as a new run.",
             },
         }
@@ -345,9 +313,7 @@ def recover(session, settings, account_id=None):
             session.refresh(run)
             if run.summary_series:
                 saved = artifacts.get_database_run_result(session, run.id)
-                saved["metrics"].update(
-                    completed=False, termination_reason=run.error["code"]
-                )
+                saved["metrics"].update(completed=False, termination_reason=run.error["code"])
                 _save_result(session, run, saved)
             _notify(session, run)
     session.flush()
@@ -357,10 +323,7 @@ def recover(session, settings, account_id=None):
 def claim(session, settings):
     recover(session, settings)
     for run_id in session.scalars(
-        select(Run.id)
-        .where(Run.status == "queued")
-        .order_by(Run.submitted_at, Run.id)
-        .limit(10)
+        select(Run.id).where(Run.status == "queued").order_by(Run.submitted_at, Run.id).limit(10)
     ):
         now, token = database_now(session), str(uuid4())
         if session.execute(
@@ -411,20 +374,12 @@ def cancel(session, principal, run_id):
 
 def _save_result(session, run, result):
     """Replace the durable full result and preview in the caller's transaction."""
-    artifacts.verify_result_contract(
-        result, expected_version=run.result_contract_version
-    )
+    artifacts.verify_result_contract(result, expected_version=run.result_contract_version)
     preview = artifacts.build_preview_from_result(result)
     session.execute(delete(RunArtifact).where(RunArtifact.run_id == run.id))
+    session.add(artifacts.create_result_artifact(run_id=run.id, cache_entry_id=None, result=result))
     session.add(
-        artifacts.create_result_artifact(
-            run_id=run.id, cache_entry_id=None, result=result
-        )
-    )
-    session.add(
-        artifacts.create_preview_artifact(
-            run_id=run.id, cache_entry_id=None, preview=preview
-        )
+        artifacts.create_preview_artifact(run_id=run.id, cache_entry_id=None, preview=preview)
     )
     run.summary_scalars = artifacts.summary_scalars(result)
     run.summary_series = preview
@@ -481,13 +436,11 @@ def finish(session, run_id, token, *, result=None, error=None, terminal="failed"
 def activity(session, principal, settings):
     recover(session, settings, principal.account_id)
     active = session.scalar(
-        select(Run).where(
-            Run.account_id == principal.account_id, Run.status.in_(ACTIVE)
-        )
+        select(Run).where(Run.account_id == principal.account_id, Run.status.in_(ACTIVE))
     )
-    condition = (
-        RunNotification.account_id == principal.account_id
-    ) & RunNotification.read_at.is_(None)
+    condition = (RunNotification.account_id == principal.account_id) & RunNotification.read_at.is_(
+        None
+    )
     condition = condition & (RunNotification.user_id == principal.user_id)
     notices = session.scalars(
         select(RunNotification)
@@ -501,9 +454,7 @@ def activity(session, principal, settings):
             {
                 "id": notice.id,
                 "created_at": aware(notice.created_at),
-                "run": status(
-                    session.get(Run, notice.run_id), include_provenance=False
-                ),
+                "run": status(session.get(Run, notice.run_id), include_provenance=False),
             }
             for notice in notices
         ],

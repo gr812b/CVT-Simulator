@@ -34,17 +34,11 @@ def send_password_reset(settings: Settings, recipient: str, token: str) -> None:
             output.write(message.as_bytes())
         return
     try:
-        transport = (
-            smtplib.SMTP_SSL if settings.smtp_security == "tls" else smtplib.SMTP
-        )
+        transport = smtplib.SMTP_SSL if settings.smtp_security == "tls" else smtplib.SMTP
         options = (
-            {"context": ssl.create_default_context()}
-            if settings.smtp_security == "tls"
-            else {}
+            {"context": ssl.create_default_context()} if settings.smtp_security == "tls" else {}
         )
-        with transport(
-            settings.smtp_host, settings.smtp_port, timeout=15, **options
-        ) as smtp:
+        with transport(settings.smtp_host, settings.smtp_port, timeout=15, **options) as smtp:
             if settings.smtp_security == "starttls":
                 smtp.starttls(context=ssl.create_default_context())
             if settings.smtp_username:

@@ -152,9 +152,7 @@ def create(
         expected=request.expected_revision_id,
         note=request.change_note,
     )
-    return ExperimentSaved(
-        detail=service.detail(session, principal, obj.id), changed=changed
-    )
+    return ExperimentSaved(detail=service.detail(session, principal, obj.id), changed=changed)
 
 
 @router.get("/items/{object_id}/detail", response_model=ExperimentDetail)
@@ -184,9 +182,7 @@ def save(
         expected=request.expected_revision_id,
         note=request.change_note,
     )
-    return ExperimentSaved(
-        detail=service.detail(session, principal, obj.id), changed=changed
-    )
+    return ExperimentSaved(detail=service.detail(session, principal, obj.id), changed=changed)
 
 
 @router.post("/copy", response_model=ExperimentDetail, status_code=201)
@@ -241,9 +237,7 @@ def restore(
         expected=request.expected_revision_id,
         note=f"Restored revision {revision.number} as a new revision.",
     )
-    return ExperimentSaved(
-        detail=service.detail(session, principal, obj.id), changed=changed
-    )
+    return ExperimentSaved(detail=service.detail(session, principal, obj.id), changed=changed)
 
 
 @router.get("/compare", response_model=ExperimentCompare)
@@ -253,9 +247,7 @@ def compare(
     session: Session = SessionDep,
     principal=PublicDep,
 ):
-    left, right = [
-        service.get_revision(session, principal, rev) for rev in (before, after)
-    ]
+    left, right = [service.get_revision(session, principal, rev) for rev in (before, after)]
     if left.experiment_id != right.experiment_id:
         raise access.unavailable()
     return ExperimentCompare(differences=differences(left.document, right.document))

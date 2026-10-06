@@ -171,7 +171,7 @@ export function ApplicationShell() {
       <AppShell.Navbar p={compact ? 8 : 'md'} id="workspace-navigation">
         {replay && (
           <AppShell.Section visibleFrom="sm" mb="md">
-            <Group justify="space-between">
+            <Group justify={compact ? 'center' : 'space-between'}>
               {!compact && (
                 <Text size="sm" fw={600}>
                   Navigation
@@ -182,6 +182,7 @@ export function ApplicationShell() {
                 withArrow
               >
                 <ActionIcon
+                  size={compact ? 38 : 'md'}
                   variant="default"
                   aria-label={
                     compact ? 'Expand navigation' : 'Collapse navigation'
@@ -224,8 +225,9 @@ export function ApplicationShell() {
                     styles={
                       compact
                         ? {
-                            root: { padding: 10 },
+                            root: { padding: 10, justifyContent: 'center' },
                             section: { marginInlineEnd: 0 },
+                            body: { display: 'none' },
                           }
                         : undefined
                     }

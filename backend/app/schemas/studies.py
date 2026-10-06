@@ -32,9 +32,7 @@ class GeometryDesignContextRequest(ApiModel):
     @model_validator(mode="after")
     def _check_shift_range(self) -> GeometryDesignContextRequest:
         if self.max_shift_m < self.deadzone_shift_m:
-            raise ValueError(
-                "max_shift_m must be greater than or equal to deadzone_shift_m."
-            )
+            raise ValueError("max_shift_m must be greater than or equal to deadzone_shift_m.")
         return self
 
 

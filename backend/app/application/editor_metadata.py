@@ -16,9 +16,7 @@ def editor_document(gateway: CinderGateway) -> EditorDocument:
             "value_kind": "number",
             "required": True,
             "enum_values": [],
-            "exposure": "scenario"
-            if path.startswith(("/scenario/", "/host/"))
-            else "design",
+            "exposure": "scenario" if path.startswith(("/scenario/", "/host/")) else "design",
         }
         for key in ("minimum", "maximum", "when"):
             if key in hint:

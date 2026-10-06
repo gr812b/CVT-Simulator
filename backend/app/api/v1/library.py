@@ -59,8 +59,7 @@ def list_institutions(
 ) -> InstitutionListResponse:
     return InstitutionListResponse(
         items=[
-            _institution_response(item)
-            for item in service.list_institutions(session, query=query)
+            _institution_response(item) for item in service.list_institutions(session, query=query)
         ]
     )
 
@@ -78,9 +77,7 @@ def list_tunes(
     if not include_deleted:
         stmt = stmt.where(Tune.deleted_at.is_(None))
     stmt = stmt.order_by(Tune.updated_at.desc(), Tune.name.asc())
-    return TuneListResponse(
-        items=[_tune_response(item) for item in session.scalars(stmt).all()]
-    )
+    return TuneListResponse(items=[_tune_response(item) for item in session.scalars(stmt).all()])
 
 
 @router.post("/tunes", response_model=TuneResponse, status_code=status.HTTP_201_CREATED)
@@ -90,7 +87,9 @@ def create_tune(
     principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
     principal.require_write()
-    raise ApiProblem(410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes.")
+    raise ApiProblem(
+        410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes."
+    )
 
 
 @router.patch("/tunes/{tune_id}", response_model=TuneResponse)
@@ -101,7 +100,9 @@ def update_tune(
     principal: Principal = Depends(get_current_principal),
 ) -> TuneResponse:
     access.owned(session.get(Tune, tune_id), principal, write=True)
-    raise ApiProblem(410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes.")
+    raise ApiProblem(
+        410, "tune_endpoint_retired", "Use the revisioned /experiments/items API to save tunes."
+    )
 
 
 @router.get("/load-cases", response_model=LoadCaseListResponse)
@@ -122,9 +123,7 @@ def list_load_cases(
     )
 
 
-@router.post(
-    "/load-cases", response_model=LoadCaseResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/load-cases", response_model=LoadCaseResponse, status_code=status.HTTP_201_CREATED)
 def create_load_case(
     request: CreateLoadCaseRequest,
     session: Session = Depends(get_database_session),
@@ -199,9 +198,7 @@ def update_execution_preset(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ) -> ExecutionPresetResponse:
-    preset = access.owned(
-        session.get(ExecutionPreset, preset_id), principal, write=True
-    )
+    preset = access.owned(session.get(ExecutionPreset, preset_id), principal, write=True)
     if preset is None:
         raise ApiProblem(
             404,
@@ -306,9 +303,7 @@ def update_library_draft(
     access.library_object(session, principal, resource, object_id, write=True)
     data = request.model_dump(exclude_unset=True)
     try:
-        obj = service.update_draft(
-            session, resource=resource, object_id=object_id, data=data
-        )
+        obj = service.update_draft(session, resource=resource, object_id=object_id, data=data)
     except LibraryError as exc:
         raise _not_found(exc) from exc
     return _object_response(resource, obj)
@@ -341,9 +336,7 @@ def release_library_object(
     return _version_response(resource, version)
 
 
-@router.post(
-    "/{resource}/versions/{version_id}/fork", response_model=LibraryObjectResponse
-)
+@router.post("/{resource}/versions/{version_id}/fork", response_model=LibraryObjectResponse)
 def fork_library_version(
     resource: LibraryResource,
     version_id: str,
@@ -404,9 +397,7 @@ def get_library_version(
     return _version_response(resource, version)
 
 
-@router.post(
-    "/{resource}/versions/{version_id}/deprecate", response_model=LibraryVersionResponse
-)
+@router.post("/{resource}/versions/{version_id}/deprecate", response_model=LibraryVersionResponse)
 def deprecate_library_version(
     resource: LibraryResource,
     version_id: str,
@@ -414,17 +405,13 @@ def deprecate_library_version(
     session: Session = Depends(get_database_session),
     principal: Principal = Depends(get_current_principal),
 ) -> LibraryVersionResponse:
-    version = access.library_version(
-        session, principal, resource, version_id, write=True
-    )
+    version = access.library_version(session, principal, resource, version_id, write=True)
     if request.superseded_by_version_id:
         successor = access.library_version(
             session, principal, resource, request.superseded_by_version_id, write=True
         )
         binding = service.binding_for(resource)
-        if getattr(version, binding.object_fk_name) != getattr(
-            successor, binding.object_fk_name
-        ):
+        if getattr(version, binding.object_fk_name) != getattr(successor, binding.object_fk_name):
             raise ApiProblem(
                 422,
                 "version_parent_mismatch",
@@ -582,9 +569,7 @@ def _not_found(exc: Exception) -> ApiProblem:
     return ApiProblem(404, "library_object_not_found", str(exc))
 
 
-def _read_object_response(
-    resource: str, obj: Any, principal: Principal
-) -> LibraryObjectResponse:
+def _read_object_response(resource: str, obj: Any, principal: Principal) -> LibraryObjectResponse:
     response = _object_response(resource, obj)
     if obj.account_id != principal.account_id:
         response.draft_payload = None

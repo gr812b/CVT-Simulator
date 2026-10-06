@@ -202,6 +202,25 @@ export function ExperimentPage() {
     setScenario(next.document);
     setPreview(null);
   };
+  const acceptTune = (next: ExperimentDetail) => {
+    if (next.document.kind !== 'tunes') return;
+    setTune(next.document);
+    setTuneDetail(next);
+    setTunes((old) => [
+      ...old.filter((item) => item.id !== next.item.id),
+      next.item,
+    ]);
+    // Editing the default keeps its identity but creates a new revision. Keep
+    // the picker cache in sync so choosing it again cannot restore old values.
+    setSurface((current) =>
+      current?.default_tune.item.id === next.item.id
+        ? { ...current, default_tune: next }
+        : current,
+    );
+    // A tune linked from the catalog should follow later explicit choices.
+    setRequestedTune((current) => (current ? next : null));
+    setPreview(null);
+  };
   useEffect(() => {
     let disposed = false;
     setBusy(true);
@@ -337,7 +356,7 @@ export function ExperimentPage() {
       if (
         dirty &&
         !window.confirm(
-          'Replace the current working setup and tune with this saved setup?',
+          'Replace the current working setup with this saved setup?',
         )
       )
         return;
@@ -353,11 +372,13 @@ export function ExperimentPage() {
         requestedTune.document.cvt_revision_id === nextSurface.cvt_revision_id
           ? requestedTune
           : nextSurface.default_tune;
+      const keepTune = tune?.cvt_revision_id === nextSurface.cvt_revision_id;
       setSetupDetail(next);
       setSetup(vehicle);
       setSurface(nextSurface);
-      setTune(chosen.document as Tune);
-      setTuneDetail(chosen);
+      // Vehicle changes do not discard the selected tune for the same CVT.
+      setTune(keepTune ? tune : (chosen.document as Tune));
+      setTuneDetail(keepTune ? tuneDetail : chosen);
       setPrimary(null);
       setVehicleMassOverride(null);
       setPreview(null);
@@ -416,13 +437,14 @@ export function ExperimentPage() {
       (current.document.kind === 'setups' &&
         nextSurface.cvt_revision_id !== current.document.data.cvt.revision_id)
     ) {
-      const previousSurface = nextSurface;
       nextSurface = await getTuneSurface(
         current.document.kind === 'setups'
           ? current.document.data.cvt.revision_id!
           : '',
       );
-      if (previousSurface?.cvt_revision_id !== nextSurface.cvt_revision_id) {
+      // Saving a setup may refresh its surface. Only changing the CVT itself
+      // requires another tune; the latest saved/run-only values take priority.
+      if (nextTune?.cvt_revision_id !== nextSurface.cvt_revision_id) {
         const chosen =
           requestedTune?.document.kind === 'tunes' &&
           requestedTune.document.cvt_revision_id === nextSurface.cvt_revision_id
@@ -430,6 +452,8 @@ export function ExperimentPage() {
             : nextSurface.default_tune;
         nextTune = chosen.document as Tune;
         setTuneDetail(chosen);
+        // An explicit CVT change supersedes an incompatible catalog link.
+        if (chosen !== requestedTune) setRequestedTune(null);
       }
       setSurface(nextSurface);
       setTune(nextTune);
@@ -766,10 +790,7 @@ export function ExperimentPage() {
                                           tunes.find((item) => item.id === id)
                                             ?.revision_id,
                                         );
-                                  if (next.document.kind === 'tunes') {
-                                    setTune(next.document);
-                                    setTuneDetail(next);
-                                  }
+                                  acceptTune(next);
                                 })
                               }
                             />
@@ -1135,12 +1156,7 @@ export function ExperimentPage() {
                 surface={surface}
                 onClose={() => setTuneOpen(false)}
                 onSaved={(next) => {
-                  setTuneDetail(next);
-                  if (next.document.kind === 'tunes') setTune(next.document);
-                  setTunes((old) => [
-                    ...old.filter((item) => item.id !== next.item.id),
-                    next.item,
-                  ]);
+                  acceptTune(next);
                   setTuneOpen(false);
                 }}
                 onUse={(value) => {

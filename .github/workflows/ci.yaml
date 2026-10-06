@@ -51,7 +51,7 @@ jobs:
           python -m coverage report
 
   backend-tests:
-    name: Backend Lint & Contract Validation
+    name: Backend Lint, Contracts & Regression Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -115,6 +115,13 @@ jobs:
           source venv/bin/activate
           python -m compileall -q app
 
+      - name: Run backend regression tests
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m pip install -r requirements-dev.txt
+          python -m pytest
+
       - name: Verify bundled tuned-launch preset
         working-directory: ./backend
         run: |
@@ -143,7 +150,7 @@ jobs:
           if-no-files-found: error
 
   web-tests:
-    name: Frontend Lint & Build
+    name: Frontend Lint, Regression Tests & Build
     needs: backend-tests
     runs-on: ubuntu-latest
 
@@ -174,6 +181,18 @@ jobs:
       - name: Run ESLint
         working-directory: ./frontend
         run: npm run lint
+
+      - name: Run frontend helper checks
+        working-directory: ./frontend
+        run: npm run test:helpers
+
+      - name: Install test browser
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run saved-tune browser regressions
+        working-directory: ./frontend
+        run: npm run test:browser
 
       - name: Build frontend
         working-directory: ./frontend

@@ -108,9 +108,7 @@ def experiment(
     responses={
         200: {
             "content": {
-                "application/octet-stream": {
-                    "schema": {"type": "string", "format": "binary"}
-                }
+                "application/octet-stream": {"schema": {"type": "string", "format": "binary"}}
             }
         }
     },

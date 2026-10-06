@@ -730,9 +730,7 @@ class ArchitectureComparisonAnalysisArchitectureA(TypedDict):
     certified_path_count: int
     shape_sample_count: int
     footprint: ArchitectureComparisonAnalysisArchitectureAFootprint
-    specific_leverage_envelope: (
-        ArchitectureComparisonAnalysisArchitectureASpecificLeverageEnvelope
-    )
+    specific_leverage_envelope: ArchitectureComparisonAnalysisArchitectureASpecificLeverageEnvelope
 
 
 @with_config(ConfigDict(extra="allow"))
@@ -765,9 +763,7 @@ class ArchitectureComparisonAnalysisArchitectureB(TypedDict):
     certified_path_count: int
     shape_sample_count: int
     footprint: ArchitectureComparisonAnalysisArchitectureBFootprint
-    specific_leverage_envelope: (
-        ArchitectureComparisonAnalysisArchitectureBSpecificLeverageEnvelope
-    )
+    specific_leverage_envelope: ArchitectureComparisonAnalysisArchitectureBSpecificLeverageEnvelope
 
 
 @with_config(ConfigDict(extra="allow"))

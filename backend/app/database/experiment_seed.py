@@ -11,17 +11,13 @@ from app.database.seed import SEED_ACCOUNT_ID, SEED_USER_ID
 from app.schemas.experiments import ScenarioDocument, SpatialRoad
 
 
-def seed_experiments(session):
+def _seed_scenarios(session):
     templates = feature_templates()
     examples = [
         ("demo-course", [demo_scenario()]),
         (
             "flat",
-            [
-                default_scenario().model_copy(
-                    update={"name": "CINDER Default · flat road"}
-                )
-            ],
+            [default_scenario().model_copy(update={"name": "CINDER Default · flat road"})],
         ),
         (
             "hill",
@@ -29,7 +25,14 @@ def seed_experiments(session):
                 ScenarioDocument(
                     kind="scenarios",
                     name="CINDER Default · climb and descent",
-                    road=SpatialRoad(features=templates[:3]),
+                    notes="20 m flat launch, 90 m at +20°, then 90 m at −20°. Finish at 200 m.",
+                    road=SpatialRoad(
+                        features=[
+                            templates[0],
+                            {**templates[1], "length_m": 90},
+                            {**templates[2], "length_m": 90},
+                        ]
+                    ),
                 )
             ],
         ),
@@ -39,24 +42,28 @@ def seed_experiments(session):
                 ScenarioDocument(
                     kind="scenarios",
                     name="CINDER Default · whoops",
-                    road=SpatialRoad(features=[templates[0], templates[5]]),
-                ),
-                ScenarioDocument(
-                    kind="scenarios",
-                    name="CINDER Default · whoops",
-                    notes="Revision 2: gentler, wider whoops for editor/history practice.",
+                    notes=(
+                        "Eight 0.8 m-high whoops at 4 m spacing start after 5 m, "
+                        "followed by a flat finish at 200 m."
+                    ),
                     road=SpatialRoad(
                         features=[
-                            templates[0],
-                            {**templates[5], "height_m": 0.3, "spacing_m": 8},
+                            {**templates[0], "name": "Launch", "length_m": 5},
+                            templates[5],
+                            {
+                                **templates[0],
+                                "id": "finish",
+                                "name": "Finish",
+                                "length_m": 163,
+                            },
                         ]
                     ),
                 ),
             ],
         ),
     ]
-    for angle in (-15, -10, -5, 5, 10, 15):
-        length = 1000.0
+    for angle in (-30, -15, 15, 30):
+        length = 200.0
         examples.append(
             (
                 f"grade:{angle}",
@@ -86,7 +93,7 @@ def seed_experiments(session):
         existing = session.get(Experiment, object_id)
         if existing:
             if (
-                key == "demo-course"
+                existing.kind == "scenarios"
                 and existing.is_sample
                 and existing.account_id == SEED_ACCOUNT_ID
             ):
@@ -100,12 +107,13 @@ def seed_experiments(session):
                         document=payload,
                         content_hash=content_hash,
                         created_by_user_id=SEED_USER_ID,
-                        change_note="Update the built-in demo course definition or description.",
+                        change_note="Update the built-in load case definition or description.",
                     )
                     session.add(revision)
                     session.flush()
                     existing.current_revision_id = revision.id
-                    existing.name = documents[-1].name
+                existing.name = documents[-1].name
+                existing.archived = False
             continue
         obj = Experiment(
             id=object_id,
@@ -132,6 +140,24 @@ def seed_experiments(session):
             session.flush()
             obj.current_revision_id = revision.id
         session.flush()
+
+    # Retire the replaced defaults without deleting their immutable revisions.
+    # Existing runs and explicit revision selections can still resolve them.
+    for angle in (-10, -5, 5, 10):
+        old = session.get(Experiment, sample_id(f"scenario:grade:{angle}"))
+        if (
+            old is not None
+            and old.kind == "scenarios"
+            and old.is_sample
+            and old.account_id == SEED_ACCOUNT_ID
+            and not old.archived
+        ):
+            old.archived = True
+    session.flush()
+
+
+def seed_experiments(session):
+    _seed_scenarios(session)
     _seed_sample_tunes(session)
     from sqlalchemy import select
 
@@ -152,13 +178,8 @@ def _seed_sample_tunes(session):
     from app.schemas.experiments import TuneDocument
 
     cvt = session.get(CVTDesignVersion, sample_id("cvt:r1"))
-    assembly = _current_assembly_document(
-        cvt.cinder_assembly, baseline_case()["execution"]
-    )
-    defaults = {
-        field["key"]: field["default"]
-        for field in parameters(assembly, cvt.tuning_schema)
-    }
+    assembly = _current_assembly_document(cvt.cinder_assembly, baseline_case()["execution"])
+    defaults = {field["key"]: field["default"] for field in parameters(assembly, cvt.tuning_schema)}
     # Section 4.5 / appendix table: exact tip-mass and spring changes from R00.
     cases = [
         ("R00", "Reference", {}, "Reference McMaster configuration."),
@@ -261,9 +282,7 @@ def seed_experiment_fixtures(session, *, account_id, user_id, setup_revision_id,
     engine = session.get(EngineVersion, setup.engine_version_id)
     output = session.get(OutputSystemVersion, setup.output_system_version_id)
     case = baseline_case()
-    case["assembly"] = _current_assembly_document(
-        cvt.cinder_assembly, case["execution"]
-    )
+    case["assembly"] = _current_assembly_document(cvt.cinder_assembly, case["execution"])
     case["shaft_boundaries"] = {
         "primary": _current_primary_boundary(engine.input_boundary),
         "secondary": _current_secondary_boundary(output.output_boundary_template),
@@ -303,17 +322,17 @@ def seed_experiment_fixtures(session, *, account_id, user_id, setup_revision_id,
             execution_options=options,
             provenance={"development_fixture": True, "setup_revision_id": setup.id},
             completed_at=utc_now() if state != "queued" else None,
-            error={
-                "code": "development_fixture",
-                "message": "Deliberately failed development fixture; no simulation was executed.",
-            }
-            if state == "failed"
-            else None,
+            error=(
+                {
+                    "code": "development_fixture",
+                    "message": "Deliberately failed development fixture; no simulation was executed.",
+                }
+                if state == "failed"
+                else None
+            ),
         )
         session.add(row)
         session.flush()
         if state != "queued":
-            session.add(
-                RunNotification(account_id=account_id, user_id=user_id, run_id=row.id)
-            )
+            session.add(RunNotification(account_id=account_id, user_id=user_id, run_id=row.id))
     session.flush()
