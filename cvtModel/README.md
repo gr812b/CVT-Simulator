@@ -11,7 +11,7 @@ frontend and backend.
 ## Install
 
 ```bash
-python -m pip install cinder-cvt==1.1.0
+python -m pip install cinder-cvt==1.1.5
 ```
 
 Verify the installed distribution:
@@ -23,7 +23,7 @@ python -c "import cinder; print(cinder.__version__)"
 Expected output for this release:
 
 ```text
-1.1.0
+1.1.5
 ```
 
 Runtime dependencies are intentionally small:
@@ -57,14 +57,14 @@ frontend or backend.
 
 ## Documentation
 
-- [Getting started](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/GETTING_STARTED.md)
-- [Public document contracts](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/PUBLIC_CONTRACTS.md)
-- [Source layout](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/SOURCE_LAYOUT.md)
-- [Simulation-document JSON Schema](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/DOCUMENT_SCHEMA.md)
-- [Geometry study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/GEOMETRY_STUDY_API.md)
-- [Actuation study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/ACTUATION_STUDY_API.md)
-- [Fixed-pivot flyweight mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/FIXED_PIVOT_FLYWEIGHT.md)
-- [Hybrid impact mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.0/cvtModel/docs/HYBRID_IMPACT_MECHANICS.md)
+- [Getting started](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/GETTING_STARTED.md)
+- [Public document contracts](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/PUBLIC_CONTRACTS.md)
+- [Source layout](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/SOURCE_LAYOUT.md)
+- [Simulation-document JSON Schema](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/DOCUMENT_SCHEMA.md)
+- [Geometry study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/GEOMETRY_STUDY_API.md)
+- [Actuation study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/ACTUATION_STUDY_API.md)
+- [Fixed-pivot flyweight mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/FIXED_PIVOT_FLYWEIGHT.md)
+- [Hybrid impact mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.1.5/cvtModel/docs/HYBRID_IMPACT_MECHANICS.md)
 
 ## Repository-only material
 
