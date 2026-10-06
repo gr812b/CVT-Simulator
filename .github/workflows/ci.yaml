@@ -72,23 +72,12 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install "black>=24" "flake8>=7"
 
-      - name: Verify backend uses packaged CINDER
+      - name: Verify backend uses the pinned published CINDER
         working-directory: ./backend
         run: |
           source venv/bin/activate
-          python - <<'PY'
-          import os
-          from pathlib import Path
-
-          import cinder
-
-          module_path = Path(cinder.__file__).resolve()
-          repo_path = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
-          local_cinder = (repo_path / "cvtModel").resolve()
-
-          assert local_cinder not in module_path.parents, module_path
-          print(f"Backend is using CINDER {cinder.__version__} from {module_path}")
-          PY
+          python -m pip check
+          python -m app.scripts.check_cinder_install
 
       - name: Validate database migrations
         working-directory: ./backend
@@ -161,7 +150,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -204,3 +193,23 @@ jobs:
           name: frontend-build
           path: frontend/dist
           if-no-files-found: error
+
+  container-builds:
+    name: Production images (build only)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build backend image
+        run: docker build --pull -f backend/Dockerfile -t cinder-ci-backend .
+
+      - name: Check packaged CINDER and retained demo
+        run: |
+          docker run --rm --network none cinder-ci-backend python -m app.scripts.check_cinder_install
+          docker run --rm --network none cinder-ci-backend python -c "from app.application.demo import playback, scene; assert playback().result['metrics']['completed']; scene(); print('Retained demo and landing scene loaded')"
+
+      - name: Build frontend image
+        run: docker build --pull -f frontend/Dockerfile -t cinder-ci-frontend .

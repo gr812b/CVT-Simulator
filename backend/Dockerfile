@@ -8,15 +8,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install the reporting-capable CINDER source from this same checkout.
-COPY cvtModel/pyproject.toml cvtModel/README.md cvtModel/LICENSE /cvtModel/
-COPY cvtModel/src /cvtModel/src
+# Install the pinned published CINDER distribution, not the source checkout.
 COPY backend/requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir -r /app/requirements.txt
+    && python -m pip install --no-cache-dir -r /app/requirements.txt \
+    && python -m pip check
 
 # Includes app/, presets/, and the rest of the runtime backend package.
 COPY backend /app
+RUN python -m app.scripts.check_cinder_install
 
 EXPOSE 8000
 
