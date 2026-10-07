@@ -21,6 +21,7 @@ export function VehicleEditor({
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <QuantityInput
+          scope="vehicle"
           label="Total vehicle mass"
           value={value.mass_kg}
           unit="kg"
@@ -30,6 +31,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ mass_kg: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Loaded wheel radius"
           value={value.wheel_radius_m}
           unit="mm"
@@ -38,6 +40,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ wheel_radius_m: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Final-drive reduction"
           value={value.reduction_ratio}
           min={0}
@@ -46,6 +49,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ reduction_ratio: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Total wheel rotational inertia"
           value={value.wheel_rotational_inertia_kg_m2}
           unit="kg·m²"
@@ -55,6 +59,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ wheel_rotational_inertia_kg_m2: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Other inertia at the secondary shaft"
           value={value.direct_secondary_shaft_inertia_kg_m2}
           unit="kg·m²"
@@ -66,6 +71,7 @@ export function VehicleEditor({
           }
         />
         <QuantityInput
+          scope="vehicle"
           label="Rolling resistance coefficient"
           value={value.rolling_resistance_coefficient}
           min={0}
@@ -73,6 +79,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ rolling_resistance_coefficient: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Drag coefficient"
           value={value.drag_coefficient}
           min={0}
@@ -80,6 +87,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ drag_coefficient: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Frontal area"
           value={value.frontal_area_m2}
           unit="m²"
@@ -88,6 +96,7 @@ export function VehicleEditor({
           onChange={(next) => patch({ frontal_area_m2: next })}
         />
         <QuantityInput
+          scope="vehicle"
           label="Air density"
           value={value.air_density_kg_per_m3}
           unit="kg/m³"

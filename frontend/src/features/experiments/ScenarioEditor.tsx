@@ -65,6 +65,7 @@ export function ScenarioEditor({
                 />
                 {stops?.rollback_m !== null && (
                   <QuantityInput
+                    scope="course"
                     label="Rollback from furthest point" unit="m" min={0.05} scale={1}
                     value={stops?.rollback_m ?? 5}
                     onChange={rollback_m => setStops({ rollback_m })}
@@ -126,6 +127,7 @@ export function ScenarioEditor({
                 }
               />
               <QuantityInput
+                scope="hardware"
                 label="Initial shift position"
                 unit="mm"
                 scale={1000}
@@ -150,6 +152,7 @@ export function ScenarioEditor({
                 }
               />
               <QuantityInput
+                scope="course"
                 label="Initial road distance"
                 unit="m"
                 scale={1}

@@ -32,6 +32,7 @@ from app.schemas.auth import (
     LoginRequest,
     RegisterRequest,
     ResetPasswordRequest,
+    UnitPreferences,
     UpdateProfileRequest,
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
@@ -154,6 +155,24 @@ def profile(
 ) -> AuthSessionResponse:
     principal.user.display_name = body.display_name
     principal.user.school = body.school
+    session.flush()
+    return principal.response()
+
+
+@router.patch("/unit-preferences", response_model=AuthSessionResponse)
+def unit_preferences(
+    body: UnitPreferences,
+    principal: Principal = Depends(get_current_principal),
+    session: Session = Depends(get_database_session),
+) -> AuthSessionResponse:
+    # Serialize partial preference updates for the authenticated user only.
+    user = session.scalar(
+        select(User)
+        .where(User.id == principal.user_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    user.unit_preferences = body.apply_to(user.unit_preferences)
     session.flush()
     return principal.response()
 

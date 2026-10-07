@@ -24,8 +24,9 @@ function load(relative, dependencies = {}) {
   vm.runInNewContext(code, context, { filename });
   return context.exports;
 }
+const units = load('utils/units.ts');
 const { describeRunOutcome, outcomeDataMessage, outcomeProgress, outcomeLabel } =
-  load('features/results/runOutcome.ts');
+  load('features/results/runOutcome.ts', { '@utils/units': units });
 let count = 0;
 async function test(name, fn) {
   await fn();
@@ -113,6 +114,12 @@ await test('retained previews do not promise full playback after artifact evicti
 await test('a saved initial state is reported honestly, while non-finite progress is omitted', () => {
   assert.match(outcomeProgress(outcome({ has_data: true, reached_time_s: 0, reached_distance_m: 0 })), /0 s.*0 m/);
   assert.equal(outcomeProgress(outcome({ has_data: true, reached_time_s: NaN, reached_distance_m: Infinity })), null);
+});
+await test('run progress follows output length preferences without changing stored distance', () => {
+  const source = outcome({ has_data: true, reached_distance_m: 1 });
+  const prefs = units.presetUnitPreferences('imperial');
+  assert.match(outcomeProgress(source, prefs), /3\.281 ft/);
+  assert.equal(source.reached_distance_m, 1);
 });
 
 let responses = [], requests = 0;

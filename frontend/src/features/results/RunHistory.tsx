@@ -21,6 +21,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getHistory, type HistoryQuery, type RunHistoryPage } from './api';
 import { isActive, message } from '../experiments/api';
 import { describeRunOutcome, outcomeDataMessage, outcomeProgress } from './runOutcome';
+import { useAuth } from '@contexts/AuthContext';
 
 const statuses: NonNullable<HistoryQuery['status']>[] = [
   'queued',
@@ -44,6 +45,7 @@ export function RunHistory({
   publicView?: boolean;
   authorId?: string;
 }) {
+  const { unitPreferences } = useAuth();
   const [params, setParams] = useSearchParams();
   const search = params.get('q') ?? '';
   const [query] = useDebouncedValue(search, 250);
@@ -278,8 +280,8 @@ export function RunHistory({
                           {!isActive(run) && outcome.category !== 'success' && (
                             <Text size="sm" mt="xs">{outcome.message}</Text>
                           )}
-                          {outcomeProgress(outcome) && (
-                            <Text size="xs" c="dimmed">{outcomeProgress(outcome)}</Text>
+                          {outcomeProgress(outcome, unitPreferences) && (
+                            <Text size="xs" c="dimmed">{outcomeProgress(outcome, unitPreferences)}</Text>
                           )}
                           {!isActive(run) && outcome.category !== 'success' && (
                             <Text size="xs" c="dimmed">{outcomeDataMessage(outcome)}</Text>

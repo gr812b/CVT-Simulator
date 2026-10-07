@@ -46,7 +46,7 @@ const guide = [
 ];
 
 export function Dashboard() {
-  const { session } = useAuth();
+  const { session, unitPreferences } = useAuth();
   const { activity } = useRunActivity();
   const [recent, setRecent] = useState<RunStatus[]>([]);
   const [busy, setBusy] = useState(true);
@@ -136,9 +136,9 @@ export function Dashboard() {
                             Queue position: {run.queue_position}
                           </Text>
                         )}
-                      {outcomeProgress(describeRunOutcome(run)) && (
+                      {outcomeProgress(describeRunOutcome(run), unitPreferences) && (
                         <Text size="xs" c="dimmed">
-                          {outcomeProgress(describeRunOutcome(run))}
+                          {outcomeProgress(describeRunOutcome(run), unitPreferences)}
                         </Text>
                       )}
                     </Stack>

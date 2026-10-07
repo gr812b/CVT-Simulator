@@ -14,7 +14,8 @@ on:
 
 concurrency:
   group: containerize-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Finish publishing the current image pair before a newer release starts.
+  cancel-in-progress: false
 
 env:
   REGISTRY_GH: ghcr.io
@@ -22,8 +23,15 @@ env:
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/cvt-simulator-frontend
 
 jobs:
+  validate:
+    name: Validate release
+    uses: ./.github/workflows/ci.yaml
+    permissions:
+      contents: read
+
   deploy:
     name: Build and publish container images
+    needs: validate
     runs-on: ubuntu-latest
 
     permissions:
@@ -104,6 +112,8 @@ jobs:
         with:
           context: .
           file: backend/Dockerfile
+          build-args: |
+            CVT_IMAGE_REVISION=${{ github.sha }}
           push: false
           load: true
           pull: true
@@ -133,12 +143,14 @@ jobs:
           cache-from: type=gha,scope=cvt-frontend
           cache-to: type=gha,mode=max,scope=cvt-frontend
 
-      # Both builds must succeed before either component is published. Registry
-      # pushes are still separate operations; use a pinned pair for rollouts.
+      # CI and both builds must succeed before either component is published.
+      # Registry tag pushes are separate: keep normal releases compatible during
+      # the brief period in which Watchtower can observe different image tags.
       - name: Check built backend before publication
         env:
           IMAGE: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
         run: |
+          docker run --rm --network none -e EXPECTED_REVISION="$GITHUB_SHA" "$IMAGE" python -c "import os; from app.core.deployment import image_revision; assert image_revision() == os.environ['EXPECTED_REVISION']; print('Image revision verified')"
           docker run --rm --network none "$IMAGE" python -m app.scripts.check_cinder_install
           docker run --rm --network none "$IMAGE" python -c "from app.application.demo import playback, scene; assert playback().result['metrics']['completed']; scene(); print('Retained demo and landing scene loaded')"
 

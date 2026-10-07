@@ -117,7 +117,9 @@ def document_for_revision(
             cvt=choice_for_revision(session, principal, "cvts", version.cvt_design_version_id),
             vehicle=vehicle_from_boundary(output.output_boundary_template),
         )
-    return DOCUMENTS[kind](kind=kind, data=data, **metadata)
+    # Read old revisions through the same adapter used on save so the handful
+    # of pre-Patch-C CVTs immediately adopt groove-width travel semantics.
+    return normalize_document(DOCUMENTS[kind](kind=kind, data=data, **metadata))
 
 
 def choice_for_revision(session, principal, kind, revision_id):

@@ -1,6 +1,8 @@
 import { Text } from '@mantine/core';
 import type { TuneProfileTrace } from './api';
 import { displayAngle, type Ramp } from './profileStages';
+import { useAuth } from '@contexts/AuthContext';
+import { normalizeUnitPreferences, preferredDisplayUnit, siToDisplay, formatDisplayNumber } from '@utils/units';
 
 /** Plot sampled CINDER surface angles, not a second copy of the 3D ramp shape. */
 export function ProfileSketch({ trace, profile, selected, onSelect, contact, helix, ranges: requestedRanges }: {
@@ -12,18 +14,22 @@ export function ProfileSketch({ trace, profile, selected, onSelect, contact, hel
   helix: boolean;
   ranges?: [number, number][];
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const lengthUnit = preferredDisplayUnit('length', 'hardware', preferences, 'mm');
+  const angleUnit = preferredDisplayUnit('angle', 'hardware', preferences);
   if (!trace?.coordinates_m.length) return <Text size="xs" c="dimmed">The angle plot appears when a profile preview is available.</Text>;
   const xs = trace.coordinates_m;
   const lo = helix ? trace.used_start_m ?? xs[0] : xs[0];
   const hi = helix ? trace.used_end_m ?? xs.at(-1)! : xs.at(-1)!;
   const span = Math.max(hi - lo, 1e-12);
-  const values = trace.slope_angles_rad.map(angle => displayAngle(angle, helix) * 180 / Math.PI);
+  const values = trace.slope_angles_rad.map(angle => siToDisplay(displayAngle(angle, helix), angleUnit));
   const indices = xs.flatMap((coordinate, i) => coordinate >= lo - 1e-12 && coordinate <= hi + 1e-12 && Number.isFinite(values[i]) ? [i] : []);
   if (!indices.length) return <Text size="xs" c="dimmed">No sampled angles are available in the displayed travel interval.</Text>;
   const angles = indices.map(i => values[i]);
   const minimum = Math.min(...angles), maximum = Math.max(...angles);
   const centre = (minimum + maximum) / 2;
-  const extent = Math.max(maximum - minimum, 5) * 1.2;
+  const extent = Math.max(maximum - minimum, siToDisplay(5 * Math.PI / 180, angleUnit)) * 1.2;
   const ymin = centre - extent / 2, ymax = centre + extent / 2;
   const x = (coordinate: number) => 58 + (coordinate - lo) / span * 340;
   const y = (angle: number) => 142 - (angle - ymin) / extent * 112;
@@ -36,14 +42,14 @@ export function ProfileSketch({ trace, profile, selected, onSelect, contact, hel
   const [a, b] = ranges[selected] ?? [lo, hi];
   const active = indices.filter(i => xs[i] >= a && xs[i] <= b);
   const currentX = contact == null ? null : x(contact);
-  const axisLabel = helix ? 'Helix angle (°)' : 'Ramp angle (°)';
+  const axisLabel = `${helix ? 'Helix' : 'Ramp'} angle (${angleUnit})`;
   return <svg viewBox="0 0 440 193" style={{ width: '100%', display: 'block' }} role="group"
     aria-label={helix ? 'Helix angle through secondary opening' : 'Ramp surface angle along the primary profile'}>
     <title>{helix ? 'Helix angle from the circumferential direction' : 'Ramp surface angle from its axial profile coordinate, not the flyweight arm angle'}</title>
     <text x={12} y={86} transform="rotate(-90 12 86)" textAnchor="middle" fill="currentColor" fontSize={11}>{axisLabel}</text>
     {[ymin, centre, ymax].map(tick => <g key={tick}>
       <line x1={58} x2={398} y1={y(tick)} y2={y(tick)} stroke="currentColor" opacity={0.12}/>
-      <text x={50} y={y(tick) + 3} textAnchor="end" fill="currentColor" fontSize={10}>{tick.toFixed(1)}</text>
+      <text x={50} y={y(tick) + 3} textAnchor="end" fill="currentColor" fontSize={10}>{formatDisplayNumber(tick, 1)}</text>
     </g>)}
     <path d="M58 25 V148 H403" fill="none" stroke="currentColor" opacity={0.4}/>
     <polyline points={points(indices)} fill="none" stroke="currentColor" strokeWidth={2}/>
@@ -66,10 +72,10 @@ export function ProfileSketch({ trace, profile, selected, onSelect, contact, hel
     </g>}
     {[0, 0.5, 1].map(fraction => <text key={fraction} x={x(lo + fraction * span)} y={164}
       textAnchor={fraction === 0 ? 'start' : fraction === 1 ? 'end' : 'middle'} fill="currentColor" fontSize={10}>
-      {helix ? `${fraction * 100}%` : ((lo + fraction * span) * 1000).toFixed(1)}
+      {helix ? `${fraction * 100}%` : formatDisplayNumber(siToDisplay(lo + fraction * span, lengthUnit), 1)}
     </text>)}
     <text x={228} y={184} textAnchor="middle" fill="currentColor" fontSize={11}>
-      {helix ? 'Secondary opening travel' : 'Position along ramp (axial coordinate, mm)'}
+      {helix ? 'Secondary opening travel' : `Position along ramp (axial coordinate, ${lengthUnit})`}
     </text>
   </svg>;
 }

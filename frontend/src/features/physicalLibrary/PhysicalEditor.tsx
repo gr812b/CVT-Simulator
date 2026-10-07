@@ -67,6 +67,9 @@ import { DifferenceList, PhysicalStatus } from './PhysicalStatus';
 import { RevisionHistory } from './RevisionHistory';
 import { VehicleEditor } from './VehicleEditor';
 import styles from './PhysicalEditor.module.scss';
+import { useEditorHistory } from '@components/editorHistory/useEditorHistory';
+import { EditorHistoryBoundary, UndoRedoControls } from '@components/editorHistory/EditorHistory';
+import type { DraftHistory } from '@components/editorHistory/draftHistory';
 import { CvtTunes } from '../experiments/CvtTunes';
 import { ConfigurationBack } from './ConfigurationLink';
 import { PublishDialog } from '../publicLibrary/PublishDialog';
@@ -75,13 +78,27 @@ import { CopyAttribution } from '../publicLibrary/CopyAttribution';
 export function PhysicalEditorPage() {
   const { kind, objectId } = useParams();
   const [params] = useSearchParams();
+  const { session } = useAuth();
+  // One-use, page-local handoff across the new-item URL change after its first save.
+  // It is neither serialized into browser history nor shared between accounts.
+  const handoff = useRef<{ key: string; user: string; history: DraftHistory<PhysicalDocument | null> } | null>(null);
+  const routeKey = `${kind}/${objectId}/${params.get('revision') ?? ''}`;
+  const owner = session?.user.id ?? '';
+  const retained = handoff.current?.key === routeKey && handoff.current.user === owner
+    ? handoff.current.history : undefined;
+  useEffect(() => {
+    if (handoff.current && (handoff.current.key !== routeKey || handoff.current.user !== owner))
+      handoff.current = null;
+  }, [routeKey, owner]);
   if (!isPhysicalKind(kind) || !objectId)
     return <Navigate to="/library/setups" replace />;
   return (
     <PhysicalEditor
-      key={`${kind}/${objectId}/${params.get('revision') ?? ''}`}
+      key={`${routeKey}/${owner}`}
       kind={kind}
       objectId={objectId}
+      retainedHistory={retained}
+      onCreated={(id, history) => { handoff.current = { key: `${kind}/${id}/`, user: owner, history }; }}
     />
   );
 }
@@ -89,9 +106,13 @@ export function PhysicalEditorPage() {
 function PhysicalEditor({
   kind,
   objectId,
+  retainedHistory,
+  onCreated,
 }: {
   kind: PhysicalKind;
   objectId: string;
+  retainedHistory?: DraftHistory<PhysicalDocument | null>;
+  onCreated: (id: string, history: DraftHistory<PhysicalDocument | null>) => void;
 }) {
   const navigate = useNavigate();
   const { hash, state: returnState } = useLocation();
@@ -102,8 +123,9 @@ function PhysicalEditor({
   const [editing, setEditing] = useState(isNew);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [detail, setDetail] = useState<PhysicalDetail | null>(null);
-  const [document, setDocument] = useState<PhysicalDocument | null>(null);
-  const [saved, setSaved] = useState('');
+  const draft = useEditorHistory<PhysicalDocument | null>(null, retainedHistory);
+  const { history: editHistory, value: document, setValue: setDocument } = draft;
+  const retainedOnLoad = useRef(Boolean(retainedHistory));
   const [validated, setValidated] = useState('');
   const [validation, setValidation] = useState<PhysicalValidation | null>(null);
   const [resolved, setResolved] = useState<PhysicalResolvedCase | null>(null);
@@ -112,6 +134,7 @@ function PhysicalEditor({
   const [loading, setLoading] = useState(true);
   const [workingBusy, setBusy] = useState(false);
   const [componentLoading, setComponentLoading] = useState(false);
+  const [componentSaveBlock, setComponentSaveBlock] = useState<string | null>(null);
   const busy = workingBusy || componentLoading || catalogLoading;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -122,9 +145,12 @@ function PhysicalEditor({
   const [update, setUpdate] = useState<PhysicalUpdatePreview | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [reloadOpen, setReloadOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
   const permitNavigation = useRef(false);
   const serialized = document ? JSON.stringify(document) : '';
-  const dirty = !!document && (serialized !== saved || invalid.size > 0);
+  const dirty =
+    !!document &&
+    (draft.dirty || invalid.size > 0);
   const editable = editing && (isNew || !!detail?.item.owned);
   const blocker = useBlocker(
     useCallback(() => dirty && !permitNavigation.current, [dirty]),
@@ -141,15 +167,16 @@ function PhysicalEditor({
     ),
   );
 
-  const accept = useCallback((next: PhysicalDetail) => {
+  const accept = useCallback((next: PhysicalDetail, preserveHistory = false) => {
     setDetail(next);
-    setDocument(next.document);
-    setSaved(JSON.stringify(next.document));
+    if (preserveHistory) editHistory.markSaved(next.document);
+    else editHistory.reset(next.document);
     setValidated(JSON.stringify(next.document));
     setValidation(next.validation);
     setResolved(null);
     setNote('');
-  }, []);
+    setInvalid(new Set());
+  }, [editHistory]);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -165,11 +192,13 @@ function PhysicalEditor({
             : Promise.resolve({ cvt_fields: [] }),
         ]);
         if (controller.signal.aborted) return;
-        if ('document' in loaded) accept(loaded);
+        if ('document' in loaded) {
+          accept(loaded, retainedOnLoad.current);
+          retainedOnLoad.current = false;
+        }
         else {
           const blank = { ...loaded, name: '' };
-          setDocument(blank);
-          setSaved(JSON.stringify(blank));
+          editHistory.reset(blank);
           setValidated('');
           setValidation(null);
         }
@@ -187,7 +216,7 @@ function PhysicalEditor({
     };
     void load();
     return () => controller.abort();
-  }, [kind, objectId, revisionId, isNew, retry, accept]);
+  }, [kind, objectId, revisionId, isNew, retry, accept, editHistory]);
   useEffect(() => {
     if (!loading && hash === '#tunes')
       window.document
@@ -240,17 +269,18 @@ function PhysicalEditor({
   };
   const save = () =>
     perform(async () => {
-      if (!document || invalid.size) return;
+      if (!document || invalid.size || editHistory.getSnapshot().invalidCount || componentSaveBlock) return;
       const result = await savePhysical(
         document,
         detail?.item.revision_id ?? null,
         isNew ? undefined : objectId,
         note,
       );
-      accept(result.detail);
+      accept(result.detail, true);
       setEditing(false);
       setMessage(result.changed ? 'Saved.' : 'Already saved.');
       if (isNew) {
+        onCreated(result.detail.item.id, editHistory);
         permitNavigation.current = true;
         navigate(`/library/${kind}/${result.detail.item.id}`, {
           state: returnState,
@@ -260,7 +290,7 @@ function PhysicalEditor({
     });
   const check = () =>
     perform(async () => {
-      if (!document || invalid.size) return;
+      if (!document || invalid.size || editHistory.getSnapshot().invalidCount || componentSaveBlock) return;
       const result = await validatePhysical(document);
       setValidation(result.validation);
       setValidated(serialized);
@@ -327,6 +357,25 @@ function PhysicalEditor({
     link.click();
     URL.revokeObjectURL(url);
   };
+  const discardCurrentDraft = () => {
+    setDiscardOpen(false);
+    setError(null);
+    setInvalid(new Set());
+    if (isNew) {
+      permitNavigation.current = true;
+      navigate(`/library/${kind}`, { state: returnState, replace: true });
+      return;
+    }
+    if (detail) accept(detail);
+    setEditing(false);
+  };
+  const requestDiscardCurrentDraft = () => {
+    if (dirty) {
+      setDiscardOpen(true);
+      return;
+    }
+    discardCurrentDraft();
+  };
 
   if (isNew && !session)
     return (
@@ -359,9 +408,16 @@ function PhysicalEditor({
       </Container>
     );
   const disabled = !editable || busy;
+  const restoreDraft = () => {
+    setEditing(true);
+    setMessage(null);
+  };
+  const invalidInputs = invalid.size + draft.invalidCount;
   const componentItems = (componentKind: PhysicalKind) =>
     catalog.filter((item) => item.kind === componentKind);
   return (
+    <EditorHistoryBoundary history={editHistory}
+      disabled={busy || !editable} onRestore={restoreDraft}>
     <Container size="lg" py="lg">
       <Stack gap="lg">
         <Group justify="space-between">
@@ -422,6 +478,9 @@ function PhysicalEditor({
               <div className={styles.actions}>
                 <Group justify="space-between">
                   <Group gap="sm">
+                    {editable && (
+                      <UndoRedoControls history={editHistory} disabled={busy} onRestore={restoreDraft} />
+                    )}
                     {detail?.item.owned && !editing && !revisionId && (
                       <Button onClick={() => setEditing(true)}>
                         Edit configuration
@@ -436,18 +495,13 @@ function PhysicalEditor({
                         Open latest version
                       </Button>
                     )}
-                    {editing && !isNew && (
+                    {editable && (
                       <Button
                         variant="default"
                         disabled={busy}
-                        onClick={() => {
-                          if (detail) accept(detail);
-                          setInvalid(new Set());
-                          setEditing(false);
-                          setError(null);
-                        }}
+                        onClick={requestDiscardCurrentDraft}
                       >
-                        Cancel editing
+                        {isNew ? 'Discard draft' : 'Cancel editing'}
                       </Button>
                     )}
                     {editable && (
@@ -455,7 +509,7 @@ function PhysicalEditor({
                         type="submit"
                         leftSection={<IconCheck size={16} />}
                         loading={busy}
-                        disabled={invalid.size > 0 || !document.name.trim()}
+                        disabled={invalidInputs > 0 || !document.name.trim() || Boolean(componentSaveBlock)}
                       >
                         Save
                       </Button>
@@ -463,7 +517,7 @@ function PhysicalEditor({
                     {editable && (
                       <Button
                         variant="default"
-                        disabled={busy || invalid.size > 0}
+                        disabled={busy || invalidInputs > 0 || Boolean(componentSaveBlock)}
                         onClick={() => void check()}
                       >
                         Check inputs
@@ -504,6 +558,11 @@ function PhysicalEditor({
                   Checking physical inputs and completing your action…
                 </Text>
               )}
+              {componentSaveBlock && (
+                <Text role="status" size="sm" c="dimmed">
+                  {componentSaveBlock}
+                </Text>
+              )}
               {error && (
                 <FormError
                   color="red"
@@ -530,7 +589,7 @@ function PhysicalEditor({
               {(editable || validation?.is_valid === false) && (
                 <PhysicalStatus
                   validation={validation}
-                  stale={serialized !== validated || invalid.size > 0}
+                  stale={serialized !== validated || invalidInputs > 0}
                   setup={kind === 'setups'}
                 />
               )}
@@ -653,14 +712,18 @@ function PhysicalEditor({
                       )}
                       {document.kind === 'cvts' && (
                         <CvtEditor
+                          draftPathPrefix="/data/assembly"
                           value={document.data}
                           onChange={(data) =>
                             setDocument({ ...document, data })
                           }
                           fields={fields}
                           belts={componentItems('belts')}
+                          validation={validation}
                           disabled={disabled}
                           onLoadingChange={setComponentLoading}
+                          onSaveBlockChange={setComponentSaveBlock}
+                          enableInitialTune={isNew}
                         />
                       )}
                       {document.kind === 'setups' && (
@@ -744,6 +807,7 @@ function PhysicalEditor({
                                   onLoadingChange={setComponentLoading}
                                 />
                                 <CvtEditor
+                                  draftPathPrefix="/data/cvt/data/assembly"
                                   value={document.data.cvt.data}
                                   onChange={(data) =>
                                     setDocument({
@@ -756,8 +820,11 @@ function PhysicalEditor({
                                   }
                                   fields={fields}
                                   belts={componentItems('belts')}
+                                  validation={validation}
                                   disabled={disabled}
                                   onLoadingChange={setComponentLoading}
+                                  onSaveBlockChange={setComponentSaveBlock}
+                                  enableInitialTune={!document.data.cvt.revision_id}
                                 />
                               </Stack>
                             </Accordion.Panel>
@@ -907,6 +974,7 @@ function PhysicalEditor({
               <Button
                 onClick={() => {
                   setReloadOpen(false);
+                  setInvalid(new Set());
                   setRetry((value) => value + 1);
                 }}
               >
@@ -916,12 +984,37 @@ function PhysicalEditor({
           </Stack>
         </Modal>
         <Modal
-          opened={blocker.state === 'blocked'}
-          onClose={() => blocker.state === 'blocked' && blocker.reset()}
-          title="Leave unsaved changes?"
+          opened={discardOpen}
+          onClose={() => !busy && setDiscardOpen(false)}
+          title={isNew ? 'Discard this draft?' : 'Discard unsaved changes?'}
         >
           <Stack>
-            <Text>Your working values have not been saved.</Text>
+            <Text>
+              {isNew
+                ? 'This new item has not been saved. Discarding it removes this working draft.'
+                : 'This restores the latest saved revision and removes your working changes.'}
+            </Text>
+            <Group justify="end">
+              <Button variant="default" onClick={() => setDiscardOpen(false)}>
+                Keep editing
+              </Button>
+              <Button color="red" onClick={discardCurrentDraft}>
+                {isNew ? 'Discard draft' : 'Discard changes'}
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+        <Modal
+          opened={blocker.state === 'blocked'}
+          onClose={() => blocker.state === 'blocked' && blocker.reset()}
+          title={isNew ? 'Discard this draft and leave?' : 'Leave unsaved changes?'}
+        >
+          <Stack>
+            <Text>
+              {isNew
+                ? 'This draft has not been saved.'
+                : 'Your working values have not been saved.'}
+            </Text>
             <Group justify="end">
               <Button
                 variant="default"
@@ -933,12 +1026,13 @@ function PhysicalEditor({
                 color="red"
                 onClick={() => blocker.state === 'blocked' && blocker.proceed()}
               >
-                Discard & leave
+                {isNew ? 'Discard draft & leave' : 'Discard & leave'}
               </Button>
             </Group>
           </Stack>
         </Modal>
       </Stack>
     </Container>
+    </EditorHistoryBoundary>
   );
 }

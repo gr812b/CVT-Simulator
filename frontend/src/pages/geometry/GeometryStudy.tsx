@@ -29,7 +29,16 @@ import {
   type PhysicalItem,
 } from '../../features/physicalLibrary/api';
 import { message } from '../../features/experiments/api';
-import { formatProjectedQuantity } from '@utils/units';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  formatPreferredProjectedQuantity,
+  formatPreferredQuantity,
+  isQuantityDimension,
+  normalizeUnitPreferences,
+  preferredProjectedDisplayUnit,
+  siToDisplay,
+  type DisplayUnit,
+} from '@utils/units';
 
 const GeometryScene = lazy(
   () => import('@components/scene3DViewer/GeometryScene'),
@@ -39,6 +48,8 @@ type Inputs = components['schemas']['SimpleGeometryRequest'];
 type Result = components['schemas']['SimpleGeometryResponse'];
 
 export function GeometryStudy() {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const [value, setValue] = useState<Inputs | null>(null);
   const [belts, setBelts] = useState<PhysicalItem[]>([]);
   const [beltId, setBeltId] = useState<string | null>(null);
@@ -187,6 +198,7 @@ export function GeometryStudy() {
   ) => (
     <QuantityInput
       key={key}
+      scope="hardware"
       label={label}
       unit={unit}
       min={minimum}
@@ -393,15 +405,26 @@ export function GeometryStudy() {
                     </div>
                     <Text size="sm">
                       Shift:{' '}
-                      {(
-                        (result.scene.frames[frameIndex]?.shift_m ?? 0) * 1000
-                      ).toFixed(2)}{' '}
-                      mm
+                      {formatPreferredQuantity(
+                        result.scene.frames[frameIndex]?.shift_m ?? 0,
+                        'length',
+                        'hardware',
+                        preferences,
+                        'mm',
+                        2,
+                      )}
                     </Text>
                     <Slider
                       thumbLabel="Geometry preview shift"
                       thumbValueText={(i) =>
-                        `${((result.scene.frames[i]?.shift_m ?? 0) * 1000).toFixed(2)} mm`
+                        formatPreferredQuantity(
+                          result.scene.frames[i]?.shift_m ?? 0,
+                          'length',
+                          'hardware',
+                          preferences,
+                          'mm',
+                          2,
+                        )
                       }
                       min={0}
                       max={result.scene.frames.length - 1}
@@ -409,7 +432,14 @@ export function GeometryStudy() {
                       value={frameIndex}
                       onChange={setFrameIndex}
                       label={(i) =>
-                        `${((result.scene.frames[i]?.shift_m ?? 0) * 1000).toFixed(2)} mm`
+                        formatPreferredQuantity(
+                          result.scene.frames[i]?.shift_m ?? 0,
+                          'length',
+                          'hardware',
+                          preferences,
+                          'mm',
+                          2,
+                        )
                       }
                     />
                   </Stack>
@@ -421,10 +451,14 @@ export function GeometryStudy() {
                         Belt bottom width
                       </Text>
                       <Text fw={600}>
-                        {(
-                          result.resolved_context.belt.inner_width_m * 1000
-                        ).toFixed(3)}{' '}
-                        mm
+                        {formatPreferredQuantity(
+                          result.resolved_context.belt.inner_width_m,
+                          'length',
+                          'hardware',
+                          preferences,
+                          'mm',
+                          3,
+                        )}
                       </Text>
                     </div>
                     <div>
@@ -432,10 +466,14 @@ export function GeometryStudy() {
                         Total maximum shift
                       </Text>
                       <Text fw={600}>
-                        {(result.resolved_context.max_shift_m * 1000).toFixed(
+                        {formatPreferredQuantity(
+                          result.resolved_context.max_shift_m,
+                          'length',
+                          'hardware',
+                          preferences,
+                          'mm',
                           3,
-                        )}{' '}
-                        mm
+                        )}
                       </Text>
                     </div>
                     {result.study.summary.scalars.map((item) => (
@@ -446,10 +484,12 @@ export function GeometryStudy() {
                         <Text fw={600}>
                           {item.value === null
                             ? '—'
-                            : formatProjectedQuantity(
+                            : formatPreferredProjectedQuantity(
                                 item.value,
                                 item.dimension,
                                 item.canonical_unit,
+                                'hardware',
+                                preferences,
                                 5,
                               )}
                         </Text>
@@ -487,7 +527,12 @@ export function GeometryStudy() {
                             <Table.Tr>
                               {result.study.path.columns.map((column) => (
                                 <Table.Th key={column.key}>
-                                  {column.label} ({column.canonical_unit})
+                                  {column.label} ({preferredProjectedDisplayUnit(
+                                    column.dimension,
+                                    column.canonical_unit,
+                                    'hardware',
+                                    preferences,
+                                  )})
                                 </Table.Th>
                               ))}
                             </Table.Tr>
@@ -515,7 +560,18 @@ export function GeometryStudy() {
                                   return (
                                     <Table.Td key={column.key}>
                                       {typeof v === 'number'
-                                        ? v.toPrecision(5)
+                                        ? (isQuantityDimension(column.dimension)
+                                            ? siToDisplay(
+                                                v,
+                                                preferredProjectedDisplayUnit(
+                                                  column.dimension,
+                                                  column.canonical_unit,
+                                                  'hardware',
+                                                  preferences,
+                                                ) as DisplayUnit,
+                                              )
+                                            : v
+                                          ).toPrecision(5)
                                         : '—'}
                                     </Table.Td>
                                   );

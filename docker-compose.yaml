@@ -56,19 +56,31 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.lifecycle.post-update=python -m app.scripts.wait_for_api --url http://127.0.0.1:8000 --timeout 120"
+      - "com.centurylinklabs.watchtower.lifecycle.post-update-timeout=3"
     networks:
       - cvt-network
 
   cvt-worker:
     image: ghcr.io/gr812b/cvt-simulator-backend:${CVT_TAG:-latest}
     restart: unless-stopped
-    environment: *backend-environment
+    # This container starts 0..N simulation processes as jobs arrive.
+    scale: 1
+    environment:
+      <<: *backend-environment
+      CVT_WORKER_MAX_CONCURRENCY: ${CVT_WORKER_MAX_CONCURRENCY:-1}
+      CVT_WORKER_API_URL: http://cvt-backend:8000
     command: ["python", "-m", "app.scripts.run_worker"]
     # Allow the 300-second run deadline plus child-process cleanup on shutdown.
     stop_grace_period: 330s
     depends_on:
       cvt-backend:
         condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.depends-on=${COMPOSE_PROJECT_NAME}-cvt-backend-1"
     networks:
       - cvt-network
 
@@ -78,6 +90,9 @@ services:
     depends_on:
       cvt-backend:
         condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.depends-on=${COMPOSE_PROJECT_NAME}-cvt-backend-1,${COMPOSE_PROJECT_NAME}-cvt-worker-1"
     networks:
       - cvt-network
       - web

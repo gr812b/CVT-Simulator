@@ -20,10 +20,30 @@ import {
   expandJsonPointerTemplate,
   getValueAtJsonPointer,
 } from '@utils/jsonPointer';
-import { displayScale } from '@utils/units';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  dimensionForUnit,
+  formatDisplayNumber,
+  formatPreferredQuantity,
+  displayScale,
+  displayUnitForCanonical,
+  normalizeUnitPreferences,
+  preferredDisplayUnit,
+  siToDisplay,
+  type UnitScope,
+} from '@utils/units';
 import { EngineCurve } from '../physicalLibrary/EngineCurve';
 import { ConfigurationLink } from '../physicalLibrary/ConfigurationLink';
-import { isCvtHardwareField } from '../physicalLibrary/cvtHardware';
+import {
+  cvtFieldPresentation,
+  isCanonicalPrimaryRadiusField,
+  isCvtHardwareField,
+  isOrdinaryPrimaryTravelField,
+  isPrimaryRotationalInertiaField,
+  primaryHasRelativeRotationCoupling,
+  primaryRotatingHardwareInertia,
+  primaryShaftRadius,
+} from '../physicalLibrary/cvtHardware';
 
 type Measurement = {
   label: string;
@@ -31,22 +51,45 @@ type Measurement = {
   unit?: string;
   scale?: number;
 };
-function Measurements({ items }: { items: Measurement[] }) {
+function Measurements({
+  items,
+  scope = 'hardware',
+}: {
+  items: Measurement[];
+  scope?: UnitScope;
+}) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} component="dl" m={0}>
-      {items.map(({ label, value, unit = '', scale }, index) => (
-        <div key={`${label}-${index}`}>
-          <Text component="dt" size="sm" c="dimmed">
-            {label}
-          </Text>
-          <Text component="dd" m={0} fw={500}>
-            {new Intl.NumberFormat(undefined, {
-              maximumSignificantDigits: 6,
-            }).format(value * (scale ?? displayScale(unit)))}
-            {unit ? ` ${unit}` : ''}
-          </Text>
-        </div>
-      ))}
+      {items.map(({ label, value, unit = '', scale }, index) => {
+        const dimension = dimensionForUnit(unit);
+        let displayUnit = unit;
+        let shown = value * (scale ?? displayScale(unit));
+        if (dimension) {
+          const selected = preferredDisplayUnit(
+            dimension,
+            scope,
+            preferences,
+            displayUnitForCanonical(unit, dimension),
+          );
+          displayUnit = selected;
+          shown = siToDisplay(value, selected);
+        }
+        return (
+          <div key={`${label}-${index}`}>
+            <Text component="dt" size="sm" c="dimmed">
+              {label}
+            </Text>
+            <Text component="dd" m={0} fw={500}>
+              {new Intl.NumberFormat(undefined, {
+                maximumSignificantDigits: 6,
+              }).format(shown)}
+              {displayUnit ? ` ${displayUnit}` : ''}
+            </Text>
+          </div>
+        );
+      })}
     </SimpleGrid>
   );
 }
@@ -72,6 +115,7 @@ function BeltView({ value }: { value: BeltData }) {
 function VehicleView({ value }: { value: VehicleData }) {
   return (
     <Measurements
+      scope="vehicle"
       items={[
         { label: 'Total vehicle mass', value: value.mass_kg, unit: 'kg' },
         {
@@ -106,6 +150,10 @@ function VehicleView({ value }: { value: VehicleData }) {
   );
 }
 function EngineView({ value }: { value: EngineData }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const speedUnit = preferredDisplayUnit('angular_speed', 'hardware', preferences);
+  const torqueUnit = preferredDisplayUnit('torque', 'hardware', preferences);
   return (
     <Stack>
       <EngineCurve value={value} />
@@ -126,20 +174,17 @@ function EngineView({ value }: { value: EngineData }) {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>Speed (rpm)</Table.Th>
-                    <Table.Th>FOT torque (N·m)</Table.Th>
+                    <Table.Th>Speed ({speedUnit})</Table.Th>
+                    <Table.Th>FOT torque ({torqueUnit})</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
                   {value.points.map((point) => (
                     <Table.Tr key={point.angular_speed_rad_per_s}>
                       <Table.Td>
-                        {(
-                          (point.angular_speed_rad_per_s * 30) /
-                          Math.PI
-                        ).toFixed(0)}
+                        {formatDisplayNumber(siToDisplay(point.angular_speed_rad_per_s, speedUnit))}
                       </Table.Td>
-                      <Table.Td>{point.torque_Nm}</Table.Td>
+                      <Table.Td>{formatDisplayNumber(siToDisplay(point.torque_Nm, torqueUnit))}</Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>
@@ -186,6 +231,8 @@ export function ConfigurationView({
   fields: PhysicalField[];
   references?: PhysicalDetail['references'];
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const cvt = document.kind === 'cvts' ? document.data : null;
   const engine = document.kind === 'engines' ? document.data : null;
   const groups = cvt
@@ -196,35 +243,58 @@ export function ConfigurationView({
         'inertias',
         'contact',
       ]
-        .map((group) => ({
-          group,
-          items: fields
-            .filter(
-              (field) =>
-                isCvtHardwareField(field.path) &&
-                !field.advanced &&
-                field.path.startsWith(`/${group}/`) &&
-                !field.path.startsWith('/geometry/belt'),
+        .map((group) => {
+          const primaryCoupled = primaryHasRelativeRotationCoupling(cvt);
+          const derived: Measurement[] =
+            group === 'geometry'
+              ? [
+                  {
+                    label: 'Primary shaft radius',
+                    value: primaryShaftRadius(cvt),
+                    unit: 'mm',
+                  },
+                ]
+              : group === 'inertias' && !primaryCoupled
+                ? [
+                    {
+                      label: 'Primary rotating hardware inertia',
+                      value: primaryRotatingHardwareInertia(cvt),
+                      unit: 'kg·m²',
+                    },
+                  ]
+                : [];
+          const items = fields.flatMap((field) => {
+            if (
+              !isCvtHardwareField(field.path) ||
+              !field.path.startsWith(`/${group}/`) ||
+              field.path.startsWith('/geometry/belt')
             )
-            .flatMap((field) =>
-              expandJsonPointerTemplate(cvt.assembly, field.path).flatMap(
-                (path) => {
-                  const value = getValueAtJsonPointer(cvt.assembly, path);
-                  const segment = path.match(/\/segments\/(\d+)\//);
-                  return typeof value === 'number'
-                    ? [
-                        {
-                          label: `${segment ? `Segment ${Number(segment[1]) + 1} · ` : ''}${field.label}`,
-                          value,
-                          unit: field.display_unit,
-                          scale: field.display_scale,
-                        },
-                      ]
-                    : [];
-                },
-              ),
-            ),
-        }))
+              return [];
+            return expandJsonPointerTemplate(cvt.assembly, field.path).flatMap(
+              (path) => {
+                const presentation = cvtFieldPresentation(field, path);
+                if (presentation.advanced) return [];
+                if (isCanonicalPrimaryRadiusField(path)) return [];
+                if (!primaryCoupled && isPrimaryRotationalInertiaField(path))
+                  return [];
+                if (isOrdinaryPrimaryTravelField(path, cvt)) return [];
+                const value = getValueAtJsonPointer(cvt.assembly, path);
+                const segment = path.match(/\/segments\/(\d+)\//);
+                return typeof value === 'number'
+                  ? [
+                      {
+                        label: `${segment ? `Segment ${Number(segment[1]) + 1} · ` : ''}${presentation.label}`,
+                        value,
+                        unit: field.display_unit,
+                        scale: field.display_scale,
+                      },
+                    ]
+                  : [];
+              },
+            );
+          });
+          return { group, items: [...derived, ...items] };
+        })
         .filter((group) => group.items.length)
     : [];
   return (
@@ -265,14 +335,14 @@ export function ConfigurationView({
             )}
             {reference.kind === 'belts' && cvt && (
               <Text size="sm">
-                {Number((cvt.belt.data.outer_length_m * 1000).toPrecision(5))}{' '}
-                mm outer length ·{' '}
-                {Number(
-                  ((cvt.belt.data.half_angle_rad * 180) / Math.PI).toPrecision(
-                    4,
+                {new Intl.NumberFormat(undefined, { maximumSignificantDigits: 5 }).format(
+                  siToDisplay(
+                    cvt.belt.data.outer_length_m,
+                    preferredDisplayUnit('length', 'hardware', preferences, 'mm'),
                   ),
-                )}
-                ° belt and sheave half-angle
+                )}{' '}
+                {preferredDisplayUnit('length', 'hardware', preferences, 'mm')} outer length ·{' '}
+                {formatPreferredQuantity(cvt.belt.data.half_angle_rad, 'angle', 'hardware', preferences)} belt and sheave half-angle
               </Text>
             )}
           </Stack>

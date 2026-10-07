@@ -1,9 +1,16 @@
 import { FormError } from '@components/form/FormError';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useEditorHistory } from '@components/editorHistory/useEditorHistory';
+import { EditorHistoryBoundary, UndoRedoControls } from '@components/editorHistory/EditorHistory';
 import { Modal } from '@components/modal/Modal';
 import { Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  formatPreferredQuantity,
+  normalizeUnitPreferences,
+} from '@utils/units';
 import { BeltEditor } from './BeltEditor';
 import { libraryOptions } from './libraryOptions';
 import {
@@ -28,11 +35,22 @@ export function BeltPicker({
   disabled?: boolean;
   onLoadingChange?: (busy: boolean) => void;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const [added, setAdded] = useState<PhysicalItem[]>([]);
-  const [draft, setDraft] = useState<Extract<
+  const draftState = useEditorHistory<Extract<
     PhysicalDocument,
     { kind: 'belts' }
   > | null>(null);
+  const { value: draft, setValue: setDraft, history: draftHistory } = draftState;
+  const [discardOpen, setDiscardOpen] = useState(false);
+  useEffect(() => {
+    if (!draft || !draftState.dirty) return;
+    const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [draft, draftState.dirty]);
+  const closeDraft = () => { draftHistory.reset(null); setDiscardOpen(false); };
   const [invalid, setInvalid] = useState(new Set<string>());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +119,7 @@ export function BeltPicker({
                 const template = await physicalTemplate('belts');
                 if (template.kind === 'belts') {
                   setInvalid(new Set());
-                  setDraft({ ...template, name: '' });
+                  draftHistory.reset({ ...template, name: '' });
                 }
               })
             }
@@ -111,11 +129,11 @@ export function BeltPicker({
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        {(value.data.outer_length_m * 1000).toFixed(1)} mm outer length ·{' '}
-        {(value.data.outer_width_m * 1000).toFixed(2)} /{' '}
-        {(value.data.inner_width_m * 1000).toFixed(2)} mm top / bottom ·{' '}
-        {(value.data.height_m * 1000).toFixed(2)} mm height ·{' '}
-        {((value.data.half_angle_rad * 180) / Math.PI).toFixed(2)}° half-angle
+        {formatPreferredQuantity(value.data.outer_length_m, 'length', 'hardware', preferences, 'mm', 1)} outer length ·{' '}
+        {formatPreferredQuantity(value.data.outer_width_m, 'length', 'hardware', preferences, 'mm', 2)} /{' '}
+        {formatPreferredQuantity(value.data.inner_width_m, 'length', 'hardware', preferences, 'mm', 2)} top / bottom ·{' '}
+        {formatPreferredQuantity(value.data.height_m, 'length', 'hardware', preferences, 'mm', 2)} height ·{' '}
+        {formatPreferredQuantity(value.data.half_angle_rad, 'angle', 'hardware', preferences)} half-angle
       </Text>
       {error && !draft && (
         <FormError color="red" role="alert">
@@ -126,7 +144,8 @@ export function BeltPicker({
         opened={Boolean(draft)}
         onClose={() => {
           if (!busy) {
-            setDraft(null);
+            if (draftState.dirty) setDiscardOpen(true);
+            else closeDraft();
             setError(null);
           }
         }}
@@ -135,8 +154,10 @@ export function BeltPicker({
         closeOnClickOutside={!busy}
       >
         {draft && (
+          <EditorHistoryBoundary history={draftHistory} disabled={busy}>
           <QuantityValidationContext.Provider value={setInvalid}>
             <Stack>
+              <UndoRedoControls history={draftHistory} disabled={busy} />
               <TextInput
                 label="Belt name"
                 required
@@ -160,7 +181,7 @@ export function BeltPicker({
               <Button
                 loading={busy}
                 disabledReason={
-                  invalid.size
+                  invalid.size || draftState.invalidCount
                     ? 'Complete the belt measurements and wait for calculation.'
                     : !draft.name.trim()
                       ? 'Enter a belt name.'
@@ -168,13 +189,14 @@ export function BeltPicker({
                 }
                 onClick={() =>
                   void task(async () => {
+                    if (invalid.size || draftHistory.getSnapshot().invalidCount) return;
                     const { detail } = await savePhysical(draft, null);
                     if (detail.document.kind !== 'belts') return;
                     const { kind: _, ...belt } = detail.document;
                     void _;
                     setAdded((previous) => [...previous, detail.item]);
                     onChange({ ...belt, revision_id: detail.item.revision_id });
-                    setDraft(null);
+                    closeDraft();
                   })
                 }
               >
@@ -182,7 +204,14 @@ export function BeltPicker({
               </Button>
             </Stack>
           </QuantityValidationContext.Provider>
+          </EditorHistoryBoundary>
         )}
+      </Modal>
+      <Modal opened={discardOpen} onClose={() => setDiscardOpen(false)} title="Discard unsaved belt changes?">
+        <Stack><Text>The new belt has not been saved.</Text><Group>
+          <Button variant="default" onClick={() => setDiscardOpen(false)}>Keep editing</Button>
+          <Button color="red" onClick={closeDraft}>Discard belt draft</Button>
+        </Group></Stack>
       </Modal>
     </Stack>
   );

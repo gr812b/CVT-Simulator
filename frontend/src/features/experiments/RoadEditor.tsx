@@ -19,6 +19,12 @@ import {
 } from '@tabler/icons-react';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import { projectCourse, roadFromMap } from '@components/course/courseGeometry';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  normalizeUnitPreferences,
+  preferredDisplayUnit,
+  siToDisplay,
+} from '@utils/units';
 import {
   message,
   resolveRoad,
@@ -50,6 +56,7 @@ function FeatureInputs({
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
         {'length_m' in value && (
           <QuantityInput
+            scope="course"
             label="Section length"
             unit="m"
             scale={1}
@@ -60,6 +67,7 @@ function FeatureInputs({
         )}
         {'angle_rad' in value && (
           <QuantityInput
+            scope="course"
             label="Incline angle"
             unit="deg"
             description="Positive climbs; negative descends. Changing length keeps this angle."
@@ -71,6 +79,7 @@ function FeatureInputs({
         )}
         {'height_m' in value && (
           <QuantityInput
+            scope="course"
             label="Feature height"
             unit="m"
             scale={1}
@@ -82,6 +91,7 @@ function FeatureInputs({
         {value.kind === 'whoops' && (
           <>
             <QuantityInput
+              scope="course"
               label="Whoops spacing"
               unit="m"
               scale={1}
@@ -90,6 +100,7 @@ function FeatureInputs({
               onChange={(spacing_m) => onChange({ ...value, spacing_m })}
             />
             <QuantityInput
+              scope="course"
               label="Whoops count"
               integer
               min={1}
@@ -137,6 +148,12 @@ export function RoadEditor({
   onChange: (road: Road) => void;
   onValidityChange: (valid: boolean) => void;
 }) {
+  const { unitPreferences } = useAuth();
+  const lengthUnit = preferredDisplayUnit(
+    'length', 'course', normalizeUnitPreferences(unitPreferences), 'm',
+  );
+  const displayLength = (metres: number) =>
+    siToDisplay(metres, lengthUnit).toFixed(1);
   const [resolution, setResolution] = useState<RoadResolution | null>(null);
   const [resolvedKey, setResolvedKey] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -249,7 +266,8 @@ export function RoadEditor({
     <Stack gap="md">
       <Group justify="space-between">
         <Text fw={700}>
-          Road profile · {resolution?.length_m.toFixed(1) ?? '…'} m
+          Road profile · {resolution ? displayLength(resolution.length_m) : '…'}{' '}
+          {lengthUnit}
         </Text>
         <Group gap="xs">
           <Button
@@ -403,7 +421,7 @@ export function RoadEditor({
                   fill="currentColor"
                   fontSize="12"
                 >
-                  {elevation.toFixed(1)}
+                  {displayLength(elevation)}
                 </text>
               </g>
             );
@@ -475,11 +493,11 @@ export function RoadEditor({
               fill="currentColor"
               fontSize="12"
             >
-              {(view.cx + (px - 460) / view.scale).toFixed(1)}
+              {displayLength(view.cx + (px - 460) / view.scale)}
             </text>
           ))}
           <text x="65" y="18" fill="currentColor" fontSize="12">
-            Elevation (m)
+            Elevation ({lengthUnit})
           </text>
           <text
             x="460"
@@ -488,7 +506,7 @@ export function RoadEditor({
             fill="currentColor"
             fontSize="13"
           >
-            Horizontal distance (m)
+            Horizontal distance ({lengthUnit})
           </text>
         </svg>
       </Paper>
@@ -642,6 +660,7 @@ export function RoadEditor({
                 {points[pointIndex] && (
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
                     <QuantityInput
+                      scope="course"
                       label="Distance along section"
                       unit="m"
                       scale={1}
@@ -656,6 +675,7 @@ export function RoadEditor({
                       }
                     />
                     <QuantityInput
+                      scope="course"
                       label="Elevation from section start"
                       unit="m"
                       scale={1}

@@ -10,13 +10,16 @@ import {
 } from 'react';
 import * as auth from '@api/auth';
 import { ApiClientError, SESSION_EXPIRED, setCsrfToken } from '@api/transport';
+import { normalizeUnitPreferences, type UnitPreferences } from '@utils/units';
 
 interface AuthState {
   session: auth.AuthSession | null;
   loading: boolean;
   error: string | null;
+  unitPreferences: UnitPreferences;
   refresh: () => Promise<void>;
   accept: (session: auth.AuthSession) => void;
+  saveUnitPreferences: (preferences: UnitPreferences) => Promise<void>;
   signOut: () => Promise<void>;
 }
 const AuthContext = createContext<AuthState | null>(null);
@@ -26,9 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const revision = useRef(0);
+  const currentSession = useRef<auth.AuthSession | null>(null);
   const channel = useRef<BroadcastChannel | null>(null);
   const setCurrent = useCallback((next: auth.AuthSession | null) => {
     revision.current += 1;
+    currentSession.current = next;
     setCsrfToken(next?.csrf_token ?? null);
     setSession(next);
     setError(null);
@@ -49,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setCurrent]);
   useEffect(() => {
-    // Retire unscoped pre-auth caches; private data now lives only in memory.
     localStorage.removeItem('cinder-simulation-case-v2');
     localStorage.removeItem('cinder-simulation-case-source-v2');
     sessionStorage.removeItem('cinder-active-run-id-v3');
@@ -62,8 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('focus', focused);
     if ('BroadcastChannel' in window) {
       channel.current = new BroadcastChannel('cinder-auth');
-      channel.current.onmessage = () => {
-        setCurrent(null);
+      channel.current.onmessage = (event: MessageEvent<unknown>) => {
+        const notice = event.data as { kind?: string; userId?: string } | null;
+        if (notice && typeof notice === 'object' && notice.kind === 'signed-out') {
+          if (notice.userId === currentSession.current?.user.id) setCurrent(null);
+          return;
+        }
+        if (notice && typeof notice === 'object' && notice.kind === 'identity-changed') {
+          setCurrent(null);
+        }
+        // Profile/units updates and old clients' "changed" notices are refreshes,
+        // not logouts. Preserve the editor until a real session response says otherwise.
         void refresh();
       };
     }
@@ -81,23 +94,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, setCurrent]);
   const accept = useCallback(
     (next: auth.AuthSession) => {
+      const sameIdentity = currentSession.current?.user.id === next.user.id;
       setCurrent(next);
-      channel.current?.postMessage('changed');
+      channel.current?.postMessage({ kind: sameIdentity ? 'refresh' : 'identity-changed', userId: next.user.id });
     },
     [setCurrent],
   );
+  const saveUnitPreferences = useCallback(async (preferences: UnitPreferences) => {
+    const token = currentSession.current?.csrf_token;
+    if (!token) throw new Error('Sign in before saving unit preferences.');
+    const next = await auth.updateUnitPreferences(preferences);
+    if (currentSession.current?.csrf_token !== token)
+      throw new Error('Your session changed before the unit preferences response arrived.');
+    accept(next);
+  }, [accept]);
   const signOut = useCallback(async () => {
+    const userId = currentSession.current?.user.id;
     try {
       await auth.logout();
     } catch (reason) {
       if (!(reason instanceof ApiClientError && reason.status === 401)) throw reason;
     }
     setCurrent(null);
-    channel.current?.postMessage('changed');
+    channel.current?.postMessage({ kind: 'signed-out', userId });
   }, [setCurrent]);
+  const unitPreferences = useMemo(
+    () => normalizeUnitPreferences(session?.user.unit_preferences),
+    [session?.user.unit_preferences],
+  );
   const value = useMemo(
-    () => ({ session, loading, error, refresh, accept, signOut }),
-    [session, loading, error, refresh, accept, signOut],
+    () => ({ session, loading, error, unitPreferences, refresh, accept, saveUnitPreferences, signOut }),
+    [session, loading, error, unitPreferences, refresh, accept, saveUnitPreferences, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -63,6 +63,8 @@ export const singularLabels = {cvts:'CVT',engines:'engine',belts:'belt'};
 `;
 fs.writeFileSync(path.join(temporary, 'fixtures.ts'), fixtures);
 const adapters = new Map([
+  ['contexts/AuthContext.tsx', `import {normalizeUnitPreferences} from '@utils/units';
+    export const useAuth=()=>({session:{user:{id:'test-user',display_name:'Driver'}},unitPreferences:normalizeUnitPreferences()});`],
   ['features/experiments/api.ts', fixtures],
   ['features/physicalLibrary/api.ts', `export * from ${JSON.stringify(path.join(temporary, 'fixtures.ts'))};`],
   ['features/experiments/RunActivity.tsx', 'export const useRunActivity=()=>({activity:{active:null},refresh:async()=>{}});'],

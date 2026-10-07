@@ -1,3 +1,5 @@
+import { useAuth } from '@contexts/AuthContext';
+import { normalizeUnitPreferences, preferredProjectedDisplayUnit, projectedDisplayValue, formatDisplayNumber } from '@utils/units';
 import type { ForcePreferences } from '../../features/playback/preferences';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -48,6 +50,10 @@ export function ForceOverlay({
   onChange: (settings: ForcePreferences) => void;
   fullscreen?: boolean;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const displayPreferences = useRef(preferences);
+  displayPreferences.current = preferences;
   const [opened, setOpened] = useState(false);
   const { enabled, body, selected, components, scale, labels } = settings;
   const update = (next: Partial<ForcePreferences>) =>
@@ -62,7 +68,7 @@ export function ForceOverlay({
     [body, data],
   );
   const keys = (
-    selected ?? tracks.filter((t) => t.unit === 'N').map((t) => t.key)
+    selected ?? tracks.filter((t) => (t.unit ?? 'N') === 'N').map((t) => t.key)
   ).filter((key) => tracks.some((track) => track.key === key));
   const options = useRef<ForceOptions>({
     body,
@@ -111,7 +117,7 @@ export function ForceOverlay({
         sample.upperIndex,
         sample.alpha,
       );
-      renderer.update(sample, sceneDistance(shift ?? 0), options.current);
+      renderer.update(sample, sceneDistance(shift ?? 0), options.current, displayPreferences.current);
     });
     return () => {
       detach();
@@ -247,15 +253,16 @@ export function ForceOverlay({
                         .filter((t) => keys.includes(t.key))
                         .map((t) => {
                           const sample = forceAt(t, bracket);
+                          const unit = t.unit ?? 'N';
                           return (
                             <Table.Tr key={t.key}>
                               <Table.Td>
-                                {t.label} ({t.unit})
+                                {t.label} ({preferredProjectedDisplayUnit('', unit, 'output', preferences)})
                               </Table.Td>
                               {[0, 1, 2].map((i) => (
                                 <Table.Td key={i}>
                                   {sample
-                                    ? sample.components[i].toFixed(1)
+                                    ? formatDisplayNumber(projectedDisplayValue(sample.components[i], '', unit, 'output', preferences), 2)
                                     : '—'}
                                 </Table.Td>
                               ))}

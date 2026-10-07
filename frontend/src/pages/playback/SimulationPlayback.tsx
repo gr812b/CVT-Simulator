@@ -13,6 +13,7 @@ import { ReportReplayController } from '@utils/reportReplay';
 import { downloadReportTableCsv } from '@utils/csvExport';
 import { reportAxisTimes } from '@utils/reportTable';
 import { buildReportGraphs } from './reportGraphs';
+import { useAuth } from '@contexts/AuthContext';
 import styles from './Playback.module.scss';
 import layout from '@components/appShell/PageGutter.module.scss';
 import { RunOutcomeNotice } from '../../features/results/RunOutcomeNotice';
@@ -39,6 +40,7 @@ export function SimulationPlayback({
   outcome?: RunOutcome;
 }) {
   const navigate = useNavigate();
+  const { unitPreferences } = useAuth();
   const rootRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -67,7 +69,10 @@ export function SimulationPlayback({
     [timeValues],
   );
   const replayRef = useRef(replayController);
-  const categories = useMemo(() => buildReportGraphs(table), [table]);
+  const categories = useMemo(
+    () => buildReportGraphs(table, unitPreferences),
+    [table, unitPreferences],
+  );
   useEffect(() => {
     replayRef.current = replayController;
     return () => replayController.dispose();

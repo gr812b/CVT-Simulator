@@ -85,13 +85,39 @@ def belt_from_assembly(assembly: dict) -> BeltData:
 
 
 def with_belt(data: CvtData) -> CvtData:
-    """A chosen belt owns its dimensions; do not accept two competing copies."""
+    """A chosen belt owns its dimensions while the physical shaft radius stays fixed."""
     result = data.model_copy(deep=True)
     belt = result.belt.data
-    result.assembly.setdefault("geometry", {}).update(
+    geometry = result.assembly.setdefault("geometry", {})
+    stored_belt = geometry.get("belt", {})
+    # Belt-section synchronization is idempotent. Legacy clients may still
+    # replace only the reusable belt choice; normalize that representation once.
+    primary_radius = geometry["primary_outer_radius_at_zero_shift_m"]
+    if stored_belt["height_m"] != belt.height_m:
+        primary_radius = primary_radius - stored_belt["height_m"] + belt.height_m
+
+    # Patch C treats the fully-open groove width as the measurable hardware
+    # travel. Existing records are normalized from their deadzone plus the
+    # selected belt bottom width. A legacy client that changes only the belt
+    # choice keeps the stored groove width and receives a new derived deadzone.
+    stored_inner_width = stored_belt.get("inner_width_m")
+    belt_changed = stored_inner_width is None or not math.isclose(
+        stored_inner_width, belt.inner_width_m, rel_tol=0.0, abs_tol=1.0e-12
+    )
+    groove_width = (
+        geometry["max_shift_m"]
+        if belt_changed
+        else geometry["deadzone_shift_m"] + belt.inner_width_m
+    )
+    deadzone = groove_width - belt.inner_width_m
+
+    geometry.update(
         {
             "belt_outer_length_m": belt.outer_length_m,
             "sheave_half_angle_rad": belt.half_angle_rad,
+            "primary_outer_radius_at_zero_shift_m": primary_radius,
+            "deadzone_shift_m": deadzone,
+            "max_shift_m": groove_width,
             "belt": belt.model_dump(
                 exclude={
                     "outer_length_m",
@@ -103,6 +129,12 @@ def with_belt(data: CvtData) -> CvtData:
         }
     )
     result.assembly.setdefault("inertias", {})["belt_density_kg_per_m3"] = belt.density_kg_per_m3
+    for component in result.assembly.get("pulleys", {}).get("primary", {}).get("components", []):
+        if component.get("kind") != "fixed_pivot_roller_flyweight":
+            continue
+        contact_geometry = component.get("geometry", {})
+        contact_geometry["axial_position_min_m"] = 0.0
+        contact_geometry["axial_position_max_m"] = groove_width
     return result
 
 

@@ -1,6 +1,8 @@
 import { projectCourse } from './courseGeometry';
 import { useId } from 'react';
 import type { components } from '@api/generated/backend';
+import { useAuth } from '@contexts/AuthContext';
+import { normalizeUnitPreferences, preferredDisplayUnit, siToDisplay, type UnitScope } from '@utils/units';
 
 type Point = components['schemas']['CoursePoint'];
 /** Display-only chart shared by road previews and recorded playback. */
@@ -8,12 +10,17 @@ export function CourseChart({
   points: roadPoints,
   position,
   label = 'Road elevation preview',
+  scope = 'course',
 }: {
   points: readonly Point[];
   position?: number | null;
   label?: string;
+  scope?: UnitScope;
 }) {
   const id = useId();
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const lengthUnit = preferredDisplayUnit('length', scope, preferences, 'm');
   if (!roadPoints.length) return null;
   const points = projectCourse(roadPoints);
   const first = points[0],
@@ -62,7 +69,7 @@ export function CourseChart({
       <title id={id}>
         {label}
         {marker
-          ? `; vehicle at ${marker.distance_m.toFixed(1)} m, elevation ${marker.elevation_m.toFixed(1)} m`
+          ? `; vehicle at ${siToDisplay(marker.distance_m, lengthUnit).toFixed(1)} ${lengthUnit}, elevation ${siToDisplay(marker.elevation_m, lengthUnit).toFixed(1)} ${lengthUnit}`
           : ''}
       </title>
       {[0, 0.5, 1].map((fraction) => {
@@ -83,13 +90,13 @@ export function CourseChart({
               fill="currentColor"
               fontSize="12"
             >
-              {elevation.toFixed(1)}
+              {siToDisplay(elevation, lengthUnit).toFixed(1)}
             </text>
           </g>
         );
       })}
       <text x="68" y="24" fill="currentColor" fontSize="13">
-        Elevation (m)
+        Elevation ({lengthUnit})
       </text>
       <polyline
         points={points
@@ -120,10 +127,10 @@ export function CourseChart({
         </g>
       )}
       <text x="68" y="205" fill="currentColor" fontSize="12">
-        {leftX.toFixed(1)}
+        {siToDisplay(leftX, lengthUnit).toFixed(1)}
       </text>
       <text x="678" y="205" textAnchor="end" fill="currentColor" fontSize="12">
-        {(leftX + width / scale).toFixed(1)}
+        {siToDisplay(leftX + width / scale, lengthUnit).toFixed(1)}
       </text>
       <text
         x="373"
@@ -132,7 +139,7 @@ export function CourseChart({
         fill="currentColor"
         fontSize="13"
       >
-        Horizontal distance (m)
+        Horizontal distance ({lengthUnit})
       </text>
     </svg>
   );

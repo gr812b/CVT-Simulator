@@ -14,7 +14,12 @@ from app.core.settings import Settings
 from app.database.auth_models import AuthSession, PasswordResetToken
 from app.database.base import utc_now
 from app.database.models import Account, AccountUser, User
-from app.schemas.auth import AuthAccountResponse, AuthSessionResponse, AuthUserResponse
+from app.schemas.auth import (
+    AuthAccountResponse,
+    AuthSessionResponse,
+    AuthUserResponse,
+    UnitPreferences,
+)
 
 passwords = PasswordHash.recommended()
 _dummy_hash = passwords.hash(secrets.token_urlsafe(32))
@@ -61,12 +66,17 @@ class Principal:
             raise ApiProblem(403, "write_access_required", "This workspace is read only.")
 
     def response(self) -> AuthSessionResponse:
+        try:
+            units = UnitPreferences.model_validate(self.user.unit_preferences or {})
+        except ValueError:
+            units = UnitPreferences()
         return AuthSessionResponse(
             user=AuthUserResponse(
                 id=self.user.id,
                 email=self.user.email,
                 display_name=self.user.display_name or "",
                 school=self.user.school,
+                unit_preferences=units,
             ),
             account=AuthAccountResponse(
                 id=self.account.id, name=self.account.name, role=self.membership.role

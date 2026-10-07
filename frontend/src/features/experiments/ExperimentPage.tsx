@@ -28,6 +28,8 @@ import {
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
+import { useAuth } from '@contexts/AuthContext';
+import { formatPreferredQuantity, normalizeUnitPreferences } from '@utils/units';
 import { ComponentPicker } from '../physicalLibrary/ComponentPicker';
 import { CvtEditor } from '../physicalLibrary/CvtEditor';
 import { EngineEditor } from '../physicalLibrary/EngineEditor';
@@ -111,6 +113,10 @@ const steps = [
 ];
 
 export function ExperimentPage() {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const vehicleMassLabel = (mass: number) =>
+    formatPreferredQuantity(mass, 'mass', 'vehicle', preferences, 'kg', 1);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { activity, refresh: refreshActivity } = useRunActivity();
@@ -142,6 +148,7 @@ export function ExperimentPage() {
   );
   const [busy, setBusy] = useState(true);
   const [componentBusy, setComponentBusy] = useState(false);
+  const [componentSaveBlock, setComponentSaveBlock] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<ExperimentPreview | null>(null);
   const [previewKey, setPreviewKey] = useState('');
@@ -528,6 +535,7 @@ export function ExperimentPage() {
         throw new Error(
           'Correct the highlighted numeric inputs before changing steps.',
         );
+      if (componentSaveBlock) throw new Error(componentSaveBlock);
       if (!setup?.name.trim())
         throw new Error('Give this vehicle setup a name.');
       if (next >= 2) {
@@ -659,7 +667,7 @@ export function ExperimentPage() {
                                   key={setupDetail?.item.id ?? 'new'}
                                   title="Vehicle"
                                   initiallyOpen={!setupDetail}
-                                  summary={`${setup.name || 'New vehicle'} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`}
+                                  summary={`${setup.name || 'New vehicle'} · ${vehicleMassLabel(vehicleMassOverride ?? setup.data.vehicle.mass_kg)}`}
                                 >
                                   <TextInput
                                     label="Vehicle setup name"
@@ -684,6 +692,7 @@ export function ExperimentPage() {
                                   <Paper withBorder p="md">
                                     <Stack gap="sm">
                                       <QuantityInput
+                                        scope="vehicle"
                                         label="Run-only vehicle mass"
                                         unit="kg"
                                         scale={1}
@@ -745,6 +754,8 @@ export function ExperimentPage() {
                                   })
                                 }
                                 onLoadingChange={setComponentBusy}
+                                onSaveBlockChange={setComponentSaveBlock}
+                                enableInitialTune={!setup.data.cvt.revision_id}
                               />
                             </EditorDisclosure>
                           </>
@@ -1036,11 +1047,13 @@ export function ExperimentPage() {
                           disabledReason={
                             componentBusy
                               ? 'Wait for the selected component to load.'
-                              : invalid.size
-                                ? 'Correct the highlighted inputs before continuing.'
-                                : !setup
-                                  ? 'Choose or create a vehicle setup.'
-                                  : undefined
+                              : componentSaveBlock
+                                ? componentSaveBlock
+                                : invalid.size
+                                  ? 'Correct the highlighted inputs before continuing.'
+                                  : !setup
+                                    ? 'Choose or create a vehicle setup.'
+                                    : undefined
                           }
                           onClick={() => go(step + 1)}
                         >
@@ -1068,7 +1081,7 @@ export function ExperimentPage() {
                       {
                         label: 'Vehicle',
                         value: setup
-                          ? `${setup.name} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`
+                          ? `${setup.name} · ${vehicleMassLabel(vehicleMassOverride ?? setup.data.vehicle.mass_kg)}`
                           : 'Choose a vehicle',
                         step: 0,
                       },

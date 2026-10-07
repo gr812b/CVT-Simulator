@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1.router import router as v1_router
 from app.application.container import build_container
+from app.core.deployment import IMAGE_REVISION_HEADER, image_revision
 from app.core.errors import ApiProblem
 from app.core.settings import Settings
 from app.database.session import make_engine, make_session_factory
@@ -16,6 +17,7 @@ from app.schemas.common import HealthResponse
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = Settings.from_environment() if settings is None else settings
+    revision = image_revision()
     app = FastAPI(
         title="CVT Simulator API",
         version="1.0.0",
@@ -64,7 +66,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])
-    def health() -> HealthResponse:
+    def health(response: Response) -> HealthResponse:
+        if revision:
+            response.headers[IMAGE_REVISION_HEADER] = revision
         return HealthResponse()
 
     app.include_router(v1_router, prefix=settings.api_prefix)

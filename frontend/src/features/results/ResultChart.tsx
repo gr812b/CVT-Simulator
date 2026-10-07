@@ -1,3 +1,6 @@
+import { useAuth } from '@contexts/AuthContext';
+import { formatDisplayNumber, normalizeUnitPreferences, preferredProjectedDisplayUnit } from '@utils/units';
+import { displayColumn, convertZoomUnits } from '@utils/unitProjection';
 import { PlotInfo } from '@components/plotInfo/PlotInfo';
 import { compactChartLayout } from '@components/graph2D/compactChartLayout';
 import { DEFAULT_PLOTS, usePlotPreferences } from '../playback/preferences';
@@ -21,6 +24,9 @@ import { isActive, message } from '../experiments/api';
 
 export function ResultChart({ inspection }: { inspection: RunInspection }) {
   const { run, availability } = inspection;
+  const { unitPreferences } = useAuth();
+  const units = useMemo(() => normalizeUnitPreferences(unitPreferences), [unitPreferences]);
+  const zoomUnit = useRef('');
   const [data, setData] = useState<RunSeries | null>(null);
   const [preferences, setPreferences] = usePlotPreferences();
   const signal = preferences.signal;
@@ -52,17 +58,26 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
     data?.columns.filter((column) => column.key !== data.axis_key) ?? [];
   const selected =
     available.find((column) => column.key === signal) ?? available[0];
+  const selectedUnit = selected ? preferredProjectedDisplayUnit(selected.dimension, selected.canonical_unit, 'output', units) : '';
   const option = useMemo<EChartsOption>(() => {
     const x = data?.columns.find((column) => column.key === data.axis_key);
+    const displayedY = selected ? displayColumn(selected, units) : [];
     return {
       animation: false,
       color: [theme.colors.red[5]],
       textStyle: { color: theme.colors.dark[0], fontFamily: theme.fontFamily },
       ...compactChartLayout(
-        selected?.canonical_unit || 'Dimensionless',
+        selectedUnit || 'Dimensionless',
         theme.colors.dark[0],
       ),
-      tooltip: { trigger: 'axis', renderMode: 'richText', confine: true },
+      tooltip: {
+        trigger: 'axis', renderMode: 'richText', confine: true,
+        valueFormatter: (value: unknown) => {
+          const number = Array.isArray(value) ? value.at(-1) : value;
+          return typeof number === 'number'
+            ? `${formatDisplayNumber(number)}${selectedUnit ? ` ${selectedUnit}` : ''}` : '—';
+        },
+      },
       xAxis: {
         type: 'value',
         name: `Time (${x?.canonical_unit ?? 's'})`,
@@ -72,7 +87,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
       },
       yAxis: {
         type: 'value',
-        name: selected?.canonical_unit || 'Dimensionless',
+        name: selectedUnit || 'Dimensionless',
         nameLocation: 'end',
         nameRotate: 0,
         nameGap: 9,
@@ -85,7 +100,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
         feature: { dataZoom: {}, restore: {}, saveAsImage: {} },
         iconStyle: { borderColor: theme.colors.dark[0] },
       },
-      dataZoom: zoom.current ?? [
+      dataZoom: convertZoomUnits(zoom.current, zoomUnit.current, selectedUnit) ?? [
         { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
         { type: 'inside', yAxisIndex: 0, filterMode: 'none' },
       ],
@@ -100,20 +115,20 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
                 connectNulls: false,
                 data: x.values.map((time, index) => [
                   time,
-                  selected.values[index] ?? null,
+                  displayedY[index] ?? null,
                 ]),
               },
             ]
           : [],
     };
-  }, [data, selected, theme]);
+  }, [data, selected, selectedUnit, theme, units]);
   return (
     <Paper withBorder p="lg">
       <Stack>
         <Group justify="space-between">
           <Group gap={5}>
             <Title order={2} size="h3">Time history</Title>
-            <PlotInfo title="Time history" description="The selected report signal against simulation time, in its canonical units. Gaps are unavailable data, not zero. Use the signal description below to interpret its definition and sign."/>
+            <PlotInfo title="Time history" description="The selected report signal against simulation time, in your selected output units. Raw report exports remain SI. Gaps are unavailable data, not zero. Use the signal description below to interpret its definition and sign."/>
           </Group>
           <Button
             size="compact-xs"
@@ -163,7 +178,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
               value={selected.key}
               data={available.map((column) => ({
                 value: column.key,
-                label: `${column.label}${column.canonical_unit ? ` (${column.canonical_unit})` : ''}`,
+                label: `${column.label}${column.canonical_unit ? ` (${preferredProjectedDisplayUnit(column.dimension, column.canonical_unit, 'output', units)})` : ''}`,
               }))}
               onChange={(value) => {
                 if (value) {
@@ -188,7 +203,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
             </Text>
             <div
               role="img"
-              aria-label={`${selected.label} versus time in seconds. ${data.resolution} data.`}
+              aria-label={`${selected.label} (${selectedUnit}) versus time in seconds. ${data.resolution} data.`}
             >
               <ReactECharts
                 key={run.id}
@@ -196,6 +211,7 @@ export function ResultChart({ inspection }: { inspection: RunInspection }) {
                 option={option}
                 onEvents={{
                   datazoom: () => {
+                    zoomUnit.current = selectedUnit;
                     const option = chart.current
                       ?.getEchartsInstance()
                       .getOption() as

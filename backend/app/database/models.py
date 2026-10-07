@@ -71,6 +71,9 @@ class User(StringUUIDPrimaryKeyMixin, Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     school: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
+    unit_preferences: Mapped[JsonDict] = mapped_column(
+        JSON, nullable=False, default=dict, server_default="{}"
+    )
     password_hash: Mapped[str | None] = mapped_column(String(500), nullable=True)
     auth_version: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"

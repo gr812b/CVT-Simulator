@@ -2,6 +2,7 @@ import { Alert, Stack, Text } from '@mantine/core';
 import { runOutcomeColors } from '@styles/theme';
 import type { RunInspection } from './api';
 import { outcomeDataMessage, outcomeProgress, type RunOutcome } from './runOutcome';
+import { useAuth } from '@contexts/AuthContext';
 
 export function RunOutcomeNotice({
   outcome,
@@ -12,8 +13,9 @@ export function RunOutcomeNotice({
   availability?: RunInspection['availability'];
   showReference?: boolean;
 }) {
+  const { unitPreferences } = useAuth();
   if (outcome.category === 'success') return null;
-  const progress = outcomeProgress(outcome);
+  const progress = outcomeProgress(outcome, unitPreferences);
   return (
     <Alert color={runOutcomeColors[outcome.category]} title={outcome.title} role="status">
       <Stack gap="xs">

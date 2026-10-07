@@ -1,3 +1,4 @@
+import { formatPreferredProjectedQuantity, normalizeUnitPreferences, type UnitPreferences } from '@utils/units';
 import * as THREE from 'three';
 import type { Scene3DController } from '@utils/Scene3DController';
 import type { VisualReplaySample } from '@utils/reportReplay';
@@ -101,7 +102,7 @@ export class ForceRenderer {
     const max = (unit: string) => {
       let peak = 1;
       for (const track of data.tracks) {
-        if (track.unit !== unit) continue;
+        if ((track.unit ?? 'N') !== unit) continue;
         for (const sample of track.samples) {
           if (sample) peak = Math.max(peak, Math.hypot(...sample.components));
         }
@@ -153,13 +154,15 @@ export class ForceRenderer {
     }
     controller.getScene().add(this.root);
   }
-  update(sample: VisualReplaySample, shift: number, options: ForceOptions) {
+  update(sample: VisualReplaySample, shift: number, options: ForceOptions, preferences?: UnitPreferences) {
+    const units = normalizeUnitPreferences(preferences);
     const bracket = forceBracket(this.data, sample);
     const l = mechanismLayout(this.geometry),
       pose = mechanismPose(this.geometry, shift);
     for (const track of this.data.tracks) {
       const item = this.arrows.get(track.key)!;
       const s = forceAt(track, bracket);
+      const unit = track.unit ?? 'N';
       item.group.visible =
         (options.body === 'both' || options.body === track.body) &&
         options.tracks.includes(track.key) &&
@@ -212,7 +215,7 @@ export class ForceRenderer {
             (this.geometry.beltOuterWidth / 2 -
               this.geometry.cordDepth * Math.tan(this.geometry.halfAngle));
       }
-      if (track.unit === 'N·m') {
+      if (unit === 'N·m') {
         radius =
           (primary
             ? this.geometry.primaryMaxRadius
@@ -221,7 +224,7 @@ export class ForceRenderer {
       }
       const origin = new THREE.Vector3(center.x, center.y, z).addScaledVector(
         radial,
-        track.unit === 'N·m' ? 0 : radius,
+        unit === 'N·m' ? 0 : radius,
       );
       item.group.position.copy(origin);
       const parts = [
@@ -236,7 +239,7 @@ export class ForceRenderer {
         const vector = all[index],
           length = vector.length() * scale;
         arrow.visible =
-          track.unit === 'N' &&
+          unit === 'N' &&
           length > 1e-7 &&
           (index === 0 ||
             options.components.includes(
@@ -252,7 +255,7 @@ export class ForceRenderer {
         }
       });
       item.arc.visible = item.tip.visible =
-        track.unit === 'N·m' && Math.abs(s.components[0]) > 1e-8;
+        unit === 'N·m' && Math.abs(s.components[0]) > 1e-8;
       if (item.arc.visible) {
         const angle =
           Math.sign(s.components[0]) *
@@ -291,7 +294,7 @@ export class ForceRenderer {
       }
       item.label.visible = options.labels;
       if (options.labels) {
-        const text = `${track.label}: ${(track.unit === 'N' ? force.length() : s.components[0]).toFixed(0)} ${track.unit}`;
+        const text = `${track.label}: ${formatPreferredProjectedQuantity(unit === 'N' ? force.length() : s.components[0], '', unit, 'output', units, 2)}`;
         if (text !== item.text) {
           const canvas = document.createElement('canvas');
           canvas.width = 512;
@@ -309,7 +312,7 @@ export class ForceRenderer {
         }
         item.label.position
           .copy(force)
-          .multiplyScalar(track.unit === 'N' ? scale : 0)
+          .multiplyScalar(unit === 'N' ? scale : 0)
           .add(new THREE.Vector3(0, 0.4, 0));
       }
     }

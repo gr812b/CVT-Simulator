@@ -1,0 +1,402 @@
+{
+  "hardware": {
+    "area": [
+      "m²",
+      "cm²",
+      "mm²",
+      "in²",
+      "ft²"
+    ],
+    "volume": [
+      "m³",
+      "cm³",
+      "mm³",
+      "in³",
+      "ft³"
+    ],
+    "angle": [
+      "rad",
+      "deg"
+    ],
+    "angular_speed": [
+      "rad/s",
+      "rpm"
+    ],
+    "angular_acceleration": [
+      "rad/s²",
+      "rpm/s"
+    ],
+    "acceleration": [
+      "m/s²",
+      "mm/s²",
+      "in/s²",
+      "ft/s²"
+    ],
+    "force": [
+      "N",
+      "lbf"
+    ],
+    "torque": [
+      "N·m",
+      "N·mm",
+      "lbf·in",
+      "lbf·ft"
+    ],
+    "density": [
+      "kg/m³",
+      "g/cm³",
+      "lbm/ft³"
+    ],
+    "inertia": [
+      "kg·m²",
+      "kg·mm²",
+      "g·mm²",
+      "lbm·in²"
+    ],
+    "first_moment": [
+      "kg·m",
+      "g·mm",
+      "lbm·in"
+    ],
+    "inverse_length": [
+      "1/m",
+      "1/mm",
+      "1/in"
+    ],
+    "inverse_area": [
+      "1/m²",
+      "1/mm²",
+      "1/in²"
+    ],
+    "stiffness": [
+      "N/m",
+      "N/mm",
+      "lbf/in"
+    ],
+    "torsional_stiffness": [
+      "N·m/rad",
+      "N·m/deg",
+      "lbf·in/deg"
+    ],
+    "rotational_damping": [
+      "N·m·s/rad",
+      "lbf·in·s/rad"
+    ],
+    "power": [
+      "W",
+      "kW",
+      "hp"
+    ],
+    "length_rate": [
+      "m/s",
+      "mm/s",
+      "in/s",
+      "ft/s",
+      "km/h",
+      "mph"
+    ]
+  },
+  "vehicle": {
+    "area": [
+      "m²",
+      "cm²",
+      "mm²",
+      "in²",
+      "ft²"
+    ],
+    "volume": [
+      "m³",
+      "cm³",
+      "mm³",
+      "in³",
+      "ft³"
+    ],
+    "angle": [
+      "rad",
+      "deg"
+    ],
+    "angular_speed": [
+      "rad/s",
+      "rpm"
+    ],
+    "angular_acceleration": [
+      "rad/s²",
+      "rpm/s"
+    ],
+    "acceleration": [
+      "m/s²",
+      "mm/s²",
+      "in/s²",
+      "ft/s²"
+    ],
+    "force": [
+      "N",
+      "lbf"
+    ],
+    "torque": [
+      "N·m",
+      "N·mm",
+      "lbf·in",
+      "lbf·ft"
+    ],
+    "density": [
+      "kg/m³",
+      "g/cm³",
+      "lbm/ft³"
+    ],
+    "inertia": [
+      "kg·m²",
+      "kg·mm²",
+      "g·mm²",
+      "lbm·in²"
+    ],
+    "first_moment": [
+      "kg·m",
+      "g·mm",
+      "lbm·in"
+    ],
+    "inverse_length": [
+      "1/m",
+      "1/mm",
+      "1/in"
+    ],
+    "inverse_area": [
+      "1/m²",
+      "1/mm²",
+      "1/in²"
+    ],
+    "stiffness": [
+      "N/m",
+      "N/mm",
+      "lbf/in"
+    ],
+    "torsional_stiffness": [
+      "N·m/rad",
+      "N·m/deg",
+      "lbf·in/deg"
+    ],
+    "rotational_damping": [
+      "N·m·s/rad",
+      "lbf·in·s/rad"
+    ],
+    "power": [
+      "W",
+      "kW",
+      "hp"
+    ],
+    "length_rate": [
+      "m/s",
+      "mm/s",
+      "in/s",
+      "ft/s",
+      "km/h",
+      "mph"
+    ]
+  },
+  "course": {
+    "area": [
+      "m²",
+      "cm²",
+      "mm²",
+      "in²",
+      "ft²"
+    ],
+    "volume": [
+      "m³",
+      "cm³",
+      "mm³",
+      "in³",
+      "ft³"
+    ],
+    "angle": [
+      "rad",
+      "deg"
+    ],
+    "angular_speed": [
+      "rad/s",
+      "rpm"
+    ],
+    "angular_acceleration": [
+      "rad/s²",
+      "rpm/s"
+    ],
+    "acceleration": [
+      "m/s²",
+      "mm/s²",
+      "in/s²",
+      "ft/s²"
+    ],
+    "force": [
+      "N",
+      "lbf"
+    ],
+    "torque": [
+      "N·m",
+      "N·mm",
+      "lbf·in",
+      "lbf·ft"
+    ],
+    "mass": [
+      "kg",
+      "g",
+      "oz",
+      "lb"
+    ],
+    "density": [
+      "kg/m³",
+      "g/cm³",
+      "lbm/ft³"
+    ],
+    "inertia": [
+      "kg·m²",
+      "kg·mm²",
+      "g·mm²",
+      "lbm·in²"
+    ],
+    "first_moment": [
+      "kg·m",
+      "g·mm",
+      "lbm·in"
+    ],
+    "inverse_length": [
+      "1/m",
+      "1/mm",
+      "1/in"
+    ],
+    "inverse_area": [
+      "1/m²",
+      "1/mm²",
+      "1/in²"
+    ],
+    "stiffness": [
+      "N/m",
+      "N/mm",
+      "lbf/in"
+    ],
+    "torsional_stiffness": [
+      "N·m/rad",
+      "N·m/deg",
+      "lbf·in/deg"
+    ],
+    "rotational_damping": [
+      "N·m·s/rad",
+      "lbf·in·s/rad"
+    ],
+    "power": [
+      "W",
+      "kW",
+      "hp"
+    ],
+    "length_rate": [
+      "m/s",
+      "mm/s",
+      "in/s",
+      "ft/s",
+      "km/h",
+      "mph"
+    ]
+  },
+  "output": {
+    "area": [
+      "m²",
+      "cm²",
+      "mm²",
+      "in²",
+      "ft²"
+    ],
+    "volume": [
+      "m³",
+      "cm³",
+      "mm³",
+      "in³",
+      "ft³"
+    ],
+    "angle": [
+      "rad",
+      "deg"
+    ],
+    "angular_speed": [
+      "rad/s",
+      "rpm"
+    ],
+    "angular_acceleration": [
+      "rad/s²",
+      "rpm/s"
+    ],
+    "acceleration": [
+      "m/s²",
+      "mm/s²",
+      "in/s²",
+      "ft/s²"
+    ],
+    "force": [
+      "N",
+      "lbf"
+    ],
+    "torque": [
+      "N·m",
+      "N·mm",
+      "lbf·in",
+      "lbf·ft"
+    ],
+    "mass": [
+      "kg",
+      "g",
+      "oz",
+      "lb"
+    ],
+    "density": [
+      "kg/m³",
+      "g/cm³",
+      "lbm/ft³"
+    ],
+    "inertia": [
+      "kg·m²",
+      "kg·mm²",
+      "g·mm²",
+      "lbm·in²"
+    ],
+    "first_moment": [
+      "kg·m",
+      "g·mm",
+      "lbm·in"
+    ],
+    "inverse_length": [
+      "1/m",
+      "1/mm",
+      "1/in"
+    ],
+    "inverse_area": [
+      "1/m²",
+      "1/mm²",
+      "1/in²"
+    ],
+    "stiffness": [
+      "N/m",
+      "N/mm",
+      "lbf/in"
+    ],
+    "torsional_stiffness": [
+      "N·m/rad",
+      "N·m/deg",
+      "lbf·in/deg"
+    ],
+    "rotational_damping": [
+      "N·m·s/rad",
+      "lbf·in·s/rad"
+    ],
+    "power": [
+      "W",
+      "kW",
+      "hp"
+    ],
+    "length_rate": [
+      "m/s",
+      "mm/s",
+      "in/s",
+      "ft/s",
+      "km/h",
+      "mph"
+    ]
+  }
+}

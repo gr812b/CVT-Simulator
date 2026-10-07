@@ -32,6 +32,8 @@ class Settings:
     road_max_distance_m: float = 100000.0
     road_max_grade_degrees: float = 60.0
     worker_poll_seconds: float = 1.0
+    worker_max_concurrency: int = 1
+    worker_api_url: str = ""
     cors_origins: tuple[str, ...] = ("http://localhost:5173",)
     database_url: str = "sqlite:///./cvt_simulator_dev.db"
     database_echo: bool = False
@@ -67,6 +69,21 @@ class Settings:
             raise ValueError("CVT_SMTP_SECURITY must be starttls or tls.")
         if self.session_lifetime_seconds <= 0 or self.reset_lifetime_seconds <= 0:
             raise ValueError("Authentication lifetimes must be positive.")
+        if (
+            not isinstance(self.worker_max_concurrency, int)
+            or isinstance(self.worker_max_concurrency, bool)
+            or self.worker_max_concurrency <= 0
+        ):
+            raise ValueError("CVT_WORKER_MAX_CONCURRENCY must be a positive integer.")
+        if self.worker_api_url:
+            worker_url = urlsplit(self.worker_api_url)
+            if (
+                worker_url.scheme not in {"http", "https"}
+                or not worker_url.netloc
+                or worker_url.query
+                or worker_url.fragment
+            ):
+                raise ValueError("CVT_WORKER_API_URL must be an absolute http(s) API URL.")
         for field in (
             "run_timeout_seconds",
             "run_queue_timeout_seconds",
@@ -115,6 +132,10 @@ class Settings:
             for item in getenv("CVT_CORS_ORIGINS", "http://localhost:5173").split(",")
             if item.strip()
         )
+        try:
+            worker_max_concurrency = int(getenv("CVT_WORKER_MAX_CONCURRENCY", "1"))
+        except ValueError:
+            raise ValueError("CVT_WORKER_MAX_CONCURRENCY must be a positive integer.") from None
         return cls(
             preset_directory=root / "presets",
             run_timeout_seconds=timeout,
@@ -133,6 +154,8 @@ class Settings:
             road_max_distance_m=float(getenv("CVT_ROAD_MAX_DISTANCE_M", "100000")),
             road_max_grade_degrees=float(getenv("CVT_ROAD_MAX_GRADE_DEGREES", "60")),
             worker_poll_seconds=float(getenv("CVT_WORKER_POLL_SECONDS", "1")),
+            worker_max_concurrency=worker_max_concurrency,
+            worker_api_url=getenv("CVT_WORKER_API_URL", "").rstrip("/"),
             cors_origins=origins,
             database_url=database_url,
             database_echo=database_echo,

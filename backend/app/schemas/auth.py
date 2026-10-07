@@ -8,6 +8,7 @@ from pydantic import AfterValidator, EmailStr, Field, StringConstraints, field_v
 from app.application.schools import known_school
 
 from .common import ApiModel
+from .unit_preferences import UnitPreferences
 
 Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
@@ -59,6 +60,7 @@ class AuthUserResponse(ApiModel):
     id: str
     email: str
     display_name: str
+    unit_preferences: UnitPreferences = Field(default_factory=UnitPreferences)
 
 
 class AuthAccountResponse(ApiModel):

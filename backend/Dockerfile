@@ -18,6 +18,11 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 COPY backend /app
 RUN python -m app.scripts.check_cinder_install
 
+# The API and its workers must run the same release before new jobs are claimed.
+# Containerize supplies the commit SHA; manual images can pass the same build arg.
+ARG CVT_IMAGE_REVISION
+RUN printf '%s\n' "$CVT_IMAGE_REVISION" > /app/image-revision.txt
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -46,6 +46,24 @@ configuration. `--once` processes at most one queued job and is useful for a
 controlled local check. Native Windows cannot run the worker; use WSL or the
 Linux container setup below. Without a worker, accepted simulations remain queued.
 
+Set `CVT_WORKER_MAX_CONCURRENCY` to a positive integer to allow more simultaneous
+runs (default `1`). A single worker supervisor starts solver subprocesses as jobs
+arrive, up to that cap, and has no solver processes while idle. Extra jobs stay
+queued until a slot opens. The limit is per worker container; keep the production
+Compose service at one replica. Each concurrent run has its own memory and
+wall-clock limits. SIGTERM/SIGINT stops intake and drains active runs before exit;
+allow at least the run timeout plus cleanup time when stopping the container.
+
+Production Compose sets `CVT_WORKER_API_URL=http://cvt-backend:8000`. With this
+setting, a worker only claims jobs while the API health response identifies the
+same `CVT_IMAGE_REVISION` baked into its image. It waits through API startup,
+migrations, and temporary image mismatches. Published images receive the Git
+commit at build time; custom images using this gate must pass
+`--build-arg CVT_IMAGE_REVISION=<commit>` to `docker build`. Leave
+`CVT_WORKER_API_URL` unset for an independent local worker or a local `--once`
+check. The readiness CLI used by Watchtower is
+`python -m app.scripts.wait_for_api --url http://127.0.0.1:8000 --timeout 120`.
+
 The API is at `http://localhost:8000`, its health check at `/api/v1/health`, and
 its current interactive reference at `/docs`. Start the frontend separately as
 shown in [frontend/README.md](../frontend/README.md).
