@@ -55,8 +55,17 @@ try {
   page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(10000);
   const url=`http://127.0.0.1:${server.address().port}`;await page.goto(url);
   const button=name=>page.getByRole('button',{name,exact:true});
-  const length=page.getByLabel('Test length',{exact:true});
-  const inertia=page.getByLabel('Test inertia',{exact:true});await length.waitFor();
+  const length=page.getByLabel(/^Test length(?:\s*\*)?$/);
+  const inertia=page.getByLabel(/^Test inertia(?:\s*\*)?$/);
+  try {
+    await length.waitFor();
+  } catch (error) {
+    console.error('Editor fixture did not mount the expected input.');
+    console.error('Browser JavaScript errors:', errors);
+    console.error('Page text:', await page.locator('body').innerText().catch(() => '(unavailable)'));
+    console.error('Rendered root:', await page.locator('#root').innerHTML().catch(() => '(unavailable)'));
+    throw error;
+  }
   const state=async()=>JSON.parse(await page.getByTestId('state').innerText());
   const until=async predicate=>page.waitForFunction(`(${predicate})(JSON.parse(document.querySelector('[data-testid=state]').textContent))`);
   const pass=name=>{count++;console.log('PASS',name);};
@@ -87,7 +96,7 @@ try {
   await button('Discard draft').click();await length.fill('2');
   // A second page shares the authentication cookie/session fixture and broadcasts real events.
   const other=await context.newPage();other.on('pageerror',error=>errors.push(error.message));await other.goto(url);
-  await other.getByLabel('Test length',{exact:true}).waitFor();
+  await other.getByLabel(/^Test length(?:\s*\*)?$/).waitFor();
   await other.getByRole('button',{name:'SI preferences',exact:true}).click();await until("s=>s.preferences.hardware_length==='m'");
   assert.equal(await page.locator('body').getAttribute('data-signed-out'),null);
   assert.ok(Math.abs((await state()).value.length-.0508)<1e-14);assert.equal(await length.inputValue(),'2');pass('cross-tab preferences keep identity and in-progress text');
