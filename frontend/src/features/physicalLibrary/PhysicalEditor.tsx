@@ -417,7 +417,7 @@ function PhysicalEditor({
     catalog.filter((item) => item.kind === componentKind);
   return (
     <EditorHistoryBoundary history={editHistory}
-      disabled={busy || (!isNew && (!detail?.item.owned || Boolean(revisionId)))} onRestore={restoreDraft}>
+      disabled={busy || !editable} onRestore={restoreDraft}>
     <Container size="lg" py="lg">
       <Stack gap="lg">
         <Group justify="space-between">

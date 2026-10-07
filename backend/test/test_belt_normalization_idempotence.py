@@ -84,6 +84,30 @@ def test_actual_frontend_selection_fixture():
     data.assembly["geometry"].update(selected["assembly"]["geometry"])
     data.assembly["inertias"].update(selected["assembly"]["inertias"])
     data = CvtData.model_validate(data.model_dump())
-    before = deepcopy(data.model_dump())
-    assert with_belt(data).model_dump() == before
-    assert with_belt(with_belt(data)).model_dump() == before
+    normalized = with_belt(data)
+
+    # The frontend fixture contains only belt-owned fields; its source has no
+    # primary travel geometry. The remaining template fields are legitimately
+    # normalized to the selected belt's width by the backend.
+    for key, expected in selected["assembly"]["geometry"].items():
+        assert normalized.assembly["geometry"][key] == expected
+    for key, expected in selected["assembly"]["inertias"].items():
+        assert normalized.assembly["inertias"][key] == expected
+    assert normalized.belt == data.belt
+
+    geometry = normalized.assembly["geometry"]
+    groove_width = (
+        data.assembly["geometry"]["deadzone_shift_m"] + data.belt.data.inner_width_m
+    )
+    assert geometry["max_shift_m"] == groove_width
+    assert geometry["deadzone_shift_m"] == (
+        groove_width - data.belt.data.inner_width_m
+    )
+    contact = next(
+        component["geometry"]
+        for component in normalized.assembly["pulleys"]["primary"]["components"]
+        if component["kind"] == "fixed_pivot_roller_flyweight"
+    )
+    assert contact["axial_position_min_m"] == 0.0
+    assert contact["axial_position_max_m"] == groove_width
+    assert with_belt(normalized).model_dump() == normalized.model_dump()
