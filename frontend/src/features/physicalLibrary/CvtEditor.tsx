@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Accordion,
   ActionIcon,
@@ -9,7 +9,6 @@ import {
   SimpleGrid,
   Stack,
   Text,
-  Tooltip,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
@@ -19,7 +18,8 @@ import {
   setValueAtJsonPointer,
 } from '@utils/jsonPointer';
 import { BeltPicker } from './BeltPicker';
-import { CvtMeasurementPreview } from './CvtMeasurementPreview';
+import { CvtPrimaryHardwarePreview, CvtPulleyPreview } from './CvtHardwarePreviews';
+import { InitialTunePanel } from './InitialTunePanel';
 import {
   cvtFieldPresentation,
   isCanonicalPrimaryRadiusField,
@@ -113,6 +113,20 @@ function AdvancedSection({
   );
 }
 
+
+function assemblyFindingPath(path: string): string {
+  const normalized = path.replace(/\./g, '/');
+  const marker = normalized.indexOf('/assembly/');
+  if (marker >= 0) return normalized.slice(marker + '/assembly'.length);
+  return normalized.replace(/^\/assembly/, '');
+}
+
+function relatedFieldPath(field: string, finding: string): boolean {
+  const a = field.replace(/\/$/, '');
+  const b = finding.replace(/\/$/, '');
+  return a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
+}
+
 type Entry = { field: PhysicalField; path: string };
 
 export function CvtEditor({
@@ -123,7 +137,9 @@ export function CvtEditor({
   validation = null,
   disabled = false,
   onLoadingChange,
+  onSaveBlockChange,
   draftPathPrefix = '',
+  enableInitialTune = false,
 }: {
   value: CvtData;
   onChange: (value: CvtData) => void;
@@ -132,16 +148,20 @@ export function CvtEditor({
   validation?: PhysicalValidation | null;
   disabled?: boolean;
   onLoadingChange?: (loading: boolean) => void;
+  onSaveBlockChange?: (reason: string | null) => void;
   draftPathPrefix?: string;
+  enableInitialTune?: boolean;
 }) {
   const assembly = value.assembly;
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  const [openedCategories, setOpenedCategories] = useState<string[]>(['belt', 'geometry']);
   const focusPath = (path: string) => (focused: boolean) =>
     setFocusedPath((current) => focused ? path : current === path ? null : current);
   const primaryCoupled = primaryHasRelativeRotationCoupling(value);
   const changeAssembly = (next: CvtData['assembly']) =>
     onChange({ ...value, assembly: next });
-  const entries = (prefix: string, advanced: boolean): Entry[] =>
+
+  const entries = (prefix: string): Entry[] =>
     fields
       .filter(
         (field) =>
@@ -156,27 +176,43 @@ export function CvtEditor({
           .filter((path) => path.startsWith(prefix))
           .map((path) => ({ field, path })),
       )
-      .filter(({ field, path }) => {
-        const presentation = cvtFieldPresentation(field, path);
-        if (presentation.advanced !== advanced) return false;
+      .filter(({ path }) => {
         if (isCanonicalPrimaryRadiusField(path)) return false;
         if (!primaryCoupled && isPrimaryRotationalInertiaField(path)) return false;
         if (isOrdinaryPrimaryTravelField(path, value)) return false;
         return typeof getValueAtJsonPointer(assembly, path) === 'number';
       });
 
-  const advancedHasError = (items: Entry[]) => {
-    const paths = new Set(items.map(({ path }) => path));
-    return (
-      validation?.findings.some((finding) => {
-        if (finding.severity !== 'error' || !finding.document_path) return false;
-        const documentPath = finding.document_path.replace(/^\/assembly/, '');
-        return [...paths].some(
-          (path) => documentPath === path || documentPath.startsWith(`${path}/`),
-        );
-      }) ?? false
-    );
-  };
+  const findingTouches = useCallback((path: string) =>
+    validation?.findings.some((finding) => {
+      if (finding.severity !== 'error' || !finding.document_path) return false;
+      const documentPath = assemblyFindingPath(finding.document_path);
+      return relatedFieldPath(path, documentPath);
+    }) ?? false, [validation]);
+
+  const advancedHasError = (items: Entry[]) =>
+    items.some(({ path }) => findingTouches(path));
+
+  useEffect(() => {
+    if (!validation?.findings.some((finding) => finding.severity === 'error')) return;
+    const categories: Array<[string, string[]]> = [
+      ['geometry', ['/geometry/']],
+      ['inertias', ['/inertias/']],
+      ['contact', ['/contact/']],
+      ['primary', ['/pulleys/primary/']],
+      ['secondary', ['/pulleys/secondary/']],
+    ];
+    const needed = categories
+      .filter(([, prefixes]) => prefixes.some((prefix) => findingTouches(prefix)))
+      .map(([category]) => category);
+    if (needed.length)
+      setOpenedCategories((current) => Array.from(new Set([...current, ...needed])));
+  }, [validation, findingTouches]);
+
+  useEffect(() => {
+    if (!enableInitialTune) onSaveBlockChange?.(null);
+    return () => onSaveBlockChange?.(null);
+  }, [enableInitialTune, onSaveBlockChange]);
 
   const changePath = (path: string, next: number) => {
     if (path === '/geometry/max_shift_m') {
@@ -217,36 +253,70 @@ export function CvtEditor({
             <div style={{ flex: 1 }}>{input}</div>
             <FieldInfo label={label} description={presentation.description} />
           </Group>
-        ) : (
-          input
-        );
+        ) : input;
       })}
     </SimpleGrid>
   );
 
-  const componentFields = (prefix: string) => {
-    const basic = entries(prefix, false);
-    const advanced = entries(prefix, true);
+  const groupedFields = (
+    groups: Array<{ label?: string; prefix: string }>,
+  ) => {
+    const resolved = groups.map((group) => {
+      const all = entries(group.prefix);
+      return {
+        ...group,
+        basic: all.filter(({ field, path }) => !cvtFieldPresentation(field, path).advanced),
+        advanced: all.filter(({ field, path }) => cvtFieldPresentation(field, path).advanced),
+      };
+    });
+    const advanced = resolved.flatMap((group) => group.advanced);
     return (
-      <Stack gap="md">
-        {basic.length > 0 && renderEntries(basic)}
+      <Stack gap="lg">
+        {resolved.map((group) => group.basic.length > 0 && (
+          <Stack key={group.prefix} gap="sm">
+            {group.label && <Badge variant="outline" w="fit-content">{group.label}</Badge>}
+            {renderEntries(group.basic)}
+          </Stack>
+        ))}
         {advanced.length > 0 && (
           <AdvancedSection forceOpen={advancedHasError(advanced)}>
-            {renderEntries(advanced)}
+            {resolved.map((group) => group.advanced.length > 0 && (
+              <Stack key={group.prefix} gap="sm">
+                {group.label && <Text fw={600} size="sm">{group.label}</Text>}
+                {renderEntries(group.advanced)}
+              </Stack>
+            ))}
           </AdvancedSection>
         )}
       </Stack>
     );
   };
 
+  const pulleyGroups = (mount: 'primary' | 'secondary') => {
+    const groups = assembly.pulleys[mount].components.map((component, index) => ({
+      label: componentLabel(component.kind),
+      prefix: `/pulleys/${mount}/components/${index}/`,
+    }));
+    if (assembly.pulleys[mount].helical_coupling)
+      groups.push({
+        label: 'Helical coupling geometry',
+        prefix: `/pulleys/${mount}/helical_coupling/`,
+      });
+    return groups;
+  };
+
   return (
     <Stack gap="lg">
       <Text size="sm" c="dimmed">
-        Enter fixed hardware measurements here. Flyweight mass, springs, ramp
-        placement, ramp shape and helix shape are adjusted in Tunes after the
-        CVT is saved.
+        Enter fixed hardware measurements here. Replaceable masses, springs,
+        ramp placement, ramp shape and helix shape are adjusted in Tunes.
       </Text>
-      <Accordion variant="separated" multiple defaultValue={['belt', 'geometry']}>
+      <Accordion
+        variant="separated"
+        multiple
+        value={openedCategories}
+        onChange={setOpenedCategories}
+      >
         <Accordion.Item value="belt">
           <Accordion.Control>Reusable belt</Accordion.Control>
           <Accordion.Panel>
@@ -260,35 +330,33 @@ export function CvtEditor({
               />
               <Text size="xs" c="dimmed">
                 Changing the belt keeps the physical primary shaft/sleeve radius
-                unchanged and updates CINDER’s outer-belt radius from the new
-                belt height.
+                unchanged and updates CINDER’s outer-belt radius from the new belt height.
               </Text>
             </Stack>
           </Accordion.Panel>
         </Accordion.Item>
+
         <Accordion.Item value="geometry">
           <Accordion.Control>Pulley geometry & travel</Accordion.Control>
           <Accordion.Panel>
-            <Stack>
-              <CvtMeasurementPreview value={value} activePath={focusedPath} />
-              <Tooltip
-                label="CINDER requires the sheave half-angle to match the selected belt’s half-angle."
-                multiline
-                w={300}
-                withArrow
-                events={{ hover: true, focus: true, touch: true }}
+            <Stack gap="lg">
+              <CvtPulleyPreview value={value} activePath={focusedPath} />
+              <div
+                tabIndex={0}
+                onFocus={() => setFocusedPath('/geometry/sheave_half_angle_rad')}
+                onBlur={() => setFocusedPath((current) =>
+                  current === '/geometry/sheave_half_angle_rad' ? null : current
+                )}
               >
-                <div tabIndex={0}>
-                  <QuantityInput
-                    scope="hardware"
-                    label="Sheave half-angle · set by belt"
-                    value={value.belt.data.half_angle_rad}
-                    unit="deg"
-                    disabled
-                    onChange={() => undefined}
-                  />
-                </div>
-              </Tooltip>
+                <QuantityInput
+                  scope="hardware"
+                  label="Sheave half-angle · set by belt"
+                  value={value.belt.data.half_angle_rad}
+                  unit="deg"
+                  disabled
+                  onChange={() => undefined}
+                />
+              </div>
               <QuantityInput
                 scope="hardware"
                 draftKey={`cvt:${draftPathPrefix}:shaft-radius`}
@@ -301,15 +369,15 @@ export function CvtEditor({
                 onChange={(next) => onChange(withPrimaryShaftRadius(value, next))}
                 onFocusChange={focusPath('@primary-shaft-radius')}
               />
-              {componentFields('/geometry/')}
+              {groupedFields([{ prefix: '/geometry/' }])}
             </Stack>
           </Accordion.Panel>
         </Accordion.Item>
+
         <Accordion.Item value="inertias">
           <Accordion.Control>CVT masses & inertias</Accordion.Control>
           <Accordion.Panel>
-            <Stack>
-              <Text fw={600}>Primary</Text>
+            <Stack gap="lg">
               {!primaryCoupled && (
                 <QuantityInput
                   scope="hardware"
@@ -319,18 +387,18 @@ export function CvtEditor({
                   unit="kg·m²"
                   min={0}
                   disabled={disabled}
-                  description="Total rotational inertia about the primary shaft of the fixed and movable primary hardware. Excludes the engine and separately modelled flyweights; movable-sheave translating mass remains separate below."
-                  onChange={(next) =>
-                    onChange(withPrimaryRotatingHardwareInertia(value, next))
-                  }
+                  description="Total rotational inertia about the primary shaft of the fixed and movable primary hardware. Excludes the engine and separately modelled flyweights; movable-sheave translating mass remains separate."
+                  onChange={(next) => onChange(withPrimaryRotatingHardwareInertia(value, next))}
                 />
               )}
-              {componentFields('/inertias/primary/')}
-              <Text fw={600}>Secondary</Text>
-              {componentFields('/inertias/secondary/')}
+              {groupedFields([
+                { label: 'Primary', prefix: '/inertias/primary/' },
+                { label: 'Secondary', prefix: '/inertias/secondary/' },
+              ])}
             </Stack>
           </Accordion.Panel>
         </Accordion.Item>
+
         <Accordion.Item value="contact">
           <Accordion.Control>Belt contact</Accordion.Control>
           <Accordion.Panel>
@@ -351,38 +419,41 @@ export function CvtEditor({
                   })
                 }
               />
-              {componentFields('/contact/')}
+              {groupedFields([{ prefix: '/contact/' }])}
             </Stack>
           </Accordion.Panel>
         </Accordion.Item>
-        {(['primary', 'secondary'] as const).map((mount) => (
-          <Accordion.Item key={mount} value={mount}>
-            <Accordion.Control>
-              {mount === 'primary' ? 'Primary' : 'Secondary'} mounting geometry
-            </Accordion.Control>
+
+        <Accordion.Item value="primary">
+          <Accordion.Control>Primary mounting geometry</Accordion.Control>
+          <Accordion.Panel>
+            <Stack gap="lg">
+              <CvtPrimaryHardwarePreview value={value} activePath={focusedPath} />
+              {groupedFields(pulleyGroups('primary'))}
+            </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        <Accordion.Item value="secondary">
+          <Accordion.Control>Secondary mounting geometry</Accordion.Control>
+          <Accordion.Panel>
+            {groupedFields(pulleyGroups('secondary'))}
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        {enableInitialTune && (
+          <Accordion.Item value="initial-tune">
+            <Accordion.Control>Initial tune</Accordion.Control>
             <Accordion.Panel>
-              <Stack gap="xl">
-                {mount === 'primary' && (
-                  <CvtMeasurementPreview value={value} activePath={focusedPath} />
-                )}
-                {assembly.pulleys[mount].components.map((component, index) => (
-                  <Stack key={`${index}-${component.kind}`} gap="md">
-                    <Group>
-                      <Badge variant="outline">{componentLabel(component.kind)}</Badge>
-                    </Group>
-                    {componentFields(`/pulleys/${mount}/components/${index}/`)}
-                  </Stack>
-                ))}
-                {assembly.pulleys[mount].helical_coupling && (
-                  <Stack>
-                    <Text fw={600}>Helical coupling geometry</Text>
-                    {componentFields(`/pulleys/${mount}/helical_coupling/`)}
-                  </Stack>
-                )}
-              </Stack>
+              <InitialTunePanel
+                value={value}
+                onChange={onChange}
+                disabled={disabled}
+                onSaveBlockChange={onSaveBlockChange}
+              />
             </Accordion.Panel>
           </Accordion.Item>
-        ))}
+        )}
       </Accordion>
     </Stack>
   );

@@ -134,6 +134,7 @@ function PhysicalEditor({
   const [loading, setLoading] = useState(true);
   const [workingBusy, setBusy] = useState(false);
   const [componentLoading, setComponentLoading] = useState(false);
+  const [componentSaveBlock, setComponentSaveBlock] = useState<string | null>(null);
   const busy = workingBusy || componentLoading || catalogLoading;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -268,7 +269,7 @@ function PhysicalEditor({
   };
   const save = () =>
     perform(async () => {
-      if (!document || invalid.size || editHistory.getSnapshot().invalidCount) return;
+      if (!document || invalid.size || editHistory.getSnapshot().invalidCount || componentSaveBlock) return;
       const result = await savePhysical(
         document,
         detail?.item.revision_id ?? null,
@@ -289,7 +290,7 @@ function PhysicalEditor({
     });
   const check = () =>
     perform(async () => {
-      if (!document || invalid.size || editHistory.getSnapshot().invalidCount) return;
+      if (!document || invalid.size || editHistory.getSnapshot().invalidCount || componentSaveBlock) return;
       const result = await validatePhysical(document);
       setValidation(result.validation);
       setValidated(serialized);
@@ -508,7 +509,7 @@ function PhysicalEditor({
                         type="submit"
                         leftSection={<IconCheck size={16} />}
                         loading={busy}
-                        disabled={invalidInputs > 0 || !document.name.trim()}
+                        disabled={invalidInputs > 0 || !document.name.trim() || Boolean(componentSaveBlock)}
                       >
                         Save
                       </Button>
@@ -516,7 +517,7 @@ function PhysicalEditor({
                     {editable && (
                       <Button
                         variant="default"
-                        disabled={busy || invalidInputs > 0}
+                        disabled={busy || invalidInputs > 0 || Boolean(componentSaveBlock)}
                         onClick={() => void check()}
                       >
                         Check inputs
@@ -555,6 +556,11 @@ function PhysicalEditor({
               {busy && (
                 <Text role="status" size="sm" c="dimmed">
                   Checking physical inputs and completing your action…
+                </Text>
+              )}
+              {componentSaveBlock && (
+                <Text role="status" size="sm" c="dimmed">
+                  {componentSaveBlock}
                 </Text>
               )}
               {error && (
@@ -716,6 +722,8 @@ function PhysicalEditor({
                           validation={validation}
                           disabled={disabled}
                           onLoadingChange={setComponentLoading}
+                          onSaveBlockChange={setComponentSaveBlock}
+                          enableInitialTune={isNew}
                         />
                       )}
                       {document.kind === 'setups' && (
@@ -815,6 +823,8 @@ function PhysicalEditor({
                                   validation={validation}
                                   disabled={disabled}
                                   onLoadingChange={setComponentLoading}
+                                  onSaveBlockChange={setComponentSaveBlock}
+                                  enableInitialTune={!document.data.cvt.revision_id}
                                 />
                               </Stack>
                             </Accordion.Panel>

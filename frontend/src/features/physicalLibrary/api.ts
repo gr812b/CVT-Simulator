@@ -32,6 +32,10 @@ export async function resolveBeltSection(
   );
 }
 export type CvtData = Schema['CvtData'];
+export type CvtEditorScenePreview = Schema['ScenePreview'];
+export type CvtEditorTunePreview = Schema['TuneScenePreview'];
+export type InitialTuneSurface = Schema['InitialTuneSurface'];
+export type InitialTuneValues = Schema['InitialTuneRequest']['values'];
 export type VehicleData = Schema['VehicleData'];
 export type EngineChoice = Schema['EngineChoice'];
 export type BeltChoice = Schema['BeltChoice'];
@@ -60,6 +64,55 @@ export function isPhysicalKind(
   return (
     value !== undefined &&
     Object.prototype.hasOwnProperty.call(kindLabels, value)
+  );
+}
+
+export async function previewCvtPulleys(value: CvtData, signal?: AbortSignal) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/editor/pulleys', {
+      body: { geometry: value.assembly.geometry },
+      signal,
+    }),
+  );
+}
+export async function previewCvtMechanism(value: CvtData, signal?: AbortSignal) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/editor/mechanism', {
+      body: { cvt: value },
+      signal,
+    }),
+  );
+}
+export async function initialTuneSurface(value: CvtData, signal?: AbortSignal) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/editor/initial-tune/surface', {
+      body: { cvt: value },
+      signal,
+    }),
+  );
+}
+export async function previewInitialTune(
+  value: CvtData,
+  values: InitialTuneValues,
+  signal?: AbortSignal,
+) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/editor/initial-tune/preview', {
+      body: { cvt: value, values },
+      signal,
+    }),
+  );
+}
+export async function applyInitialTune(
+  value: CvtData,
+  values: InitialTuneValues,
+  signal?: AbortSignal,
+) {
+  return dataOrThrow(
+    await api.POST('/api/v1/physical-library/editor/initial-tune/apply', {
+      body: { cvt: value, values },
+      signal,
+    }),
   );
 }
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends
 from . import (
     auth,
     community,
+    cvt_editor,
     demo,
     experiments,
     library,
@@ -29,6 +30,7 @@ router = APIRouter(
 )
 router.include_router(auth.router)
 router.include_router(community.router)
+router.include_router(cvt_editor.router)
 router.include_router(demo.router)
 router.include_router(publications.router)
 router.include_router(results.router)

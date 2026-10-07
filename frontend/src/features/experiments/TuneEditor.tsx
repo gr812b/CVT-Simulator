@@ -70,12 +70,20 @@ function travelIndex(preview: TunePreview | null, mount: Mount, percent: number)
   return best;
 }
 
-export function TuneEditor({ value, surface, onChange, readOnly = false, onValidationChange }: {
+export function TuneEditor({
+  value,
+  surface,
+  onChange,
+  readOnly = false,
+  onValidationChange,
+  previewRequest = previewTune,
+}: {
   value: Tune;
-  surface: TuneSurface;
+  surface: Pick<TuneSurface, 'fields'>;
   onChange: (value: Tune) => void;
   readOnly?: boolean;
   onValidationChange?: (check: TuneCheck) => void;
+  previewRequest?: (value: Tune, signal?: AbortSignal) => Promise<TunePreview>;
 }) {
   const { unitPreferences } = useAuth();
   const preferences = normalizeUnitPreferences(unitPreferences);
@@ -96,7 +104,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void previewTune(JSON.parse(encoded), controller.signal).then(next => {
+      void previewRequest(JSON.parse(encoded), controller.signal).then(next => {
         if (!controller.signal.aborted) {
           if (!next.validation || typeof next.validation.is_valid !== 'boolean' || !Array.isArray(next.validation.findings)) {
             throw new Error('The backend did not return a contact-preview check. Restart the updated backend and retry.');
@@ -109,7 +117,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
       });
     }, 350);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [encoded, attempt]);
+  }, [encoded, attempt, previewRequest]);
 
   useEffect(() => {
     onValidationChange?.({ inputKey: encoded, validation, error });

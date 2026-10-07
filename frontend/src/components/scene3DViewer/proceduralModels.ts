@@ -116,6 +116,64 @@ function sheave(
   return group;
 }
 
+export function createPulleyModels(
+  geometry: SceneGeometry,
+  primaryShaftRadius?: number,
+): Model3DConfig[] {
+  const layout = mechanismLayout(geometry);
+  // Hardware editing may provide the measured primary shaft/sleeve radius.
+  // The legacy procedural radius remains a fallback for old recordings.
+  const measuredPrimaryShaft = primaryShaftRadius ?? layout.shaftP;
+  return [
+    {
+      id: 'primaryFixed',
+      object3D: sheave(
+        geometry,
+        geometry.primaryMinRadius,
+        geometry.primaryMaxRadius,
+        -1,
+        true,
+        measuredPrimaryShaft,
+      ),
+    },
+    {
+      id: 'primaryMoving',
+      parentId: 'primaryFixed',
+      object3D: sheave(
+        geometry,
+        geometry.primaryMinRadius,
+        geometry.primaryMaxRadius,
+        1,
+        false,
+        measuredPrimaryShaft,
+      ),
+    },
+    {
+      id: 'secondaryFixed',
+      object3D: sheave(
+        geometry,
+        geometry.secondaryMinRadius,
+        geometry.secondaryMaxRadius,
+        1,
+        true,
+        layout.shaftS,
+      ),
+    },
+    {
+      id: 'secondaryMoving',
+      parentId: 'secondaryFixed',
+      object3D: sheave(
+        geometry,
+        geometry.secondaryMinRadius,
+        geometry.secondaryMaxRadius,
+        -1,
+        false,
+        layout.shaftS,
+      ),
+    },
+  ];
+}
+
 export function createCVTModels(geometry: SceneGeometry, focus?: 'primary' | 'secondary'): Model3DConfig[] {
   if (focus) return [
     { id: `${focus}Fixed`, object3D: new THREE.Group() },

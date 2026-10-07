@@ -169,6 +169,7 @@ test('absolute ramp reference coordinates are tune-only, not CVT hardware fields
   assert.equal(h.isCvtHardwareField('/pulleys/primary/components/*/geometry/ramp_reference_axial_position_m'), false);
   assert.equal(h.isCvtHardwareField('/pulleys/primary/components/*/geometry/ramp_reference_radius_m'), false);
   assert.equal(h.isCvtHardwareField('/pulleys/primary/components/*/geometry/pivot_radius_m'), true);
+  assert.equal(h.isCvtHardwareField('/pulleys/primary/components/*/geometry/pivot_axial_position_m'), false);
 });
 
 test('mechanical mappings and compilation controls are advanced with physical labels', () => {
@@ -178,7 +179,7 @@ test('mechanical mappings and compilation controls are advanced with physical la
   assert.match(spring.label, /Spring compression/);
   const travel = h.cvtFieldPresentation({ ...field, label: 'Max shift' }, '/geometry/max_shift_m');
   assert.equal(travel.advanced, false);
-  assert.equal(travel.label, 'Available primary travel');
+  assert.equal(travel.label, 'Primary travel');
 });
 
 for (const relative of [
@@ -194,13 +195,16 @@ for (const relative of [
   assert.equal(parsed.diagnostics?.filter((item) => item.category === ts.DiagnosticCategory.Error).length, 0, relative);
 }
 
-test('editor source uses the physical shaft, combined inertia and component-level advanced flow', () => {
+test('editor source uses the physical shaft, shared 3D previews and category-level Advanced flow', () => {
   const text = fs.readFileSync(path.join(root, 'src/features/physicalLibrary/CvtEditor.tsx'), 'utf8');
   assert.match(text, /Primary shaft radius/);
   assert.match(text, /Primary rotating hardware inertia/);
+  assert.match(text, /CvtPulleyPreview/);
+  assert.match(text, /CvtPrimaryHardwarePreview/);
+  assert.match(text, /const groupedFields/);
   assert.match(text, /Advanced mechanical settings/);
   assert.match(text, /withBeltPreservingPrimaryShaft/);
-  assert.doesNotMatch(text, /Show advanced geometry compilation settings/);
+  assert.doesNotMatch(text, /CvtMeasurementPreview/);
 });
 
 console.log(JSON.stringify({ cvtHardwareChecks: count, syntaxFiles: 2 }));

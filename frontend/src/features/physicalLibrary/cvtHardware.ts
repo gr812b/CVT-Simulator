@@ -12,6 +12,7 @@ const RAMP_PLACEMENT_FIELDS = new Set([
   'ramp_reference_axial_position_m',
   'ramp_reference_radius_m',
 ]);
+const REFERENCE_ONLY_FIELDS = new Set(['pivot_axial_position_m']);
 const ADVANCED_MECHANICAL_FIELDS = new Set([
   'compression_per_axial_position',
   'ramp_axial_direction',
@@ -33,17 +34,17 @@ const FIELD_COPY: Record<
   { label: string; description: string }
 > = {
   secondary_outer_radius_at_zero_shift_m: {
-    label: 'Secondary belt outer-surface radius at low ratio',
+    label: 'Secondary belt radius',
     description:
-      'With the primary fully open and secondary fully closed, measure from the secondary shaft centreline to the belt outer surface.',
+      'With the primary fully open, measure from the secondary shaft centreline to the belt outer surface—not the sheave rim or belt cord line.',
   },
   deadzone_shift_m: {
-    label: 'Primary free travel before belt contact',
+    label: 'Free travel before belt contact',
     description:
       'Measure movable-primary travel from the fully open stop until the belt first contacts both sheave faces.',
   },
   max_shift_m: {
-    label: 'Available primary travel',
+    label: 'Primary travel',
     description:
       'Measure the movable primary sheave from the fully open stop to the fully closed stop along the shaft. Fully open is 0.',
   },
@@ -76,15 +77,15 @@ const FIELD_COPY: Record<
       'With the primary fully open, measure along the shaft from the primary axial datum to the centre of the fixed flyweight pivot.',
   },
   pivot_radius_m: {
-    label: 'Flyweight pivot radius',
+    label: 'Pivot radius',
     description: 'Measure radially from the primary shaft centreline to the fixed pivot centre.',
   },
   arm_length_m: {
-    label: 'Pivot-to-roller arm length',
+    label: 'Arm length',
     description: 'Centre-to-centre distance from the fixed flyweight pivot to the roller centre.',
   },
   roller_radius_m: {
-    label: 'Flyweight roller radius',
+    label: 'Roller radius',
     description: 'Measure from the roller centre to its running surface.',
   },
   radius_m: {
@@ -174,7 +175,7 @@ export function primaryFixedPivot(assembly: Assembly): {
 /** Editable CVT hardware. Replaceable clamping and ramp settings live in Tunes. */
 export function isCvtHardwareField(path: string): boolean {
   if (!path.startsWith('/pulleys/')) return true;
-  if (RAMP_PLACEMENT_FIELDS.has(fieldKey(path))) return false;
+  if (RAMP_PLACEMENT_FIELDS.has(fieldKey(path)) || REFERENCE_ONLY_FIELDS.has(fieldKey(path))) return false;
   return (
     !['/mass_geometry/', '/ramp_profile/', '/circumferential_profile/'].some(
       (part) => path.includes(part),

@@ -241,8 +241,8 @@ def setup_tuning(session, principal, setup_revision_id):
     return setup, assembly, params
 
 
-def tune_surface(session, principal, cvt_revision_id):
-    cvt, _assembly, params = cvt_tuning(session, principal, cvt_revision_id)
+def tune_fields(params):
+    """Transport/editor metadata shared by saved Tunes and new-CVT initial tuning."""
     hints = cvt_fields()
     fields = []
     for param in params:
@@ -255,7 +255,7 @@ def tune_surface(session, principal, cvt_revision_id):
             fields.append(
                 {
                     **common,
-                    "default": param["default"],
+                    "default": deepcopy(param["default"]),
                     "angle_convention": param.get("angle_convention", "profile"),
                     "fields": [
                         hint.model_copy(update={"path": hint.path[len(normalized) :]})
@@ -284,6 +284,12 @@ def tune_surface(session, principal, cvt_revision_id):
                     "maximum": param.get("maximum"),
                 }
             )
+    return fields
+
+
+def tune_surface(session, principal, cvt_revision_id):
+    cvt, _assembly, params = cvt_tuning(session, principal, cvt_revision_id)
+    fields = tune_fields(params)
     from app.application import experiments
 
     revision = default_tune_revision(session, cvt.id)
