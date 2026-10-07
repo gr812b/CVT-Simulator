@@ -34,6 +34,7 @@ def test_unit_preferences_persist_across_sessions_and_stay_user_isolated(api, re
         "speed": "mph",
         "output_length": "ft",
         "output_speed": "mph",
+        "quantity_units": {"hardware": {"inertia": "g·mm²", "area": "in²"}},
     }
     saved = api.patch("/api/v1/auth/unit-preferences", json=chosen)
     assert saved.status_code == 200, saved.text
@@ -56,3 +57,24 @@ def test_unit_preferences_persist_across_sessions_and_stay_user_isolated(api, re
         assert created.status_code == 201, created.text
         assert created.json()["user"]["unit_preferences"]["preset"] == "recommended"
         assert created.json()["user"]["unit_preferences"]["output_speed"] == "km/h"
+
+
+def test_legacy_preference_patch_retains_new_overrides(api, register):
+    register(api, email="units-legacy@example.com")
+    response = api.patch("/api/v1/auth/unit-preferences", json={
+        "quantity_units": {"hardware": {"inertia": "g·mm²"}},
+    })
+    assert response.status_code == 200, response.text
+    response = api.patch("/api/v1/auth/unit-preferences", json={"hardware_length": "mm"})
+    assert response.status_code == 200, response.text
+    preferences = response.json()["user"]["unit_preferences"]
+    assert preferences["hardware_length"] == "mm"
+    assert preferences["quantity_units"]["hardware"]["inertia"] == "g·mm²"
+    invalid = api.patch("/api/v1/auth/unit-preferences", json={
+        "quantity_units": {"hardware": {"torsional_stiffness": "N/mm"}},
+    })
+    assert invalid.status_code == 422
+    assert api.get("/api/v1/auth/session").json()["user"]["unit_preferences"] == preferences
+    cleared = api.patch("/api/v1/auth/unit-preferences", json={"quantity_units": {}})
+    assert cleared.status_code == 200
+    assert cleared.json()["user"]["unit_preferences"]["quantity_units"] == {}

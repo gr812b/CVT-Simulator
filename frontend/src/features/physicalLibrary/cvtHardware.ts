@@ -225,6 +225,8 @@ export function withBeltPreservingPrimaryShaft(
   belt: BeltChoice,
 ): CvtData {
   const shaftRadiusM = primaryShaftRadius(value);
+  const { outer_length_m, density_kg_per_m3, half_angle_rad, length_reference, ...section } = belt.data;
+  void length_reference;
   return {
     ...value,
     belt,
@@ -232,9 +234,14 @@ export function withBeltPreservingPrimaryShaft(
       ...value.assembly,
       geometry: {
         ...value.assembly.geometry,
-        sheave_half_angle_rad: belt.data.half_angle_rad,
-        primary_outer_radius_at_zero_shift_m: shaftRadiusM + belt.data.height_m,
+        sheave_half_angle_rad: half_angle_rad,
+        belt_outer_length_m: outer_length_m,
+        belt: section,
+        primary_outer_radius_at_zero_shift_m: belt.data.height_m === value.belt.data.height_m
+          ? value.assembly.geometry.primary_outer_radius_at_zero_shift_m
+          : shaftRadiusM + belt.data.height_m,
       },
+      inertias: { ...value.assembly.inertias, belt_density_kg_per_m3: density_kg_per_m3 },
     },
   };
 }

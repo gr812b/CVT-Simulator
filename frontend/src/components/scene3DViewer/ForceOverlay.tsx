@@ -1,3 +1,5 @@
+import { useAuth } from '@contexts/AuthContext';
+import { normalizeUnitPreferences, preferredProjectedDisplayUnit, projectedDisplayValue, formatDisplayNumber } from '@utils/units';
 import type { ForcePreferences } from '../../features/playback/preferences';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -48,6 +50,10 @@ export function ForceOverlay({
   onChange: (settings: ForcePreferences) => void;
   fullscreen?: boolean;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const displayPreferences = useRef(preferences);
+  displayPreferences.current = preferences;
   const [opened, setOpened] = useState(false);
   const { enabled, body, selected, components, scale, labels } = settings;
   const update = (next: Partial<ForcePreferences>) =>
@@ -111,7 +117,7 @@ export function ForceOverlay({
         sample.upperIndex,
         sample.alpha,
       );
-      renderer.update(sample, sceneDistance(shift ?? 0), options.current);
+      renderer.update(sample, sceneDistance(shift ?? 0), options.current, displayPreferences.current);
     });
     return () => {
       detach();
@@ -250,12 +256,12 @@ export function ForceOverlay({
                           return (
                             <Table.Tr key={t.key}>
                               <Table.Td>
-                                {t.label} ({t.unit})
+                                {t.label} ({preferredProjectedDisplayUnit('', t.unit, 'output', preferences)})
                               </Table.Td>
                               {[0, 1, 2].map((i) => (
                                 <Table.Td key={i}>
                                   {sample
-                                    ? sample.components[i].toFixed(1)
+                                    ? formatDisplayNumber(projectedDisplayValue(sample.components[i], '', t.unit, 'output', preferences), 2)
                                     : '—'}
                                 </Table.Td>
                               ))}

@@ -6,6 +6,8 @@ import { FormError } from '@components/form/FormError';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
 import { overlayLayers } from '../../styles/theme';
 import { TuneEditor } from './TuneEditor';
+import { useEditorHistory } from '@components/editorHistory/useEditorHistory';
+import { EditorHistoryBoundary, UndoRedoControls } from '@components/editorHistory/EditorHistory';
 import { tuneGeometryBlocker, type TuneCheck } from './tunePreviewState';
 import {
   saveExperiment,
@@ -32,11 +34,11 @@ export function TuneDialog({
   onSaved: (detail: ExperimentDetail) => void;
   onUse?: (value: Tune) => void;
 }) {
-  const [value, setValue] = useState<Tune>(() => ({
+  const draft = useEditorHistory<Tune>(() => ({
     ...(initial ?? surface.template),
     name: mode === 'edit' ? (initial?.name ?? '') : '',
   }));
-  const [baseline] = useState(() => JSON.stringify(value));
+  const { value, setValue, history: editHistory } = draft;
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [textEdited, setTextEdited] = useState(false);
   const [invalid, setInvalid] = useState(new Set<string>());
@@ -45,9 +47,9 @@ export function TuneDialog({
   const [geometryCheck, setGeometryCheck] = useState<TuneCheck | null>(null);
   // Compare the current draft key synchronously during render. Do not wait for
   // the child's debounced request/effect to invalidate a previous approval.
-  const useBlocker = invalid.size ? 'Correct the highlighted inputs.' : tuneGeometryBlocker(value, geometryCheck);
+  const useBlocker = invalid.size || draft.invalidCount ? 'Correct the highlighted inputs.' : tuneGeometryBlocker(value, geometryCheck);
   const saveBlocker = !value.name.trim() ? 'Give this tune a name.' : useBlocker;
-  const dirty = JSON.stringify(value) !== baseline || (textEdited && invalid.size > 0);
+  const dirty = draft.dirty || (textEdited && invalid.size > 0);
   const requestClose = () => {
     if (busy) return;
     if (dirty) setConfirmDiscard(true);
@@ -71,7 +73,11 @@ export function TuneDialog({
     }
     setBusy(true);
     try {
-      onSaved(await saveExperiment(value, detail, mode !== 'edit'));
+      const saved = await saveExperiment(value, detail, mode !== 'edit');
+      editHistory.markSaved(saved.document.kind === 'tunes' ? saved.document : value);
+      setInvalid(new Set());
+      setTextEdited(false);
+      onSaved(saved);
     } catch (cause) {
       setError(message(cause));
     } finally {
@@ -88,11 +94,15 @@ export function TuneDialog({
       size="min(1100px, 96vw)"
       closeOnClickOutside={false}
     >
+      <EditorHistoryBoundary history={editHistory} disabled={busy}
+        onRestore={() => { setError(null); }}>
       <QuantityValidationContext.Provider value={setInvalid}>
         {/* Bubbling keeps dirty tracking in the same update as the field edit. */}
         <Stack onInput={(event) => {
           if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) setTextEdited(true);
         }}>
+          <UndoRedoControls history={editHistory} disabled={busy}
+            onRestore={() => { setError(null); }} />
           <Text size="sm" c="dimmed">
             For {surface.cvt_name}
           </Text>
@@ -146,6 +156,7 @@ export function TuneDialog({
           </Group>
         </Stack>
       </QuantityValidationContext.Provider>
+      </EditorHistoryBoundary>
     </Modal>
     <Modal
       opened={confirmDiscard}

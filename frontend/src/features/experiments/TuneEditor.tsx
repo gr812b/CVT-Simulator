@@ -7,6 +7,8 @@ import {
   dimensionForUnit,
   displayUnitForCanonical,
   formatQuantity,
+  formatPreferredQuantity,
+  formatDisplayNumber,
   normalizeUnitPreferences,
   preferredDisplayUnit,
   siToDisplay,
@@ -120,7 +122,7 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
     const numeric = typeof currentValue === 'number' ? currentValue : field.default;
     return readOnly
       ? <Measurement key={field.key} label={field.label} value={numeric} unit={field.display_unit} scale={field.display_scale}/>
-      : <QuantityInput key={field.key} scope="hardware" label={field.label} value={numeric} onChange={n => change(field.key, n)} unit={field.display_unit}
+      : <QuantityInput key={field.key} draftKey={`tune:${field.key}`} scope="hardware" label={field.label} value={numeric} onChange={n => change(field.key, n)} unit={field.display_unit}
           scale={field.display_scale} description={field.description} min={field.minimum ?? undefined} max={field.maximum ?? undefined}/>;
   };
   const findings = validation?.findings.filter(finding => finding.severity === 'error') ?? [];
@@ -192,14 +194,14 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
               <Text size="xs" c="dimmed">Drag to rotate · Scroll or pinch to zoom · The camera stays where you leave it while scrubbing.</Text>
               <Text size="sm" fw={500}>{mount === 'primary' ? 'Movable-sheave closure' : 'Secondary opening travel'}</Text>
               <Slider aria-label={`${mount} travel`} min={0} max={sliderMax} step={sliderMax / 128} value={travel[mount] / 100 * sliderMax}
-                disabled={!hasMechanism} label={v => `${v.toFixed(2)}${mount === 'primary' ? ` ${hardwareLengthUnit}` : '%'}`} marks={marks}
+                disabled={!hasMechanism} label={v => `${formatDisplayNumber(v, 2)}${mount === 'primary' ? ` ${hardwareLengthUnit}` : '%'}`} marks={marks}
                 onChange={v => setTravel(p => ({ ...p, [mount]: v / sliderMax * 100 }))}/>
               <Text size="sm" mt="sm" aria-live="polite">
                 {mount === 'primary'
-                  ? `${formatQuantity(primaryClosure ?? 0, 'length', hardwareLengthUnit, 2)} closure · ${arm != null ? `Flyweight arm ${(arm * 180 / Math.PI).toFixed(1)}°` : 'No valid contact at this position'}`
+                  ? `${formatQuantity(primaryClosure ?? 0, 'length', hardwareLengthUnit, 2)} closure · ${arm != null ? `Flyweight arm ${formatPreferredQuantity(arm, 'angle', 'hardware', preferences)}` : 'No valid contact at this position'}`
                   : opening != null ? `${openingPercent?.toFixed(1) ?? '—'}% opening · ${formatQuantity(opening, 'length', hardwareLengthUnit, 2)} profile coordinate` : 'No helix contact preview'}
               </Text>
-              {contactFailure != null && <Text size="xs" c="red">First unavailable contact sample: {contactFailure.toFixed(2)} {hardwareLengthUnit} closure. Save and Use remain disabled.</Text>}
+              {contactFailure != null && <Text size="xs" c="red">First unavailable contact sample: {formatDisplayNumber(contactFailure, 2)} {hardwareLengthUnit} closure. Save and Use remain disabled.</Text>}
               <Text size="xs" c="dimmed">{mount === 'primary'
                 ? 'Ramp angle and flyweight arm angle are different. The arm angle is measured from the positive axial direction at the fixed pivot.'
                 : 'The orientation indicator’s radial and tangent directions refer to the marked roller 1.'} This is a quick, sampled contact preview. The full construction check runs when you save or submit a run; contact forces are checked during the simulation.</Text>

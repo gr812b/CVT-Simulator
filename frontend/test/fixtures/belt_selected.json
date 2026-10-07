@@ -1,0 +1,31 @@
+{
+  "belt": {
+    "name": "Belt",
+    "data": {
+      "height_m": 0.02,
+      "outer_length_m": 0.95,
+      "outer_width_m": 0.03237344998438493,
+      "inner_width_m": 0.02,
+      "cord_depth_from_outer_m": 0.003,
+      "half_angle_rad": 0.3,
+      "density_kg_per_m3": 1100,
+      "length_reference": "outer"
+    }
+  },
+  "assembly": {
+    "geometry": {
+      "primary_outer_radius_at_zero_shift_m": 0.045,
+      "belt": {
+        "height_m": 0.02,
+        "outer_width_m": 0.03237344998438493,
+        "inner_width_m": 0.02,
+        "cord_depth_from_outer_m": 0.003
+      },
+      "sheave_half_angle_rad": 0.3,
+      "belt_outer_length_m": 0.95
+    },
+    "inertias": {
+      "belt_density_kg_per_m3": 1100
+    }
+  }
+}

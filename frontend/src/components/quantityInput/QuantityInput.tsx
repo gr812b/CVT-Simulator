@@ -1,37 +1,28 @@
-import { useContext, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { TextInput } from '@mantine/core';
 import { useAuth } from '@contexts/AuthContext';
 import { QuantityValidationContext } from './validation';
+import { EditorHistoryContext } from '../editorHistory/context';
+import type { QuantityDraft } from '../editorHistory/draftHistory';
+import { editQuantity, quantityError } from './quantityDraft';
 import {
-  dimensionForUnit,
-  displayUnitForCanonical,
-  formatEditableQuantity,
-  normalizeUnitPreferences,
-  parseQuantityText,
-  preferredDisplayUnit,
-  type DisplayUnit,
-  type QuantityDimension,
-  type UnitScope,
+  dimensionForUnit, displayUnitForCanonical, formatEditableQuantity, normalizeUnitPreferences,
+  preferredDisplayUnit, sameQuantity, type QuantityDimension, type UnitScope,
 } from '@utils/units';
 
+const EMPTY = { quantities: {} as Readonly<Record<string, QuantityDraft>>, epoch: 0, canUndo: false, canRedo: false };
+const noSubscription = () => () => undefined;
+const emptySnapshot = () => EMPTY;
+
 export function QuantityInput({
-  label,
-  value,
-  onChange,
-  unit = '',
-  dimension: requestedDimension,
-  scope = 'default',
-  description,
-  min,
-  max,
-  integer = false,
-  disabled = false,
-  onFocusChange,
+  label, value, onChange, unit = '', dimension: requestedDimension, scope = 'default', description,
+  min, max, integer = false, disabled = false, onFocusChange, draftKey, documentPath,
 }: {
   label: string;
   value: number | null;
   onChange: (value: number) => void;
   unit?: string;
+  /** Retained for source compatibility; recognized units own their conversion factor. */
   scale?: number;
   dimension?: QuantityDimension;
   scope?: UnitScope;
@@ -41,96 +32,93 @@ export function QuantityInput({
   integer?: boolean;
   disabled?: boolean;
   onFocusChange?: (focused: boolean) => void;
+  draftKey?: string;
+  documentPath?: string;
 }) {
   const id = useId();
+  const history = useContext(EditorHistoryContext);
+  const snapshot = useSyncExternalStore(history?.subscribe ?? noSubscription,
+    history?.getSnapshot ?? emptySnapshot, history?.getSnapshot ?? emptySnapshot);
+  const key = draftKey ?? `${scope}:${label}`;
   const { session } = useAuth();
   const preferences = normalizeUnitPreferences(session?.user.unit_preferences);
-  const dimension = requestedDimension ?? dimensionForUnit(unit) ?? 'dimensionless';
-  const fallbackUnit = displayUnitForCanonical(unit, dimension) as DisplayUnit;
+  const knownDimension = requestedDimension ?? dimensionForUnit(unit);
+  const dimension = knownDimension ?? 'dimensionless';
+  const configurationError = !knownDimension && unit !== '' ? `Unsupported field unit: ${unit}` : undefined;
+  const fallbackUnit = displayUnitForCanonical(unit, dimension);
   const displayUnit = preferredDisplayUnit(dimension, scope, preferences, fallbackUnit);
   const setInvalid = useContext(QuantityValidationContext);
-  const display = useMemo(
-    () => value === null ? '' : formatEditableQuantity(value, displayUnit),
-    [value, displayUnit],
-  );
-  const [working, setWorking] = useState(display);
-  const [focused, setFocused] = useState(false);
+  const [localDraft, setLocalDraft] = useState<QuantityDraft | undefined>(undefined);
   const [entryUnit, setEntryUnit] = useState(displayUnit);
-  useEffect(() => {
-    if (!focused) {
-      setWorking(display);
-      setEntryUnit(displayUnit);
-    }
-  }, [display, displayUnit, focused]);
-  const parseUnit = focused ? entryUnit : displayUnit;
-  const parsed = parseQuantityText(working, dimension, parseUnit);
-  const valid = parsed.error === undefined &&
-    Number.isFinite(parsed.valueSi) &&
-    (min === undefined || parsed.valueSi >= min) &&
-    (max === undefined || parsed.valueSi <= max) &&
-    (!integer || Number.isInteger(parsed.valueSi));
-  useEffect(() => {
-    setInvalid?.((previous) => {
+  const [focused, setFocused] = useState(false);
+  const draft = history ? snapshot.quantities[key] : localDraft;
+  const limits = { min, max, integer };
+  const error = configurationError ?? draft?.error ?? quantityError(draft ? draft.valueSi : value, limits);
+  const invalid = error !== undefined && (!disabled || draft !== undefined);
+  const writeDraft = useCallback((next: QuantityDraft | undefined) => {
+    if (history) history.setQuantity(key, next);
+    else setLocalDraft(next);
+  }, [history, key]);
+  const setValidity = useCallback((bad: boolean) => {
+    setInvalid?.(previous => {
+      if (previous.has(id) === bad) return previous;
       const next = new Set(previous);
-      if (valid || disabled) next.delete(id);
-      else next.add(id);
+      if (bad) next.add(id); else next.delete(id);
       return next;
     });
-    return () =>
-      setInvalid?.((previous) => {
-        const next = new Set(previous);
-        next.delete(id);
-        return next;
-      });
-  }, [id, setInvalid, valid, disabled]);
+  }, [id, setInvalid]);
+  useEffect(() => { setValidity(invalid); }, [invalid, setValidity]);
+  useEffect(() => () => { setValidity(false); }, [setValidity]);
+  useEffect(() => {
+    // A genuine external replacement (not our own accepted edit) invalidates stale text.
+    // Undo/redo restore a matching value+text frame together. Unit changes never enter here.
+    if (draft && !sameQuantity(value, draft.sourceValue) && !sameQuantity(value, draft.valueSi))
+      writeDraft(undefined);
+  }, [value, draft, writeDraft]);
+
   const normalize = () => {
-    if (valid && parsed.error === undefined) {
-      onChange(parsed.valueSi);
-      setWorking(formatEditableQuantity(parsed.valueSi, displayUnit));
+    if (!draft || disabled) return; // Focus/blur must not round-trip an untouched value.
+    const checked = editQuantity(draft.text, dimension, draft.entryUnit, value, limits, documentPath);
+    if (checked.error) { writeDraft(checked); setValidity(true); return; }
+    // Valid text is sent synchronously on input. Do not silently discard a value
+    // rejected by a higher-level control (e.g. a profile-stage constraint).
+    if (!sameQuantity(value, checked.valueSi)) {
+      writeDraft({ ...checked, error: 'This value could not be applied. Check the neighbouring settings.' });
+      setValidity(true);
+      return;
     }
+    writeDraft(undefined);
+    setValidity(false);
   };
-  return (
-    <TextInput
-      id={id}
-      label={label}
-      description={description}
-      value={working}
-      disabled={disabled}
-      onFocus={() => {
-        setEntryUnit(displayUnit);
-        setFocused(true);
-        onFocusChange?.(true);
-      }}
-      onBlur={() => {
-        setFocused(false);
-        normalize();
-        onFocusChange?.(false);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          normalize();
-          event.currentTarget.blur();
-        }
-      }}
-      onChange={(event) => {
-        const next = event.currentTarget.value;
-        setWorking(next);
-        const candidate = parseQuantityText(next, dimension, parseUnit);
-        if (
-          candidate.error === undefined &&
-          Number.isFinite(candidate.valueSi) &&
-          (min === undefined || candidate.valueSi >= min) &&
-          (max === undefined || candidate.valueSi <= max) &&
-          (!integer || Number.isInteger(candidate.valueSi))
-        ) onChange(candidate.valueSi);
-      }}
-      required
-      error={
-        !valid && !disabled
-          ? parsed.error ?? (integer ? 'Enter a whole number in the allowed range.' : 'Check the allowed range.')
-          : undefined
+  return <TextInput
+    key={snapshot.epoch}
+    id={id}
+    label={label}
+    description={description}
+    value={draft?.text ?? (value === null ? '' : formatEditableQuantity(value, focused ? entryUnit : displayUnit))}
+    disabled={disabled}
+    data-quantity-input
+    onFocus={() => { setFocused(true); setEntryUnit(draft?.entryUnit ?? displayUnit); onFocusChange?.(true); }}
+    onBlur={() => { normalize(); setFocused(false); history?.endGroup(); onFocusChange?.(false); }}
+    onKeyDown={event => {
+      if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+        event.preventDefault();
+        event.currentTarget.blur(); // One normalization, not Enter plus blur twice.
       }
-    />
-  );
+    }}
+    onChange={event => {
+      const next = editQuantity(event.currentTarget.value, dimension, draft?.entryUnit ?? entryUnit,
+        value, limits, documentPath);
+      const apply = () => {
+        writeDraft(next);
+        setValidity(next.error !== undefined || configurationError !== undefined);
+        if (!configurationError && !next.error && next.valueSi !== null && !sameQuantity(value, next.valueSi))
+          onChange(next.valueSi);
+      };
+      if (history) { history.beginGroup(`quantity:${key}`); history.transaction(apply); }
+      else apply();
+    }}
+    required
+    error={invalid ? error : undefined}
+  />;
 }

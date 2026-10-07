@@ -51,7 +51,7 @@ test('QuantityInput exposes focus state without changing its SI value contract',
   assert.match(text, /onFocusChange\?: \(focused: boolean\) => void/);
   assert.match(text, /onFocusChange\?\.\(true\)/);
   assert.match(text, /onFocusChange\?\.\(false\)/);
-  assert.match(text, /onChange\(candidate\.valueSi\)/);
+  assert.match(text, /onChange\(next\.valueSi\)/);
 });
 
 for (const relative of [

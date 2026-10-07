@@ -90,14 +90,16 @@ def with_belt(data: CvtData) -> CvtData:
     belt = result.belt.data
     geometry = result.assembly.setdefault("geometry", {})
     stored_belt = geometry.get("belt", {})
-    shaft_radius = (
-        geometry["primary_outer_radius_at_zero_shift_m"] - stored_belt["height_m"]
-    )
+    # An already synchronized assembly must remain bit-for-bit unchanged here.
+    # Legacy clients may still replace only the belt choice: normalize that once.
+    primary_radius = geometry["primary_outer_radius_at_zero_shift_m"]
+    if stored_belt["height_m"] != belt.height_m:
+        primary_radius = primary_radius - stored_belt["height_m"] + belt.height_m
     geometry.update(
         {
             "belt_outer_length_m": belt.outer_length_m,
             "sheave_half_angle_rad": belt.half_angle_rad,
-            "primary_outer_radius_at_zero_shift_m": shaft_radius + belt.height_m,
+            "primary_outer_radius_at_zero_shift_m": primary_radius,
             "belt": belt.model_dump(
                 exclude={
                     "outer_length_m",

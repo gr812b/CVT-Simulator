@@ -123,6 +123,7 @@ export function CvtEditor({
   validation = null,
   disabled = false,
   onLoadingChange,
+  draftPathPrefix = '',
 }: {
   value: CvtData;
   onChange: (value: CvtData) => void;
@@ -131,6 +132,7 @@ export function CvtEditor({
   validation?: PhysicalValidation | null;
   disabled?: boolean;
   onLoadingChange?: (loading: boolean) => void;
+  draftPathPrefix?: string;
 }) {
   const assembly = value.assembly;
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
@@ -195,6 +197,8 @@ export function CvtEditor({
           <QuantityInput
             scope="hardware"
             key={path}
+            draftKey={`cvt:${draftPathPrefix}${path}`}
+            documentPath={draftPathPrefix ? `${draftPathPrefix}${path}` : undefined}
             label={label}
             value={current}
             disabled={disabled}
@@ -287,6 +291,7 @@ export function CvtEditor({
               </Tooltip>
               <QuantityInput
                 scope="hardware"
+                draftKey={`cvt:${draftPathPrefix}:shaft-radius`}
                 label="Primary shaft radius"
                 value={primaryShaftRadius(value)}
                 unit="mm"
@@ -308,6 +313,7 @@ export function CvtEditor({
               {!primaryCoupled && (
                 <QuantityInput
                   scope="hardware"
+                  draftKey={`cvt:${draftPathPrefix}:primary-inertia`}
                   label="Primary rotating hardware inertia"
                   value={primaryRotatingHardwareInertia(value)}
                   unit="kg·m²"

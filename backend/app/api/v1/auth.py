@@ -165,7 +165,12 @@ def unit_preferences(
     principal: Principal = Depends(get_current_principal),
     session: Session = Depends(get_database_session),
 ) -> AuthSessionResponse:
-    principal.user.unit_preferences = body.model_dump()
+    # Serialize partial preference updates for the authenticated user only.
+    user = session.scalar(
+        select(User).where(User.id == principal.user_id).with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    user.unit_preferences = body.apply_to(user.unit_preferences)
     session.flush()
     return principal.response()
 

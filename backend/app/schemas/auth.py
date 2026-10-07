@@ -8,6 +8,7 @@ from pydantic import AfterValidator, EmailStr, Field, StringConstraints, field_v
 from app.application.schools import known_school
 
 from .common import ApiModel
+from .unit_preferences import UnitPreferences
 
 Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
@@ -27,18 +28,6 @@ School = Annotated[
     StringConstraints(strip_whitespace=True, max_length=200),
     AfterValidator(known_school),
 ]
-
-
-class UnitPreferences(ApiModel):
-    preset: Literal["recommended", "metric", "si", "imperial"] = "recommended"
-    hardware_length: Literal["in", "mm", "m"] = "in"
-    component_mass: Literal["g", "kg", "oz"] = "g"
-    vehicle_length: Literal["m", "ft", "in"] = "m"
-    vehicle_mass: Literal["kg", "lb"] = "kg"
-    course_length: Literal["m", "ft"] = "m"
-    speed: Literal["km/h", "m/s", "mph"] = "km/h"
-    output_length: Literal["m", "ft", "mm", "in"] = "m"
-    output_speed: Literal["km/h", "m/s", "mph"] = "km/h"
 
 
 class RegisterRequest(EmailRequest):

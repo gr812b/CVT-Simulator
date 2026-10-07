@@ -1,3 +1,4 @@
+import { formatPreferredProjectedQuantity, normalizeUnitPreferences, type UnitPreferences } from '@utils/units';
 import * as THREE from 'three';
 import type { Scene3DController } from '@utils/Scene3DController';
 import type { VisualReplaySample } from '@utils/reportReplay';
@@ -153,7 +154,8 @@ export class ForceRenderer {
     }
     controller.getScene().add(this.root);
   }
-  update(sample: VisualReplaySample, shift: number, options: ForceOptions) {
+  update(sample: VisualReplaySample, shift: number, options: ForceOptions, preferences?: UnitPreferences) {
+    const units = normalizeUnitPreferences(preferences);
     const bracket = forceBracket(this.data, sample);
     const l = mechanismLayout(this.geometry),
       pose = mechanismPose(this.geometry, shift);
@@ -291,7 +293,7 @@ export class ForceRenderer {
       }
       item.label.visible = options.labels;
       if (options.labels) {
-        const text = `${track.label}: ${(track.unit === 'N' ? force.length() : s.components[0]).toFixed(0)} ${track.unit}`;
+        const text = `${track.label}: ${formatPreferredProjectedQuantity(track.unit === 'N' ? force.length() : s.components[0], '', track.unit, 'output', units, 2)}`;
         if (text !== item.text) {
           const canvas = document.createElement('canvas');
           canvas.width = 512;

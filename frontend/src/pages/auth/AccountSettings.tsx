@@ -1,5 +1,6 @@
 import { SchoolSelect } from '../../features/community/SchoolSelect';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { UnitPreferenceFields } from './UnitPreferenceFields';
 import {
   Alert,
   Badge,
@@ -33,9 +34,17 @@ export function AccountSettings() {
   const [units, setUnits] = useState<UnitPreferences>(() =>
     normalizeUnitPreferences(session?.user.unit_preferences),
   );
+  const persistedUnits = JSON.stringify(normalizeUnitPreferences(session?.user.unit_preferences));
+  const priorPreferences = useRef({ owner: session?.user.id, value: persistedUnits });
   useEffect(() => {
-    setUnits(normalizeUnitPreferences(session?.user.unit_preferences));
-  }, [session?.user.unit_preferences]);
+    const previous = priorPreferences.current;
+    const owner = session?.user.id;
+    // A focus refresh may return a new object without changing any preferences.
+    // Do not erase unsaved selections in Account Settings on that refresh.
+    setUnits(current => previous.owner !== owner || JSON.stringify(current) === previous.value
+      ? normalizeUnitPreferences(JSON.parse(persistedUnits)) : current);
+    priorPreferences.current = { owner, value: persistedUnits };
+  }, [persistedUnits, session?.user.id]);
   const profile = useForm({
     initialValues: {
       display_name: session?.user.display_name ?? '',
@@ -152,6 +161,7 @@ export function AccountSettings() {
                 data={['g', 'kg', 'oz']}
                 onChange={(value) => value && patchUnits('component_mass', value as UnitPreferences['component_mass'])} />
             </SimpleGrid>
+            <UnitPreferenceFields scope="hardware" value={units} onChange={setUnits} />
             <Title order={3} size="h4">Vehicle & course inputs</Title>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <Select label="Vehicle lengths" value={units.vehicle_length} allowDeselect={false}
@@ -167,6 +177,8 @@ export function AccountSettings() {
                 data={['km/h', 'm/s', 'mph']}
                 onChange={(value) => value && patchUnits('speed', value as UnitPreferences['speed'])} />
             </SimpleGrid>
+            <UnitPreferenceFields scope="vehicle" value={units} onChange={setUnits} />
+            <UnitPreferenceFields scope="course" value={units} onChange={setUnits} />
             <Title order={3} size="h4">Outputs & playback</Title>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <Select label="Lengths" value={units.output_length} allowDeselect={false}
@@ -176,6 +188,10 @@ export function AccountSettings() {
                 data={['km/h', 'm/s', 'mph']}
                 onChange={(value) => value && patchUnits('output_speed', value as UnitPreferences['output_speed'])} />
             </SimpleGrid>
+            <UnitPreferenceFields scope="output" value={units} onChange={setUnits} />
+            <Button variant="subtle" disabled={busy !== null} onClick={() => setUnits(normalizeUnitPreferences(JSON.parse(persistedUnits)))}>
+              Reset to saved preferences
+            </Button>
             <Button loading={busy === 'units'} disabled={busy !== null} onClick={() => void saveUnits()}>
               Save unit preferences
             </Button>

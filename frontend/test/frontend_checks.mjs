@@ -36,6 +36,9 @@ const react = {
     return [hookState[index], next => { hookState[index] = typeof next === 'function' ? next(hookState[index]) : next; }];
   },
   useEffect() {},
+  createContext(initial) { return { current: initial }; },
+  useContext(context) { return context.current; },
+  useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot(); },
   useRef(initial) { return { current: initial }; },
   lazy() { return 'LazyPreview'; },
   Suspense: 'Suspense',
@@ -64,6 +67,8 @@ function load(relative, extra = {}) {
     if (name === './mechanisms' || name === './sceneSpec') return {};
     if (name === '@contexts/AuthContext') return { useAuth: () => ({ session: null, unitPreferences: undefined }) };
     if (name === '@utils/units') return load('frontend/src/utils/units.ts');
+    if (name === '@components/editorHistory/EditorHistory') return { EditorHistoryBoundary: 'EditorHistoryBoundary', UndoRedoControls: 'UndoRedoControls' };
+    if (name.startsWith('@components/editorHistory/')) return load('frontend/src/components/editorHistory/' + name.split('/').at(-1) + '.ts');
     if (name === 'react-router-dom') return { Link: 'Link' };
     if (name === '@tabler/icons-react') return new Proxy({}, { get: (_, name) => name });
     if (name === '@components/appShell/Brand') return { Brand: 'Brand' };

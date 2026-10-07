@@ -23,6 +23,8 @@ import {
 import { useAuth } from '@contexts/AuthContext';
 import {
   dimensionForUnit,
+  formatDisplayNumber,
+  formatPreferredQuantity,
   displayScale,
   displayUnitForCanonical,
   normalizeUnitPreferences,
@@ -148,6 +150,10 @@ function VehicleView({ value }: { value: VehicleData }) {
   );
 }
 function EngineView({ value }: { value: EngineData }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const speedUnit = preferredDisplayUnit('angular_speed', 'hardware', preferences);
+  const torqueUnit = preferredDisplayUnit('torque', 'hardware', preferences);
   return (
     <Stack>
       <EngineCurve value={value} />
@@ -168,20 +174,17 @@ function EngineView({ value }: { value: EngineData }) {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>Speed (rpm)</Table.Th>
-                    <Table.Th>FOT torque (N·m)</Table.Th>
+                    <Table.Th>Speed ({speedUnit})</Table.Th>
+                    <Table.Th>FOT torque ({torqueUnit})</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
                   {value.points.map((point) => (
                     <Table.Tr key={point.angular_speed_rad_per_s}>
                       <Table.Td>
-                        {(
-                          (point.angular_speed_rad_per_s * 30) /
-                          Math.PI
-                        ).toFixed(0)}
+                        {formatDisplayNumber(siToDisplay(point.angular_speed_rad_per_s, speedUnit))}
                       </Table.Td>
-                      <Table.Td>{point.torque_Nm}</Table.Td>
+                      <Table.Td>{formatDisplayNumber(siToDisplay(point.torque_Nm, torqueUnit))}</Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>
@@ -339,12 +342,7 @@ export function ConfigurationView({
                   ),
                 )}{' '}
                 {preferredDisplayUnit('length', 'hardware', preferences, 'mm')} outer length ·{' '}
-                {Number(
-                  ((cvt.belt.data.half_angle_rad * 180) / Math.PI).toPrecision(
-                    4,
-                  ),
-                )}
-                ° belt and sheave half-angle
+                {formatPreferredQuantity(cvt.belt.data.half_angle_rad, 'angle', 'hardware', preferences)} belt and sheave half-angle
               </Text>
             )}
           </Stack>
