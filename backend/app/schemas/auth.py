@@ -29,6 +29,18 @@ School = Annotated[
 ]
 
 
+class UnitPreferences(ApiModel):
+    preset: Literal["recommended", "metric", "si", "imperial"] = "recommended"
+    hardware_length: Literal["in", "mm", "m"] = "in"
+    component_mass: Literal["g", "kg", "oz"] = "g"
+    vehicle_length: Literal["m", "ft", "in"] = "m"
+    vehicle_mass: Literal["kg", "lb"] = "kg"
+    course_length: Literal["m", "ft"] = "m"
+    speed: Literal["km/h", "m/s", "mph"] = "km/h"
+    output_length: Literal["m", "ft", "mm", "in"] = "m"
+    output_speed: Literal["km/h", "m/s", "mph"] = "km/h"
+
+
 class RegisterRequest(EmailRequest):
     school: School = ""
     display_name: DisplayName
@@ -59,6 +71,7 @@ class AuthUserResponse(ApiModel):
     id: str
     email: str
     display_name: str
+    unit_preferences: UnitPreferences = Field(default_factory=UnitPreferences)
 
 
 class AuthAccountResponse(ApiModel):

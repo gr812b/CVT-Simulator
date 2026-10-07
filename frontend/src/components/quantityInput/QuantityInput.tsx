@@ -1,14 +1,26 @@
-import { useContext, useEffect, useId, useState } from 'react';
-import { NumberInput } from '@mantine/core';
+import { useContext, useEffect, useId, useMemo, useState } from 'react';
+import { TextInput } from '@mantine/core';
+import { useAuth } from '@contexts/AuthContext';
 import { QuantityValidationContext } from './validation';
-import { displayScale } from '@utils/units';
+import {
+  dimensionForUnit,
+  displayUnitForCanonical,
+  formatEditableQuantity,
+  normalizeUnitPreferences,
+  parseQuantityText,
+  preferredDisplayUnit,
+  type DisplayUnit,
+  type QuantityDimension,
+  type UnitScope,
+} from '@utils/units';
 
 export function QuantityInput({
   label,
   value,
   onChange,
   unit = '',
-  scale: requestedScale,
+  dimension: requestedDimension,
+  scope = 'default',
   description,
   min,
   max,
@@ -20,6 +32,8 @@ export function QuantityInput({
   onChange: (value: number) => void;
   unit?: string;
   scale?: number;
+  dimension?: QuantityDimension;
+  scope?: UnitScope;
   description?: string;
   min?: number;
   max?: number;
@@ -27,19 +41,27 @@ export function QuantityInput({
   disabled?: boolean;
 }) {
   const id = useId();
-  const scale = requestedScale ?? displayScale(unit);
+  const { session } = useAuth();
+  const preferences = normalizeUnitPreferences(session?.user.unit_preferences);
+  const dimension = requestedDimension ?? dimensionForUnit(unit) ?? 'dimensionless';
+  const fallbackUnit = displayUnitForCanonical(unit, dimension) as DisplayUnit;
+  const displayUnit = preferredDisplayUnit(dimension, scope, preferences, fallbackUnit);
   const setInvalid = useContext(QuantityValidationContext);
-  const display = value === null ? '' : Number((value * scale).toPrecision(12));
-  const [working, setWorking] = useState<string | number>(display);
+  const display = useMemo(
+    () => value === null ? '' : formatEditableQuantity(value, displayUnit),
+    [value, displayUnit],
+  );
+  const [working, setWorking] = useState(display);
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
-    setWorking(display);
-  }, [display]);
-  const valid =
-    typeof working === 'number' &&
-    Number.isFinite(working) &&
-    (min === undefined || working / scale >= min) &&
-    (max === undefined || working / scale <= max) &&
-    (!integer || Number.isInteger(working));
+    if (!focused) setWorking(display);
+  }, [display, focused]);
+  const parsed = parseQuantityText(working, dimension, displayUnit);
+  const valid = parsed.error === undefined &&
+    Number.isFinite(parsed.valueSi) &&
+    (min === undefined || parsed.valueSi >= min) &&
+    (max === undefined || parsed.valueSi <= max) &&
+    (!integer || Number.isInteger(parsed.valueSi));
   useEffect(() => {
     setInvalid?.((previous) => {
       const next = new Set(previous);
@@ -54,30 +76,47 @@ export function QuantityInput({
         return next;
       });
   }, [id, setInvalid, valid, disabled]);
+  const normalize = () => {
+    if (valid && parsed.error === undefined) {
+      onChange(parsed.valueSi);
+      setWorking(formatEditableQuantity(parsed.valueSi, displayUnit));
+    }
+  };
   return (
-    <NumberInput
+    <TextInput
       id={id}
       label={label}
       description={description}
       value={working}
       disabled={disabled}
-      onChange={(next) => {
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        normalize();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          normalize();
+          event.currentTarget.blur();
+        }
+      }}
+      onChange={(event) => {
+        const next = event.currentTarget.value;
         setWorking(next);
-        if (typeof next === 'number' && Number.isFinite(next))
-          onChange(next / scale);
+        const candidate = parseQuantityText(next, dimension, displayUnit);
+        if (
+          candidate.error === undefined &&
+          Number.isFinite(candidate.valueSi) &&
+          (min === undefined || candidate.valueSi >= min) &&
+          (max === undefined || candidate.valueSi <= max) &&
+          (!integer || Number.isInteger(candidate.valueSi))
+        ) onChange(candidate.valueSi);
       }}
       required
-      suffix={unit ? ` ${unit}` : undefined}
-      allowDecimal={!integer}
-      min={min === undefined ? undefined : min * scale}
-      max={max === undefined ? undefined : max * scale}
-      clampBehavior="none"
-      hideControls={!integer}
       error={
         !valid && !disabled
-          ? working === ''
-            ? 'Enter a value.'
-            : 'Check the allowed range.'
+          ? parsed.error ?? (integer ? 'Enter a whole number in the allowed range.' : 'Check the allowed range.')
           : undefined
       }
     />
