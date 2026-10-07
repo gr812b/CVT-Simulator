@@ -659,6 +659,7 @@ function PhysicalEditor({
                           }
                           fields={fields}
                           belts={componentItems('belts')}
+                          validation={validation}
                           disabled={disabled}
                           onLoadingChange={setComponentLoading}
                         />
@@ -756,6 +757,7 @@ function PhysicalEditor({
                                   }
                                   fields={fields}
                                   belts={componentItems('belts')}
+                                  validation={validation}
                                   disabled={disabled}
                                   onLoadingChange={setComponentLoading}
                                 />

@@ -85,13 +85,19 @@ def belt_from_assembly(assembly: dict) -> BeltData:
 
 
 def with_belt(data: CvtData) -> CvtData:
-    """A chosen belt owns its dimensions; do not accept two competing copies."""
+    """A chosen belt owns its dimensions while the physical shaft radius stays fixed."""
     result = data.model_copy(deep=True)
     belt = result.belt.data
-    result.assembly.setdefault("geometry", {}).update(
+    geometry = result.assembly.setdefault("geometry", {})
+    stored_belt = geometry.get("belt", {})
+    shaft_radius = (
+        geometry["primary_outer_radius_at_zero_shift_m"] - stored_belt["height_m"]
+    )
+    geometry.update(
         {
             "belt_outer_length_m": belt.outer_length_m,
             "sheave_half_angle_rad": belt.half_angle_rad,
+            "primary_outer_radius_at_zero_shift_m": shaft_radius + belt.height_m,
             "belt": belt.model_dump(
                 exclude={
                     "outer_length_m",

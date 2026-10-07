@@ -23,7 +23,16 @@ import {
 import { displayScale } from '@utils/units';
 import { EngineCurve } from '../physicalLibrary/EngineCurve';
 import { ConfigurationLink } from '../physicalLibrary/ConfigurationLink';
-import { isCvtHardwareField } from '../physicalLibrary/cvtHardware';
+import {
+  cvtFieldPresentation,
+  isCanonicalPrimaryRadiusField,
+  isCvtHardwareField,
+  isOrdinaryPrimaryTravelField,
+  isPrimaryRotationalInertiaField,
+  primaryHasRelativeRotationCoupling,
+  primaryRotatingHardwareInertia,
+  primaryShaftRadius,
+} from '../physicalLibrary/cvtHardware';
 
 type Measurement = {
   label: string;
@@ -196,35 +205,58 @@ export function ConfigurationView({
         'inertias',
         'contact',
       ]
-        .map((group) => ({
-          group,
-          items: fields
-            .filter(
-              (field) =>
-                isCvtHardwareField(field.path) &&
-                !field.advanced &&
-                field.path.startsWith(`/${group}/`) &&
-                !field.path.startsWith('/geometry/belt'),
+        .map((group) => {
+          const primaryCoupled = primaryHasRelativeRotationCoupling(cvt);
+          const derived: Measurement[] =
+            group === 'geometry'
+              ? [
+                  {
+                    label: 'Primary shaft radius',
+                    value: primaryShaftRadius(cvt),
+                    unit: 'mm',
+                  },
+                ]
+              : group === 'inertias' && !primaryCoupled
+                ? [
+                    {
+                      label: 'Primary rotating hardware inertia',
+                      value: primaryRotatingHardwareInertia(cvt),
+                      unit: 'kg·m²',
+                    },
+                  ]
+                : [];
+          const items = fields.flatMap((field) => {
+            if (
+              !isCvtHardwareField(field.path) ||
+              !field.path.startsWith(`/${group}/`) ||
+              field.path.startsWith('/geometry/belt')
             )
-            .flatMap((field) =>
-              expandJsonPointerTemplate(cvt.assembly, field.path).flatMap(
-                (path) => {
-                  const value = getValueAtJsonPointer(cvt.assembly, path);
-                  const segment = path.match(/\/segments\/(\d+)\//);
-                  return typeof value === 'number'
-                    ? [
-                        {
-                          label: `${segment ? `Segment ${Number(segment[1]) + 1} · ` : ''}${field.label}`,
-                          value,
-                          unit: field.display_unit,
-                          scale: field.display_scale,
-                        },
-                      ]
-                    : [];
-                },
-              ),
-            ),
-        }))
+              return [];
+            return expandJsonPointerTemplate(cvt.assembly, field.path).flatMap(
+              (path) => {
+                const presentation = cvtFieldPresentation(field, path);
+                if (presentation.advanced) return [];
+                if (isCanonicalPrimaryRadiusField(path)) return [];
+                if (!primaryCoupled && isPrimaryRotationalInertiaField(path))
+                  return [];
+                if (isOrdinaryPrimaryTravelField(path, cvt)) return [];
+                const value = getValueAtJsonPointer(cvt.assembly, path);
+                const segment = path.match(/\/segments\/(\d+)\//);
+                return typeof value === 'number'
+                  ? [
+                      {
+                        label: `${segment ? `Segment ${Number(segment[1]) + 1} · ` : ''}${presentation.label}`,
+                        value,
+                        unit: field.display_unit,
+                        scale: field.display_scale,
+                      },
+                    ]
+                  : [];
+              },
+            );
+          });
+          return { group, items: [...derived, ...items] };
+        })
         .filter((group) => group.items.length)
     : [];
   return (
