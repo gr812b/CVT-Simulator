@@ -43,9 +43,7 @@ def apply_initial_tune(cvt: CvtData, values: dict) -> CvtData:
     # Untouched offsets/masses/profiles stay exactly as supplied by the working
     # copy. Only intentional Tune edits go through the shared applicator.
     changed = {
-        key: value
-        for key, value in values.items()
-        if key not in defaults or value != defaults[key]
+        key: value for key, value in values.items() if key not in defaults or value != defaults[key]
     }
     apply_values(current.assembly, params, changed)
     return CvtData.model_validate(current.model_dump())
@@ -71,9 +69,7 @@ def mechanism_preview(cvt: CvtData):
         if component["kind"] == "fixed_pivot_roller_flyweight"
     ]
     if len(flyweights) > 1:
-        raise ValueError(
-            "The hardware preview supports one fixed-pivot mechanism per primary."
-        )
+        raise ValueError("The hardware preview supports one fixed-pivot mechanism per primary.")
     primary = None
     if flyweights:
         component = flyweights[0]

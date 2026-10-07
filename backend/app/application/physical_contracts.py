@@ -129,9 +129,7 @@ def with_belt(data: CvtData) -> CvtData:
         }
     )
     result.assembly.setdefault("inertias", {})["belt_density_kg_per_m3"] = belt.density_kg_per_m3
-    for component in (
-        result.assembly.get("pulleys", {}).get("primary", {}).get("components", [])
-    ):
+    for component in result.assembly.get("pulleys", {}).get("primary", {}).get("components", []):
         if component.get("kind") != "fixed_pivot_roller_flyweight":
             continue
         contact_geometry = component.get("geometry", {})

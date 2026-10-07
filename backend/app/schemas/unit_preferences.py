@@ -27,10 +27,15 @@ class UnitPreferences(ApiModel):
 
     @field_validator("quantity_units")
     @classmethod
-    def check_dimensions(cls, value: dict[UnitScope, dict[str, str]]) -> dict[UnitScope, dict[str, str]]:
+    def check_dimensions(
+        cls, value: dict[UnitScope, dict[str, str]]
+    ) -> dict[UnitScope, dict[str, str]]:
         for scope, settings in value.items():
             for dimension, unit in settings.items():
-                if dimension not in UNIT_CHOICES[scope] or unit not in UNIT_CHOICES[scope][dimension]:
+                if (
+                    dimension not in UNIT_CHOICES[scope]
+                    or unit not in UNIT_CHOICES[scope][dimension]
+                ):
                     raise ValueError(f"Unsupported {scope} display unit for {dimension}: {unit}")
         return value
 
@@ -41,4 +46,6 @@ class UnitPreferences(ApiModel):
         a preset/override is possible without mutating anyone else's preferences.
         """
         stored = UnitPreferences.model_validate(previous or {}).model_dump()
-        return UnitPreferences.model_validate({**stored, **self.model_dump(exclude_unset=True)}).model_dump()
+        return UnitPreferences.model_validate(
+            {**stored, **self.model_dump(exclude_unset=True)}
+        ).model_dump()

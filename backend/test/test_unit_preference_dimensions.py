@@ -25,13 +25,16 @@ def test_every_advertised_unit_is_accepted_in_its_own_dimension():
                 assert prefs.quantity_units[scope][dimension] == unit
 
 
-@pytest.mark.parametrize("value", [
-    {"hardware": {"inertia": "lbf·in"}},
-    {"hardware": {"torsional_stiffness": "N/mm"}},
-    {"output": {"area": "m"}},
-    {"course": {"not_a_dimension": "m"}},
-    {"other_scope": {"area": "m²"}},
-])
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"hardware": {"inertia": "lbf·in"}},
+        {"hardware": {"torsional_stiffness": "N/mm"}},
+        {"output": {"area": "m"}},
+        {"course": {"not_a_dimension": "m"}},
+        {"other_scope": {"area": "m²"}},
+    ],
+)
 def test_mismatched_dimensions_and_unknown_preferences_fail_closed(value):
     with pytest.raises(ValidationError):
         UnitPreferences(quantity_units=value)

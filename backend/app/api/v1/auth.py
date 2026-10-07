@@ -167,7 +167,9 @@ def unit_preferences(
 ) -> AuthSessionResponse:
     # Serialize partial preference updates for the authenticated user only.
     user = session.scalar(
-        select(User).where(User.id == principal.user_id).with_for_update()
+        select(User)
+        .where(User.id == principal.user_id)
+        .with_for_update()
         .execution_options(populate_existing=True)
     )
     user.unit_preferences = body.apply_to(user.unit_preferences)

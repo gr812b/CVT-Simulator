@@ -57,9 +57,7 @@ def test_frontend_style_belt_swap_preserves_groove_width_via_deadzone():
         update={"belt": normalized.belt.model_copy(update={"data": belt_data})},
         deep=True,
     )
-    selected.assembly["geometry"]["deadzone_shift_m"] = (
-        groove_width - belt_data.inner_width_m
-    )
+    selected.assembly["geometry"]["deadzone_shift_m"] = groove_width - belt_data.inner_width_m
 
     result = with_belt(selected)
     assert math.isclose(

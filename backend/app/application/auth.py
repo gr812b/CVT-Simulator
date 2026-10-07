@@ -14,7 +14,12 @@ from app.core.settings import Settings
 from app.database.auth_models import AuthSession, PasswordResetToken
 from app.database.base import utc_now
 from app.database.models import Account, AccountUser, User
-from app.schemas.auth import AuthAccountResponse, AuthSessionResponse, AuthUserResponse, UnitPreferences
+from app.schemas.auth import (
+    AuthAccountResponse,
+    AuthSessionResponse,
+    AuthUserResponse,
+    UnitPreferences,
+)
 
 passwords = PasswordHash.recommended()
 _dummy_hash = passwords.hash(secrets.token_urlsafe(32))
