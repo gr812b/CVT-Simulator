@@ -1,5 +1,5 @@
 import { SchoolSelect } from '../../features/community/SchoolSelect';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { UnitPreferenceFields } from './UnitPreferenceFields';
 import {
   Alert,
@@ -16,9 +16,13 @@ import {
   Title,
 } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
+import { Modal } from '@components/modal/Modal';
+import { EditorHistoryBoundary, UndoRedoControls } from '@components/editorHistory/EditorHistory';
+import { useEditorHistory } from '@components/editorHistory/useEditorHistory';
 import { useForm } from '@mantine/form';
 import { changePassword, updateProfile } from '@api/auth';
 import { useAuth } from '@contexts/AuthContext';
+import { useBeforeUnload, useBlocker } from 'react-router-dom';
 import {
   normalizeUnitPreferences,
   presetUnitPreferences,
@@ -31,20 +35,47 @@ export function AccountSettings() {
   const [busy, setBusy] = useState<'profile' | 'password' | 'units' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [units, setUnits] = useState<UnitPreferences>(() =>
+  const unitDraft = useEditorHistory<UnitPreferences>(() =>
     normalizeUnitPreferences(session?.user.unit_preferences),
   );
+  const { history: unitHistory, value: units, setValue: setUnits, dirty: unitsDirty } = unitDraft;
   const persistedUnits = JSON.stringify(normalizeUnitPreferences(session?.user.unit_preferences));
+  const [discardUnitsOpen, setDiscardUnitsOpen] = useState(false);
+  const unitsBlocker = useBlocker(
+    useCallback(() => unitsDirty, [unitsDirty]),
+  );
+  useBeforeUnload(
+    useCallback((event) => {
+      if (!unitsDirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    }, [unitsDirty]),
+  );
+  useEffect(() => {
+    if (unitsBlocker.state === 'blocked') setDiscardUnitsOpen(true);
+  }, [unitsBlocker.state]);
+  const savedUnits = () => normalizeUnitPreferences(JSON.parse(persistedUnits));
+  const discardUnits = (leave = false) => {
+    unitHistory.reset(savedUnits());
+    setDiscardUnitsOpen(false);
+    if (unitsBlocker.state === 'blocked') {
+      if (leave) unitsBlocker.proceed();
+      else unitsBlocker.reset();
+    }
+  };
   const priorPreferences = useRef({ owner: session?.user.id, value: persistedUnits });
   useEffect(() => {
     const previous = priorPreferences.current;
     const owner = session?.user.id;
     // A focus refresh may return a new object without changing any preferences.
     // Do not erase unsaved selections in Account Settings on that refresh.
-    setUnits(current => previous.owner !== owner || JSON.stringify(current) === previous.value
-      ? normalizeUnitPreferences(JSON.parse(persistedUnits)) : current);
+    const next = normalizeUnitPreferences(JSON.parse(persistedUnits));
+    const snapshot = unitHistory.getSnapshot();
+    if (previous.owner !== owner || !snapshot.dirty) unitHistory.reset(next);
+    else if (JSON.stringify(snapshot.value) === persistedUnits)
+      unitHistory.markSaved(next);
     priorPreferences.current = { owner, value: persistedUnits };
-  }, [persistedUnits, session?.user.id]);
+  }, [persistedUnits, session?.user.id, unitHistory]);
   const profile = useForm({
     initialValues: {
       display_name: session?.user.display_name ?? '',
@@ -92,6 +123,7 @@ export function AccountSettings() {
     setMessage(null);
     try {
       await saveUnitPreferences(units);
+      unitHistory.markSaved(units);
       setMessage('Unit preferences updated. Stored configurations and results remain unchanged in SI.');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to save unit preferences.');
@@ -132,12 +164,16 @@ export function AccountSettings() {
             </Stack>
           </form>
         </Paper>
-        <Paper withBorder p="lg">
-          <Stack>
-            <div>
-              <Title order={2} size="h3">Display units</Title>
+        <EditorHistoryBoundary history={unitHistory} disabled={busy !== null}>
+          <Paper withBorder p="lg">
+            <Stack>
+              <div>
+                <Group justify="space-between" align="center">
+                  <Title order={2} size="h3">Display units</Title>
+                  {unitsDirty && <Badge color="orange">Unsaved changes</Badge>}
+                </Group>
               <Text size="sm" c="dimmed" mt="xs">
-                These are personal display preferences shared across devices. CINDER documents and raw results stay in canonical SI, so changing units does not change or dirty saved work.
+                These are personal display preferences shared across devices. Changes stay local to this form until you save them; CINDER documents and raw results remain canonical SI.
               </Text>
             </div>
             <Select
@@ -189,14 +225,28 @@ export function AccountSettings() {
                 onChange={(value) => value && patchUnits('output_speed', value as UnitPreferences['output_speed'])} />
             </SimpleGrid>
             <UnitPreferenceFields scope="output" value={units} onChange={setUnits} />
-            <Button variant="subtle" disabled={busy !== null} onClick={() => setUnits(normalizeUnitPreferences(JSON.parse(persistedUnits)))}>
-              Reset to saved preferences
-            </Button>
-            <Button loading={busy === 'units'} disabled={busy !== null} onClick={() => void saveUnits()}>
-              Save unit preferences
-            </Button>
-          </Stack>
-        </Paper>
+            {unitsDirty && (
+              <UndoRedoControls history={unitHistory} disabled={busy !== null} />
+            )}
+            <Group justify="flex-end">
+              <Button
+                variant="default"
+                disabled={busy !== null || !unitsDirty}
+                onClick={() => discardUnits()}
+              >
+                Discard changes
+              </Button>
+              <Button
+                loading={busy === 'units'}
+                disabled={busy !== null || !unitsDirty}
+                onClick={() => void saveUnits()}
+              >
+                Save changes
+              </Button>
+            </Group>
+            </Stack>
+          </Paper>
+        </EditorHistoryBoundary>
         <Paper withBorder p="lg">
           <form onSubmit={password.onSubmit((values) =>
             save('password', () => changePassword({
@@ -217,6 +267,35 @@ export function AccountSettings() {
             </Stack>
           </form>
         </Paper>
+        <Modal
+          opened={discardUnitsOpen}
+          onClose={() => {
+            setDiscardUnitsOpen(false);
+            if (unitsBlocker.state === 'blocked') unitsBlocker.reset();
+          }}
+          title="Discard display-unit changes?"
+          closeOnClickOutside={false}
+        >
+          <Stack>
+            <Text>
+              Your display-unit selections have not been saved. Leave this page and discard them?
+            </Text>
+            <Group justify="flex-end">
+              <Button
+                variant="default"
+                onClick={() => {
+                  setDiscardUnitsOpen(false);
+                  if (unitsBlocker.state === 'blocked') unitsBlocker.reset();
+                }}
+              >
+                Keep editing
+              </Button>
+              <Button color="red" onClick={() => discardUnits(true)}>
+                Discard and leave
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
       </Stack>
     </Container>
   );

@@ -41,12 +41,12 @@ const FIELD_COPY: Record<
   deadzone_shift_m: {
     label: 'Free travel before belt contact',
     description:
-      'Measure movable-primary travel from the fully open stop until the belt first contacts both sheave faces.',
+      'Derived from the fully-open primary groove width minus the selected belt inner width.',
   },
   max_shift_m: {
-    label: 'Primary travel',
+    label: 'Primary groove width',
     description:
-      'Measure the movable primary sheave from the fully open stop to the fully closed stop along the shaft. Fully open is 0.',
+      'Axial face-to-face groove width measured at the primary shaft/sleeve outer radius with the primary fully open. It must be at least the selected belt inner width.',
   },
   fixed_rotating_hardware_inertia_kg_m2: {
     label: 'Fixed rotating hardware inertia',
@@ -199,6 +199,82 @@ export function cvtFieldPresentation(field: PhysicalField, path: string) {
   };
 }
 
+
+function hasPrimaryTravelGeometry(value: CvtData): boolean {
+  return Number.isFinite(value.assembly.geometry.max_shift_m) &&
+    Number.isFinite(value.assembly.geometry.deadzone_shift_m);
+}
+
+export function primaryGrooveWidth(value: CvtData): number {
+  // Canonical max_shift_m is the measurable fully-open groove width.
+  // Keeping this value independent of the selected belt lets an incompatible
+  // wider belt remain visibly invalid instead of silently changing hardware.
+  return value.assembly.geometry.max_shift_m;
+}
+
+export function primaryBeltContactTravel(value: CvtData): number {
+  return value.belt.data.inner_width_m;
+}
+
+export function primaryFreeTravel(value: CvtData): number {
+  return primaryGrooveWidth(value) - primaryBeltContactTravel(value);
+}
+
+export function primaryGrooveFitsBelt(value: CvtData): boolean {
+  return primaryFreeTravel(value) >= -EPS;
+}
+
+function withPrimaryTravelGeometry(
+  value: CvtData,
+  grooveWidthM: number,
+  deadzoneM: number,
+): CvtData {
+  const fixedPivot = primaryFixedPivot(value.assembly);
+  const components = fixedPivot
+    ? value.assembly.pulleys.primary.components.map((component, index) =>
+        index === fixedPivot.index && component.kind === 'fixed_pivot_roller_flyweight'
+          ? {
+              ...component,
+              geometry: {
+                ...component.geometry,
+                axial_position_min_m: 0,
+                axial_position_max_m: grooveWidthM,
+              },
+            }
+          : component,
+      ) as typeof value.assembly.pulleys.primary.components
+    : value.assembly.pulleys.primary.components;
+  return {
+    ...value,
+    assembly: {
+      ...value.assembly,
+      geometry: {
+        ...value.assembly.geometry,
+        deadzone_shift_m: deadzoneM,
+        max_shift_m: grooveWidthM,
+      },
+      pulleys: {
+        ...value.assembly.pulleys,
+        primary: {
+          ...value.assembly.pulleys.primary,
+          components,
+        },
+      },
+    },
+  };
+}
+
+export function withPrimaryGrooveWidth(
+  value: CvtData,
+  grooveWidthM: number,
+): CvtData {
+  return withPrimaryTravelGeometry(
+    value,
+    grooveWidthM,
+    grooveWidthM - primaryBeltContactTravel(value),
+  );
+}
+
 export function primaryShaftRadius(value: CvtData): number {
   return (
     value.assembly.geometry.primary_outer_radius_at_zero_shift_m -
@@ -220,15 +296,16 @@ export function withPrimaryShaftRadius(value: CvtData, shaftRadiusM: number): Cv
   };
 }
 
-/** A belt change owns belt dimensions, but not the physical shaft/sleeve radius. */
+/** A belt change owns belt dimensions, but not shaft radius or groove width. */
 export function withBeltPreservingPrimaryShaft(
   value: CvtData,
   belt: BeltChoice,
 ): CvtData {
   const shaftRadiusM = primaryShaftRadius(value);
+  const grooveWidthM = primaryGrooveWidth(value);
   const { outer_length_m, density_kg_per_m3, half_angle_rad, length_reference, ...section } = belt.data;
   void length_reference;
-  return {
+  const selected: CvtData = {
     ...value,
     belt,
     assembly: {
@@ -245,6 +322,13 @@ export function withBeltPreservingPrimaryShaft(
       inertias: { ...value.assembly.inertias, belt_density_kg_per_m3: density_kg_per_m3 },
     },
   };
+  return hasPrimaryTravelGeometry(value)
+    ? withPrimaryTravelGeometry(
+        selected,
+        grooveWidthM,
+        grooveWidthM - belt.data.inner_width_m,
+      )
+    : selected;
 }
 
 export function primaryHasRelativeRotationCoupling(value: CvtData): boolean {
@@ -287,15 +371,9 @@ export function withPrimaryRotatingHardwareInertia(
 }
 
 export function usesOrdinaryPrimaryTravel(value: CvtData): boolean {
-  const fixedPivot = primaryFixedPivot(value.assembly);
-  if (!fixedPivot) return false;
-  const geometry = fixedPivot.component.geometry;
-  return (
-    Math.abs(geometry.axial_position_min_m) <= EPS &&
-    Math.abs(
-      geometry.axial_position_max_m - value.assembly.geometry.max_shift_m,
-    ) <= EPS
-  );
+  // Patch C deliberately retires custom fixed-pivot contact bounds. A supported
+  // fixed-pivot mechanism always searches the full zero-based primary travel.
+  return primaryFixedPivot(value.assembly) !== null;
 }
 
 export function isOrdinaryPrimaryTravelField(path: string, value: CvtData): boolean {
@@ -309,39 +387,9 @@ export function isOrdinaryPrimaryTravelField(path: string, value: CvtData): bool
   );
 }
 
+/** @deprecated Hardware editors should use the measurable groove width. */
 export function withAvailablePrimaryTravel(value: CvtData, travelM: number): CvtData {
-  const ordinary = usesOrdinaryPrimaryTravel(value);
-  const fixedPivot = primaryFixedPivot(value.assembly);
-  const base: CvtData = {
-    ...value,
-    assembly: {
-      ...value.assembly,
-      geometry: { ...value.assembly.geometry, max_shift_m: travelM },
-    },
-  };
-  if (!ordinary || !fixedPivot) return base;
-  const components = base.assembly.pulleys.primary.components.map((component, index) =>
-    index === fixedPivot.index && component.kind === 'fixed_pivot_roller_flyweight'
-      ? {
-          ...component,
-          geometry: {
-            ...component.geometry,
-            axial_position_min_m: 0,
-            axial_position_max_m: travelM,
-          },
-        }
-      : component,
-  ) as typeof base.assembly.pulleys.primary.components;
-  return {
-    ...base,
-    assembly: {
-      ...base.assembly,
-      pulleys: {
-        ...base.assembly.pulleys,
-        primary: { ...base.assembly.pulleys.primary, components },
-      },
-    },
-  };
+  return withPrimaryGrooveWidth(value, travelM);
 }
 
 export function isCanonicalPrimaryRadiusField(path: string): boolean {

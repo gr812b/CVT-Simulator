@@ -2,8 +2,9 @@ export type HardwareMeasurementKey =
   | 'shaft-radius'
   | 'secondary-radius'
   | 'sheave-angle'
-  | 'primary-travel'
+  | 'groove-width'
   | 'deadzone-travel'
+  | 'belt-contact-travel'
   | 'pivot-radius'
   | 'arm-length'
   | 'roller-radius';
@@ -14,9 +15,12 @@ export function hardwareMeasurementKey(
   if (!path) return null;
   const geometry: Record<string, HardwareMeasurementKey> = {
     '@primary-shaft-radius': 'shaft-radius',
+    '@primary-groove-width': 'groove-width',
+    '@primary-free-travel': 'deadzone-travel',
+    '@primary-belt-contact-travel': 'belt-contact-travel',
     '/geometry/secondary_outer_radius_at_zero_shift_m': 'secondary-radius',
     '/geometry/sheave_half_angle_rad': 'sheave-angle',
-    '/geometry/max_shift_m': 'primary-travel',
+    '/geometry/max_shift_m': 'groove-width',
     '/geometry/deadzone_shift_m': 'deadzone-travel',
   };
   if (Object.prototype.hasOwnProperty.call(geometry, path))

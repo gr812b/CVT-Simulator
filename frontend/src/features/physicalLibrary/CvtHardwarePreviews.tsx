@@ -15,6 +15,7 @@ import { orientInspectionModels } from '@components/scene3DViewer/inspectionFram
 import {
   mechanismLayout,
   primaryTipDimensions,
+  sheaveHub,
 } from '@components/scene3DViewer/mechanisms';
 import { positionBeam } from '@components/scene3DViewer/mechanismGeometry';
 import {
@@ -38,7 +39,14 @@ import {
   type CvtData,
   type CvtEditorScenePreview,
 } from './api';
-import { primaryFixedPivot, primaryShaftRadius } from './cvtHardware';
+import {
+  primaryBeltContactTravel,
+  primaryFixedPivot,
+  primaryFreeTravel,
+  primaryGrooveWidth,
+  primaryShaftRadius,
+  withPrimaryGrooveWidth,
+} from './cvtHardware';
 
 function projected(point: Vector3, controller: Scene3DController, svg: SVGSVGElement) {
   const camera = controller.getCamera();
@@ -97,6 +105,125 @@ function setLine(
   text.textContent = label;
 }
 
+function hideRadiusRing(svg: SVGSVGElement) {
+  const ring = svg.querySelector<SVGPolylineElement>('[data-radius-ring]');
+  if (ring) ring.style.display = 'none';
+}
+
+function setProjectedRing(
+  svg: SVGSVGElement,
+  controller: Scene3DController,
+  points: Vector3[],
+) {
+  const ring = svg.querySelector<SVGPolylineElement>('[data-radius-ring]');
+  if (!ring) return;
+  const projectedPoints = points
+    .map((point) => projected(point, controller, svg))
+    .filter((point): point is { x: number; y: number } => point !== null);
+  if (projectedPoints.length < 3) {
+    ring.style.display = 'none';
+    return;
+  }
+  ring.style.display = '';
+  ring.setAttribute(
+    'points',
+    projectedPoints.map((point) => `${point.x},${point.y}`).join(' '),
+  );
+}
+
+function modelCircle(
+  controller: Scene3DController,
+  model: string,
+  radius: number,
+  axial = 0,
+): Vector3[] {
+  const object = controller.getModel(model)?.object3D;
+  if (!object) return [];
+  object.updateWorldMatrix(true, true);
+  return Array.from({ length: 65 }, (_, index) => {
+    const angle = (index * Math.PI * 2) / 64;
+    return new Vector3(
+      radius * Math.cos(angle),
+      radius * Math.sin(angle),
+      axial,
+    ).applyMatrix4(object.matrixWorld);
+  });
+}
+
+function worldPlaneCircle(
+  center: Vector3,
+  firstAxis: Vector3,
+  secondAxis: Vector3,
+  radius: number,
+): Vector3[] {
+  return Array.from({ length: 65 }, (_, index) => {
+    const angle = (index * Math.PI * 2) / 64;
+    return center
+      .clone()
+      .addScaledVector(firstAxis, radius * Math.cos(angle))
+      .addScaledVector(secondAxis, radius * Math.sin(angle));
+  });
+}
+
+function updatePulleyLabels(
+  svg: SVGSVGElement,
+  controller: Scene3DController,
+) {
+  for (const [key, model, label] of [
+    ['primary', 'primaryFixed', 'Primary'],
+    ['secondary', 'secondaryFixed', 'Secondary'],
+  ] as const) {
+    const group = svg.querySelector<SVGGElement>(`[data-pulley-label="${key}"]`);
+    const center = localWorld(controller, model, new Vector3());
+    const point = center ? projected(center, controller, svg) : null;
+    if (!group) continue;
+    group.style.display = point ? '' : 'none';
+    if (!point) continue;
+    group.setAttribute('transform', `translate(${point.x},${point.y - 34})`);
+    const text = group.querySelector('text');
+    if (text) text.textContent = label;
+  }
+}
+
+function updateOrientationKey(
+  svg: SVGSVGElement,
+  controller: Scene3DController,
+) {
+  const origin = localWorld(controller, 'primaryFixed', new Vector3());
+  const radial = localWorld(controller, 'primaryFixed', new Vector3(1, 0, 0));
+  const axial = localWorld(controller, 'primaryFixed', new Vector3(0, 0, 1));
+  if (!origin || !radial || !axial) return;
+  const po = projected(origin, controller, svg);
+  const pr = projected(radial, controller, svg);
+  const pa = projected(axial, controller, svg);
+  if (!po || !pr || !pa) return;
+  const normalized = (x: number, y: number) => {
+    const length = Math.hypot(x, y) || 1;
+    return { x: x / length, y: y / length };
+  };
+  const r = normalized(pr.x - po.x, pr.y - po.y);
+  const a = normalized(pa.x - po.x, pa.y - po.y);
+  const anchor = { x: 48, y: svg.getBoundingClientRect().height - 42 };
+  const update = (name: string, direction: { x: number; y: number }) => {
+    const group = svg.querySelector<SVGGElement>(`[data-axis="${name}"]`);
+    if (!group) return;
+    const line = group.querySelector('line')!;
+    const end = {
+      x: anchor.x + 28 * direction.x,
+      y: anchor.y + 28 * direction.y,
+    };
+    line.setAttribute('x1', String(anchor.x));
+    line.setAttribute('y1', String(anchor.y));
+    line.setAttribute('x2', String(end.x));
+    line.setAttribute('y2', String(end.y));
+    const text = group.querySelector('text')!;
+    text.setAttribute('x', String(end.x + 5 * direction.x));
+    text.setAttribute('y', String(end.y + 5 * direction.y));
+  };
+  update('radial', r);
+  update('axial', a);
+}
+
 function MeasurementSvg({ svgRef }: { svgRef: RefObject<SVGSVGElement | null> }) {
   return (
     <svg
@@ -113,6 +240,34 @@ function MeasurementSvg({ svgRef }: { svgRef: RefObject<SVGSVGElement | null> })
         overflow: 'hidden',
       }}
     >
+      {(['primary', 'secondary'] as const).map((key) => (
+        <g key={key} data-pulley-label={key} style={{ display: 'none' }}>
+          <text
+            textAnchor="middle"
+            fontSize={11}
+            fontWeight={600}
+            fill="var(--mantine-color-dimmed)"
+            stroke="var(--mantine-color-body)"
+            strokeWidth={3}
+            paintOrder="stroke"
+          />
+        </g>
+      ))}
+      <polyline
+        data-radius-ring
+        style={{ display: 'none' }}
+        fill="none"
+        stroke="var(--mantine-primary-color-filled)"
+        strokeWidth={2.5}
+      />
+      <g data-axis="radial">
+        <line stroke="var(--mantine-color-dimmed)" strokeWidth={1.5} />
+        <text fontSize={10} fill="var(--mantine-color-dimmed)">Radial</text>
+      </g>
+      <g data-axis="axial">
+        <line stroke="var(--mantine-primary-color-filled)" strokeWidth={1.5} />
+        <text fontSize={10} fill="var(--mantine-primary-color-filled)">Axial</text>
+      </g>
       <g data-measurement style={{ display: 'none' }}>
         <line stroke="var(--mantine-primary-color-filled)" strokeWidth={2} />
         <circle r={4} fill="var(--mantine-color-body)" stroke="var(--mantine-primary-color-filled)" strokeWidth={2} />
@@ -152,10 +307,12 @@ function measurementText(
       return `Primary shaft radius · ${formatPreferredQuantity(primaryShaftRadius(value), 'length', 'hardware', preferences, 'mm', 3)}`;
     case 'secondary-radius':
       return `Secondary belt radius · ${formatPreferredQuantity(value.assembly.geometry.secondary_outer_radius_at_zero_shift_m, 'length', 'hardware', preferences, 'mm', 3)}`;
-    case 'primary-travel':
-      return `Primary travel · ${formatPreferredQuantity(value.assembly.geometry.max_shift_m, 'length', 'hardware', preferences, 'mm', 3)}`;
+    case 'groove-width':
+      return `Primary groove width · ${formatPreferredQuantity(primaryGrooveWidth(value), 'length', 'hardware', preferences, 'mm', 3)}`;
     case 'deadzone-travel':
-      return `Free travel before belt contact · ${formatPreferredQuantity(value.assembly.geometry.deadzone_shift_m, 'length', 'hardware', preferences, 'mm', 3)}`;
+      return `Free travel before belt contact · ${formatPreferredQuantity(Math.max(0, primaryFreeTravel(value)), 'length', 'hardware', preferences, 'mm', 3)}`;
+    case 'belt-contact-travel':
+      return `Primary travel · ${formatPreferredQuantity(primaryBeltContactTravel(value), 'length', 'hardware', preferences, 'mm', 3)}`;
     case 'sheave-angle':
       return `Sheave half-angle · ${formatPreferredQuantity(value.assembly.geometry.sheave_half_angle_rad, 'angle', 'hardware', preferences, 'deg', 2)}`;
     case 'pivot-radius':
@@ -209,12 +366,14 @@ function PulleyScene({
   frameIndex,
   active,
   resetKey,
+  projection,
 }: {
   preview: CvtEditorScenePreview;
   value: CvtData;
   frameIndex: number;
   active: HardwareMeasurementKey | null;
   resetKey: number;
+  projection: 'orthographic' | 'perspective';
 }) {
   const geometry = useMemo(() => sceneGeometry(preview.geometry), [preview.geometry]);
   const models = useMemo(
@@ -223,6 +382,7 @@ function PulleyScene({
   );
   const config = sceneConfiguration(false);
   config.renderOnDemand = true;
+  config.camera.type = 'orthographic';
   config.camera.position = [3, 7, 19];
   const { containerRef, sceneController, error } = useScene3D({ sceneConfig: config, models });
   const frame = preview.frames[frameIndex] ?? preview.frames[0];
@@ -231,6 +391,10 @@ function PulleyScene({
   const { unitPreferences } = useAuth();
   const preferences = normalizeUnitPreferences(unitPreferences);
   const label = measurementText(active, value, preferences);
+
+  useEffect(() => {
+    sceneController?.setCameraProjection(projection);
+  }, [sceneController, projection]);
 
   useEffect(() => {
     if (!sceneController || !frame) return;
@@ -261,25 +425,54 @@ function PulleyScene({
     const update = () => {
       const svg = overlay.current;
       if (!svg) return;
+      updateOrientationKey(svg, sceneController);
+      updatePulleyLabels(svg, sceneController);
+      hideRadiusRing(svg);
       const primaryRadius = sceneDistance(primaryShaftRadius(value));
       const secondaryRadius = sceneDistance(value.assembly.geometry.secondary_outer_radius_at_zero_shift_m);
+      const hub = sheaveHub(geometry.primaryMinRadius, geometry);
+      const slope = Math.tan(geometry.halfAngle);
+      const fixedFaceAxial = -(primaryRadius - hub) * slope;
+      const movingFaceAxial = (primaryRadius - hub) * slope;
+      const movingPoint = localWorld(
+        sceneController,
+        'primaryMoving',
+        new Vector3(primaryRadius, 0, movingFaceAxial),
+      );
+      const axisStart = localWorld(sceneController, 'primaryFixed', new Vector3());
+      const axisEnd = localWorld(sceneController, 'primaryFixed', new Vector3(0, 0, 1));
+      const axialDirection = axisStart && axisEnd
+        ? axisEnd.clone().sub(axisStart).normalize()
+        : null;
       let a: Vector3 | null = null;
       let b: Vector3 | null = null;
       if (active === 'shaft-radius') {
         a = localWorld(sceneController, 'primaryFixed', new Vector3());
         b = localWorld(sceneController, 'primaryFixed', new Vector3(primaryRadius, 0, 0));
+        setProjectedRing(svg, sceneController, modelCircle(sceneController, 'primaryFixed', primaryRadius));
       } else if (active === 'secondary-radius') {
         a = localWorld(sceneController, 'secondaryFixed', new Vector3());
         b = localWorld(sceneController, 'secondaryFixed', new Vector3(secondaryRadius, 0, 0));
-      } else if (active === 'primary-travel' || active === 'deadzone-travel') {
-        const length = sceneDistance(
-          active === 'primary-travel'
-            ? value.assembly.geometry.max_shift_m
-            : value.assembly.geometry.deadzone_shift_m,
+        setProjectedRing(svg, sceneController, modelCircle(sceneController, 'secondaryFixed', secondaryRadius));
+      } else if (active === 'groove-width') {
+        a = localWorld(
+          sceneController,
+          'primaryFixed',
+          new Vector3(primaryRadius, 0, fixedFaceAxial),
         );
-        const radial = geometry.primaryMaxRadius * 1.08;
-        a = localWorld(sceneController, 'primaryFixed', new Vector3(radial, 0, 0));
-        b = localWorld(sceneController, 'primaryFixed', new Vector3(radial, 0, -length));
+        b = movingPoint;
+      } else if (active === 'deadzone-travel' && movingPoint && axialDirection) {
+        a = movingPoint.clone().addScaledVector(
+          axialDirection,
+          sceneDistance(primaryFreeTravel(value)),
+        );
+        b = movingPoint;
+      } else if (active === 'belt-contact-travel' && movingPoint && axialDirection) {
+        a = movingPoint;
+        b = movingPoint.clone().addScaledVector(
+          axialDirection,
+          -sceneDistance(primaryBeltContactTravel(value)),
+        );
       } else if (active === 'sheave-angle') {
         const radial = geometry.primaryMaxRadius * 0.92;
         a = localWorld(sceneController, 'primaryFixed', new Vector3(radial, 0, 0));
@@ -305,58 +498,73 @@ function PulleyScene({
 }
 
 export function CvtPulleyPreview({ value, activePath }: { value: CvtData; activePath: string | null }) {
-  const key = JSON.stringify(value.assembly.geometry);
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const grooveWidth = primaryGrooveWidth(value);
+  const normalizedValue = useMemo(
+    () => withPrimaryGrooveWidth(value, grooveWidth),
+    [value, grooveWidth],
+  );
+  const key = JSON.stringify(normalizedValue.assembly.geometry);
   const request = useCallback(
-    (signal: AbortSignal) => previewCvtPulleys(value, signal),
-    [value],
+    (signal: AbortSignal) => previewCvtPulleys(normalizedValue, signal),
+    [normalizedValue],
   );
   const preview = useDebouncedPreview(key, request);
   const [travel, setTravel] = useState(0);
   const [reset, setReset] = useState(0);
+  const [projection, setProjection] = useState<'orthographic' | 'perspective'>('orthographic');
   const active = hardwareMeasurementKey(activePath);
+  const freeTravel = Math.max(0, primaryFreeTravel(value));
+  const firstContactPercent = grooveWidth > 0
+    ? Math.min(100, Math.max(0, (100 * freeTravel) / grooveWidth))
+    : 0;
   useEffect(() => {
-    if (active === 'primary-travel') setTravel(100);
-    else if (active === 'deadzone-travel') {
-      const maximum = value.assembly.geometry.max_shift_m;
-      setTravel(
-        maximum > 0
-          ? Math.min(
-              100,
-              (100 * value.assembly.geometry.deadzone_shift_m) / maximum,
-            )
-          : 0,
-      );
-    } else if (
+    if (active === 'belt-contact-travel' || active === 'deadzone-travel')
+      setTravel(firstContactPercent);
+    else if (
       active === 'shaft-radius' ||
       active === 'secondary-radius' ||
+      active === 'groove-width' ||
       active === 'sheave-angle'
     )
       setTravel(0);
-  }, [
-    active,
-    value.assembly.geometry.deadzone_shift_m,
-    value.assembly.geometry.max_shift_m,
-  ]);
+  }, [active, firstContactPercent]);
   const frameIndex = preview.value?.frames.length
     ? Math.round((travel / 100) * (preview.value.frames.length - 1))
     : 0;
   return (
     <Stack gap="xs">
-      <Group justify="space-between">
+      <Group justify="space-between" align="center">
         <div>
           <Text fw={600}>Pulley geometry preview</Text>
-          <Text size="xs" c="dimmed">Pulleys and shafts only. Focus a measurement below to mark it on the model.</Text>
+          <Text size="xs" c="dimmed">Pulleys and shafts only. The axial/radial key follows the camera so the view stays oriented while you rotate it.</Text>
         </div>
-        <Button size="compact-xs" variant="subtle" disabled={!preview.value} onClick={() => setReset((n) => n + 1)}>
-          Reset view
-        </Button>
+        <Group gap="sm">
+          <Switch
+            size="sm"
+            label="Orthographic"
+            checked={projection === 'orthographic'}
+            onChange={(event) => setProjection(event.currentTarget.checked ? 'orthographic' : 'perspective')}
+          />
+          <Button size="compact-xs" variant="subtle" disabled={!preview.value} onClick={() => setReset((n) => n + 1)}>
+            Reset view
+          </Button>
+        </Group>
       </Group>
       {preview.error && <Alert color="orange">{preview.error}{preview.value && ' The view still shows the last valid geometry.'}</Alert>}
       {!preview.current && !preview.error && <Text role="status" size="xs" c="dimmed">Updating pulley geometry…</Text>}
       {preview.value ? (
-        <PulleyScene preview={preview.value} value={value} frameIndex={frameIndex} active={isPrimaryMeasurement(active) ? null : active} resetKey={reset} />
+        <PulleyScene
+          preview={preview.value}
+          value={normalizedValue}
+          frameIndex={frameIndex}
+          active={isPrimaryMeasurement(active) ? null : active}
+          resetKey={reset}
+          projection={projection}
+        />
       ) : !preview.error ? <Loader size="sm" /> : null}
-      <Text size="sm" fw={500}>Primary travel position</Text>
+      <Text size="sm" fw={500}>Preview position</Text>
       <Slider
         min={0}
         max={100}
@@ -365,9 +573,18 @@ export function CvtPulleyPreview({ value, activePath }: { value: CvtData; active
         onChange={setTravel}
         disabled={!preview.value}
         label={(v) => `${v.toFixed(0)}%`}
-        marks={[{ value: 0, label: 'Open' }, { value: 100, label: 'Closed' }]}
+        marks={firstContactPercent > 0 && firstContactPercent < 100
+          ? [{ value: firstContactPercent }]
+          : []}
       />
-      <Text size="xs" c="dimmed">Drag to rotate · Scroll or pinch to zoom. The slider is visual only and does not edit the CVT.</Text>
+      <Group justify="space-between" gap="xs">
+        <Text size="xs" c="dimmed">Fully open</Text>
+        <Text size="xs" c="dimmed">Full travel</Text>
+      </Group>
+      <Text size="xs" c="dimmed">
+        First belt contact: {formatPreferredQuantity(freeTravel, 'length', 'hardware', preferences, 'mm', 3)} · {firstContactPercent.toFixed(0)}% of total travel
+      </Text>
+      <Text size="xs" c="dimmed">Orthographic is the default measurement view. Drag to rotate · Scroll or pinch to zoom. The slider is visual only and does not edit the CVT.</Text>
     </Stack>
   );
 }
@@ -472,21 +689,52 @@ function FlyweightLabels({
       marker('shaft', shaftWorld, 'Shaft centreline');
       marker('pivot', pivotWorld, 'Pivot');
       marker('roller', rollerWorld, 'Roller centre');
+      hideRadiusRing(root);
       const rampGroup = root.querySelector<SVGGElement>('[data-point="ramp"]')!;
       const ramp = controller.getModel('primaryRamps')?.object3D;
       if (showRamp && ramp) {
         ramp.updateWorldMatrix(true, true);
         const bounds = new Box3().setFromObject(ramp);
-        const center = bounds.getCenter(new Vector3());
-        const p = projected(center, controller, root);
+        const corners = [bounds.min.x, bounds.max.x].flatMap((x) =>
+          [bounds.min.y, bounds.max.y].flatMap((y) =>
+            [bounds.min.z, bounds.max.z].map((z) => new Vector3(x, y, z)),
+          ),
+        );
+        const farCorner = corners.reduce((best, corner) =>
+          corner.distanceToSquared(rollerWorld) > best.distanceToSquared(rollerWorld)
+            ? corner
+            : best,
+        );
+        const p = projected(farCorner, controller, root);
         rampGroup.style.display = p ? '' : 'none';
-        if (p) rampGroup.setAttribute('transform', `translate(${p.x},${p.y})`);
+        if (p) {
+          rampGroup.setAttribute('transform', `translate(${p.x},${p.y})`);
+          const left = p.x > root.getBoundingClientRect().width * 0.58;
+          const leader = rampGroup.querySelector('path');
+          const text = rampGroup.querySelector('text');
+          leader?.setAttribute('d', left ? 'M-3 3 L-11 15' : 'M3 -3 L11 -15');
+          if (text) {
+            text.setAttribute('x', left ? '-14' : '14');
+            text.setAttribute('y', left ? '20' : '-11');
+            text.setAttribute('text-anchor', left ? 'end' : 'start');
+          }
+        }
       } else rampGroup.style.display = 'none';
       let a: Vector3 | null = null;
       let b: Vector3 | null = null;
       if (active === 'pivot-radius') {
         a = shaftWorld;
         b = pivotWorld;
+        setProjectedRing(
+          root,
+          controller,
+          modelCircle(
+            controller,
+            'primaryFixed',
+            sceneDistance(fixed.geometry.pivot_radius_m),
+            layout.pivotZ,
+          ),
+        );
       } else if (active === 'arm-length') {
         a = pivotWorld;
         b = rollerWorld;
@@ -494,6 +742,21 @@ function FlyweightLabels({
         const outward = rollerWorld.clone().sub(pivotWorld).normalize();
         a = rollerWorld;
         b = rollerWorld.clone().addScaledVector(outward, sceneDistance(fixed.geometry.roller_radius_m));
+        const primary = controller.getModel('primaryFixed')?.object3D;
+        if (primary) {
+          const radialAxis = new Vector3(1, 0, 0).transformDirection(primary.matrixWorld);
+          const axialAxis = new Vector3(0, 0, 1).transformDirection(primary.matrixWorld);
+          setProjectedRing(
+            root,
+            controller,
+            worldPlaneCircle(
+              rollerWorld,
+              radialAxis,
+              axialAxis,
+              sceneDistance(fixed.geometry.roller_radius_m),
+            ),
+          );
+        }
       }
       setLine(root, a, b, label, controller);
     };
@@ -526,7 +789,14 @@ function FlyweightLabels({
       {point('shaft', 'Shaft centreline', true)}
       {point('pivot', 'Pivot', true)}
       {point('roller', 'Roller centre')}
-      {point('ramp', 'Reference ramp · adjusted in Tunes')}
+      {point('ramp', 'Reference ramp · Tunes')}
+      <polyline
+        data-radius-ring
+        style={{ display: 'none' }}
+        fill="none"
+        stroke="var(--mantine-primary-color-filled)"
+        strokeWidth={2.5}
+      />
       <g data-measurement style={{ display: 'none' }}>
         <line stroke="var(--mantine-primary-color-filled)" strokeWidth={2} />
         <circle r={4} fill="var(--mantine-color-body)" stroke="var(--mantine-primary-color-filled)" strokeWidth={2} />

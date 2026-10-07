@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from 'react';
-import { Group, Text } from '@mantine/core';
+import { Group } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { EditorHistoryContext, type QuantityHistory } from './context';
 
@@ -69,6 +69,5 @@ export function UndoRedoControls({ history, disabled = false, onRestore }: {
     <Button type="button" size="xs" variant="default" disabled={disabled || !snapshot.canRedo}
       title="Redo last edit (Ctrl+Shift+Z / Ctrl+Y)"
       onClick={() => { history.redo(); onRestore?.(); }}>Redo</Button>
-    <Text size="xs" c="dimmed">Draft edits only; saved versions stay unchanged.</Text>
   </Group>;
 }

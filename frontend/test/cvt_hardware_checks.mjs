@@ -28,10 +28,10 @@ context.require = (name) => {
 vm.runInNewContext(compiled.outputText, context, { filename: source });
 const h = context.exports;
 
-const belt = (height_m, half_angle_rad = 0.2) => ({
+const belt = (height_m, half_angle_rad = 0.2, inner_width_m = 0.01655) => ({
   revision_id: 'belt-r1', name: 'Belt', description: '', source_label: '', source_url: '', source_notes: '',
   data: {
-    height_m, half_angle_rad, outer_width_m: 0.02, inner_width_m: 0.016,
+    height_m, half_angle_rad, outer_width_m: 0.02, inner_width_m,
     outer_length_m: 0.95, cord_depth_from_outer_m: 0.0025, density_kg_per_m3: 1100,
     length_reference: 'outer',
   },
@@ -110,13 +110,23 @@ test('primary shaft radius is derived from the stored outer-belt radius and sele
   near(h.primaryShaftRadius(make()), 0.0206375);
 });
 
-test('changing belts preserves shaft radius while recomputing CINDER outer-belt radius', () => {
+test('primary groove width owns total travel and derives the free/contact split', () => {
+  const value = make();
+  near(h.primaryGrooveWidth(value), 0.01905);
+  near(h.primaryBeltContactTravel(value), 0.01655);
+  near(h.primaryFreeTravel(value), 0.0025);
+  assert.equal(h.primaryGrooveFitsBelt(value), true);
+});
+
+test('changing belts preserves shaft radius and groove width while recomputing free travel', () => {
   const value = make();
   const before = h.primaryShaftRadius(value);
-  const next = h.withBeltPreservingPrimaryShaft(value, belt(0.012, 0.24));
+  const next = h.withBeltPreservingPrimaryShaft(value, belt(0.012, 0.24, 0.017));
   near(h.primaryShaftRadius(next), before);
   near(next.assembly.geometry.primary_outer_radius_at_zero_shift_m, before + 0.012);
   near(next.assembly.geometry.sheave_half_angle_rad, 0.24);
+  near(h.primaryGrooveWidth(next), h.primaryGrooveWidth(value));
+  near(next.assembly.geometry.deadzone_shift_m, 0.01905 - 0.017);
   near(value.assembly.geometry.primary_outer_radius_at_zero_shift_m, 0.0362077);
 });
 
@@ -143,26 +153,35 @@ test('a primary relative-rotation coupling keeps the separate-inertia path avail
   assert.equal(h.primaryHasRelativeRotationCoupling(value), true);
 });
 
-test('ordinary primary contact checking is zero-based and follows available travel', () => {
+test('editing groove width updates total shift, derived deadzone and ordinary contact bounds together', () => {
   const value = make();
   assert.equal(h.usesOrdinaryPrimaryTravel(value), true);
-  const next = h.withAvailablePrimaryTravel(value, 0.022);
+  const next = h.withPrimaryGrooveWidth(value, 0.022);
   assert.equal(next.assembly.geometry.max_shift_m, 0.022);
+  near(next.assembly.geometry.deadzone_shift_m, 0.022 - value.belt.data.inner_width_m);
   const geometry = next.assembly.pulleys.primary.components[0].geometry;
   assert.equal(geometry.axial_position_min_m, 0);
   assert.equal(geometry.axial_position_max_m, 0.022);
 });
 
-test('custom legacy contact bounds are preserved when ordinary travel changes', () => {
+test('a belt wider than the measured groove is retained as an invalid working choice', () => {
+  const value = make();
+  const next = h.withBeltPreservingPrimaryShaft(value, belt(0.015, 0.2, 0.020));
+  near(h.primaryGrooveWidth(next), 0.01905);
+  near(next.assembly.geometry.deadzone_shift_m, 0.01905 - 0.020);
+  assert.equal(h.primaryGrooveFitsBelt(next), false);
+});
+
+test('legacy fixed-pivot contact bounds normalize to the zero-based groove travel', () => {
   const value = make();
   value.assembly.pulleys.primary.components[0].geometry.axial_position_min_m = -0.001;
   value.assembly.pulleys.primary.components[0].geometry.axial_position_max_m = 0.025;
-  assert.equal(h.usesOrdinaryPrimaryTravel(value), false);
-  const next = h.withAvailablePrimaryTravel(value, 0.021);
+  assert.equal(h.usesOrdinaryPrimaryTravel(value), true);
+  const next = h.withPrimaryGrooveWidth(value, 0.021);
   const geometry = next.assembly.pulleys.primary.components[0].geometry;
   assert.equal(next.assembly.geometry.max_shift_m, 0.021);
-  assert.equal(geometry.axial_position_min_m, -0.001);
-  assert.equal(geometry.axial_position_max_m, 0.025);
+  assert.equal(geometry.axial_position_min_m, 0);
+  assert.equal(geometry.axial_position_max_m, 0.021);
 });
 
 test('absolute ramp reference coordinates are tune-only, not CVT hardware fields', () => {
@@ -179,7 +198,7 @@ test('mechanical mappings and compilation controls are advanced with physical la
   assert.match(spring.label, /Spring compression/);
   const travel = h.cvtFieldPresentation({ ...field, label: 'Max shift' }, '/geometry/max_shift_m');
   assert.equal(travel.advanced, false);
-  assert.equal(travel.label, 'Primary travel');
+  assert.equal(travel.label, 'Primary groove width');
 });
 
 for (const relative of [
@@ -198,6 +217,9 @@ for (const relative of [
 test('editor source uses the physical shaft, shared 3D previews and category-level Advanced flow', () => {
   const text = fs.readFileSync(path.join(root, 'src/features/physicalLibrary/CvtEditor.tsx'), 'utf8');
   assert.match(text, /Primary shaft radius/);
+  assert.match(text, /Primary groove width/);
+  assert.match(text, /Primary travel · set by belt/);
+  assert.match(text, /primaryBeltContactTravel/);
   assert.match(text, /Primary rotating hardware inertia/);
   assert.match(text, /CvtPulleyPreview/);
   assert.match(text, /CvtPrimaryHardwarePreview/);

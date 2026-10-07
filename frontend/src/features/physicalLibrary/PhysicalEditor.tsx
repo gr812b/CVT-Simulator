@@ -478,7 +478,7 @@ function PhysicalEditor({
               <div className={styles.actions}>
                 <Group justify="space-between">
                   <Group gap="sm">
-                    {(isNew || (detail?.item.owned && !revisionId)) && (
+                    {editable && (
                       <UndoRedoControls history={editHistory} disabled={busy} onRestore={restoreDraft} />
                     )}
                     {detail?.item.owned && !editing && !revisionId && (

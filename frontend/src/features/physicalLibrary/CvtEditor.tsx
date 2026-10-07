@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Accordion,
-  ActionIcon,
+  Alert,
   Badge,
+  Box,
   Checkbox,
   Group,
-  Popover,
   SimpleGrid,
   Stack,
   Text,
 } from '@mantine/core';
-import { IconInfoCircle } from '@tabler/icons-react';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import {
   expandJsonPointerTemplate,
@@ -26,11 +25,15 @@ import {
   isCvtHardwareField,
   isOrdinaryPrimaryTravelField,
   isPrimaryRotationalInertiaField,
+  primaryBeltContactTravel,
+  primaryFreeTravel,
+  primaryGrooveFitsBelt,
+  primaryGrooveWidth,
   primaryHasRelativeRotationCoupling,
   primaryRotatingHardwareInertia,
   primaryShaftRadius,
-  withAvailablePrimaryTravel,
   withBeltPreservingPrimaryShaft,
+  withPrimaryGrooveWidth,
   withPrimaryRotatingHardwareInertia,
   withPrimaryShaftRadius,
 } from './cvtHardware';
@@ -53,27 +56,6 @@ function fieldLabel(field: PhysicalField, path: string) {
   const segment = path.match(/\/segments\/(\d+)\//);
   const label = cvtFieldPresentation(field, path).label;
   return segment ? `Segment ${Number(segment[1]) + 1} · ${label}` : label;
-}
-
-function FieldInfo({ label, description }: { label: string; description: string }) {
-  if (!description) return null;
-  return (
-    <Popover width={320} position="bottom-end" withArrow shadow="md">
-      <Popover.Target>
-        <ActionIcon
-          type="button"
-          variant="subtle"
-          color="gray"
-          aria-label={`About ${label}`}
-        >
-          <IconInfoCircle size={17} />
-        </ActionIcon>
-      </Popover.Target>
-      <Popover.Dropdown>
-        <Text size="sm">{description}</Text>
-      </Popover.Dropdown>
-    </Popover>
-  );
 }
 
 function AdvancedSection({
@@ -99,6 +81,9 @@ function AdvancedSection({
         <Accordion.Control>{title}</Accordion.Control>
         <Accordion.Panel>
           <Stack gap="md">
+            <Text size="xs" c="dimmed">
+              Coordinate mappings, orientation signs and numerical construction settings. The descriptions below explain when each value should be changed.
+            </Text>
             {forceOpen && (
               <Text size="sm" c="red">
                 This section is open because the latest input check reported an
@@ -154,9 +139,10 @@ export function CvtEditor({
 }) {
   const assembly = value.assembly;
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
-  const [openedCategories, setOpenedCategories] = useState<string[]>(['belt', 'geometry']);
-  const focusPath = (path: string) => (focused: boolean) =>
-    setFocusedPath((current) => focused ? path : current === path ? null : current);
+  const [openedCategories, setOpenedCategories] = useState<string[]>(['geometry']);
+  const focusPath = (path: string) => (focused: boolean) => {
+    if (focused) setFocusedPath(path);
+  };
   const primaryCoupled = primaryHasRelativeRotationCoupling(value);
   const changeAssembly = (next: CvtData['assembly']) =>
     onChange({ ...value, assembly: next });
@@ -169,7 +155,9 @@ export function CvtEditor({
           field.path.startsWith(prefix.replace(/\/\d+\//g, '/*/')) &&
           !field.path.startsWith('/geometry/belt') &&
           field.path !== '/inertias/belt_density_kg_per_m3' &&
-          field.path !== '/geometry/sheave_half_angle_rad',
+          field.path !== '/geometry/sheave_half_angle_rad' &&
+          field.path !== '/geometry/deadzone_shift_m' &&
+          field.path !== '/geometry/max_shift_m',
       )
       .flatMap((field) =>
         expandJsonPointerTemplate(assembly, field.path)
@@ -215,10 +203,6 @@ export function CvtEditor({
   }, [enableInitialTune, onSaveBlockChange]);
 
   const changePath = (path: string, next: number) => {
-    if (path === '/geometry/max_shift_m') {
-      onChange(withAvailablePrimaryTravel(value, next));
-      return;
-    }
     changeAssembly(setValueAtJsonPointer(assembly, path, next));
   };
 
@@ -229,7 +213,7 @@ export function CvtEditor({
         if (typeof current !== 'number') return null;
         const presentation = cvtFieldPresentation(field, path);
         const label = fieldLabel(field, path);
-        const input = (
+        return (
           <QuantityInput
             scope="hardware"
             key={path}
@@ -241,19 +225,13 @@ export function CvtEditor({
             onChange={(next) => changePath(path, next)}
             unit={field.display_unit}
             scale={field.display_scale ?? 1}
-            description={presentation.advanced ? undefined : presentation.description}
+            description={presentation.description}
             min={field.minimum ?? undefined}
             max={field.maximum ?? undefined}
             integer={field.integer}
             onFocusChange={focusPath(path)}
           />
         );
-        return presentation.advanced && presentation.description ? (
-          <Group key={path} align="end" wrap="nowrap">
-            <div style={{ flex: 1 }}>{input}</div>
-            <FieldInfo label={label} description={presentation.description} />
-          </Group>
-        ) : input;
       })}
     </SimpleGrid>
   );
@@ -317,60 +295,110 @@ export function CvtEditor({
         value={openedCategories}
         onChange={setOpenedCategories}
       >
-        <Accordion.Item value="belt">
-          <Accordion.Control>Reusable belt</Accordion.Control>
-          <Accordion.Panel>
-            <Stack>
-              <BeltPicker
-                value={value.belt}
-                onChange={(belt) => onChange(withBeltPreservingPrimaryShaft(value, belt))}
-                items={belts}
-                disabled={disabled}
-                onLoadingChange={onLoadingChange}
-              />
-              <Text size="xs" c="dimmed">
-                Changing the belt keeps the physical primary shaft/sleeve radius
-                unchanged and updates CINDER’s outer-belt radius from the new belt height.
-              </Text>
-            </Stack>
-          </Accordion.Panel>
-        </Accordion.Item>
-
         <Accordion.Item value="geometry">
           <Accordion.Control>Pulley geometry & travel</Accordion.Control>
           <Accordion.Panel>
-            <Stack gap="lg">
-              <CvtPulleyPreview value={value} activePath={focusedPath} />
-              <div
-                tabIndex={0}
-                onFocus={() => setFocusedPath('/geometry/sheave_half_angle_rad')}
-                onBlur={() => setFocusedPath((current) =>
-                  current === '/geometry/sheave_half_angle_rad' ? null : current
+            <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl" verticalSpacing="lg">
+              <Stack gap="lg">
+                <Stack gap="sm">
+                  <Text fw={600}>Reusable belt</Text>
+                  <BeltPicker
+                    value={value.belt}
+                    onChange={(belt) => onChange(withBeltPreservingPrimaryShaft(value, belt))}
+                    items={belts}
+                    disabled={disabled}
+                    onLoadingChange={onLoadingChange}
+                  />
+                  <Text size="xs" c="dimmed">
+                    The selected belt sets the inner width and sheave angle. Changing belts keeps the primary shaft radius and fully-open groove width fixed, then recomputes the free travel to first contact.
+                  </Text>
+                </Stack>
+
+                {!primaryGrooveFitsBelt(value) && (
+                  <Alert color="red" title="Selected belt is too wide">
+                    Increase the primary groove width or choose a belt with a smaller inner width. The groove must be at least as wide as the belt at its inner surface.
+                  </Alert>
                 )}
-              >
+
                 <QuantityInput
                   scope="hardware"
-                  label="Sheave half-angle · set by belt"
-                  value={value.belt.data.half_angle_rad}
-                  unit="deg"
-                  disabled
-                  onChange={() => undefined}
+                  draftKey={`cvt:${draftPathPrefix}:groove-width`}
+                  label="Primary groove width"
+                  value={primaryGrooveWidth(value)}
+                  unit="mm"
+                  min={primaryBeltContactTravel(value)}
+                  disabled={disabled}
+                  description="With the primary fully open, measure the axial face-to-face groove width at the shaft/sleeve outer radius. This CAD-friendly dimension equals total primary travel and must be at least the selected belt inner width."
+                  onChange={(next) => onChange(withPrimaryGrooveWidth(value, next))}
+                  onFocusChange={focusPath('@primary-groove-width')}
                 />
-              </div>
-              <QuantityInput
-                scope="hardware"
-                draftKey={`cvt:${draftPathPrefix}:shaft-radius`}
-                label="Primary shaft radius"
-                value={primaryShaftRadius(value)}
-                unit="mm"
-                min={0}
-                disabled={disabled}
-                description="Outside radius of the shaft or sleeve supporting the belt at low ratio, measured from the primary shaft centreline. This is not the bore radius or cord-line radius."
-                onChange={(next) => onChange(withPrimaryShaftRadius(value, next))}
-                onFocusChange={focusPath('@primary-shaft-radius')}
-              />
-              {groupedFields([{ prefix: '/geometry/' }])}
-            </Stack>
+
+                <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                  <div
+                    tabIndex={0}
+                    onFocus={() => setFocusedPath('@primary-free-travel')}
+                  >
+                    <QuantityInput
+                      scope="hardware"
+                      label="Free travel before belt contact"
+                      value={Math.max(0, primaryFreeTravel(value))}
+                      unit="mm"
+                      disabled
+                      description="Derived as the fully-open groove width minus the selected belt inner (bottom) width."
+                      onChange={() => undefined}
+                    />
+                  </div>
+                  <div
+                    tabIndex={0}
+                    onFocus={() => setFocusedPath('@primary-belt-contact-travel')}
+                  >
+                    <QuantityInput
+                      scope="hardware"
+                      label="Primary travel · set by belt"
+                      value={primaryBeltContactTravel(value)}
+                      unit="mm"
+                      disabled
+                      description="Travel after first belt contact; this is equal to the selected belt inner (bottom) width."
+                      onChange={() => undefined}
+                    />
+                  </div>
+                </SimpleGrid>
+                <Text size="xs" c="dimmed">
+                  Total travel from fully open to fully closed is the groove width: free travel to first contact plus the primary travel set by the selected belt.
+                </Text>
+
+                <div
+                  tabIndex={0}
+                  onFocus={() => setFocusedPath('/geometry/sheave_half_angle_rad')}
+                >
+                  <QuantityInput
+                    scope="hardware"
+                    label="Sheave half-angle · set by belt"
+                    value={value.belt.data.half_angle_rad}
+                    unit="deg"
+                    disabled
+                    onChange={() => undefined}
+                  />
+                </div>
+                <QuantityInput
+                  scope="hardware"
+                  draftKey={`cvt:${draftPathPrefix}:shaft-radius`}
+                  label="Primary shaft radius"
+                  value={primaryShaftRadius(value)}
+                  unit="mm"
+                  min={0}
+                  disabled={disabled}
+                  description="Outside radius of the shaft or sleeve supporting the belt at low ratio, measured from the primary shaft centreline. This is not the bore radius or cord-line radius."
+                  onChange={(next) => onChange(withPrimaryShaftRadius(value, next))}
+                  onFocusChange={focusPath('@primary-shaft-radius')}
+                />
+                {groupedFields([{ prefix: '/geometry/' }])}
+              </Stack>
+
+              <Box style={{ position: 'sticky', top: 88, alignSelf: 'start' }}>
+                <CvtPulleyPreview value={value} activePath={focusedPath} />
+              </Box>
+            </SimpleGrid>
           </Accordion.Panel>
         </Accordion.Item>
 
