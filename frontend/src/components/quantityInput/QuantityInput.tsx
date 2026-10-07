@@ -26,6 +26,7 @@ export function QuantityInput({
   max,
   integer = false,
   disabled = false,
+  onFocusChange,
 }: {
   label: string;
   value: number | null;
@@ -39,6 +40,7 @@ export function QuantityInput({
   max?: number;
   integer?: boolean;
   disabled?: boolean;
+  onFocusChange?: (focused: boolean) => void;
 }) {
   const id = useId();
   const { session } = useAuth();
@@ -89,10 +91,14 @@ export function QuantityInput({
       description={description}
       value={working}
       disabled={disabled}
-      onFocus={() => setFocused(true)}
+      onFocus={() => {
+        setFocused(true);
+        onFocusChange?.(true);
+      }}
       onBlur={() => {
         setFocused(false);
         normalize();
+        onFocusChange?.(false);
       }}
       onKeyDown={(event) => {
         if (event.key === 'Enter') {

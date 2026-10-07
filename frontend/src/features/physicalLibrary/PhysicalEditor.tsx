@@ -67,6 +67,7 @@ import { DifferenceList, PhysicalStatus } from './PhysicalStatus';
 import { RevisionHistory } from './RevisionHistory';
 import { VehicleEditor } from './VehicleEditor';
 import styles from './PhysicalEditor.module.scss';
+import { hasUnsavedEditorDraft } from './editorDraft';
 import { CvtTunes } from '../experiments/CvtTunes';
 import { ConfigurationBack } from './ConfigurationLink';
 import { PublishDialog } from '../publicLibrary/PublishDialog';
@@ -122,9 +123,12 @@ function PhysicalEditor({
   const [update, setUpdate] = useState<PhysicalUpdatePreview | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [reloadOpen, setReloadOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
   const permitNavigation = useRef(false);
   const serialized = document ? JSON.stringify(document) : '';
-  const dirty = !!document && (serialized !== saved || invalid.size > 0);
+  const dirty =
+    !!document &&
+    hasUnsavedEditorDraft(serialized, saved, invalid.size);
   const editable = editing && (isNew || !!detail?.item.owned);
   const blocker = useBlocker(
     useCallback(() => dirty && !permitNavigation.current, [dirty]),
@@ -149,6 +153,7 @@ function PhysicalEditor({
     setValidation(next.validation);
     setResolved(null);
     setNote('');
+    setInvalid(new Set());
   }, []);
   useEffect(() => {
     const controller = new AbortController();
@@ -327,6 +332,25 @@ function PhysicalEditor({
     link.click();
     URL.revokeObjectURL(url);
   };
+  const discardCurrentDraft = () => {
+    setDiscardOpen(false);
+    setError(null);
+    setInvalid(new Set());
+    if (isNew) {
+      permitNavigation.current = true;
+      navigate(`/library/${kind}`, { state: returnState, replace: true });
+      return;
+    }
+    if (detail) accept(detail);
+    setEditing(false);
+  };
+  const requestDiscardCurrentDraft = () => {
+    if (dirty) {
+      setDiscardOpen(true);
+      return;
+    }
+    discardCurrentDraft();
+  };
 
   if (isNew && !session)
     return (
@@ -436,18 +460,13 @@ function PhysicalEditor({
                         Open latest version
                       </Button>
                     )}
-                    {editing && !isNew && (
+                    {editable && (
                       <Button
                         variant="default"
                         disabled={busy}
-                        onClick={() => {
-                          if (detail) accept(detail);
-                          setInvalid(new Set());
-                          setEditing(false);
-                          setError(null);
-                        }}
+                        onClick={requestDiscardCurrentDraft}
                       >
-                        Cancel editing
+                        {isNew ? 'Discard draft' : 'Cancel editing'}
                       </Button>
                     )}
                     {editable && (
@@ -909,6 +928,7 @@ function PhysicalEditor({
               <Button
                 onClick={() => {
                   setReloadOpen(false);
+                  setInvalid(new Set());
                   setRetry((value) => value + 1);
                 }}
               >
@@ -918,12 +938,37 @@ function PhysicalEditor({
           </Stack>
         </Modal>
         <Modal
-          opened={blocker.state === 'blocked'}
-          onClose={() => blocker.state === 'blocked' && blocker.reset()}
-          title="Leave unsaved changes?"
+          opened={discardOpen}
+          onClose={() => !busy && setDiscardOpen(false)}
+          title={isNew ? 'Discard this draft?' : 'Discard unsaved changes?'}
         >
           <Stack>
-            <Text>Your working values have not been saved.</Text>
+            <Text>
+              {isNew
+                ? 'This new item has not been saved. Discarding it removes this working draft.'
+                : 'This restores the latest saved revision and removes your working changes.'}
+            </Text>
+            <Group justify="end">
+              <Button variant="default" onClick={() => setDiscardOpen(false)}>
+                Keep editing
+              </Button>
+              <Button color="red" onClick={discardCurrentDraft}>
+                {isNew ? 'Discard draft' : 'Discard changes'}
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+        <Modal
+          opened={blocker.state === 'blocked'}
+          onClose={() => blocker.state === 'blocked' && blocker.reset()}
+          title={isNew ? 'Discard this draft and leave?' : 'Leave unsaved changes?'}
+        >
+          <Stack>
+            <Text>
+              {isNew
+                ? 'This draft has not been saved.'
+                : 'Your working values have not been saved.'}
+            </Text>
             <Group justify="end">
               <Button
                 variant="default"
@@ -935,7 +980,7 @@ function PhysicalEditor({
                 color="red"
                 onClick={() => blocker.state === 'blocked' && blocker.proceed()}
               >
-                Discard & leave
+                {isNew ? 'Discard draft & leave' : 'Discard & leave'}
               </Button>
             </Group>
           </Stack>

@@ -19,6 +19,7 @@ import {
   setValueAtJsonPointer,
 } from '@utils/jsonPointer';
 import { BeltPicker } from './BeltPicker';
+import { CvtMeasurementPreview } from './CvtMeasurementPreview';
 import {
   cvtFieldPresentation,
   isCanonicalPrimaryRadiusField,
@@ -132,6 +133,9 @@ export function CvtEditor({
   onLoadingChange?: (loading: boolean) => void;
 }) {
   const assembly = value.assembly;
+  const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  const focusPath = (path: string) => (focused: boolean) =>
+    setFocusedPath((current) => focused ? path : current === path ? null : current);
   const primaryCoupled = primaryHasRelativeRotationCoupling(value);
   const changeAssembly = (next: CvtData['assembly']) =>
     onChange({ ...value, assembly: next });
@@ -200,6 +204,7 @@ export function CvtEditor({
             min={field.minimum ?? undefined}
             max={field.maximum ?? undefined}
             integer={field.integer}
+            onFocusChange={focusPath(path)}
           />
         );
         return presentation.advanced && presentation.description ? (
@@ -260,6 +265,7 @@ export function CvtEditor({
           <Accordion.Control>Pulley geometry & travel</Accordion.Control>
           <Accordion.Panel>
             <Stack>
+              <CvtMeasurementPreview value={value} activePath={focusedPath} />
               <Tooltip
                 label="CINDER requires the sheave half-angle to match the selected belt’s half-angle."
                 multiline
@@ -285,6 +291,7 @@ export function CvtEditor({
                 disabled={disabled}
                 description="Outside radius of the shaft or sleeve supporting the belt at low ratio, measured from the primary shaft centreline. This is not the bore radius or cord-line radius."
                 onChange={(next) => onChange(withPrimaryShaftRadius(value, next))}
+                onFocusChange={focusPath('@primary-shaft-radius')}
               />
               {componentFields('/geometry/')}
             </Stack>
@@ -345,6 +352,9 @@ export function CvtEditor({
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="xl">
+                {mount === 'primary' && (
+                  <CvtMeasurementPreview value={value} activePath={focusedPath} />
+                )}
                 {assembly.pulleys[mount].components.map((component, index) => (
                   <Stack key={`${index}-${component.kind}`} gap="md">
                     <Group>
