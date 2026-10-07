@@ -11,7 +11,7 @@ export function UnitPreferenceFields({ scope, value, onChange }: {
 }) {
   const dimensions = extraPreferenceDimensions(scope);
   const prominent = dimensions.filter(d => d === 'area' || d === 'inertia');
-  const other = dimensions.filter(d => !prominent.includes(d));
+  const other = dimensions.filter(d => d !== 'area' && d !== 'inertia');
   const input = (dimension: QuantityDimension) => <Select
     key={dimension}
     label={QUANTITY_LABELS[dimension]}

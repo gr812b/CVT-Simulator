@@ -68,7 +68,7 @@ export function ForceOverlay({
     [body, data],
   );
   const keys = (
-    selected ?? tracks.filter((t) => t.unit === 'N').map((t) => t.key)
+    selected ?? tracks.filter((t) => (t.unit ?? 'N') === 'N').map((t) => t.key)
   ).filter((key) => tracks.some((track) => track.key === key));
   const options = useRef<ForceOptions>({
     body,
@@ -253,15 +253,16 @@ export function ForceOverlay({
                         .filter((t) => keys.includes(t.key))
                         .map((t) => {
                           const sample = forceAt(t, bracket);
+                          const unit = t.unit ?? 'N';
                           return (
                             <Table.Tr key={t.key}>
                               <Table.Td>
-                                {t.label} ({preferredProjectedDisplayUnit('', t.unit, 'output', preferences)})
+                                {t.label} ({preferredProjectedDisplayUnit('', unit, 'output', preferences)})
                               </Table.Td>
                               {[0, 1, 2].map((i) => (
                                 <Table.Td key={i}>
                                   {sample
-                                    ? formatDisplayNumber(projectedDisplayValue(sample.components[i], '', t.unit, 'output', preferences), 2)
+                                    ? formatDisplayNumber(projectedDisplayValue(sample.components[i], '', unit, 'output', preferences), 2)
                                     : '—'}
                                 </Table.Td>
                               ))}
