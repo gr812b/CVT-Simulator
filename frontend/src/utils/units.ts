@@ -16,6 +16,10 @@ export type QuantityDimension =
   | 'mass'
   | 'density'
   | 'inertia'
+  | 'first_moment'
+  | 'inverse_length'
+  | 'inverse_area'
+  | 'rotational_damping'
   | 'stiffness'
   | 'time'
   | 'power'
@@ -30,7 +34,8 @@ export type DisplayUnit =
   | 'm/s' | 'km/h' | 'mph' | 'm/s²'
   | 'N' | 'lbf' | 'N·m' | 'lb·ft'
   | 'kg' | 'g' | 'oz' | 'lb' | 'kg/m³'
-  | 'kg·m²' | 'N/m' | 'N/mm' | 'N·m/rad'
+  | 'kg·m²' | 'kg·m' | '1/m' | '1/m²'
+  | 'N/m' | 'N/mm' | 'N·m/rad' | 'N·m·s/rad'
   | 's' | 'W' | 'kW' | 'mm/s' | '1/s' | '%' | '';
 
 export type UnitPreset = 'recommended' | 'metric' | 'si' | 'imperial';
@@ -62,6 +67,10 @@ const DEFAULT_UNITS: Readonly<Record<QuantityDimension, DisplayUnit>> = {
   mass: 'kg',
   density: 'kg/m³',
   inertia: 'kg·m²',
+  first_moment: 'kg·m',
+  inverse_length: '1/m',
+  inverse_area: '1/m²',
+  rotational_damping: 'N·m·s/rad',
   stiffness: 'N/m',
   time: 's',
   power: 'kW',
@@ -98,9 +107,13 @@ const SI_TO_DISPLAY: Readonly<Record<DisplayUnit, number>> = {
   lb: 2.2046226218488,
   'kg/m³': 1,
   'kg·m²': 1,
+  'kg·m': 1,
+  '1/m': 1,
+  '1/m²': 1,
   'N/m': 1,
   'N/mm': 0.001,
   'N·m/rad': 1,
+  'N·m·s/rad': 1,
   s: 1,
   W: 1,
   kW: 0.001,
@@ -118,7 +131,8 @@ const UNIT_DIMENSION: Readonly<Partial<Record<DisplayUnit, QuantityDimension>>> 
   'm/s': 'speed', 'km/h': 'speed', mph: 'speed', 'm/s²': 'acceleration',
   N: 'force', lbf: 'force', 'N·m': 'torque', 'lb·ft': 'torque',
   kg: 'mass', g: 'mass', oz: 'mass', lb: 'mass', 'kg/m³': 'density',
-  'kg·m²': 'inertia', 'N/m': 'stiffness', 'N/mm': 'stiffness', 'N·m/rad': 'stiffness',
+  'kg·m²': 'inertia', 'kg·m': 'first_moment', '1/m': 'inverse_length', '1/m²': 'inverse_area',
+  'N/m': 'stiffness', 'N/mm': 'stiffness', 'N·m/rad': 'stiffness', 'N·m·s/rad': 'rotational_damping',
   s: 'time', W: 'power', kW: 'power', 'mm/s': 'length_rate', '1/s': 'ratio_rate',
   '%': 'dimensionless', '': 'dimensionless',
 };
@@ -137,7 +151,9 @@ const UNIT_ALIASES: Readonly<Record<string, DisplayUnit>> = {
   'kmh': 'km/h', 'kph': 'km/h',
   'mps': 'm/s',
   'lbft': 'lb·ft', 'lb-ft': 'lb·ft', 'ftlb': 'lb·ft', 'ft-lb': 'lb·ft',
-  'nm': 'N·m', 'n-m': 'N·m',
+  'nm': 'N·m', 'n-m': 'N·m', 'kgm': 'kg·m',
+  '1/m': '1/m', '1/m2': '1/m²', '1/m²': '1/m²',
+  'n·m·s/rad': 'N·m·s/rad', 'nm·s/rad': 'N·m·s/rad',
   'lbs': 'lb', 'pound': 'lb', 'pounds': 'lb',
   'ounce': 'oz', 'ounces': 'oz',
 };
@@ -286,7 +302,7 @@ export function parseQuantityText(
   if (!text) return { error: 'Enter a value.' };
   text = text.replace(/″|"/g, ' in').replace(/′/g, ' ft');
   const numberAndUnit = text.match(
-    /^([+-]?(?:\d+\s*(?:-\s*|\s+)\d+\s*\/\s*\d+|\d+\s*\/\s*\d+|(?:\d+(?:\.\d*)?|\.\d+)))\s*(.*)$/,
+    /^([+-]?(?:\d+\s*(?:-\s*|\s+)\d+\s*\/\s*\d+|\d+\s*\/\s*\d+|(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?))\s*(.*)$/,
   );
   if (!numberAndUnit) return { error: 'Enter a number, optionally followed by a unit.' };
   const number = parseNumericExpression(numberAndUnit[1]);
@@ -329,6 +345,22 @@ export function formatProjectedQuantity(
   return canonicalUnit ? `${text} ${canonicalUnit}` : text;
 }
 
+export function formatPreferredQuantity(
+  valueSi: number,
+  dimension: QuantityDimension,
+  scope: UnitScope,
+  preferences: UnitPreferences,
+  fallback = defaultDisplayUnit(dimension),
+  maximumFractionDigits = 4,
+): string {
+  return formatQuantity(
+    valueSi,
+    dimension,
+    preferredDisplayUnit(dimension, scope, preferences, fallback),
+    maximumFractionDigits,
+  );
+}
+
 /** Used only when the catalog gives a unit but no explicit CINDER dimension. */
 export function dimensionForUnit(unit: string): QuantityDimension | undefined {
   const normalized = normalizedUnitToken(unit);
@@ -341,4 +373,44 @@ export function displayUnitForCanonical(canonicalUnit: string, dimension?: strin
     return known;
   if (isQuantityDimension(dimension)) return defaultDisplayUnit(dimension);
   return '';
+}
+
+export function preferredProjectedDisplayUnit(
+  dimension: string,
+  canonicalUnit: string,
+  scope: UnitScope,
+  preferences: UnitPreferences,
+): string {
+  if (!isQuantityDimension(dimension)) return canonicalUnit;
+  return preferredDisplayUnit(
+    dimension,
+    scope,
+    preferences,
+    displayUnitForCanonical(canonicalUnit, dimension),
+  );
+}
+
+export function formatPreferredProjectedQuantity(
+  valueSi: number,
+  dimension: string,
+  canonicalUnit: string,
+  scope: UnitScope,
+  preferences: UnitPreferences,
+  maximumFractionDigits = 4,
+): string {
+  if (!isQuantityDimension(dimension)) {
+    const text = new Intl.NumberFormat(undefined, { maximumFractionDigits }).format(valueSi);
+    return canonicalUnit ? `${text} ${canonicalUnit}` : text;
+  }
+  return formatQuantity(
+    valueSi,
+    dimension,
+    preferredDisplayUnit(
+      dimension,
+      scope,
+      preferences,
+      displayUnitForCanonical(canonicalUnit, dimension),
+    ),
+    maximumFractionDigits,
+  );
 }

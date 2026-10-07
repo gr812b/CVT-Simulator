@@ -1,6 +1,8 @@
 import { Text } from '@mantine/core';
 import type { TuneProfileTrace } from './api';
 import { displayAngle, type Ramp } from './profileStages';
+import { useAuth } from '@contexts/AuthContext';
+import { normalizeUnitPreferences, preferredDisplayUnit, siToDisplay } from '@utils/units';
 
 /** Plot sampled CINDER surface angles, not a second copy of the 3D ramp shape. */
 export function ProfileSketch({ trace, profile, selected, onSelect, contact, helix, ranges: requestedRanges }: {
@@ -12,6 +14,9 @@ export function ProfileSketch({ trace, profile, selected, onSelect, contact, hel
   helix: boolean;
   ranges?: [number, number][];
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const lengthUnit = preferredDisplayUnit('length', 'hardware', preferences, 'mm');
   if (!trace?.coordinates_m.length) return <Text size="xs" c="dimmed">The angle plot appears when a profile preview is available.</Text>;
   const xs = trace.coordinates_m;
   const lo = helix ? trace.used_start_m ?? xs[0] : xs[0];
@@ -66,10 +71,10 @@ export function ProfileSketch({ trace, profile, selected, onSelect, contact, hel
     </g>}
     {[0, 0.5, 1].map(fraction => <text key={fraction} x={x(lo + fraction * span)} y={164}
       textAnchor={fraction === 0 ? 'start' : fraction === 1 ? 'end' : 'middle'} fill="currentColor" fontSize={10}>
-      {helix ? `${fraction * 100}%` : ((lo + fraction * span) * 1000).toFixed(1)}
+      {helix ? `${fraction * 100}%` : siToDisplay(lo + fraction * span, lengthUnit).toFixed(1)}
     </text>)}
     <text x={228} y={184} textAnchor="middle" fill="currentColor" fontSize={11}>
-      {helix ? 'Secondary opening travel' : 'Position along ramp (axial coordinate, mm)'}
+      {helix ? 'Secondary opening travel' : `Position along ramp (axial coordinate, ${lengthUnit})`}
     </text>
   </svg>;
 }

@@ -1,5 +1,6 @@
 import type { RunStatus } from '../experiments/api';
 import type { RunInspection } from './api';
+import { formatPreferredQuantity, normalizeUnitPreferences, type UnitPreferences } from '@utils/units';
 
 export type RunOutcome = NonNullable<RunStatus['outcome']>;
 type OutcomeSource = Pick<RunStatus, 'id' | 'status'> &
@@ -94,8 +95,12 @@ export function outcomeLabel(outcome: RunOutcome, status?: RunStatus['status']) 
     : labels[outcome.category];
 }
 
-export function outcomeProgress(outcome: RunOutcome): string | null {
+export function outcomeProgress(
+  outcome: RunOutcome,
+  requestedPreferences?: Partial<UnitPreferences> | null,
+): string | null {
   if (!outcome.has_data) return null;
+  const preferences = normalizeUnitPreferences(requestedPreferences);
   const format = (value: number) => new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 3,
   }).format(value);
@@ -103,7 +108,9 @@ export function outcomeProgress(outcome: RunOutcome): string | null {
   const distance = finite(outcome.reached_distance_m);
   const parts = [
     time === null ? null : `Saved through ${format(time)} s of simulated time`,
-    distance === null ? null : `road position ${format(distance)} m`,
+    distance === null
+      ? null
+      : `road position ${formatPreferredQuantity(distance, 'length', 'output', preferences, 'm', 3)}`,
   ].filter(Boolean);
   return parts.length ? `${parts.join(' · ')}.` : null;
 }

@@ -116,6 +116,7 @@ export function BeltEditor({
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         {sectionFields.map(({ key, label, unit }) => (
           <QuantityInput
+            scope="hardware"
             key={key}
             label={label}
             unit={unit}
@@ -148,6 +149,7 @@ export function BeltEditor({
       )}
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <QuantityInput
+          scope="hardware"
           label="Outer circumference"
           description="Length around the belt’s outer surface, not pitch or nominal length."
           value={value.outer_length_m}
@@ -157,6 +159,7 @@ export function BeltEditor({
           onChange={(next) => patch({ outer_length_m: next })}
         />
         <QuantityInput
+          scope="hardware"
           label="Cord depth from outer surface"
           value={value.cord_depth_from_outer_m}
           unit="mm"
@@ -166,6 +169,7 @@ export function BeltEditor({
           onChange={(next) => patch({ cord_depth_from_outer_m: next })}
         />
         <QuantityInput
+          scope="hardware"
           label="Belt density"
           value={value.density_kg_per_m3}
           unit="kg/m³"

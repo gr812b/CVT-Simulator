@@ -92,6 +92,7 @@ export function useRunActivity() {
 
 export function RunActivityButton() {
   const { activity, error, refresh, dismiss } = useRunActivity();
+  const { unitPreferences } = useAuth();
   const [opened, setOpened] = useState(false);
   const [recent, setRecent] = useState<RunStatus[]>([]);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -170,7 +171,7 @@ export function RunActivityButton() {
                 <RunStatusBadge run={notice.run} />
               </Group>
               <Text size="sm">{outcome.message}</Text>
-              {outcomeProgress(outcome) && <Text size="xs">{outcomeProgress(outcome)}</Text>}
+              {outcomeProgress(outcome, unitPreferences) && <Text size="xs">{outcomeProgress(outcome, unitPreferences)}</Text>}
               <Text size="xs" c="dimmed">{outcomeDataMessage(outcome)}</Text>
               <Group>
                 <Button
@@ -227,11 +228,12 @@ export function RunActivityButton() {
 
 export function RunActivityBanner() {
   const { activity, dismiss } = useRunActivity();
+  const { unitPreferences } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const notice = activity?.unread[0];
   if (!notice) return null;
   const outcome = describeRunOutcome(notice.run);
-  const progress = outcomeProgress(outcome);
+  const progress = outcomeProgress(outcome, unitPreferences);
   return (
     <Alert
       mb="md"

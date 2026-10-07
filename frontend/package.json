@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "npm run test:helpers && npm run test:browser",
-    "test:helpers": "node test/unit_preferences_checks.mjs && node test/cvt_hardware_checks.mjs && node test/editor_ux_checks.mjs && node test/editor_draft_checks.mjs && node test/frontend_checks.mjs && node test/run_outcome_checks.mjs",
+    "test:helpers": "node test/unit_preferences_checks.mjs && node test/unit_surface_checks.mjs && node test/cvt_hardware_checks.mjs && node test/editor_ux_checks.mjs && node test/editor_draft_checks.mjs && node test/frontend_checks.mjs && node test/run_outcome_checks.mjs",
     "test:browser": "node test/run_builder_tune_browser.mjs && node test/run_outcome_browser.mjs",
     "preview": "vite preview",
     "contracts:generate": "node scripts/generate-contracts.mjs"

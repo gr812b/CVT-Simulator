@@ -193,6 +193,7 @@ export function CvtEditor({
         const label = fieldLabel(field, path);
         const input = (
           <QuantityInput
+            scope="hardware"
             key={path}
             label={label}
             value={current}
@@ -275,6 +276,7 @@ export function CvtEditor({
               >
                 <div tabIndex={0}>
                   <QuantityInput
+                    scope="hardware"
                     label="Sheave half-angle · set by belt"
                     value={value.belt.data.half_angle_rad}
                     unit="deg"
@@ -284,6 +286,7 @@ export function CvtEditor({
                 </div>
               </Tooltip>
               <QuantityInput
+                scope="hardware"
                 label="Primary shaft radius"
                 value={primaryShaftRadius(value)}
                 unit="mm"
@@ -304,6 +307,7 @@ export function CvtEditor({
               <Text fw={600}>Primary</Text>
               {!primaryCoupled && (
                 <QuantityInput
+                  scope="hardware"
                   label="Primary rotating hardware inertia"
                   value={primaryRotatingHardwareInertia(value)}
                   unit="kg·m²"

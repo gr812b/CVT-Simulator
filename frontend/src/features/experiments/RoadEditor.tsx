@@ -50,6 +50,7 @@ function FeatureInputs({
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
         {'length_m' in value && (
           <QuantityInput
+            scope="course"
             label="Section length"
             unit="m"
             scale={1}
@@ -60,6 +61,7 @@ function FeatureInputs({
         )}
         {'angle_rad' in value && (
           <QuantityInput
+            scope="course"
             label="Incline angle"
             unit="deg"
             description="Positive climbs; negative descends. Changing length keeps this angle."
@@ -71,6 +73,7 @@ function FeatureInputs({
         )}
         {'height_m' in value && (
           <QuantityInput
+            scope="course"
             label="Feature height"
             unit="m"
             scale={1}
@@ -82,6 +85,7 @@ function FeatureInputs({
         {value.kind === 'whoops' && (
           <>
             <QuantityInput
+              scope="course"
               label="Whoops spacing"
               unit="m"
               scale={1}
@@ -90,6 +94,7 @@ function FeatureInputs({
               onChange={(spacing_m) => onChange({ ...value, spacing_m })}
             />
             <QuantityInput
+              scope="course"
               label="Whoops count"
               integer
               min={1}
@@ -642,6 +647,7 @@ export function RoadEditor({
                 {points[pointIndex] && (
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
                     <QuantityInput
+                      scope="course"
                       label="Distance along section"
                       unit="m"
                       scale={1}
@@ -656,6 +662,7 @@ export function RoadEditor({
                       }
                     />
                     <QuantityInput
+                      scope="course"
                       label="Elevation from section start"
                       unit="m"
                       scale={1}

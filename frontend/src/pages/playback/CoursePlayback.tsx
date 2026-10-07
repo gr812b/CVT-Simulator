@@ -5,6 +5,8 @@ import type { ReportTable } from '@api/client';
 import { CourseChart } from '@components/course/CourseChart';
 import { ReportReplayController, ReplayEventType } from '@utils/reportReplay';
 import { valueAt } from '@utils/reportTable';
+import { useAuth } from '@contexts/AuthContext';
+import { formatPreferredQuantity, normalizeUnitPreferences } from '@utils/units';
 
 export function CoursePlayback({
   course,
@@ -15,6 +17,8 @@ export function CoursePlayback({
   table: ReportTable;
   replayController: ReportReplayController;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const [index, setIndex] = useState(0);
   useEffect(() => {
     setIndex(replayController.visualSample().lowerIndex);
@@ -43,13 +47,14 @@ export function CoursePlayback({
           <Text size="sm">
             {distance === null
               ? 'Position unavailable'
-              : `Vehicle: ${distance.toFixed(1)} m`}
+              : `Vehicle: ${formatPreferredQuantity(distance, 'length', 'output', preferences, 'm', 1)}`}
           </Text>
         </Group>
         <CourseChart
           points={course.points}
           position={distance}
           label="Recorded course elevation"
+          scope="output"
         />
       </Stack>
     </Paper>

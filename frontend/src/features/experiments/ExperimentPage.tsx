@@ -28,6 +28,8 @@ import {
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
+import { useAuth } from '@contexts/AuthContext';
+import { formatPreferredQuantity, normalizeUnitPreferences } from '@utils/units';
 import { ComponentPicker } from '../physicalLibrary/ComponentPicker';
 import { CvtEditor } from '../physicalLibrary/CvtEditor';
 import { EngineEditor } from '../physicalLibrary/EngineEditor';
@@ -111,6 +113,10 @@ const steps = [
 ];
 
 export function ExperimentPage() {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const vehicleMassLabel = (mass: number) =>
+    formatPreferredQuantity(mass, 'mass', 'vehicle', preferences, 'kg', 1);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { activity, refresh: refreshActivity } = useRunActivity();
@@ -659,7 +665,7 @@ export function ExperimentPage() {
                                   key={setupDetail?.item.id ?? 'new'}
                                   title="Vehicle"
                                   initiallyOpen={!setupDetail}
-                                  summary={`${setup.name || 'New vehicle'} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`}
+                                  summary={`${setup.name || 'New vehicle'} · ${vehicleMassLabel(vehicleMassOverride ?? setup.data.vehicle.mass_kg)}`}
                                 >
                                   <TextInput
                                     label="Vehicle setup name"
@@ -684,6 +690,7 @@ export function ExperimentPage() {
                                   <Paper withBorder p="md">
                                     <Stack gap="sm">
                                       <QuantityInput
+                                        scope="vehicle"
                                         label="Run-only vehicle mass"
                                         unit="kg"
                                         scale={1}
@@ -1068,7 +1075,7 @@ export function ExperimentPage() {
                       {
                         label: 'Vehicle',
                         value: setup
-                          ? `${setup.name} · ${(vehicleMassOverride ?? setup.data.vehicle.mass_kg).toFixed(1)} kg`
+                          ? `${setup.name} · ${vehicleMassLabel(vehicleMassOverride ?? setup.data.vehicle.mass_kg)}`
                           : 'Choose a vehicle',
                         step: 0,
                       },

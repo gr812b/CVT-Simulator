@@ -20,7 +20,16 @@ import {
   expandJsonPointerTemplate,
   getValueAtJsonPointer,
 } from '@utils/jsonPointer';
-import { displayScale } from '@utils/units';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  dimensionForUnit,
+  displayScale,
+  displayUnitForCanonical,
+  normalizeUnitPreferences,
+  preferredDisplayUnit,
+  siToDisplay,
+  type UnitScope,
+} from '@utils/units';
 import { EngineCurve } from '../physicalLibrary/EngineCurve';
 import { ConfigurationLink } from '../physicalLibrary/ConfigurationLink';
 import {
@@ -40,22 +49,45 @@ type Measurement = {
   unit?: string;
   scale?: number;
 };
-function Measurements({ items }: { items: Measurement[] }) {
+function Measurements({
+  items,
+  scope = 'hardware',
+}: {
+  items: Measurement[];
+  scope?: UnitScope;
+}) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} component="dl" m={0}>
-      {items.map(({ label, value, unit = '', scale }, index) => (
-        <div key={`${label}-${index}`}>
-          <Text component="dt" size="sm" c="dimmed">
-            {label}
-          </Text>
-          <Text component="dd" m={0} fw={500}>
-            {new Intl.NumberFormat(undefined, {
-              maximumSignificantDigits: 6,
-            }).format(value * (scale ?? displayScale(unit)))}
-            {unit ? ` ${unit}` : ''}
-          </Text>
-        </div>
-      ))}
+      {items.map(({ label, value, unit = '', scale }, index) => {
+        const dimension = dimensionForUnit(unit);
+        let displayUnit = unit;
+        let shown = value * (scale ?? displayScale(unit));
+        if (dimension) {
+          const selected = preferredDisplayUnit(
+            dimension,
+            scope,
+            preferences,
+            displayUnitForCanonical(unit, dimension),
+          );
+          displayUnit = selected;
+          shown = siToDisplay(value, selected);
+        }
+        return (
+          <div key={`${label}-${index}`}>
+            <Text component="dt" size="sm" c="dimmed">
+              {label}
+            </Text>
+            <Text component="dd" m={0} fw={500}>
+              {new Intl.NumberFormat(undefined, {
+                maximumSignificantDigits: 6,
+              }).format(shown)}
+              {displayUnit ? ` ${displayUnit}` : ''}
+            </Text>
+          </div>
+        );
+      })}
     </SimpleGrid>
   );
 }
@@ -81,6 +113,7 @@ function BeltView({ value }: { value: BeltData }) {
 function VehicleView({ value }: { value: VehicleData }) {
   return (
     <Measurements
+      scope="vehicle"
       items={[
         { label: 'Total vehicle mass', value: value.mass_kg, unit: 'kg' },
         {
@@ -195,6 +228,8 @@ export function ConfigurationView({
   fields: PhysicalField[];
   references?: PhysicalDetail['references'];
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const cvt = document.kind === 'cvts' ? document.data : null;
   const engine = document.kind === 'engines' ? document.data : null;
   const groups = cvt
@@ -297,8 +332,13 @@ export function ConfigurationView({
             )}
             {reference.kind === 'belts' && cvt && (
               <Text size="sm">
-                {Number((cvt.belt.data.outer_length_m * 1000).toPrecision(5))}{' '}
-                mm outer length ·{' '}
+                {new Intl.NumberFormat(undefined, { maximumSignificantDigits: 5 }).format(
+                  siToDisplay(
+                    cvt.belt.data.outer_length_m,
+                    preferredDisplayUnit('length', 'hardware', preferences, 'mm'),
+                  ),
+                )}{' '}
+                {preferredDisplayUnit('length', 'hardware', preferences, 'mm')} outer length ·{' '}
                 {Number(
                   ((cvt.belt.data.half_angle_rad * 180) / Math.PI).toPrecision(
                     4,

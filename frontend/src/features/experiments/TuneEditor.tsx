@@ -2,6 +2,15 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Alert, Box, Group, Loader, Paper, SimpleGrid, Slider, Stack, Text, Title } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  dimensionForUnit,
+  displayUnitForCanonical,
+  formatQuantity,
+  normalizeUnitPreferences,
+  preferredDisplayUnit,
+  siToDisplay,
+} from '@utils/units';
 import { AngleProfileEditor } from './AngleProfileEditor';
 import { message, previewTune, type Tune, type TuneField, type TuneSurface, type TunePreview } from './api';
 import { tuneInputKey, type TuneCheck } from './tunePreviewState';
@@ -10,8 +19,38 @@ const GeometryScene = lazy(() => import('@components/scene3DViewer/GeometryScene
 type Mount = 'primary' | 'secondary';
 type NumberField = Extract<TuneField, { kind: 'number' }>;
 
-function Measurement({ label, value, unit }: { label: string; value: number; unit?: string }) {
-  return <div><Text size="sm" c="dimmed">{label}</Text><Text>{Number(value.toPrecision(6))} {unit}</Text></div>;
+function Measurement({
+  label,
+  value,
+  unit = '',
+  scale = 1,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  scale?: number;
+}) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const dimension = dimensionForUnit(unit);
+  let displayUnit = unit;
+  let shown = value * scale;
+  if (dimension) {
+    const selected = preferredDisplayUnit(
+      dimension,
+      'hardware',
+      preferences,
+      displayUnitForCanonical(unit, dimension),
+    );
+    displayUnit = selected;
+    shown = siToDisplay(value, selected);
+  }
+  return (
+    <div>
+      <Text size="sm" c="dimmed">{label}</Text>
+      <Text>{Number(shown.toPrecision(6))} {displayUnit}</Text>
+    </div>
+  );
 }
 
 function travelIndex(preview: TunePreview | null, mount: Mount, percent: number): number {
@@ -36,6 +75,9 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
   readOnly?: boolean;
   onValidationChange?: (check: TuneCheck) => void;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
+  const hardwareLengthUnit = preferredDisplayUnit('length', 'hardware', preferences, 'mm');
   const [resolved, setResolved] = useState<{ inputKey: string; attempt: number; preview: TunePreview } | null>(null);
   const [failure, setFailure] = useState<{ inputKey: string; attempt: number; error: string } | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -77,8 +119,8 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
     const currentValue = value.values?.[field.key];
     const numeric = typeof currentValue === 'number' ? currentValue : field.default;
     return readOnly
-      ? <Measurement key={field.key} label={field.label} value={numeric * (field.display_scale ?? 1)} unit={field.display_unit}/>
-      : <QuantityInput key={field.key} label={field.label} value={numeric} onChange={n => change(field.key, n)} unit={field.display_unit}
+      ? <Measurement key={field.key} label={field.label} value={numeric} unit={field.display_unit} scale={field.display_scale}/>
+      : <QuantityInput key={field.key} scope="hardware" label={field.label} value={numeric} onChange={n => change(field.key, n)} unit={field.display_unit}
           scale={field.display_scale} description={field.description} min={field.minimum ?? undefined} max={field.maximum ?? undefined}/>;
   };
   const findings = validation?.findings.filter(finding => finding.severity === 'error') ?? [];
@@ -106,11 +148,13 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
       const contact = mount === 'primary' ? preview?.primary_contact_coordinates_m[index] : opening;
       const hasMechanism = mount === 'primary' ? !!preview?.geometry.mechanisms?.primary : !!preview?.geometry.mechanisms?.secondary_helix_points_m.length;
       const primaryClosure = preview?.geometry.mechanisms?.poses.find(p => p.shift_m === frame?.shift_m)?.primary_ramp_shift_m;
-      const sliderMax = mount === 'primary' ? Math.max(1e-9, (preview?.geometry.max_shift_m ?? 0.02) * 1000) : 100;
+      const sliderMax = mount === 'primary'
+        ? Math.max(1e-9, siToDisplay(preview?.geometry.max_shift_m ?? 0.02, hardwareLengthUnit))
+        : 100;
       const openingPercent = trace?.used_start_m != null && trace.used_end_m != null && opening != null && trace.used_end_m > trace.used_start_m
         ? 100 * (opening - trace.used_start_m) / (trace.used_end_m - trace.used_start_m) : null;
       const contactFailure = current && mount === 'primary' && preview?.primary_contact_failure_m != null
-        ? Math.min(sliderMax, Math.max(0, preview.primary_contact_failure_m * 1000)) : null;
+        ? Math.min(sliderMax, Math.max(0, siToDisplay(preview.primary_contact_failure_m, hardwareLengthUnit))) : null;
       const marks = [{ value: 0, label: contactFailure === 0 ? 'No contact at start' : 'Start' },
         ...(contactFailure !== null && contactFailure > 0 && contactFailure < sliderMax ? [{ value: contactFailure, label: 'Contact limit' }] : []),
         { value: sliderMax, label: contactFailure === sliderMax ? 'No contact at end' : 'End' }];
@@ -148,14 +192,14 @@ export function TuneEditor({ value, surface, onChange, readOnly = false, onValid
               <Text size="xs" c="dimmed">Drag to rotate · Scroll or pinch to zoom · The camera stays where you leave it while scrubbing.</Text>
               <Text size="sm" fw={500}>{mount === 'primary' ? 'Movable-sheave closure' : 'Secondary opening travel'}</Text>
               <Slider aria-label={`${mount} travel`} min={0} max={sliderMax} step={sliderMax / 128} value={travel[mount] / 100 * sliderMax}
-                disabled={!hasMechanism} label={v => `${v.toFixed(2)}${mount === 'primary' ? ' mm' : '%'}`} marks={marks}
+                disabled={!hasMechanism} label={v => `${v.toFixed(2)}${mount === 'primary' ? ` ${hardwareLengthUnit}` : '%'}`} marks={marks}
                 onChange={v => setTravel(p => ({ ...p, [mount]: v / sliderMax * 100 }))}/>
               <Text size="sm" mt="sm" aria-live="polite">
                 {mount === 'primary'
-                  ? `${((primaryClosure ?? 0) * 1000).toFixed(2)} mm closure · ${arm != null ? `Flyweight arm ${(arm * 180 / Math.PI).toFixed(1)}°` : 'No valid contact at this position'}`
-                  : opening != null ? `${openingPercent?.toFixed(1) ?? '—'}% opening · ${(opening * 1000).toFixed(2)} mm profile coordinate` : 'No helix contact preview'}
+                  ? `${formatQuantity(primaryClosure ?? 0, 'length', hardwareLengthUnit, 2)} closure · ${arm != null ? `Flyweight arm ${(arm * 180 / Math.PI).toFixed(1)}°` : 'No valid contact at this position'}`
+                  : opening != null ? `${openingPercent?.toFixed(1) ?? '—'}% opening · ${formatQuantity(opening, 'length', hardwareLengthUnit, 2)} profile coordinate` : 'No helix contact preview'}
               </Text>
-              {contactFailure != null && <Text size="xs" c="red">First unavailable contact sample: {contactFailure.toFixed(2)} mm closure. Save and Use remain disabled.</Text>}
+              {contactFailure != null && <Text size="xs" c="red">First unavailable contact sample: {contactFailure.toFixed(2)} {hardwareLengthUnit} closure. Save and Use remain disabled.</Text>}
               <Text size="xs" c="dimmed">{mount === 'primary'
                 ? 'Ramp angle and flyweight arm angle are different. The arm angle is measured from the positive axial direction at the fixed pivot.'
                 : 'The orientation indicator’s radial and tangent directions refer to the marked roller 1.'} This is a quick, sampled contact preview. The full construction check runs when you save or submit a run; contact forces are checked during the simulation.</Text>

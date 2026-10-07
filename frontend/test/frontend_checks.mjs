@@ -62,7 +62,8 @@ function load(relative, extra = {}) {
     if (name === './TuneEditor') return { TuneEditor: 'TuneEditor' };
     if (name === './api') return { saveExperiment: async () => { saves++; return {}; }, message: String };
     if (name === './mechanisms' || name === './sceneSpec') return {};
-    if (name === '@contexts/AuthContext') return { useAuth: () => ({ session: null }) };
+    if (name === '@contexts/AuthContext') return { useAuth: () => ({ session: null, unitPreferences: undefined }) };
+    if (name === '@utils/units') return load('frontend/src/utils/units.ts');
     if (name === 'react-router-dom') return { Link: 'Link' };
     if (name === '@tabler/icons-react') return new Proxy({}, { get: (_, name) => name });
     if (name === '@components/appShell/Brand') return { Brand: 'Brand' };

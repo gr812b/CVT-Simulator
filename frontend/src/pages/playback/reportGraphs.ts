@@ -4,7 +4,10 @@ import type { ReportColumn, ReportTable } from '@api/client';
 import {
   defaultDisplayUnit,
   isQuantityDimension,
+  normalizeUnitPreferences,
+  preferredDisplayUnit,
   siToDisplay,
+  type UnitPreferences,
 } from '@utils/units';
 
 type Series = { key: string; label: string };
@@ -470,29 +473,44 @@ type ChartValue = number | null;
  * A report gap must stay a gap. Carrying the prior value forward makes an
  * unavailable signal look valid and can conceal a reporting or solver issue.
  */
-function shown(columnValue: ReportColumn): ChartValue[] {
+function shown(columnValue: ReportColumn, preferences: UnitPreferences): ChartValue[] {
+  const displayUnit = isQuantityDimension(columnValue.dimension)
+    ? preferredDisplayUnit(
+        columnValue.dimension,
+        'output',
+        preferences,
+        defaultDisplayUnit(columnValue.dimension),
+      )
+    : null;
   return columnValue.values.map((value) => {
     if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-    return isQuantityDimension(columnValue.dimension)
-      ? siToDisplay(value, defaultDisplayUnit(columnValue.dimension))
-      : value;
+    return displayUnit ? siToDisplay(value, displayUnit) : value;
   });
 }
 
-function shownXAxis(columnValue: ReportColumn): number[] | null {
-  const values = shown(columnValue);
+function shownXAxis(columnValue: ReportColumn, preferences: UnitPreferences): number[] | null {
+  const values = shown(columnValue, preferences);
   return values.every((value): value is number => value !== null)
     ? values
     : null;
 }
 
-function unit(columnValue: ReportColumn): string {
+function unit(columnValue: ReportColumn, preferences: UnitPreferences): string {
   return isQuantityDimension(columnValue.dimension)
-    ? defaultDisplayUnit(columnValue.dimension)
+    ? preferredDisplayUnit(
+        columnValue.dimension,
+        'output',
+        preferences,
+        defaultDisplayUnit(columnValue.dimension),
+      )
     : columnValue.canonical_unit;
 }
 
-export function buildReportGraphs(table: ReportTable): GraphCategory[] {
+export function buildReportGraphs(
+  table: ReportTable,
+  requestedPreferences?: Partial<UnitPreferences> | null,
+): GraphCategory[] {
+  const preferences = normalizeUnitPreferences(requestedPreferences);
   const categories = new Map<string, GraphCategory>();
 
   CHARTS.forEach(({ category, chart }) => {
@@ -509,15 +527,15 @@ export function buildReportGraphs(table: ReportTable): GraphCategory[] {
     const yAxis = y[0].column;
     const config: ChartConfig = {
       title: chart.title,
-      xAxis: { name: chart.xLabel, type: 'value', unit: unit(x) },
-      yAxis: { name: chart.yLabel, type: 'value', unit: unit(yAxis) },
+      xAxis: { name: chart.xLabel, type: 'value', unit: unit(x, preferences) },
+      yAxis: { name: chart.yLabel, type: 'value', unit: unit(yAxis, preferences) },
       seriesNames: y.map((entry) => entry.series.label),
       showXLine: true,
       showYLine: false,
     };
-    const xData = shownXAxis(x);
+    const xData = shownXAxis(x, preferences);
     if (xData === null) return;
-    const seriesData = y.map((entry) => shown(entry.column));
+    const seriesData = y.map((entry) => shown(entry.column, preferences));
     const graph = {
       xData,
       yData: xData.map((_, index) =>

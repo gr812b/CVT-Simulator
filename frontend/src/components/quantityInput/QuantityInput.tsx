@@ -55,10 +55,15 @@ export function QuantityInput({
   );
   const [working, setWorking] = useState(display);
   const [focused, setFocused] = useState(false);
+  const [entryUnit, setEntryUnit] = useState(displayUnit);
   useEffect(() => {
-    if (!focused) setWorking(display);
-  }, [display, focused]);
-  const parsed = parseQuantityText(working, dimension, displayUnit);
+    if (!focused) {
+      setWorking(display);
+      setEntryUnit(displayUnit);
+    }
+  }, [display, displayUnit, focused]);
+  const parseUnit = focused ? entryUnit : displayUnit;
+  const parsed = parseQuantityText(working, dimension, parseUnit);
   const valid = parsed.error === undefined &&
     Number.isFinite(parsed.valueSi) &&
     (min === undefined || parsed.valueSi >= min) &&
@@ -92,6 +97,7 @@ export function QuantityInput({
       value={working}
       disabled={disabled}
       onFocus={() => {
+        setEntryUnit(displayUnit);
         setFocused(true);
         onFocusChange?.(true);
       }}
@@ -110,7 +116,7 @@ export function QuantityInput({
       onChange={(event) => {
         const next = event.currentTarget.value;
         setWorking(next);
-        const candidate = parseQuantityText(next, dimension, displayUnit);
+        const candidate = parseQuantityText(next, dimension, parseUnit);
         if (
           candidate.error === undefined &&
           Number.isFinite(candidate.valueSi) &&

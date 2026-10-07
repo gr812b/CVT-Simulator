@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Alert, Group, Paper, SimpleGrid, Stack, Text } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
+import { useAuth } from '@contexts/AuthContext';
+import { formatPreferredQuantity, normalizeUnitPreferences } from '@utils/units';
 import type { TuneProfileTrace } from './api';
 import { ProfileSketch } from './ProfileSketch';
 import {
@@ -14,6 +16,8 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
   field: RampField; value: Ramp; onChange: (next: Ramp) => void; readOnly: boolean;
   trace?: TuneProfileTrace | null; contact?: number | null;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const helix = field.angle_convention === 'helix';
   const [selected, setSelected] = useState(0);
   const [showStages, setShowStages] = useState(() => !(value.segments.length === 1 && value.segments[0].kind === 'linear_segment'));
@@ -29,7 +33,9 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
   const change = (next: AngleStages) => onChange(used ? writeTravelStages(next, used, total) : writeAngleStages(next));
   const position = (m: number) => used ? (m - used[0]) / (used[1] - used[0]) * 100 : m;
   const coordinate = (display: number) => used ? used[0] + display / 100 * (used[1] - used[0]) : display;
-  const formatPosition = (m: number) => used ? `${Math.min(100, Math.max(0, position(m))).toFixed(1)}%` : `${(m * 1000).toFixed(2)} mm`;
+  const formatPosition = (m: number) => used
+    ? `${Math.min(100, Math.max(0, position(m))).toFixed(1)}%`
+    : formatPreferredQuantity(m, 'length', 'hardware', preferences, 'mm', 2);
   const previewReady = !helix || !!used;
   const validAngle = (a: number) => a >= angleMin - 1e-12 && a <= angleMax + 1e-12;
   const constant = !showStages && guided?.stages.length === 1 && Math.abs(guided.start_angle_rad - guided.stages[0].angle_rad) < 1e-10;
@@ -50,14 +56,14 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
       <Text size="sm">Starting {helix ? 'helix' : 'ramp'} angle: {(displayAngle(guided.start_angle_rad, helix) * 180 / Math.PI).toFixed(2)}°</Text>
       {guided.stages.map((stage, i) => <Text key={i} size="sm">Stage {i + 1}: {formatPosition(guided.stages[i - 1]?.end_m ?? used?.[0] ?? 0)} → {formatPosition(stage.end_m)} · end angle {(displayAngle(stage.angle_rad, helix) * 180 / Math.PI).toFixed(2)}°</Text>)}
     </Stack> : constant ? <Stack gap="xs">
-      <QuantityInput label={helix ? 'Helix angle' : 'Ramp angle'} unit="°" scale={180 / Math.PI}
+      <QuantityInput scope="hardware" label={helix ? 'Helix angle' : 'Ramp angle'} unit="°" scale={180 / Math.PI}
         value={displayAngle(guided.start_angle_rad, helix)} min={angleMin} max={angleMax}
         onChange={a => { if (validAngle(a)) onChange(constantProfile(total, storedAngle(a, helix))); }}/>
-      {!helix && <QuantityInput label="Ramp axial extent" unit="mm" scale={1000} min={1e-6} value={total}
+      {!helix && <QuantityInput scope="hardware" label="Ramp axial extent" unit="mm" scale={1000} min={1e-6} value={total}
         onChange={length => { if (length >= 1e-6) onChange(constantProfile(length, guided.start_angle_rad)); }}/>}
       <Button variant="light" size="xs" disabled={!previewReady} onClick={() => { setShowStages(true); change(splitStage(guided, 0, used)); }}>Add angle stages</Button>
     </Stack> : <>
-      <QuantityInput label={`Starting ${helix ? 'helix' : 'ramp'} angle`} unit="°" scale={180 / Math.PI}
+      <QuantityInput scope="hardware" label={`Starting ${helix ? 'helix' : 'ramp'} angle`} unit="°" scale={180 / Math.PI}
         value={displayAngle(guided.start_angle_rad, helix)} min={angleMin} max={angleMax}
         onChange={a => { if (validAngle(a)) change({ ...guided, start_angle_rad: storedAngle(a, helix) }); }}/>
       {guided.stages.map((stage, i) => {
@@ -71,6 +77,7 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
             <Text size="xs" c="dimmed">Starts at {(displayAngle(previous?.angle_rad ?? guided.start_angle_rad, helix) * 180 / Math.PI).toFixed(2)}°. {i ? 'The starting angle is shared with the previous stage.' : 'The first stage uses the starting angle above.'}</Text>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               {helix && last ? <Text size="sm">Continues through 100% opening.</Text> : <QuantityInput
+                scope="hardware"
                 label={`Stage ${i + 1} ends at`} value={position(stage.end_m)}
                 unit={used ? '%' : 'mm'} scale={used ? 1 : 1000} disabled={!previewReady}
                 min={used ? position(Math.max(previous?.end_m ?? 0, used[0])) + 0.01 : (previous?.end_m ?? 0) + 1e-6}
@@ -82,7 +89,7 @@ export function AngleProfileEditor({ field, value, onChange, readOnly, trace, co
                   if (end <= lower + 1e-8 || end >= upper - 1e-8) return;
                   change({ ...guided, stages: guided.stages.map((s, k) => k === i ? { ...s, end_m: end } : s) });
                 }}/>}
-              <QuantityInput label={`Stage ${i + 1} end angle`} unit="°" scale={180 / Math.PI}
+              <QuantityInput scope="hardware" label={`Stage ${i + 1} end angle`} unit="°" scale={180 / Math.PI}
                 value={displayAngle(stage.angle_rad, helix)} min={angleMin} max={angleMax}
                 onChange={a => { if (validAngle(a)) change({ ...guided, stages: guided.stages.map((s, k) => k === i ? { ...s, angle_rad: storedAngle(a, helix) } : s) }); }}/>
             </SimpleGrid>

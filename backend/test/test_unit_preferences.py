@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from test.conftest import WEB_ORIGIN
+WEB_ORIGIN = "http://localhost:5173"
 
 
 def _browser(client: TestClient) -> None:

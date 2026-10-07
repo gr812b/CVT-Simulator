@@ -4,6 +4,11 @@ import { Modal } from '@components/modal/Modal';
 import { Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { ActionButton as Button } from '@components/button/ActionButton';
 import { QuantityValidationContext } from '@components/quantityInput/validation';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  formatPreferredQuantity,
+  normalizeUnitPreferences,
+} from '@utils/units';
 import { BeltEditor } from './BeltEditor';
 import { libraryOptions } from './libraryOptions';
 import {
@@ -28,6 +33,8 @@ export function BeltPicker({
   disabled?: boolean;
   onLoadingChange?: (busy: boolean) => void;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const [added, setAdded] = useState<PhysicalItem[]>([]);
   const [draft, setDraft] = useState<Extract<
     PhysicalDocument,
@@ -111,10 +118,10 @@ export function BeltPicker({
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        {(value.data.outer_length_m * 1000).toFixed(1)} mm outer length ·{' '}
-        {(value.data.outer_width_m * 1000).toFixed(2)} /{' '}
-        {(value.data.inner_width_m * 1000).toFixed(2)} mm top / bottom ·{' '}
-        {(value.data.height_m * 1000).toFixed(2)} mm height ·{' '}
+        {formatPreferredQuantity(value.data.outer_length_m, 'length', 'hardware', preferences, 'mm', 1)} outer length ·{' '}
+        {formatPreferredQuantity(value.data.outer_width_m, 'length', 'hardware', preferences, 'mm', 2)} /{' '}
+        {formatPreferredQuantity(value.data.inner_width_m, 'length', 'hardware', preferences, 'mm', 2)} top / bottom ·{' '}
+        {formatPreferredQuantity(value.data.height_m, 'length', 'hardware', preferences, 'mm', 2)} height ·{' '}
         {((value.data.half_angle_rad * 180) / Math.PI).toFixed(2)}° half-angle
       </Text>
       {error && !draft && (
