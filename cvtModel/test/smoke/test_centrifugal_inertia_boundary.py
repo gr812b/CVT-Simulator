@@ -7,13 +7,18 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from cinder.contracts import decode_assembly_document, validate_assembly
+from cinder.contracts import (
+    decode_assembly_document,
+    decode_simulation_case_document,
+    validate_assembly,
+)
 from cinder.execution.hybrid.cvt_impact import (
     CVTVelocityTopology,
     kinetic_energy_for_topology,
     project_cvt_velocity_topology,
 )
 from cinder.model.cvt.actuation import (
+    ActuationContribution,
     CentrifugalInertiaForce,
     CentrifugalInertiaMap,
     CentrifugalInertiaSample,
@@ -39,6 +44,7 @@ from cinder.model.cvt.dynamics.state_fixed_equations import build_state_fixed_eq
 from cinder.model.system import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues, ShaftBoundaryValue
 from cinder.model.system.state import CVTState
+from cinder.results import ReportingGrid
 
 
 @dataclass(frozen=True)
@@ -60,7 +66,12 @@ class _PolynomialInertiaMap:
 
 
 class _LegacyFixedPivotForce(FixedPivotFlyweightForce):
-    """Pre-refactor q/I equations retained only as a regression oracle."""
+    """Pre-refactor q/I equations retained only as a regression oracle.
+
+    Source: a2dcdc66a9653960dcb1ea4d73a1aa2575aebf66. Keep the four numerical
+    methods independent of the shared evaluator, including the inspected
+    terms used by the unchanged contact-roundoff guard.
+    """
 
     def evaluate(self, context):
         s = self.spec.mechanism_map.evaluate(context.axial_position)
@@ -94,6 +105,35 @@ class _LegacyFixedPivotForce(FixedPivotFlyweightForce):
             PulleyKineticMode(s.shaft_inertia, shaft_speed_coefficient=1.0),
             PulleyKineticMode(
                 s.pivot_inertia, axial_speed_coefficient=s.angle_gradient
+            ),
+        )
+
+    def inspect(self, context):
+        s = self.spec.mechanism_map.evaluate(context.axial_position)
+        return (
+            ActuationContribution(
+                key="fixed_pivot_flyweight_centrifugal",
+                label="Fixed-pivot flyweight centrifugal drive",
+                relation=AffineClosureScalar.constant(
+                    0.5 * context.shaft_speed**2 * s.shaft_inertia_gradient
+                ),
+            ),
+            ActuationContribution(
+                key="fixed_pivot_flyweight_axial_inertia",
+                label="Fixed-pivot flyweight reflected axial inertia",
+                relation=context.axial_acceleration.scaled(
+                    -s.pivot_inertia * s.angle_gradient**2
+                ),
+            ),
+            ActuationContribution(
+                key="fixed_pivot_flyweight_motion_ratio_curvature",
+                label="Fixed-pivot flyweight motion-ratio curvature",
+                relation=AffineClosureScalar.constant(
+                    -s.pivot_inertia
+                    * s.angle_gradient
+                    * s.angle_curvature
+                    * context.axial_speed**2
+                ),
             ),
         )
 
@@ -417,3 +457,112 @@ def test_fixed_pivot_shared_closure_energy_and_stop_match_legacy_representation(
     assert impacts[0].dissipated_energy == pytest.approx(
         impacts[1].dissipated_energy, rel=2e-12, abs=1e-11
     )
+
+
+def test_full_launch_trajectory_matches_legacy_fixed_pivot_representation():
+    """Compare independent integrations through launch, upshift, and upper stop."""
+
+    path = (
+        Path(__file__).resolve().parents[2]
+        / "examples/baja_baseline_simulation_case.json"
+    )
+    case = decode_simulation_case_document(json.loads(path.read_text(encoding="utf-8")))
+    current = case.assembly.pulleys.primary.actuator.force_laws[0]
+    legacy_assembly = _with_primary_element(
+        case.assembly, _LegacyFixedPivotForce(current.spec)
+    )
+    legacy_system = replace(
+        case.system,
+        cvt=replace(
+            case.system.cvt,
+            model=MechanicalCVTPlant.from_assembly(legacy_assembly),
+        ),
+    )
+    assert legacy_system.classify_initial_mode(case.initial_state) == case.initial_mode
+    settings = replace(
+        case.integrator_settings,
+        relative_tolerance=1e-7,
+        absolute_tolerance=1e-10,
+        max_step=0.02,
+        retain_dense_output=True,
+    )
+    reporting = replace(
+        case.reporting_settings,
+        grid=ReportingGrid.uniform_time_step(0.02),
+    )
+    new, old = (
+        system.run(
+            time_span=(0.0, 10.0),
+            initial_state=case.initial_state.copy(),
+            initial_mode=case.initial_mode,
+            settings=settings,
+            reporting_settings=reporting,
+        )
+        for system in (case.system, legacy_system)
+    )
+    for result in (new, old):
+        assert result.completed
+        assert result.termination_reason == "final_time_reached"
+        assert result.trace.final_time == 10.0
+        # Require the case to exercise the transitions that motivated this test.
+        events = {
+            name
+            for transition in result.transitions
+            for name in transition.fired_event_names
+        }
+        assert {
+            "cvt:lower_stop_release",
+            "cvt:engagement_reached",
+            "cvt:low_ratio_seat_reached",
+            "cvt:primary_restick",
+            "cvt:low_ratio_seat_release",
+            "cvt:upper_stop_reached",
+        } <= events
+
+    # These equivalence tolerances are much tighter than the integration
+    # tolerances. They admit accumulated floating-point roundoff, not a change
+    # of trajectory at the solver's requested accuracy.
+    rtol, atol = 2e-12, 1e-12
+    np.testing.assert_allclose(new.final_state, old.final_state, rtol=rtol, atol=atol)
+    assert len(new.transitions) == len(old.transitions)
+    for a, b in zip(new.transitions, old.transitions, strict=True):
+        assert a.previous_mode == b.previous_mode
+        assert a.fired_event_names == b.fired_event_names
+        assert a.transition.next_mode == b.transition.next_mode
+        assert a.transition.reason == b.transition.reason
+        assert a.time == pytest.approx(b.time, rel=0.0, abs=atol)
+        np.testing.assert_allclose(
+            a.post_transition_state, b.post_transition_state, rtol=rtol, atol=atol
+        )
+
+    # Preserve pre-event states and post-event resets separately. Compare all
+    # five CVT states and the host state, both on the native adaptive mesh and
+    # a common 5 ms grid; never interpolate across a hybrid reset.
+    grid = np.linspace(0.0, 10.0, 2001)
+    assert len(new.trace.segments) == len(old.trace.segments)
+    for a, b in zip(new.trace.segments, old.trace.segments, strict=True):
+        assert a.mode == b.mode
+        np.testing.assert_allclose(a.time, b.time, rtol=0.0, atol=atol)
+        np.testing.assert_allclose(a.state, b.state, rtol=rtol, atol=atol)
+        start, end = max(a.start_time, b.start_time), min(a.end_time, b.end_time)
+        assert start <= end
+        times = np.unique(np.r_[start, grid[(grid >= start) & (grid <= end)], end])
+        np.testing.assert_allclose(
+            a.dense_state_at(times), b.dense_state_at(times), rtol=rtol, atol=atol
+        )
+
+    # Exercise the public run/report path as well as the raw integration.
+    assert len(new.segments) == len(old.segments)
+    for a, b in zip(new.segments, old.segments, strict=True):
+        assert a.mode == b.mode
+        np.testing.assert_allclose(a.time, b.time, rtol=0.0, atol=atol)
+        assert a.signals.keys() == b.signals.keys()
+        for key in a.signals:
+            np.testing.assert_allclose(
+                a.signal(key).values,
+                b.signal(key).values,
+                rtol=rtol,
+                atol=atol,
+                equal_nan=True,
+                err_msg=key,
+            )

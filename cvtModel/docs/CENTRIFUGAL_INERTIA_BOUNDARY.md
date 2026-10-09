@@ -101,3 +101,36 @@ kinetic energy, coupled closure, and stop projection with the previous q/I
 representation. A coefficient-only fixture checks the generic interface and
 its power balance without depending on fixed-pivot fields. No additional
 hardware mechanism is introduced in this first implementation.
+
+## Full-trajectory equivalence regression
+
+`test_full_launch_trajectory_matches_legacy_fixed_pivot_representation` runs
+the example Baja launch case for 10 seconds through the public `run()` API,
+once with the common evaluator and once with the pre-refactor q/I equations.
+The test-only reference retains the old force, shaft reaction, kinetic modes,
+and inspected terms used by the contact-roundoff guard. Both runs use the
+same hardware, boundaries, initial state, and numerical settings: LSODA,
+`rtol = 1e-7`, `atol = 1e-10`, and `max_step = 0.02 s`.
+
+The case must reach the final time and exercise lower-stop release,
+engagement, low-ratio seating, primary resticking, seat release, and the upper
+stop. The comparison checks all five CVT states and the host shaft angle on
+the native mesh and a common 5 ms grid, each event's mode change and time,
+pre-event and post-reset states, the final state, and every reported numeric
+channel. Dense comparisons stay within individual segments so they never
+interpolate across an impact. State and report comparisons use `rtol = 2e-12`
+and `atol = 1e-12`; event and native-mesh times use `atol = 1e-12 s` with zero
+relative tolerance. These thresholds are substantially tighter than the
+integration tolerances.
+
+An additional comparison ran the actual pre-refactor checkout
+`a2dcdc66a9653960dcb1ea4d73a1aa2575aebf66` and the initial boundary commit
+`9d4bf51e3bf65c9a9ec5a62a8acfade2d1f01ee1` in separate processes. With Python
+3.12.14, NumPy 2.3.5, and SciPy 1.17.0, the 17 segments, 16 event records,
+1,184 native samples including segment endpoints, 2,001 common-grid samples,
+final state, and reported numeric arrays matched exactly. The maximum
+absolute difference in each state was zero. Both runs reached the upper
+stop at approximately 6.781925 seconds and completed at 10 seconds.
+
+That exact match is evidence for this case in the recorded environment;
+it is not a promise of bitwise identity for every mechanism or platform.
