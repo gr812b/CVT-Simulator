@@ -8,6 +8,7 @@ Start here:
 - `DOCUMENT_SCHEMA.md` — JSON Schema for the public simulation document.
 - `GEOMETRY_STUDY_API.md` — static geometry design/evaluation tools.
 - `ACTUATION_STUDY_API.md` — static actuator clamping-force studies.
+- `CENTRIFUGAL_INERTIA_BOUNDARY.md` — common M, M', J, J' mechanics and the fixed-pivot adapter.
 - `FIXED_PIVOT_FLYWEIGHT.md` — fixed-pivot roller-flyweight mechanics.
 - `HYBRID_IMPACT_MECHANICS.md` — momentum projection at captures and stops.
 

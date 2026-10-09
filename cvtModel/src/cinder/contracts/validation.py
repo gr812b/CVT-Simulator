@@ -15,6 +15,7 @@ from typing import Literal
 
 from cinder.model.cvt.actuation import (
     AxialSpringForce,
+    CentrifugalInertiaForce,
     CentrifugalRampForce,
     FixedPivotFlyweightForce,
     HelicalTorqueReactionForce,
@@ -220,16 +221,26 @@ def _validate_pulley(
                         law_location,
                     )
                 )
-        if isinstance(force_law, FixedPivotFlyweightForce):
-            mechanism_map = force_law.spec.mechanism_map
+        if isinstance(force_law, CentrifugalInertiaForce):
+            mechanism_map = force_law.inertia_map
             if (
                 mechanism_map.axial_position_min > local_min
                 or mechanism_map.axial_position_max < local_max
             ):
+                # Preserve the existing public finding for fixed-pivot designs.
+                fixed_pivot = isinstance(force_law, FixedPivotFlyweightForce)
                 findings.append(
                     _error(
-                        "actuation.fixed_pivot_map_does_not_cover_local_travel",
-                        "Fixed-pivot flyweight map does not cover the pulley local travel range.",
+                        (
+                            "actuation.fixed_pivot_map_does_not_cover_local_travel"
+                            if fixed_pivot
+                            else "actuation.inertia_map_does_not_cover_local_travel"
+                        ),
+                        (
+                            "Fixed-pivot flyweight map does not cover the pulley local travel range."
+                            if fixed_pivot
+                            else "Centrifugal inertia map does not cover the pulley local travel range."
+                        ),
                         law_location,
                     )
                 )
