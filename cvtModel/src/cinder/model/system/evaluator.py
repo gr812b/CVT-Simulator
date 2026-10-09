@@ -20,8 +20,8 @@ from cinder.model.cvt.actuation import (
 )
 from cinder.model.cvt.actuation.forces import (
     AxialSpringForce,
+    CentrifugalInertiaForce,
     CentrifugalRampForce,
-    FixedPivotFlyweightForce,
 )
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
@@ -465,14 +465,14 @@ def _validate_ramp_domain(
     minimum_position = min(axial_positions)
     maximum_position = max(axial_positions)
     for force_law in actuator.force_laws:
-        if isinstance(force_law, FixedPivotFlyweightForce):
-            mechanism_map = force_law.spec.mechanism_map
+        if isinstance(force_law, CentrifugalInertiaForce):
+            mechanism_map = force_law.inertia_map
             if (
                 minimum_position < mechanism_map.axial_position_min
                 or maximum_position > mechanism_map.axial_position_max
             ):
                 raise ValueError(
-                    f"{name} fixed-pivot flyweight map does not cover the "
+                    f"{name} centrifugal inertia map does not cover the "
                     "geometry-reachable axial interval "
                     f"[{minimum_position}, {maximum_position}]."
                 )

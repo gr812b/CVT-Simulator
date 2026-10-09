@@ -19,6 +19,8 @@ from scipy.optimize import brentq, minimize_scalar
 
 from cinder.model.cvt.profiles.types import ScalarProfile
 
+from .centrifugal_inertia import CentrifugalInertiaSample
+
 
 @dataclass(frozen=True, slots=True)
 class FixedPivotFlyweightSample:
@@ -70,6 +72,44 @@ class FixedPivotFlyweightMap(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class FixedPivotFlyweightInertiaMap:
+    """Expose an existing fixed-pivot map through M, M', J, and J'.
+
+    The original configuration map remains responsible for branch selection,
+    its interpolation, and endpoint handling. All four quantities are derived
+    from the same runtime sample; no independent inertia fit is introduced.
+    """
+
+    flyweight_map: FixedPivotFlyweightMap
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.flyweight_map, FixedPivotFlyweightMap):
+            raise TypeError("flyweight_map must implement FixedPivotFlyweightMap.")
+
+    @property
+    def axial_position_min(self) -> float:
+        return self.flyweight_map.axial_position_min
+
+    @property
+    def axial_position_max(self) -> float:
+        return self.flyweight_map.axial_position_max
+
+    def evaluate(self, axial_position: float) -> CentrifugalInertiaSample:
+        sample = self.flyweight_map.evaluate(axial_position)
+        return CentrifugalInertiaSample(
+            effective_mass=sample.pivot_inertia * sample.angle_gradient**2,
+            effective_mass_gradient=(
+                2.0
+                * sample.pivot_inertia
+                * sample.angle_gradient
+                * sample.angle_curvature
+            ),
+            shaft_inertia=sample.shaft_inertia,
+            shaft_inertia_gradient=sample.shaft_inertia_gradient,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ConcentratedTipHardwareMass:
     """Per-flyweight masses approximated at the roller-centre station.
 
@@ -117,12 +157,16 @@ class ConcentratedTipHardwareMass:
 
 @dataclass(frozen=True, slots=True)
 class FlyweightMassGeometry:
-    """Body-fixed mass moments for a circumferentially symmetric flyweight set.
+    """Mass moments for identical flyweights with no mixed shaft-shift energy.
 
     Moments are supplied for one flyweight in coordinates ``(u, v, z)`` about
     its pivot. ``u`` follows the reference arm line, ``v`` is perpendicular to
     it in the axial-radial plane, and ``z`` is circumferential. The complete set
     contains ``number_of_flyweights`` identical members.
+
+    Reflection symmetry about the axial-radial plane is sufficient to remove
+    the omitted uz/vz moments; alternatively they must cancel in the complete
+    set. Circumferential repetition alone does not establish that condition.
 
     This representation makes the mass partition explicit: these moments must
     not also be included in the movable-sheave mass or constant pulley inertia.
