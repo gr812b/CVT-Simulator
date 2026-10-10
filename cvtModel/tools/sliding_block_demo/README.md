@@ -6,13 +6,14 @@ The source uses **total weight-set mass `total_mass`** throughout. `display_coun
 
 ## Run
 
-From the repository's `cvtModel` directory, with Python 3.10+ and the CVT package's existing NumPy/SciPy dependencies:
+From the repository's `cvtModel` directory, with Python 3.10+, NumPy and SciPy available. Matplotlib is required for all plots; Plotly is needed only when generating the optional HTML:
 
 ```bash
+python -m pip install matplotlib
 python -m pytest -q tools/sliding_block_demo/test_sliding_block.py
 python -m tools.sliding_block_demo.demo --output sliding_block_outputs
 # Optional self-contained interactive browser file (plotly only needed to *generate* it)
-python -m pip install matplotlib plotly
+python -m pip install plotly
 python -m tools.sliding_block_demo.demo --output sliding_block_outputs --html
 ```
 
