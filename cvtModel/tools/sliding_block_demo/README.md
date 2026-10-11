@@ -17,7 +17,9 @@ python -m pip install plotly
 python -m tools.sliding_block_demo.demo --output sliding_block_outputs --html
 ```
 
-The command writes five PNG reports and, with `--html`, an offline `sliding_block_explorer.html`. Open the HTML directly in a browser. It has sliders for sheave closure, shaft RPM, an **imposed** shift acceleration and velocity, and **total** weight mass. It draws the full 2-D tracks and weight outline, contact locations, resultant reaction directions, the four inertia functions, and a color-coded map of admissibility over travel/assumed acceleration. **It does not solve a CINDER transient or engine response.**
+The command writes five PNG reports and, with `--html`, an offline `sliding_block_explorer.html`. Open the HTML directly in a browser. It has sliders for sheave closure, shaft RPM, an **imposed** shift acceleration and velocity, and **total** weight mass. It draws a **patent-inspired primary cross-section** with a fixed sheave, axially translating movable sheave, reaction cup, simplified spring, and reference belt trapezoid. Overlaid in prominent colors are the **actual solved** 2-D tracks, flyweight shape and position, contact points, reaction directions, and COM path. The four inertia functions and admissibility map remain available in the companion panels. **It does not solve a CINDER transient or engine response.**
+
+**Geometry fidelity:** the supporting sheaves, housing, spring and belt wedge are intentionally stylized **visual context**; their outlines and belt position are not read from CVTech CAD and are not contact constraints in this prototype. Only the colored track profiles and computed weight pose enter the solver. The slider changes the moving ramp's axial position by the specified closure while the other profile remains fixed. This viewer must not be used to measure sheave clearances or belt seating; contact admissibility pertains exclusively to the two solved weight contacts.
 
 To alter actual mechanisms without modifying code:
 

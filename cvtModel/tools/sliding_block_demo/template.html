@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CINDER — Sliding-block contact admissibility explorer</title>
+<title>CINDER — Sliding-block cross-section explorer</title>
 <style>
 :root{--paper:#f5f7fa;--ink:#17253a;--muted:#526277;--line:#d9e2eb;--accent:#315d8a;--up:#b27035;--lower:#187b8b}
 *{box-sizing:border-box}body{background:var(--paper);color:var(--ink);margin:0;font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
@@ -24,8 +24,8 @@ main{max-width:1400px;margin:auto;padding:24px 24px 38px}h1{font-size:27px;lette
 </head>
 <body>
 <main>
-<h1>CINDER · Sliding-block mechanism explorer</h1>
-<p class="lede">Two frictionless active contacts, a rigid block whose orientation is held by a guide, and <b>total</b> flyweight mass. Move the sheave, change shaft speed or demand high sheave acceleration, and inspect which mechanical assumptions remain possible.</p>
+<h1>CINDER · Sliding-block primary cross-section explorer</h1>
+<p class="lede">Same fixed-orientation, frictionless two-contact geometry as the research demo — but now shown inside a stylized primary cross-section so the moving sheave, stationary cup, spring and reference belt make physical sense together. The mechanics still come from the exact solved contact surfaces.</p>
 <div class="controls">
   <div class="control"><label for="scenario">Geometry / failure case</label><select id="scenario"></select></div>
   <div class="control"><label for="closure">Sheave closure <output id="closure-v"></output></label><input type="range" id="closure" min="0" max="75" value="40" step="1"/></div>
@@ -43,12 +43,12 @@ main{max-width:1400px;margin:auto;padding:24px 24px 38px}h1{font-size:27px;lette
   <div class="metric"><small>Guide orientation moment*</small><b id="guide-moment">—</b></div>
 </div>
 <div class="two">
-  <section class="panel"><h2>Actual meridional contact geometry</h2><div class="summary">Contact markers and reaction arrows are drawn at the solved contact locations. A red reversed arrow means the contact would need to pull, which is impossible without adhesion.</div><div class="graph" id="geometry"></div></section>
+  <section class="panel"><h2>Primary cross-section and exact active contacts</h2><div class="summary">The outer context is stylized, but the bold moving/fixed contact surfaces, the solved weight shape, contact points, normals and COM path all come from the actual reduced geometry. The moving sheave translates; the cup-side surface stays fixed.</div><div class="graph" id="geometry"></div></section>
   <section class="panel"><h2>Four inertia maps required by v4</h2><div class="summary">Each subplot uses its own units. The mass parameter scales the physics; there is no factor of three. The maps all derive from the same compatible motion.</div><div class="graph" id="inertia"></div></section>
   <section class="panel"><h2>Normal reactions and axial thrust</h2><div class="summary">These are TOTAL reactions for the entire set of identical weights. A negative normal indicates loss of the assumed double-contact branch.</div><div class="graph" id="forces"></div></section>
   <section class="panel"><h2>Admissibility across shift and imposed acceleration</h2><div class="summary">At the selected shaft speed and axial velocity: green = both normals compressive; pink = at least one must pull; grey = invalid/singular geometry. This is a probe, not a coupled CINDER solve.</div><div class="graph" id="admissibility"></div></section>
 </div>
-<p class="foot"><b>Scope / assumptions:</b> These are deliberately synthetic profile examples, not scanned CVTech production geometry. Each block translates in one radial–axial plane, keeps its orientation, and has identical motion. Contact pressure, friction, 3-D saddle geometry, finite guide strength and transitions between different contact branches are not resolved. *The guide moment is the ideal reaction required to prevent rocking; it is displayed but not compared with a measured guide capacity. A contact shown at a face endpoint is treated as a rounded point/nose approximation; use a measured rounded profile for production mechanics. Inertia parameters represent the TOTAL block mass.</p>
+<p class="foot"><b>Scope / assumptions:</b> These are synthetic profile examples, not scanned CVTech production geometry. Each block translates in one radial–axial plane, keeps its orientation, and has identical motion. Contact pressure, friction, 3-D saddle geometry, finite guide strength and transitions between different contact branches are not resolved. *The guide moment is the ideal reaction required to prevent rocking; it is displayed but not compared with a measured guide capacity. A contact shown at a face endpoint is treated as a rounded point/nose approximation; use a measured rounded profile for production mechanics. Inertia parameters represent the TOTAL block mass.</p>
 </main>
 <script>
 /*__SCENES__*/
@@ -58,10 +58,14 @@ $('scenario').value='both-curved';
 const colors={lower:'#187b8b',upper:'#b27035',block:'#6288be',centrifugal:'#8358a6',bad:'#c84f4c'};
 const cfg={responsive:true,displaylogo:false,displayModeBar:false};
 const fmt=(v,d=2)=>v===null||!Number.isFinite(v)?'—':Number(v).toFixed(d);
-const xyline=(x,y,color,label,width=2,dash='solid')=>({x,y,type:'scatter',mode:'lines',line:{color,width,dash},name:label,hoverinfo:'skip'});
+const xyline=(x,y,color,label,width=2,dash='solid',fill=null,fillcolor=null)=>({x,y,type:'scatter',mode:'lines',line:{color,width,dash},name:label,hoverinfo:'skip',fill,fillcolor});
 const point=(x,y,color,label,size=9)=>({x:[x],y:[y],mode:'markers',name:label,marker:{size,color,line:{width:1,color:'white'}}});
 function profile(p,u){const d=u-p.origin;if(p.kind==='circle')return p.offset+p.circle_sign*(p.radius-Math.sqrt(p.radius*p.radius-d*d));return p.offset+p.slope*d+(p.kind==='quadratic'?0.5*p.curvature*d*d:0)}
 const lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
+const mm=v=>v*1000;
+function beltRadius(s,p){if(p.r!==null)return Math.max(0.056,Math.min(0.081,p.r+0.012));return Math.max(0.056,Math.min(0.081,s.radius_ref+0.012+0.010*(p.x/s.xmax)))}
+function sheaveFaces(x,shift){const lower=x.map(v=>1+(14-1)*(v-18)/(84-18));const upper=x.map(v=>(17+shift)+(6-(17))*(v-18)/(84-18));return {lower,upper}}
+function springCurve(xc,z0,z1,r=3.2,turns=5){const t=lin(0,2*Math.PI*turns,260);return {x:t.map(a=>xc+r*Math.sin(a)),y:t.map(a=>z0+(z1-z0)*(a/t.at(-1)))}}
 function dynamic(s,p,omega,xd,xdd,mass){
  if(!p.lower||!p.upper)return null;
  const v=[mass*(p.rp*xdd+p.rpp*xd*xd-p.r*omega*omega),mass*(p.zp*xdd+p.zpp*xd*xd)];
@@ -72,7 +76,49 @@ function dynamic(s,p,omega,xd,xdd,mass){
  const arm=(c,N)=>{const rz=c.u,zz=c.Z-p.z;return N*(rz*c.norm[1]-zz*c.norm[0])};
  return {Nlo,Nhi,F,comforce,moment:-arm(p.lower,Nlo)-arm(p.upper,Nhi),valid:Nlo>=-1e-7&&Nhi>=-1e-7};
 }
-let tick=0;
+function polygonTrace(points,fillcolor,linecolor,name,width=1.6,hover='skip'){return {x:points.map(p=>p[0]),y:points.map(p=>p[1]),type:'scatter',mode:'lines',fill:'toself',fillcolor,line:{color:linecolor,width},name,hoverinfo:hover};}
+function crossSectionTraces(s,p,dyn){
+  const traces=[];const annotations=[];const shift=mm(p.x);const x=lin(18,86,260);const faces=sheaveFaces(x,shift);
+  traces.push(polygonTrace([[0,-3],[15,-3],[15,3],[0,3]],'rgba(215,221,230,.95)','#7e8797','shaft'));
+  traces.push(polygonTrace([[12.5,-5],[19,-5],[19,5],[12.5,5]],'rgba(196,204,216,.9)','#7e8797','hub'));
+  const lowerPoly=x.map((xi,idx)=>[xi,faces.lower[idx]]).concat([[86,18.5],[25,10.5],[18,7],[18,1]]);
+  const upperPoly=[[18,17+shift],[25,13.8+shift],[86,18+shift],[86,22.5+shift]].concat(x.slice().reverse().map((xi,idx)=>[xi,faces.upper[faces.upper.length-1-idx]]));
+  traces.push(polygonTrace(lowerPoly,'rgba(237,241,246,.92)','#7f8794','fixed sheave / housing',1.4));
+  traces.push(polygonTrace(upperPoly,'rgba(238,241,246,.92)','#7f8794','movable sheave',1.4));
+  const cup=[[11,-2],[14,-11],[18,-15],[30,-18.5],[47,-18],[64,-16],[74,-12.5],[79,-8.5],[82,-5],[84,-1.5],[84,1.5],[80,0],[77,-2.4],[70,-6.5],[56,-8.5],[44,-6.5],[34,-3.6],[25,-1.3],[18,0.5],[14,1.4],[11,1.4]];
+  traces.push(polygonTrace(cup,'rgba(241,243,246,.96)','#8b919b','reaction cup',1.4));
+  const spring=springCurve(22.5,-10,1.3+0.65*shift,3.2,5);
+  traces.push(xyline([22.5,22.5],[-11.5,3+0.65*shift],'#7c828e','spring guide',1.2));
+  traces.push(xyline(spring.x,spring.y,'#586171','spring',1.6));
+  traces.push(xyline([31,39],[10+0.55*shift,7+0.30*shift],'#8a8f99','moving support',2.2));
+  traces.push(xyline([36,43.5],[8.5+0.48*shift,4+0.16*shift],'#8a8f99','moving support',2.2));
+  const rTrackMin=Math.max(s.lower_track.left,s.upper_track.left),rTrackMax=Math.min(s.lower_track.right,s.upper_track.right);
+  const rGrid=lin(rTrackMin,rTrackMax,120),lowerY=rGrid.map(a=>mm(profile(s.lower_track,a))),upperY=rGrid.map(a=>mm(profile(s.upper_track,a)+p.x));
+  traces.push(xyline(rGrid.map(mm),lowerY,colors.lower,'fixed reaction surface',3));
+  traces.push(xyline(rGrid.map(mm),upperY,colors.upper,'moving sheave ramp (+x)',3));
+  if(p.r!==null){
+    const beltR=mm(beltRadius(s,p));
+    const r0=Math.max(51,beltR-6),r1=Math.min(84,beltR+4);
+    const lower0=1+(14-1)*(r0-18)/(84-18)+0.7,lower1=1+(14-1)*(r1-18)/(84-18)+0.7;
+    const upper1=(17+shift)+(6-17)*(r1-18)/(84-18)-0.7,upper0=upper1-0.35*(r1-r0);
+    traces.push(polygonTrace([[r0,lower0],[r1,lower1],[r1,upper1],[r0,upper0]],'rgba(63,69,79,.18)','#20252c','belt reference',1.0));
+    const u=lin(s.lower_face.left,s.lower_face.right,60),br=u.map(a=>mm(p.r+a)),blo=u.map(a=>mm(p.z+profile(s.lower_face,a))),bhi=u.map(a=>mm(p.z+profile(s.upper_face,a)));
+    traces.push({x:br.concat(br.slice().reverse(),[br[0]]),y:blo.concat(bhi.slice().reverse(),[blo[0]]),fill:'toself',fillcolor:'rgba(142,164,200,.80)',line:{color:'#284978',width:2},mode:'lines',name:'sliding weight'});
+    const path=s.points.filter(q=>q.r!==null&&q.z!==null);traces.push(xyline(path.map(q=>mm(q.r)),path.map(q=>mm(q.z)),'#4a5d80','COM path',1,'dot'));
+    traces.push(point(mm(p.r),mm(p.z),'#1f2b3c','COM',11));
+    if(p.lower&&p.upper){
+      for(const [c,N,col,label] of [[p.lower,dyn?.Nlo,colors.lower,'fixed-side contact'],[p.upper,dyn?.Nhi,colors.upper,'moving-ramp contact']]){
+        const cr=mm(c.R),cz=mm(c.Z);traces.push(point(cr,cz,col,label,10));
+        if(N!==undefined&&Number.isFinite(N)){
+          const direction=N<0?-1:1;
+          annotations.push({x:cr+5*direction*c.norm[0],y:cz+5*direction*c.norm[1],ax:cr,ay:cz,xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:N<0?colors.bad:col,arrowhead:3,arrowsize:1.15,arrowwidth:2.5});
+        }
+      }
+    }
+    annotations.push({x:mm(p.r)+8.5,y:mm(p.z)-2.2,ax:mm(p.r)+2.0,ay:mm(p.z)-2.2,xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:colors.centrifugal,arrowhead:3,arrowwidth:2});
+  }
+  return {traces,annotations};
+}
 function update(){
  const s=SCENES[$('scenario').value],i=Math.min(75,Number($('closure').value)),p=s.points[i];
  const rpm=Number($('rpm').value),omega=rpm*2*Math.PI/60,xdd=Number($('accel').value),xd=Number($('velocity').value),mass=Number($('mass').value);
@@ -84,31 +130,11 @@ function update(){
  $('com').textContent=p.r===null?'—':fmt(p.r*1000,2)+' mm';$('ratio').textContent=fmt(p.rp,3);
  $('force').textContent=dyn?fmt(dyn.F,1)+' N':'—';$('contact-force').textContent=dyn?fmt(dyn.comforce,1)+' N':'—';
  $('guide-moment').textContent=dyn?fmt(dyn.moment,2)+' N·m':'—';
- // Geometry: physical cross-section and arrows at two effective contact points.
- const tmin=Math.max(s.lower_track.left,s.upper_track.left),tmax=Math.min(s.lower_track.right,s.upper_track.right);
- const t=lin(tmin,tmax,100), mm=v=>v*1000;
- const lower=xyline(t.map(mm),t.map(a=>mm(profile(s.lower_track,a))),colors.lower,'stationary lower track',3);
- const upper=xyline(t.map(mm),t.map(a=>mm(profile(s.upper_track,a)+p.x)),colors.upper,'upper track, translated +x',3);
- const traces=[lower,upper];const annotations=[];
- if(p.r!==null){
-  const u=lin(s.lower_face.left,s.lower_face.right,55);
-  const br=u.map(a=>mm(p.r+a)),blo=u.map(a=>mm(p.z+profile(s.lower_face,a))),bhi=u.map(a=>mm(p.z+profile(s.upper_face,a)));
-  traces.push({x:br.concat(br.slice().reverse(),[br[0]]),y:blo.concat(bhi.slice().reverse(),[blo[0]]),
-     fill:'toself',fillcolor:'rgba(85,128,191,.34)',line:{color:'#416792',width:2},mode:'lines',name:'fixed-orientation weight'});
-  traces.push(point(mm(p.r),mm(p.z),'#24354c','COM',11));
-  if(p.lower&&p.upper){for(const [c,N,col,label] of [[p.lower,dyn?.Nlo,colors.lower,'stationary contact'],[p.upper,dyn?.Nhi,colors.upper,'movable contact']]){
-   const cr=mm(c.R),cz=mm(c.Z);traces.push(point(cr,cz,col,label,10));
-   if(N!==undefined&&Number.isFinite(N)){
-    const direction=N<0?-1:1;annotations.push({x:cr+4*direction*c.norm[0],y:cz+4*direction*c.norm[1],ax:cr,ay:cz,
-       xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:N<0?colors.bad:col,arrowhead:3,arrowsize:1.2,arrowwidth:2.5});}
-   }}
-  annotations.push({x:mm(p.r+0.008),y:mm(p.z)-2,ax:mm(p.r+0.001),ay:mm(p.z)-2,
-       xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:colors.centrifugal,arrowhead:3,arrowwidth:2});
- }
+ const geom=crossSectionTraces(s,p,dyn);
  const base={paper_bgcolor:'white',plot_bgcolor:'white',margin:{l:55,r:18,t:12,b:55},font:{family:'system-ui',size:12,color:'#35465e'},
-     xaxis:{title:'Radial distance [mm]',range:[42,74],gridcolor:'#eef1f6'},yaxis:{title:'Axial position [mm]',scaleanchor:'x',scaleratio:1,gridcolor:'#eef1f6'},
-     legend:{orientation:'h',y:-.21,x:0,font:{size:10}},annotations};
- Plotly.react('geometry',traces,base,cfg);
+     xaxis:{title:'Radial distance [mm]',range:[0,90],gridcolor:'#eef1f6'},yaxis:{title:'Axial coordinate [mm]',range:[-22,30],scaleanchor:'x',scaleratio:1,gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.21,x:0,font:{size:10}},annotations:geom.annotations,
+     shapes:[{type:'line',x0:0,x1:90,y0:0,y1:0,line:{color:'#bfc7d3',width:1,dash:'dot'}}]};
+ Plotly.react('geometry',geom.traces,base,cfg);
  const xlist=s.points.map(a=>a.x*1000);const fields=[['Mf','Shift effective mass [kg]',1],['Mfp','Mass slope [kg/m]',1],['J','Shaft inertia [kg·m²]',1],['Jp','Shaft inertia slope [kg·m]',1]];
  const it=[];let layout={paper_bgcolor:'white',plot_bgcolor:'white',margin:{l:55,r:14,t:8,b:38},font:{family:'system-ui',size:10,color:'#35465e'},grid:{rows:2,columns:2,pattern:'independent'},showlegend:false};
  fields.forEach(([key,label],k)=>{
@@ -120,19 +146,12 @@ function update(){
  });
  Plotly.react('inertia',it,layout,cfg);
  const fn=s.points.map(q=>dynamic(s,q,omega,xd,xdd,mass));
- const ftr=[xyline(xlist,fn.map(f=>f?.Nlo??null),colors.lower,'stationary normal'),xyline(xlist,fn.map(f=>f?.Nhi??null),colors.upper,'movable normal'),
-    xyline(xlist,fn.map(f=>f?.F??null),colors.centrifugal,'v4 axial force',2,'dash')];
- ftr.push(xyline([0,s.points.at(-1).x*1000],[0,0],'#777','zero force',1,'dot'));
- ftr.push(point(p.x*1000,dyn?.Nhi??null,'#253950','current position',10));
- Plotly.react('forces',ftr,{...base,annotations:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},
-     yaxis:{title:'TOTAL force [N]',gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.23,x:0,font:{size:10}}},cfg);
- const accGrid=lin(-600,1100,68),heat=accGrid.map(a=>s.points.map(q=>{
-    const d=dynamic(s,q,omega,xd,a,mass);return !d?2:(d.valid?0:1)}));
+ const ftr=[xyline(xlist,fn.map(f=>f?.Nlo??null),colors.lower,'fixed-side normal'),xyline(xlist,fn.map(f=>f?.Nhi??null),colors.upper,'moving-ramp normal'),xyline(xlist,fn.map(f=>f?.F??null),colors.centrifugal,'v4 axial force',2,'dash')];
+ ftr.push(xyline([0,s.points.at(-1).x*1000],[0,0],'#777','zero force',1,'dot'));ftr.push(point(p.x*1000,dyn?.Nhi??null,'#253950','current position',10));
+ Plotly.react('forces',ftr,{...base,annotations:[],shapes:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},yaxis:{title:'TOTAL force [N]',gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.23,x:0,font:{size:10}}},cfg);
+ const accGrid=lin(-600,1100,68),heat=accGrid.map(a=>s.points.map(q=>{const d=dynamic(s,q,omega,xd,a,mass);return !d?2:(d.valid?0:1)}));
  const custom=[[0,'#add7bd'],[0.32,'#add7bd'],[0.34,'#f0ada8'],[0.65,'#f0ada8'],[0.67,'#bbc2d1'],[1,'#bbc2d1']];
- Plotly.react('admissibility',[{type:'heatmap',x:xlist,y:accGrid,z:heat,colorscale:custom,zmin:0,zmax:2,showscale:false,
-   hovertemplate:'x=%{x:.1f} mm<br>sheave x¨=%{y:.0f} m/s²<br>code=%{z} (0:pass; 1:liftoff; 2:invalid geometry)<extra></extra>'},
-    {type:'scatter',x:[p.x*1000],y:[xdd],mode:'markers',marker:{size:13,color:'#19344c',symbol:'circle-open',line:{width:3}},showlegend:false,hoverinfo:'skip'}],
-    {...base,annotations:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},yaxis:{title:'Sheave x¨ [m/s²]',gridcolor:'#eef1f6'},showlegend:false},cfg);
+ Plotly.react('admissibility',[{type:'heatmap',x:xlist,y:accGrid,z:heat,colorscale:custom,zmin:0,zmax:2,showscale:false,hovertemplate:'x=%{x:.1f} mm<br>sheave x¨=%{y:.0f} m/s²<br>code=%{z} (0:pass; 1:liftoff; 2:invalid geometry)<extra></extra>'},{type:'scatter',x:[p.x*1000],y:[xdd],mode:'markers',marker:{size:13,color:'#19344c',symbol:'circle-open',line:{width:3}},showlegend:false,hoverinfo:'skip'}],{...base,annotations:[],shapes:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},yaxis:{title:'Sheave x¨ [m/s²]',gridcolor:'#eef1f6'},showlegend:false},cfg);
 }
 for(const id of ['scenario','closure','rpm','accel','velocity','mass'])$(id).addEventListener('input',update);
 update();
