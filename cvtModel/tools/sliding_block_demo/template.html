@@ -29,7 +29,7 @@
  </section>
  <aside class="panel readouts"><h2>At this position</h2><small class="label">Contact branch</small><div id="status">—</div><p id="pose-note"></p><small class="label">Solid clearance</small><div id="solid-status">—</div>
  <dl><div><dt>Belt pitch radius</dt><dd id="belt-radius">—</dd></div><div><dt>Weight radius</dt><dd id="com">—</dd></div><div><dt>Weight axial position</dt><dd id="axial-com">—</dd></div><div><dt>Motion ratio dr/dx</dt><dd id="ratio">—</dd></div><div><dt>Spring seat distance</dt><dd id="spring-length">—</dd></div></dl>
- <h3>Total weight-set loads</h3><dl><div><dt>Axial mechanism force</dt><dd id="force">—</dd></div><div><dt>From moving contact</dt><dd id="contact-force">—</dd></div><div><dt>Required guide moment*</dt><dd id="guide-moment">—</dd></div></dl>
+ <h3>Total weight-set loads</h3><dl><div><dt>Axial mechanism force</dt><dd id="force">—</dd></div><div><dt>From moving contact</dt><dd id="contact-force">—</dd></div><div><dt>Contact-only holding moment*</dt><dd id="guide-moment">—</dd></div></dl>
  <p class="section-note">Belt size stays constant. Its radius comes from both sheave faces, independently of the weight's radius.</p>
  </aside>
 </div>
@@ -45,7 +45,7 @@
  <section class="panel"><h2>Admissibility across shift and acceleration</h2><p class="summary">Green: compressive contacts. Pink: tensile demand. Grey: invalid geometry or section interference.</p><div class="graph" id="admissibility"></div></section>
  <section class="panel explanation"><h2>What this section establishes</h2><p>Filled, hatched regions represent material. The two bold contact faces are part of those solids. Only the moving assembly translates; fixed outlines stay unchanged throughout travel.</p><p>The finite inserts cover the swept contact locations with a 1 mm radial margin, within the original profile domains. They end before the unused continuations cross. This is a reference envelope around the selected branch, not measured CVTech hardware.</p><p>The belt is 10 mm deep and 30 mm wide at its pitch line, in a 20° half-angle groove. Closing the groove moves it outward by Δr = x / (2 tan 20°). These dimensions provide context and do not enter the weight mechanics.</p><p><b>Failure cases:</b> the short-track sample exhausts the solver's full-footprint domain. The parallel sample cannot select a unique weight pose. Neither displays an unsuccessful solver iterate as a physical state.</p></section>
 </div>
-<p class="foot">Synthetic geometry; frictionless, fixed-orientation weight motion. This is an operating-point probe, not a transient simulation. *The guide moment is the required reaction, not a guide-strength check. Contact pressure, friction, recontact, 3-D shaping and spring forces are not modeled. No measured CVTech geometry is claimed.</p>
+<p class="foot">Synthetic geometry; frictionless, fixed-orientation weight motion. This is an operating-point probe, not a transient simulation. *The holding moment assumes zero inertial rocking moment about the block COM. It sums like local components; divide by block count for one block. A full guide check needs the inertia tensor and guide geometry. Contact pressure, friction, impacts, recontact, 3-D shaping and spring forces are not modeled. No measured CVTech geometry is claimed.</p>
 </main>
 <script>
 /*__SCENES__*/

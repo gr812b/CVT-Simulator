@@ -38,6 +38,9 @@ class Profile:
     right: float = 1.0
 
     def __post_init__(self) -> None:
+        for name in ("origin", "offset", "slope", "curvature", "radius", "left", "right"):
+            if not isfinite(getattr(self, name)):
+                raise ValueError(f"profile {name} must be finite")
         if not self.left < self.right:
             raise ValueError("profile needs left < right")
         if self.kind == "circle":
@@ -81,6 +84,11 @@ class Mechanism:
     name: str = "sliding weight"
 
     def __post_init__(self) -> None:
+        for name in ("total_mass", "gyration_radius", "radius_ref", "x_max"):
+            if not isfinite(getattr(self, name)):
+                raise ValueError(f"mechanism {name} must be finite")
+        if isinstance(self.display_count, bool) or not isinstance(self.display_count, int):
+            raise ValueError("display_count must be a positive integer")
         if self.total_mass <= 0 or self.gyration_radius < 0:
             raise ValueError("mass must be >0 and gyration radius nonnegative")
         if self.display_count < 1 or self.radius_ref <= 0 or self.x_max <= 0:
@@ -119,7 +127,7 @@ class Point:
     N_lower: float          # total normal reaction, across all weights
     N_upper: float
     guide_tangential: float # magnitude/sign of needed tangential guide reaction
-    guide_rocking_moment: float # moment needed to hold block orientation, across all weights
+    guide_rocking_moment: float # contact-only holding moment; sum of like local components
     F_interface: float
     F_from_contact: float
     lower: Contact | None
@@ -147,8 +155,8 @@ def _min_gap(m: Mechanism, radial: float, axial: float, x: float, *, lower: bool
             return axial + face.value(u) - track.value(radial + u)
         return track.value(radial + u) + x - axial - face.value(u)
 
-    # Find GLOBAL minimum over bounded profile. A single bounded minimization
-    # silently misses separated local minima on a wavy/non-convex surface.
+    # Search sampled local minima and the endpoints. This suffices for the
+    # named examples, but is not a global certificate for arbitrary profiles.
     grid = np.linspace(a, b, 25)
     samples = [gap(float(u)) for u in grid]
     candidates = [(samples[0], a), (samples[-1], b)]
@@ -156,7 +164,6 @@ def _min_gap(m: Mechanism, radial: float, axial: float, x: float, *, lower: bool
         if samples[i] <= samples[i - 1] and samples[i] <= samples[i + 1]:
             opt = minimize_scalar(gap, bounds=(float(grid[i - 1]), float(grid[i + 1])), method="bounded", options={"xatol": 1e-13})
             candidates.append((float(opt.fun), float(opt.x)))
-    # Minima on every grid segment also catches poorly resolved nonconvex faces.
     # For the named examples, at most one smooth local minimum exists.
     return min(candidates, key=lambda item: item[0])
 
@@ -219,6 +226,10 @@ def evaluate(
     solve CINDER's coupled shift acceleration. It probes whether its assumed
     two-contact branch could remain closed at this instantaneous state.
     """
+    if not all(isfinite(v) for v in (omega, alpha, xdot, xddot)):
+        return _invalid(x, "non-finite operating state")
+    if not isfinite(max_condition) or max_condition <= 1:
+        raise ValueError("max_condition must be finite and greater than one")
     if not (0 <= x <= m.x_max):
         return _invalid(x, "travel outside configured range")
     face = m.lower_face
@@ -280,7 +291,12 @@ def evaluate(
         return _invalid(x, "singular normal-force resolution", r, z)
     Nlo, Nhi = map(float, normals)
     guide_tan = M * (2 * omega * rp * xdot + r * alpha)
-    # Contact force moments about representative COM; total over all blocks.
+    # Contact-only moment about the representative COM, positive in the (r,z)
+    # plane. Divide by count for one block. This is not a global vector sum
+    # around the pulley. A full guide-wrench calculation also needs I_C:
+    # I_C*alpha_vec + omega_vec x (I_C*omega_vec). Gyration radius alone cannot
+    # supply its transverse components, e.g. a centrifugal product-inertia
+    # couple. The reported value assumes zero required inertial rocking moment.
     def arm_moment(c: Contact, force: float) -> float:
         return (c.u * c.normal[1] - (c.axial - z) * c.normal[0]) * force
     guide_moment = -(arm_moment(lo, Nlo) + arm_moment(hi, Nhi))

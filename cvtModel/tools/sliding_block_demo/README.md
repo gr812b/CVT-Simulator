@@ -113,7 +113,9 @@ At each `x`, the prototype checks:
 3. **Unilateral contact feasibility for a specified operating point:** solve the rigid-block radial/axial Newton balance for total normal reactions. Both must be nonnegative. This check depends on **assumed** shaft speed, shift speed and shift acceleration. A negative normal means that the corresponding contact would have to pull the block: the ideal two-contact branch is impossible there.
 4. **Consistency:** the moving ramp's axial reaction equals the v4 generalized force, and `(J_f')² <= 4 J_f M_f`.
 
-The guide is assumed to prevent rotation and furnish whatever **tangential force and rocking moment** the motion requires. That required moment is calculated and reported, but **guide strength and guide contact loss are not tested** without guide geometry and capacity. Contacts at an explicit face endpoint are idealized as point/rounded-nose contact; an actual sharp corner has a contact normal cone that the simple profile does not resolve. No elastic deformation, friction, hysteresis, air gap, 3-D saddle geometry, floating sheave or discrete recontact impacts are included. Multiple possible geometric branches are not handled by a global branch/history solver; the sweep continues from the initial configuration and tests the chosen branch locally. The solver also does not yet certify absence of contact-mode changes between sample points or smoothness at every profile segment junction.
+The guide is assumed to prevent rotation and furnish whatever **tangential force and rocking moment** the motion requires. The reported rocking value is the **contact-only holding moment**, assuming zero inertial rocking moment about the COM. Its total is a sum of corresponding local components; divide by `display_count` for one block. It is not the global vector sum around the pulley. An arbitrary mass distribution can require an additional centrifugal couple through its products of inertia, and shaft acceleration also requires a centroidal spin torque. The scalar gyration radius does not specify that full guide wrench. **Guide strength and guide contact loss are not tested** without guide geometry and capacity. Circumferential sidewalls alone cannot supply a moment about their own normal, so they do not by themselves establish resistance to rocking in the meridional plane.
+
+Contacts at an explicit face endpoint are idealized as point/rounded-nose contact; an actual sharp corner has a contact normal cone that the simple profile does not resolve. No elastic deformation, friction, hysteresis, air gap, 3-D saddle geometry, floating sheave or discrete recontact impacts are included. Multiple possible geometric branches are not handled by a global branch/history solver; the sweep continues from the initial configuration and tests the chosen branch locally. The sampled minimum-gap search is not a global certificate for arbitrary curves. The solver also does not yet certify absence of contact-mode changes between sample points or smoothness at every profile segment junction.
 
 **PASS thus means 'locally admissible within the stated ideal model', not 'the actual CVTech clutch is validated'.** It does not guarantee robustness at impacts, bearing/guide strength, or global branch uniqueness.
 
@@ -156,6 +158,16 @@ This exercises open/middle/closed positions in all five examples, liftoff,
 mass scaling, display toggles, fixed-body invariance, JavaScript errors and
 mobile overflow. Review its screenshots as well as the numerical checks.
 
-## Next gate before production CINDER use
+## Physical review and production plan
 
-Obtain measured weight *and guide* geometry (especially the actual contact edges), determine whether the real 3-D contact reduces to smooth 2-D effective profiles, trace reachable contact branches, and add guide and contact-mode validation. Only after that should this compiler be treated as a trustworthy source of four inertia maps for a specific installed CVTech tuning.
+[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md) records the independent Cartesian
+material-point checks, the nonzero guide moments, an inadmissible stop impulse,
+the input-editor design, and the proposed CINDER/application PR split.
+`test_physical_checks.py` preserves these checks and rejects non-finite inputs.
+The four-function smooth-motion reduction passed the physical checks; contact
+and guide feasibility are separate requirements, including at impacts.
+
+A reusable ideal-mechanism provider can be developed against synthetic verified
+fixtures. Claiming a specific CVTech assembly is represented additionally needs
+measured weight, track and guide geometry, mass properties, and confirmation
+that its loaded 3-D contacts admit the proposed reduction.
