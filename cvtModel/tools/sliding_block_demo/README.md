@@ -6,20 +6,77 @@ The source uses **total weight-set mass `total_mass`** throughout. `display_coun
 
 ## Run
 
-From the repository's `cvtModel` directory, with Python 3.10+, NumPy and SciPy available. Matplotlib is required for all plots; Plotly is needed only when generating the optional HTML:
+From the repository root (Python 3.10+):
 
-```bash
-python -m pip install matplotlib
-python -m pytest -q tools/sliding_block_demo/test_sliding_block.py
-python -m tools.sliding_block_demo.demo --output sliding_block_outputs
-# Optional self-contained interactive browser file (plotly only needed to *generate* it)
-python -m pip install plotly
-python -m tools.sliding_block_demo.demo --output sliding_block_outputs --html
+```powershell
+python -m pip install -r cvtModel/tools/sliding_block_demo/requirements-demo.txt
+python -m pytest -q cvtModel/tools/sliding_block_demo
+python -m cvtModel.tools.sliding_block_demo.demo --output sliding_block_outputs --html
 ```
 
-The command writes five PNG reports and, with `--html`, an offline `sliding_block_explorer.html`. Open the HTML directly in a browser. It has sliders for sheave closure, shaft RPM, an **imposed** shift acceleration and velocity, and **total** weight mass. It draws a **patent-inspired primary cross-section** with a fixed sheave, axially translating movable sheave, reaction cup, simplified spring, and reference belt trapezoid. Overlaid in prominent colors are the **actual solved** 2-D tracks, flyweight shape and position, contact points, reaction directions, and COM path. The four inertia functions and admissibility map remain available in the companion panels. **It does not solve a CINDER transient or engine response.**
+Or, from `cvtModel`, use `python -m tools.sliding_block_demo.demo --html`.
+Open `sliding_block_outputs/sliding_block_explorer.html` directly in a browser;
+it is self-contained and makes no network requests. The command also writes five
+PNG reports. Shapely is a **demo-only** dependency for checking the drawn solids;
+the production CINDER package and its dependencies are unchanged.
 
-**Geometry fidelity:** the supporting sheaves, housing, spring and belt wedge are intentionally stylized **visual context**; their outlines and belt position are not read from CVTech CAD and are not contact constraints in this prototype. Only the colored track profiles and computed weight pose enter the solver. The slider changes the moving ramp's axial position by the specified closure while the other profile remains fixed. This viewer must not be used to measure sheave clearances or belt seating; contact admissibility pertains exclusively to the two solved weight contacts.
+The closure slider drives a single **meridional half-section**. Axial position
+`z` is horizontal; radius `r` is vertical. The shaft axis is **r = 0**. The
+spring's sectioned coils are symmetric about that axis, outside the shaft and
+inside the hub bore. Its moving seat translates by exactly `+x`, so its seat
+spacing decreases by `x`.
+
+### How the section is built
+
+- The cup, shaft and fixed sheave retain exactly the same coordinates throughout
+  the sweep. The moving sheave, contact insert and spring seat translate rigidly
+  by `+x`. Neither body changes shape to fit the current pose.
+- Hatched regions are finite **material polygons**, with the original contact
+  profiles forming their exposed faces. The block uses the original solved
+  shape and pose. Contact points and reaction arrows use the same coordinate
+  transformation as the solids.
+- The old full mathematical track continuations crossed outside their used
+  contact regions. They cannot all be material. For this **reference assembly**,
+  each insert retains the profile over its swept contact band with a 1 mm radial
+  margin, bounded by the original domain; unused extensions are relieved. These
+  bands are chosen **once for the whole sweep**, not clipped at each position.
+  The backings connect the inserts to the cup or moving sheave. This changes the
+  supporting illustration, not `scenarios.py`, `sliding_block.py`, the active
+  contact profiles, the motion, or the four inertia functions.
+- The belt is a rigid 10 mm-deep trapezoid, 30 mm wide at its pitch line, between
+  conical faces with a 20° half-angle. Both flanks seat on those faces. Its radius
+  satisfies `r_b(x) = r_b(0) + x/(2*tan(20°))`; its axial center moves by `x/2`.
+  Its dimensions and area remain constant, and the groove widens outward. Belt
+  radius is **independent of the weight COM**, with no clamping or ad hoc offsets.
+- `section.py` is the single source of coordinates for both PNGs and the HTML.
+  The browser projects the exported solids and translates the moving assembly;
+  it does not reconstruct a second set of approximate sheaves.
+
+**Geometry fidelity:** the finite insert extents, backing solids, sheave cones,
+shaft and spring are synthetic reference dimensions, not CVTech measurements.
+Relieving unused extensions preserves the selected contact path but is not a
+proof that a measured production part has this envelope. The original solver's
+full-footprint domain restriction is retained even where the reference solid is
+relieved. In particular, the short-track case is a **model domain limit**, not a
+simulated weight falling off an actual measured rail. Spring forces, belt forces,
+guide capacity and full 3-D clearances are not calculated.
+
+The viewer reports **contact admissibility** and **reference-solid clearance**
+separately. It checks that outlines are valid and that independent bodies do not
+interpenetrate; a custom reference envelope that fails these checks is flagged.
+Tiny curve-tessellation errors are bounded by a `0.0002 mm²` overlap-area
+tolerance. These are checks of the sampled drawing, not continuous collision
+certification. Contact vertices are retained exactly in the profile meshes.
+
+A failed geometry solve can return a finite least-squares iterate. That iterate
+is **not a compatible pose**: the viewer omits the weight and its COM at those
+positions. A negative normal reaction is different: the compatible shape remains
+visible with a red dashed outline and a liftoff warning. No subsequent free
+motion or recontact is invented.
+
+RPM, imposed acceleration/velocity, and **total** weight mass still control the
+force/admissibility diagnostics. All five original sample mechanisms remain.
+**The viewer does not solve a CINDER transient or engine response.**
 
 To alter actual mechanisms without modifying code:
 
@@ -67,12 +124,37 @@ The guide is assumed to prevent rotation and furnish whatever **tangential force
 | `straight` | Linear tracks, fixed orientation; Messick exact limit | Valid along nominal travel |
 | `curved-cup` | Circular track against straight opposing ramp | Valid; changing motion ratio |
 | `both-curved` | Quadratic block faces against two quadratic tracks | Valid; contact locations move along faces |
-| `short-track` | Same straight pair, but one short finite track | Valid initially; invalid past supported footprint |
+| `short-track` | Same straight pair, but a restricted mathematical track domain | Valid initially; full block footprint later exceeds the domain |
 | `parallel` | Two locally identical contact slopes | Singular at start; incompatible elsewhere |
 
 In the browser, select `both-curved`, reduce RPM to 250, and increase the imposed `x¨` above ~200 m/s². One required normal becomes negative. Increase RPM instead and that same imposed acceleration may become admissible again. **Mass variation alone scales the ideal inertial contact demands; it does not change the sign of the contact normals in this purely inertial, frictionless probe.**
 
 Additional checks in `test_sliding_block.py` cover analytic/finite-difference geometry derivatives, force equivalence under dynamic acceleration, the exact v4 energy identity, count invariance, proportional mass scaling, geometric singularity, track exhaustion and unilateral liftoff.
+
+## Verification
+
+```powershell
+python -m pytest -q cvtModel/tools/sliding_block_demo
+```
+
+The original 11 mechanics tests are retained. `test_section.py` adds tests of
+constant belt size and flank seating, rigid part translation, contacts on real
+solid boundaries, spring clearance about r=0, all 76 frames of each sample,
+intermediate positions, failure display, and detection of deliberately crossed
+or overlapping material. It also checks that HTML uses the same coordinates as
+the static renderer.
+
+Optional real-browser checks and screenshots:
+
+```powershell
+python -m pip install playwright
+python -m playwright install chromium
+python -m cvtModel.tools.sliding_block_demo.check_browser sliding_block_outputs/sliding_block_explorer.html --screenshots sliding_block_outputs/browser_qa
+```
+
+This exercises open/middle/closed positions in all five examples, liftoff,
+mass scaling, display toggles, fixed-body invariance, JavaScript errors and
+mobile overflow. Review its screenshots as well as the numerical checks.
 
 ## Next gate before production CINDER use
 

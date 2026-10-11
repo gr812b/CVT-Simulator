@@ -5,67 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CINDER — Sliding-block cross-section explorer</title>
 <style>
-:root{--paper:#f5f7fa;--ink:#17253a;--muted:#526277;--line:#d9e2eb;--accent:#315d8a;--up:#b27035;--lower:#187b8b}
-*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);margin:0;font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
-main{max-width:1400px;margin:auto;padding:24px 24px 38px}h1{font-size:27px;letter-spacing:-.7px;margin:2px 0 5px}h2{font-size:18px;margin:0 0 8px}p{margin:6px 0 14px} .lede{color:var(--muted);max-width:1000px}
-.controls,.panel,.metrics{background:white;border:1px solid var(--line);border-radius:11px;box-shadow:0 3px 16px #2537550a}
-.controls{padding:16px 20px;display:grid;grid-template-columns:1.25fr repeat(5,minmax(120px,1fr));gap:12px;align-items:end}
-.control{display:flex;flex-direction:column;gap:4px}.control label{font-size:12px;color:var(--muted);font-weight:700}.control output{font-size:13px;color:var(--accent);font-weight:650}.control input[type=range]{width:100%;accent-color:#356b9b}.control select{font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:7px;min-width:0}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.panel{min-width:0;padding:12px 14px}.graph{width:100%;height:400px}
-.metrics{margin-top:14px;padding:13px 16px;display:flex;gap:17px;flex-wrap:wrap;align-items:center}
-.metric{min-width:140px}.metric b{display:block;font-size:17px;font-variant-numeric:tabular-nums}.metric small{display:block;color:var(--muted)}
-#status{padding:7px 11px;border-radius:7px;font-weight:700;color:#124c37;background:#dcf3e3}
-#status.bad{color:#81292b;background:#ffe6e5}.foot{color:var(--muted);font-size:13px;margin-top:15px}
-.summary{min-height:40px;color:var(--muted);font-size:13px}
-@media(max-width:1000px){.controls{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:1fr}}
-@media(max-width:600px){main{padding:12px}.controls{grid-template-columns:repeat(2,1fr)}}
+:root{--paper:#f4f6f8;--ink:#1a293b;--muted:#57687b;--line:#dce3eb;--accent:#315d8a}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);margin:0;font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}main{max-width:1440px;margin:auto;padding:26px 28px 40px}h1{font-size:32px;letter-spacing:-1px;margin:3px 0}h2{font-size:18px;margin:0 0 9px}h3{font-size:14px;margin:22px 0 8px}p{margin:6px 0 14px}.lede,.summary,.section-note,.foot{color:var(--muted)}.eyebrow{font-size:11px;letter-spacing:1.7px;font-weight:750;color:#617b93}.lede{margin-bottom:22px}.panel{background:white;border:1px solid var(--line);border-radius:10px;min-width:0;padding:18px}.primary-controls{display:grid;grid-template-columns:320px 1fr;gap:40px;align-items:center;padding:18px 22px;background:#eaf0f5;border-radius:10px;margin-bottom:16px}.control{display:flex;flex-direction:column;gap:5px}.control label{font-size:12px;color:var(--muted);font-weight:650}.control output{float:right;color:var(--accent);font-size:13px;font-variant-numeric:tabular-nums}.control input[type=range]{width:100%;accent-color:#bb6827}.control select{font:inherit;padding:9px 11px;border:1px solid #c5d1dc;border-radius:6px;background:white;min-width:0}.range-labels{display:flex;justify-content:space-between;color:#607086;font-size:11px}.section-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}.panel-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.tag{color:#6b7b8c;font-size:11px}.summary{font-size:13px;max-width:760px;min-height:36px}#geometry{width:100%;line-height:0}#geometry svg{width:100%;height:auto;display:block}.section-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;font-size:12px;margin:5px 0 12px}.section-legend span,.section-legend label{display:flex;align-items:center;gap:5px}.swatch{width:13px;height:10px;display:inline-block;border:1px solid}.swatch.fixed{background:#e5f0f1;border-color:#167586}.swatch.moving{background:#fff0df;border-color:#bb6827}.swatch.block{background:#b2c8e2;border-color:#345f91}.section-note{font-size:12px;margin-bottom:0}.label{display:block;color:#6c7b8b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:16px 0 6px}#status{padding:9px 10px;border-radius:6px;font-size:13px;font-weight:700;color:#205841;background:#e4f2e9}#status.bad{color:#892d3b;background:#fbe8ec}#pose-note{font-size:12px;color:#68788b;margin:9px 0 15px}#solid-status{font-size:12px;color:#205841}#solid-status.bad{color:#a32839}dl{margin:15px 0}dl div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #edf0f4;padding:8px 0;font-size:12px}dt{color:#647486}dd{margin:0;font-weight:650;font-variant-numeric:tabular-nums;text-align:right}.operating{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:white;padding:14px 18px}.operating summary{font-size:14px;font-weight:650;cursor:pointer}.operating summary span{font-size:12px;color:#66778a;font-weight:400;margin-left:10px}.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px;padding:18px 0 5px}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.graph{width:100%;height:390px}.explanation p{font-size:13px;color:#526478;margin-bottom:18px}.foot{font-size:12px;margin-top:20px}
+@media(max-width:1050px){.section-layout{grid-template-columns:1fr}.readouts dl{display:grid;grid-template-columns:1fr 1fr;gap:0 25px}.two{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}}@media(max-width:600px){main{padding:16px 10px}.primary-controls{grid-template-columns:1fr;gap:18px;padding:14px}.panel{padding:12px}.panel-top{display:block}.tag{display:none}.controls{grid-template-columns:1fr 1fr;gap:18px}.operating summary span{display:none}.readouts dl{display:block}.graph{height:330px}}
 </style>
 <script>/*__PLOTLY__*/</script>
 </head>
 <body>
 <main>
-<h1>CINDER · Sliding-block primary cross-section explorer</h1>
-<p class="lede">Same fixed-orientation, frictionless two-contact geometry as the research demo — but now shown inside a stylized primary cross-section so the moving sheave, stationary cup, spring and reference belt make physical sense together. The mechanics still come from the exact solved contact surfaces.</p>
-<div class="controls">
-  <div class="control"><label for="scenario">Geometry / failure case</label><select id="scenario"></select></div>
-  <div class="control"><label for="closure">Sheave closure <output id="closure-v"></output></label><input type="range" id="closure" min="0" max="75" value="40" step="1"/></div>
-  <div class="control"><label for="rpm">Shaft speed <output id="rpm-v"></output></label><input type="range" id="rpm" min="0" max="4200" value="750" step="50"/></div>
-  <div class="control"><label for="accel">Assumed axial acceleration <output id="accel-v"></output></label><input type="range" id="accel" min="-600" max="1100" value="0" step="25"/></div>
-  <div class="control"><label for="velocity">Axial shift speed <output id="velocity-v"></output></label><input type="range" id="velocity" min="-0.50" max="0.50" value="0" step="0.05"/></div>
-  <div class="control"><label for="mass">Total flyweight mass <output id="mass-v"></output></label><input type="range" id="mass" min="0.20" max="1.50" value="0.75" step="0.05"/></div>
+<div class="eyebrow">CINDER / MECHANISM LAB</div>
+<h1>Sliding-block primary</h1>
+<p class="lede">Move the sheave. Follow the weight. See when the contact assumptions fail.</p>
+<div class="primary-controls">
+ <div class="control"><label for="scenario">Sample geometry</label><select id="scenario"></select></div>
+ <div class="control closure-control"><label for="closure">Sheave closure x <output id="closure-v"></output></label><input type="range" id="closure" min="0" max="75" value="0" step="1"/><div class="range-labels"><span>Open</span><span>Closed</span></div></div>
 </div>
-<div class="metrics">
-  <span id="status">PASS</span>
-  <div class="metric"><small>Radial COM</small><b id="com">—</b></div>
-  <div class="metric"><small>Radial motion ratio dr/dx</small><b id="ratio">—</b></div>
-  <div class="metric"><small>Axial mechanism force (v4)</small><b id="force">—</b></div>
-  <div class="metric"><small>Axial force from upper contact</small><b id="contact-force">—</b></div>
-  <div class="metric"><small>Guide orientation moment*</small><b id="guide-moment">—</b></div>
+<div class="section-layout">
+ <section class="panel section-panel"><div class="panel-top"><h2>Primary cross-section</h2><span class="tag">One current position · equal scale</span></div>
+ <p class="summary">The orange sheave moves right. The cup and fixed sheave stay in place. The weight slides outward, while the belt rises between the closing conical faces.</p>
+ <div id="geometry"></div>
+ <div class="section-legend"><span><i class="swatch fixed"></i>Fixed parts</span><span><i class="swatch moving"></i>Moving sheave</span><span><i class="swatch block"></i>Sliding weight</span><label><input id="contacts-toggle" type="checkbox" checked/>Contact reactions</label><label><input id="path-toggle" type="checkbox" checked/>COM path</label></div>
+ <p class="section-note">Original contact profiles on finite inserts. Unused profile extensions are relieved; the supporting solids are illustrative. The spring is shown in section around the shaft.</p>
+ </section>
+ <aside class="panel readouts"><h2>At this position</h2><small class="label">Contact branch</small><div id="status">—</div><p id="pose-note"></p><small class="label">Solid clearance</small><div id="solid-status">—</div>
+ <dl><div><dt>Belt pitch radius</dt><dd id="belt-radius">—</dd></div><div><dt>Weight radius</dt><dd id="com">—</dd></div><div><dt>Weight axial position</dt><dd id="axial-com">—</dd></div><div><dt>Motion ratio dr/dx</dt><dd id="ratio">—</dd></div><div><dt>Spring seat distance</dt><dd id="spring-length">—</dd></div></dl>
+ <h3>Total weight-set loads</h3><dl><div><dt>Axial mechanism force</dt><dd id="force">—</dd></div><div><dt>From moving contact</dt><dd id="contact-force">—</dd></div><div><dt>Required guide moment*</dt><dd id="guide-moment">—</dd></div></dl>
+ <p class="section-note">Belt size stays constant. Its radius comes from both sheave faces, independently of the weight's radius.</p>
+ </aside>
 </div>
+<details class="operating" open><summary>Operating point <span>Controls contact loads; geometry follows x</span></summary><div class="controls">
+ <div class="control"><label for="rpm">Shaft speed <output id="rpm-v"></output></label><input type="range" id="rpm" min="0" max="4200" value="750" step="50"/></div>
+ <div class="control"><label for="accel">Assumed axial acceleration <output id="accel-v"></output></label><input type="range" id="accel" min="-600" max="1100" value="0" step="25"/></div>
+ <div class="control"><label for="velocity">Axial shift speed <output id="velocity-v"></output></label><input type="range" id="velocity" min="-0.50" max="0.50" value="0" step="0.05"/></div>
+ <div class="control"><label for="mass">Total flyweight mass <output id="mass-v"></output></label><input type="range" id="mass" min="0.20" max="1.50" value="0.75" step="0.05"/></div>
+</div></details>
 <div class="two">
-  <section class="panel"><h2>Primary cross-section and exact active contacts</h2><div class="summary">The outer context is stylized, but the bold moving/fixed contact surfaces, the solved weight shape, contact points, normals and COM path all come from the actual reduced geometry. The moving sheave translates; the cup-side surface stays fixed.</div><div class="graph" id="geometry"></div></section>
-  <section class="panel"><h2>Four inertia maps required by v4</h2><div class="summary">Each subplot uses its own units. The mass parameter scales the physics; there is no factor of three. The maps all derive from the same compatible motion.</div><div class="graph" id="inertia"></div></section>
-  <section class="panel"><h2>Normal reactions and axial thrust</h2><div class="summary">These are TOTAL reactions for the entire set of identical weights. A negative normal indicates loss of the assumed double-contact branch.</div><div class="graph" id="forces"></div></section>
-  <section class="panel"><h2>Admissibility across shift and imposed acceleration</h2><div class="summary">At the selected shaft speed and axial velocity: green = both normals compressive; pink = at least one must pull; grey = invalid/singular geometry. This is a probe, not a coupled CINDER solve.</div><div class="graph" id="admissibility"></div></section>
+ <section class="panel"><h2>Four inertia maps</h2><p class="summary">Derived from the unchanged contact solution. The mass control scales the total weight set.</p><div class="graph" id="inertia"></div></section>
+ <section class="panel"><h2>Normal reactions and axial thrust</h2><p class="summary">A negative normal means the contact would need to pull the weight.</p><div class="graph" id="forces"></div></section>
+ <section class="panel"><h2>Admissibility across shift and acceleration</h2><p class="summary">Green: compressive contacts. Pink: tensile demand. Grey: invalid geometry or section interference.</p><div class="graph" id="admissibility"></div></section>
+ <section class="panel explanation"><h2>What this section establishes</h2><p>Filled, hatched regions represent material. The two bold contact faces are part of those solids. Only the moving assembly translates; fixed outlines stay unchanged throughout travel.</p><p>The finite inserts cover the swept contact locations with a 1 mm radial margin, within the original profile domains. They end before the unused continuations cross. This is a reference envelope around the selected branch, not measured CVTech hardware.</p><p>The belt is 10 mm deep and 30 mm wide at its pitch line, in a 20° half-angle groove. Closing the groove moves it outward by Δr = x / (2 tan 20°). These dimensions provide context and do not enter the weight mechanics.</p><p><b>Failure cases:</b> the short-track sample exhausts the solver's full-footprint domain. The parallel sample cannot select a unique weight pose. Neither displays an unsuccessful solver iterate as a physical state.</p></section>
 </div>
-<p class="foot"><b>Scope / assumptions:</b> These are synthetic profile examples, not scanned CVTech production geometry. Each block translates in one radial–axial plane, keeps its orientation, and has identical motion. Contact pressure, friction, 3-D saddle geometry, finite guide strength and transitions between different contact branches are not resolved. *The guide moment is the ideal reaction required to prevent rocking; it is displayed but not compared with a measured guide capacity. A contact shown at a face endpoint is treated as a rounded point/nose approximation; use a measured rounded profile for production mechanics. Inertia parameters represent the TOTAL block mass.</p>
+<p class="foot">Synthetic geometry; frictionless, fixed-orientation weight motion. This is an operating-point probe, not a transient simulation. *The guide moment is the required reaction, not a guide-strength check. Contact pressure, friction, recontact, 3-D shaping and spring forces are not modeled. No measured CVTech geometry is claimed.</p>
 </main>
 <script>
 /*__SCENES__*/
 const $=id=>document.getElementById(id);const names=Object.keys(SCENES);
 for(const n of names){const o=document.createElement('option');o.value=n;o.textContent=SCENES[n].title;$('scenario').appendChild(o)}
 $('scenario').value='both-curved';
+$('scenario').addEventListener('change',()=>{const s=SCENES[$('scenario').value];$('mass').value=s.mass;$('closure').max=s.points.length-1;update();});
 const colors={lower:'#187b8b',upper:'#b27035',block:'#6288be',centrifugal:'#8358a6',bad:'#c84f4c'};
 const cfg={responsive:true,displaylogo:false,displayModeBar:false};
 const fmt=(v,d=2)=>v===null||!Number.isFinite(v)?'—':Number(v).toFixed(d);
 const xyline=(x,y,color,label,width=2,dash='solid',fill=null,fillcolor=null)=>({x,y,type:'scatter',mode:'lines',line:{color,width,dash},name:label,hoverinfo:'skip',fill,fillcolor});
 const point=(x,y,color,label,size=9)=>({x:[x],y:[y],mode:'markers',name:label,marker:{size,color,line:{width:1,color:'white'}}});
-function profile(p,u){const d=u-p.origin;if(p.kind==='circle')return p.offset+p.circle_sign*(p.radius-Math.sqrt(p.radius*p.radius-d*d));return p.offset+p.slope*d+(p.kind==='quadratic'?0.5*p.curvature*d*d:0)}
 const lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
-const mm=v=>v*1000;
-function beltRadius(s,p){if(p.r!==null)return Math.max(0.056,Math.min(0.081,p.r+0.012));return Math.max(0.056,Math.min(0.081,s.radius_ref+0.012+0.010*(p.x/s.xmax)))}
-function sheaveFaces(x,shift){const lower=x.map(v=>1+(14-1)*(v-18)/(84-18));const upper=x.map(v=>(17+shift)+(6-(17))*(v-18)/(84-18));return {lower,upper}}
-function springCurve(xc,z0,z1,r=3.2,turns=5){const t=lin(0,2*Math.PI*turns,260);return {x:t.map(a=>xc+r*Math.sin(a)),y:t.map(a=>z0+(z1-z0)*(a/t.at(-1)))}}
 function dynamic(s,p,omega,xd,xdd,mass){
  if(!p.lower||!p.upper)return null;
  const v=[mass*(p.rp*xdd+p.rpp*xd*xd-p.r*omega*omega),mass*(p.zp*xdd+p.zpp*xd*xd)];
@@ -76,65 +69,26 @@ function dynamic(s,p,omega,xd,xdd,mass){
  const arm=(c,N)=>{const rz=c.u,zz=c.Z-p.z;return N*(rz*c.norm[1]-zz*c.norm[0])};
  return {Nlo,Nhi,F,comforce,moment:-arm(p.lower,Nlo)-arm(p.upper,Nhi),valid:Nlo>=-1e-7&&Nhi>=-1e-7};
 }
-function polygonTrace(points,fillcolor,linecolor,name,width=1.6,hover='skip'){return {x:points.map(p=>p[0]),y:points.map(p=>p[1]),type:'scatter',mode:'lines',fill:'toself',fillcolor,line:{color:linecolor,width},name,hoverinfo:hover};}
-function crossSectionTraces(s,p,dyn){
-  const traces=[];const annotations=[];const shift=mm(p.x);const x=lin(18,86,260);const faces=sheaveFaces(x,shift);
-  traces.push(polygonTrace([[0,-3],[15,-3],[15,3],[0,3]],'rgba(215,221,230,.95)','#7e8797','shaft'));
-  traces.push(polygonTrace([[12.5,-5],[19,-5],[19,5],[12.5,5]],'rgba(196,204,216,.9)','#7e8797','hub'));
-  const lowerPoly=x.map((xi,idx)=>[xi,faces.lower[idx]]).concat([[86,18.5],[25,10.5],[18,7],[18,1]]);
-  const upperPoly=[[18,17+shift],[25,13.8+shift],[86,18+shift],[86,22.5+shift]].concat(x.slice().reverse().map((xi,idx)=>[xi,faces.upper[faces.upper.length-1-idx]]));
-  traces.push(polygonTrace(lowerPoly,'rgba(237,241,246,.92)','#7f8794','fixed sheave / housing',1.4));
-  traces.push(polygonTrace(upperPoly,'rgba(238,241,246,.92)','#7f8794','movable sheave',1.4));
-  const cup=[[11,-2],[14,-11],[18,-15],[30,-18.5],[47,-18],[64,-16],[74,-12.5],[79,-8.5],[82,-5],[84,-1.5],[84,1.5],[80,0],[77,-2.4],[70,-6.5],[56,-8.5],[44,-6.5],[34,-3.6],[25,-1.3],[18,0.5],[14,1.4],[11,1.4]];
-  traces.push(polygonTrace(cup,'rgba(241,243,246,.96)','#8b919b','reaction cup',1.4));
-  const spring=springCurve(22.5,-10,1.3+0.65*shift,3.2,5);
-  traces.push(xyline([22.5,22.5],[-11.5,3+0.65*shift],'#7c828e','spring guide',1.2));
-  traces.push(xyline(spring.x,spring.y,'#586171','spring',1.6));
-  traces.push(xyline([31,39],[10+0.55*shift,7+0.30*shift],'#8a8f99','moving support',2.2));
-  traces.push(xyline([36,43.5],[8.5+0.48*shift,4+0.16*shift],'#8a8f99','moving support',2.2));
-  const rTrackMin=Math.max(s.lower_track.left,s.upper_track.left),rTrackMax=Math.min(s.lower_track.right,s.upper_track.right);
-  const rGrid=lin(rTrackMin,rTrackMax,120),lowerY=rGrid.map(a=>mm(profile(s.lower_track,a))),upperY=rGrid.map(a=>mm(profile(s.upper_track,a)+p.x));
-  traces.push(xyline(rGrid.map(mm),lowerY,colors.lower,'fixed reaction surface',3));
-  traces.push(xyline(rGrid.map(mm),upperY,colors.upper,'moving sheave ramp (+x)',3));
-  if(p.r!==null){
-    const beltR=mm(beltRadius(s,p));
-    const r0=Math.max(51,beltR-6),r1=Math.min(84,beltR+4);
-    const lower0=1+(14-1)*(r0-18)/(84-18)+0.7,lower1=1+(14-1)*(r1-18)/(84-18)+0.7;
-    const upper1=(17+shift)+(6-17)*(r1-18)/(84-18)-0.7,upper0=upper1-0.35*(r1-r0);
-    traces.push(polygonTrace([[r0,lower0],[r1,lower1],[r1,upper1],[r0,upper0]],'rgba(63,69,79,.18)','#20252c','belt reference',1.0));
-    const u=lin(s.lower_face.left,s.lower_face.right,60),br=u.map(a=>mm(p.r+a)),blo=u.map(a=>mm(p.z+profile(s.lower_face,a))),bhi=u.map(a=>mm(p.z+profile(s.upper_face,a)));
-    traces.push({x:br.concat(br.slice().reverse(),[br[0]]),y:blo.concat(bhi.slice().reverse(),[blo[0]]),fill:'toself',fillcolor:'rgba(142,164,200,.80)',line:{color:'#284978',width:2},mode:'lines',name:'sliding weight'});
-    const path=s.points.filter(q=>q.r!==null&&q.z!==null);traces.push(xyline(path.map(q=>mm(q.r)),path.map(q=>mm(q.z)),'#4a5d80','COM path',1,'dot'));
-    traces.push(point(mm(p.r),mm(p.z),'#1f2b3c','COM',11));
-    if(p.lower&&p.upper){
-      for(const [c,N,col,label] of [[p.lower,dyn?.Nlo,colors.lower,'fixed-side contact'],[p.upper,dyn?.Nhi,colors.upper,'moving-ramp contact']]){
-        const cr=mm(c.R),cz=mm(c.Z);traces.push(point(cr,cz,col,label,10));
-        if(N!==undefined&&Number.isFinite(N)){
-          const direction=N<0?-1:1;
-          annotations.push({x:cr+5*direction*c.norm[0],y:cz+5*direction*c.norm[1],ax:cr,ay:cz,xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:N<0?colors.bad:col,arrowhead:3,arrowsize:1.15,arrowwidth:2.5});
-        }
-      }
-    }
-    annotations.push({x:mm(p.r)+8.5,y:mm(p.z)-2.2,ax:mm(p.r)+2.0,ay:mm(p.z)-2.2,xref:'x',yref:'y',axref:'x',ayref:'y',showarrow:true,arrowcolor:colors.centrifugal,arrowhead:3,arrowwidth:2});
-  }
-  return {traces,annotations};
-}
+/*__SECTION_VIEW__*/
 function update(){
- const s=SCENES[$('scenario').value],i=Math.min(75,Number($('closure').value)),p=s.points[i];
+ const s=SCENES[$('scenario').value],i=Math.min(s.points.length-1,Number($('closure').value)),p=s.points[i];
  const rpm=Number($('rpm').value),omega=rpm*2*Math.PI/60,xdd=Number($('accel').value),xd=Number($('velocity').value),mass=Number($('mass').value);
  $('closure-v').textContent=fmt(p.x*1000,1)+' mm';$('rpm-v').textContent=rpm+' RPM';$('accel-v').textContent=xdd+' m/s²';
  $('velocity-v').textContent=fmt(xd,2)+' m/s';$('mass-v').textContent=fmt(mass,2)+' kg';
  const dyn=dynamic(s,p,omega,xd,xdd,mass);
  let issues=p.issues.slice();if(dyn&&!dyn.valid)issues.push('negative normal → contact liftoff');
- const ok=issues.length===0;$('status').className=ok?'':'bad';$('status').textContent=ok?'PASS · ideal double contact':issues.join('; ');
- $('com').textContent=p.r===null?'—':fmt(p.r*1000,2)+' mm';$('ratio').textContent=fmt(p.rp,3);
+ const ok=issues.length===0 && p.section.issues.length===0;$('status').className=ok?'':'bad';$('status').textContent=ok?'PASS · ideal double contact':(issues.length?issues:p.section.issues).join('; ');
+ $('com').textContent=!p.section.pose_valid?'—':fmt(p.r*1000,2)+' mm';$('ratio').textContent=fmt(p.rp,3);
  $('force').textContent=dyn?fmt(dyn.F,1)+' N':'—';$('contact-force').textContent=dyn?fmt(dyn.comforce,1)+' N':'—';
  $('guide-moment').textContent=dyn?fmt(dyn.moment,2)+' N·m':'—';
- const geom=crossSectionTraces(s,p,dyn);
- const base={paper_bgcolor:'white',plot_bgcolor:'white',margin:{l:55,r:18,t:12,b:55},font:{family:'system-ui',size:12,color:'#35465e'},
-     xaxis:{title:'Radial distance [mm]',range:[0,90],gridcolor:'#eef1f6'},yaxis:{title:'Axial coordinate [mm]',range:[-22,30],scaleanchor:'x',scaleratio:1,gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.21,x:0,font:{size:10}},annotations:geom.annotations,
-     shapes:[{type:'line',x0:0,x1:90,y0:0,y1:0,line:{color:'#bfc7d3',width:1,dash:'dot'}}]};
- Plotly.react('geometry',geom.traces,base,cfg);
+ renderSection(s,p,dyn);
+ $('solid-status').textContent=p.section.issues.length?p.section.issues.join('; '):'Clear · finite reference solids';
+ $('solid-status').className=p.section.issues.length?'bad':'';
+ $('belt-radius').textContent=fmt(p.section.belt_radius,2)+' mm';
+ $('axial-com').textContent=p.section.com?fmt(p.z*1000,2)+' mm':'—';
+ $('spring-length').textContent=fmt(p.section.spring_length,1)+' mm';
+ $('pose-note').textContent=!p.section.pose_valid?'No solved weight pose at this position. Failed optimizer iterates are not displayed.':(!dyn?.valid?'Required tensile reaction: the weight could not remain on this two-contact path. Free motion is not simulated.':'Both contacts are compressive at the selected operating point.');
+ const base={paper_bgcolor:'white',plot_bgcolor:'white',margin:{l:62,r:20,t:12,b:65},font:{family:'system-ui',size:12,color:'#35465e'},showlegend:true};
  const xlist=s.points.map(a=>a.x*1000);const fields=[['Mf','Shift effective mass [kg]',1],['Mfp','Mass slope [kg/m]',1],['J','Shaft inertia [kg·m²]',1],['Jp','Shaft inertia slope [kg·m]',1]];
  const it=[];let layout={paper_bgcolor:'white',plot_bgcolor:'white',margin:{l:55,r:14,t:8,b:38},font:{family:'system-ui',size:10,color:'#35465e'},grid:{rows:2,columns:2,pattern:'independent'},showlegend:false};
  fields.forEach(([key,label],k)=>{
@@ -148,12 +102,12 @@ function update(){
  const fn=s.points.map(q=>dynamic(s,q,omega,xd,xdd,mass));
  const ftr=[xyline(xlist,fn.map(f=>f?.Nlo??null),colors.lower,'fixed-side normal'),xyline(xlist,fn.map(f=>f?.Nhi??null),colors.upper,'moving-ramp normal'),xyline(xlist,fn.map(f=>f?.F??null),colors.centrifugal,'v4 axial force',2,'dash')];
  ftr.push(xyline([0,s.points.at(-1).x*1000],[0,0],'#777','zero force',1,'dot'));ftr.push(point(p.x*1000,dyn?.Nhi??null,'#253950','current position',10));
- Plotly.react('forces',ftr,{...base,annotations:[],shapes:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},yaxis:{title:'TOTAL force [N]',gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.23,x:0,font:{size:10}}},cfg);
- const accGrid=lin(-600,1100,68),heat=accGrid.map(a=>s.points.map(q=>{const d=dynamic(s,q,omega,xd,a,mass);return !d?2:(d.valid?0:1)}));
+ Plotly.react('forces',ftr,{...base,annotations:[],shapes:[],xaxis:{title:{text:'Sheave closure [mm]'},gridcolor:'#eef1f6'},yaxis:{title:{text:'TOTAL force [N]'},gridcolor:'#eef1f6'},legend:{orientation:'h',y:-.23,x:0,font:{size:10}}},cfg);
+ const accGrid=lin(-600,1100,68),heat=accGrid.map(a=>s.points.map(q=>{const d=dynamic(s,q,omega,xd,a,mass);return !d||q.section.issues.length?2:(d.valid?0:1)}));
  const custom=[[0,'#add7bd'],[0.32,'#add7bd'],[0.34,'#f0ada8'],[0.65,'#f0ada8'],[0.67,'#bbc2d1'],[1,'#bbc2d1']];
- Plotly.react('admissibility',[{type:'heatmap',x:xlist,y:accGrid,z:heat,colorscale:custom,zmin:0,zmax:2,showscale:false,hovertemplate:'x=%{x:.1f} mm<br>sheave x¨=%{y:.0f} m/s²<br>code=%{z} (0:pass; 1:liftoff; 2:invalid geometry)<extra></extra>'},{type:'scatter',x:[p.x*1000],y:[xdd],mode:'markers',marker:{size:13,color:'#19344c',symbol:'circle-open',line:{width:3}},showlegend:false,hoverinfo:'skip'}],{...base,annotations:[],shapes:[],xaxis:{title:'Sheave closure [mm]',gridcolor:'#eef1f6'},yaxis:{title:'Sheave x¨ [m/s²]',gridcolor:'#eef1f6'},showlegend:false},cfg);
+ Plotly.react('admissibility',[{type:'heatmap',x:xlist,y:accGrid,z:heat,colorscale:custom,zmin:0,zmax:2,showscale:false,hovertemplate:'x=%{x:.1f} mm<br>sheave x¨=%{y:.0f} m/s²<br>code=%{z} (0:pass; 1:liftoff; 2:invalid geometry)<extra></extra>'},{type:'scatter',x:[p.x*1000],y:[xdd],mode:'markers',marker:{size:13,color:'#19344c',symbol:'circle-open',line:{width:3}},showlegend:false,hoverinfo:'skip'}],{...base,annotations:[],shapes:[],xaxis:{title:{text:'Sheave closure [mm]'},gridcolor:'#eef1f6'},yaxis:{title:{text:'Sheave x¨ [m/s²]'},gridcolor:'#eef1f6'},showlegend:false},cfg);
 }
-for(const id of ['scenario','closure','rpm','accel','velocity','mass'])$(id).addEventListener('input',update);
+for(const id of ['scenario','closure','rpm','accel','velocity','mass','contacts-toggle','path-toggle'])$(id).addEventListener('input',update);
 update();
 </script>
 </body></html>
