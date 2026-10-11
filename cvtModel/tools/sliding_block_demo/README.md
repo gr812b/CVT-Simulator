@@ -1,6 +1,10 @@
 # Fixed-orientation sliding-block centrifugal actuator — research demo
 
-This is a **standalone geometry and admissibility prototype**, not yet wired into CINDER's production force solver. It tests whether a symmetric set of non-rotating weights between two nominally active, frictionless ramp contacts can be reduced to the **two inertia functions and their derivatives** specified by `CINDER_General_Centrifugal_Mechanisms_v4.pdf` (2026-10-09).
+This research viewer now imports its Python mechanics from CINDER. The production
+`SlidingBlockFlyweightForce` and canonical derivations are documented in
+[the formulation folder](../../docs/flyweight_mechanisms/README.md). The viewer
+retains its illustrative inputs and assumed operating accelerations; the coupled
+CINDER element uses actual solved accelerations and checks selected reset impulses.
 
 The source uses **total weight-set mass `total_mass`** throughout. `display_count` is for reporting per-weight loads and showing representative hardware only; it never multiplies the physics. If all weights have the same pose and shape, `m_one = total_mass/display_count`, and `J_C,total = total_mass*gyration_radius**2`. Changing inserts may change the gyration radius even at equal total mass.
 
@@ -9,6 +13,7 @@ The source uses **total weight-set mass `total_mass`** throughout. `display_coun
 From the repository root (Python 3.10+):
 
 ```powershell
+python -m pip install -e cvtModel
 python -m pip install -r cvtModel/tools/sliding_block_demo/requirements-demo.txt
 python -m pytest -q cvtModel/tools/sliding_block_demo
 python -m cvtModel.tools.sliding_block_demo.demo --output sliding_block_outputs --html
@@ -115,7 +120,7 @@ At each `x`, the prototype checks:
 
 The guide is assumed to prevent rotation and furnish whatever **tangential force and rocking moment** the motion requires. The reported rocking value is the **contact-only holding moment**, assuming zero inertial rocking moment about the COM. Its total is a sum of corresponding local components; divide by `display_count` for one block. It is not the global vector sum around the pulley. An arbitrary mass distribution can require an additional centrifugal couple through its products of inertia, and shaft acceleration also requires a centroidal spin torque. The scalar gyration radius does not specify that full guide wrench. **Guide strength and guide contact loss are not tested** without guide geometry and capacity. Circumferential sidewalls alone cannot supply a moment about their own normal, so they do not by themselves establish resistance to rocking in the meridional plane.
 
-Contacts at an explicit face endpoint are idealized as point/rounded-nose contact; an actual sharp corner has a contact normal cone that the simple profile does not resolve. No elastic deformation, friction, hysteresis, air gap, 3-D saddle geometry, floating sheave or discrete recontact impacts are included. Multiple possible geometric branches are not handled by a global branch/history solver; the sweep continues from the initial configuration and tests the chosen branch locally. The sampled minimum-gap search is not a global certificate for arbitrary curves. The solver also does not yet certify absence of contact-mode changes between sample points or smoothness at every profile segment junction.
+Contacts at an explicit face endpoint are idealized as point/rounded-nose contact; an actual sharp corner has a contact normal cone that the simple profile does not resolve. No elastic deformation, friction, hysteresis, air gap, 3-D saddle geometry, floating sheave or discrete recontact impacts are included. Multiple possible geometric branches are not handled by a global branch/history solver; the sweep continues from the initial configuration and tests the chosen branch locally. The core gap calculation bounds curvature and rejects unsupported shapes. The production compiler also requires one certified contact mode over a declared radial branch window. The illustrative sweep is still distinct from production branch compilation.
 
 **PASS thus means 'locally admissible within the stated ideal model', not 'the actual CVTech clutch is validated'.** It does not guarantee robustness at impacts, bearing/guide strength, or global branch uniqueness.
 

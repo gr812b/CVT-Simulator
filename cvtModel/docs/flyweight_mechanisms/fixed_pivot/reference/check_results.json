@@ -1,0 +1,136 @@
+{
+  "status": "passed",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "cinder": {
+    "model_commit": "8261226b8cd1e8b65c883d3a382c3f109ccbb10c",
+    "source_head": "a2dcdc66a9653960dcb1ea4d73a1aa2575aebf66",
+    "exact_positions": 71,
+    "affine_contexts": 390,
+    "engaged_solve_pairs": 12,
+    "deadzone_pairs": 2,
+    "geometry_audit_valid": true
+  },
+  "max_absolute_errors": {
+    "straight_closed_form_q": 6.106226635438361e-16,
+    "straight_closed_form_q_prime": 2.1316282072803006e-14,
+    "straight_closed_form_q_second": 3.183231456205249e-12,
+    "mass_integral_M": 1.1102230246251565e-16,
+    "mass_integral_M_prime": 1.7763568394002505e-15,
+    "mass_integral_J": 8.673617379884035e-19,
+    "mass_integral_J_prime": 1.3877787807814457e-17,
+    "mixed_coefficient_B": 5.24618134787804e-20,
+    "Newton_force_N": 1.3642420526593924e-12,
+    "Newton_torque_Nm": 1.1102230246251565e-15,
+    "power_balance_W": 4.547473508864641e-13,
+    "roller_moment_balance_Nm": 1.5300746780688712e-12,
+    "normal_motion_ratio_identity": 6.994405055138486e-15,
+    "finite_difference_M_prime": 5.15957054858518e-10,
+    "finite_difference_J_prime": 6.857292511597279e-13,
+    "exact_CINDER_q": 6.340483693634269e-13,
+    "exact_CINDER_q_prime": 5.943689984633238e-12,
+    "exact_CINDER_q_second": 1.5212663129204884e-08,
+    "exact_CINDER_M": 2.473576898864849e-13,
+    "exact_CINDER_M_prime": 6.278249031765881e-10,
+    "exact_CINDER_J": 1.5564806388201902e-15,
+    "exact_CINDER_J_prime": 1.4127587988355117e-14,
+    "affine_force_coefficients": 0.0,
+    "affine_torque_coefficients": 0.0,
+    "kinetic_metric": 0.0,
+    "fixed_pivot_contact_margin_N": 0.0,
+    "contact_zero_crossing_N": 0.0,
+    "engaged_closure_unknowns": 0.0,
+    "deadzone_accelerations": 0.0,
+    "topology_kinetic_energy_J": 0.0,
+    "upper_stop_successor_state": 0.0
+  },
+  "comparison_counts": {
+    "straight_closed_form_q": 41,
+    "straight_closed_form_q_prime": 41,
+    "straight_closed_form_q_second": 41,
+    "mass_integral_M": 19,
+    "mass_integral_M_prime": 19,
+    "mass_integral_J": 19,
+    "mass_integral_J_prime": 19,
+    "mixed_coefficient_B": 19,
+    "Newton_force_N": 57,
+    "Newton_torque_Nm": 57,
+    "power_balance_W": 57,
+    "roller_moment_balance_Nm": 19,
+    "normal_motion_ratio_identity": 19,
+    "finite_difference_M_prime": 46,
+    "finite_difference_J_prime": 46,
+    "exact_CINDER_q": 71,
+    "exact_CINDER_q_prime": 71,
+    "exact_CINDER_q_second": 71,
+    "exact_CINDER_M": 71,
+    "exact_CINDER_M_prime": 71,
+    "exact_CINDER_J": 71,
+    "exact_CINDER_J_prime": 71,
+    "affine_force_coefficients": 390,
+    "affine_torque_coefficients": 390,
+    "kinetic_metric": 390,
+    "fixed_pivot_contact_margin_N": 390,
+    "contact_zero_crossing_N": 3,
+    "engaged_closure_unknowns": 12,
+    "deadzone_accelerations": 2,
+    "topology_kinetic_energy_J": 2,
+    "upper_stop_successor_state": 1
+  },
+  "map_order": [
+    "M_kg",
+    "M_prime_kg_per_m",
+    "J_kg_m2",
+    "J_prime_kg_m"
+  ],
+  "sampled_map_minima": [
+    0.45621831319750755,
+    -6.4624187600308165,
+    0.0016983261653509356,
+    0.054843512508354564
+  ],
+  "sampled_map_maxima": [
+    0.5721244785739726,
+    44.150381336123154,
+    0.0029302676237870414,
+    0.06713519489666091
+  ],
+  "interpolation_positions": 1027,
+  "compiled_257_max_absolute_errors": [
+    6.596739128283957e-07,
+    0.09255225147440849,
+    9.378153635608566e-13,
+    3.72510594037756e-08
+  ],
+  "join_closures_m": [
+    0.0017131461765058746,
+    0.004282930952656586
+  ],
+  "example_at_10mm": {
+    "contact": {
+      "x": 0.01,
+      "xi": 0.015623440724609472,
+      "q": 0.39196823609454134,
+      "q_prime": 27.412853325466244,
+      "q_second": -28.368611622059912,
+      "a": 0.029130784501871405,
+      "b": 0.012041430656925124,
+      "normal_x": -0.5147345805414039,
+      "normal_r": -0.8573495854054314,
+      "offset_factor": 0.9498294698445016,
+      "g_xi": -0.04160512171831189,
+      "arm_residual": 7.589415207398531e-18
+    },
+    "maps": {
+      "M": 0.5701794519552643,
+      "M_prime": -1.1801178983707818,
+      "J": 0.0023318110048700146,
+      "J_prime": 0.06703892797364716
+    },
+    "force_torque_at_omega300_xdot0p05_xddot2_alpha10": [
+      3015.612875057585,
+      -1.0289020296534075
+    ]
+  }
+}

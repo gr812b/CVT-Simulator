@@ -22,7 +22,7 @@ class ComponentParameter:
     description: str
     minimum: float | None = None
     maximum: float | None = None
-    value_kind: Literal["number", "object"] = "number"
+    value_kind: Literal["number", "object", "string"] = "number"
     dimension: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
@@ -162,6 +162,41 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     True,
                     "Per-flyweight body moments and circumferential flyweight count.",
                     value_kind="object",
+                    dimension="structure",
+                ),
+            ),
+            supported_mounts=("primary", "secondary"),
+        ),
+        ComponentDescriptor(
+            kind="sliding_block_flyweight",
+            label="Sliding-block flyweight",
+            description="Fixed-orientation, finite-profile two-contact mechanism; total mass, full guide wrench and unilateral reset checks. Requires co-rotating tracks and an ideal guide.",
+            parameters=(
+                ComponentParameter(
+                    "geometry",
+                    "Finite contact profiles and branch",
+                    "object",
+                    True,
+                    "All lengths in metres; curvature in inverse metres. Body datum is independent of COM.",
+                    value_kind="object",
+                    dimension="structure",
+                ),
+                ComponentParameter(
+                    "mass",
+                    "Total mass and centroidal tensor",
+                    "object",
+                    True,
+                    "Total set mass in kg, count, COM in metres and inertia per mass in square metres.",
+                    value_kind="object",
+                    dimension="structure",
+                ),
+                ComponentParameter(
+                    "guide",
+                    "Guide assumption",
+                    "string",
+                    True,
+                    "Must be ideal_fixed_orientation; physical capacity remains unknown.",
+                    value_kind="string",
                     dimension="structure",
                 ),
             ),

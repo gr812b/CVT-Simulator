@@ -124,3 +124,15 @@ These are not hidden conservation errors, but they should remain explicit:
 Legacy scalar stop helpers in `cvt_lower_stop.py` and `cvt_upper_stop.py` are
 kept only for old preview/API compatibility.  Production hybrid transitions do
 **not** use them; they use `cvt_impact.project_cvt_velocity_topology`.
+
+## Mechanism contact impulses
+
+The inertia metric supplies a candidate reset. It does not prove that each
+unilateral mechanism contact can transmit the required impulse. Sliding-block
+elements expose both named normal impulses through `impulse_contact_margins`.
+Candidate projections retain these in `mechanism_impulse_margins`; direct
+callers must invoke `require_admissible_mechanism_impulses()` before acceptance.
+The operating hybrid system checks every selected reset and rejects tension
+with a named contact and impulse. Hypothetical projections used while selecting
+a regime may be inspected without prematurely raising. No flight or recontact
+topology is supplied by this policy. See the [sliding-block formulation](flyweight_mechanisms/sliding_block/formulation.pdf).

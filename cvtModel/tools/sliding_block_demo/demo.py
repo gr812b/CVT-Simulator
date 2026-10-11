@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from .scenarios import EXAMPLES, make
-from .sliding_block import Mechanism, sweep, from_mapping
+from .sliding_block import Mechanism, evaluate, sweep, from_mapping
 from .section import build_section, section_frame, render_section
 
 
@@ -26,6 +26,21 @@ SCENE_LABELS = {
     "short-track": "Finite track-domain limit",
     "parallel": "Parallel constraints · singular",
 }
+
+
+def response_coefficients(m: Mechanism, p) -> dict | None:
+    """Export the core's linear response to (omega², xdot², xddot).
+
+    The static browser viewer contracts these coefficients; it does not carry
+    a separate force law, contact solve or moment balance.
+    """
+    if p.lower is None or p.upper is None:
+        return None
+    probes = [evaluate(m, p.x, omega=w, xdot=v, xddot=a)
+              for w,v,a in ((1,0,0), (0,1,0), (0,0,1))]
+    return {key: [getattr(probe, attr) for probe in probes] for key,attr in (
+        ("Nlo", "N_lower"), ("Nhi", "N_upper"), ("F", "F_interface"),
+        ("comforce", "F_from_contact"), ("moment", "guide_rocking_moment"))}
 
 
 def static_report(output: Path, name: str, *, mechanism: Mechanism | None = None, rpm: float = 2600.0, shift_accel: float = 0.0) -> Path:
@@ -79,15 +94,14 @@ def static_report(output: Path, name: str, *, mechanism: Mechanism | None = None
     omega_map = 80.0
     accelerations = np.linspace(-500, 700, 97)
     heat = np.zeros((len(accelerations), len(pts)))
+    responses = [response_coefficients(m, p) for p in pts]
     for j, acc in enumerate(accelerations):
         for i, p_i in enumerate(pts):
             if p_i.lower is None or p_i.upper is None:
                 heat[j, i] = 2
                 continue
-            ar = p_i.r_prime * acc - p_i.radial * omega_map ** 2
-            az = p_i.z_prime * acc
-            A = np.column_stack((p_i.lower.normal, p_i.upper.normal))
-            normals = np.linalg.solve(A, m.total_mass * np.array([ar, az]))
+            normals = np.array([np.dot(responses[i][key], (omega_map**2,0,acc))
+                                for key in ("Nlo", "Nhi")])
             heat[j, i] = 0 if all(normals >= -1e-7) else 1
     map_ax.pcolormesh(xs, accelerations, heat, cmap=ListedColormap(["#a1d5b5", "#e8a7a2", "#adacc0"]),
                       vmin=0, vmax=2, shading="nearest")
@@ -135,6 +149,7 @@ def _html_data(custom: Mechanism | None = None) -> dict:
             "upper_face": asdict(m.upper_face),
             "points": [{
                 "x": p.x,
+                "response": response_coefficients(m, p),
                 "section": section_frame(section, m, p),
                 "r": p.radial if np.isfinite(p.radial) else None,
                 "z": p.axial if np.isfinite(p.axial) else None,

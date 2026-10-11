@@ -60,14 +60,10 @@ const xyline=(x,y,color,label,width=2,dash='solid',fill=null,fillcolor=null)=>({
 const point=(x,y,color,label,size=9)=>({x:[x],y:[y],mode:'markers',name:label,marker:{size,color,line:{width:1,color:'white'}}});
 const lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
 function dynamic(s,p,omega,xd,xdd,mass){
- if(!p.lower||!p.upper)return null;
- const v=[mass*(p.rp*xdd+p.rpp*xd*xd-p.r*omega*omega),mass*(p.zp*xdd+p.zpp*xd*xd)];
- const a=p.lower.norm,b=p.upper.norm,det=a[0]*b[1]-b[0]*a[1];if(Math.abs(det)<1e-11)return null;
- const Nlo=(v[0]*b[1]-b[0]*v[1])/det,Nhi=(a[0]*v[1]-a[1]*v[0])/det;
- const scale=mass/s.mass,F=scale*(0.5*p.Jp*omega*omega-p.Mf*xdd-0.5*p.Mfp*xd*xd);
- const comforce=Nhi/Math.sqrt(1+p.upper.slope*p.upper.slope);
- const arm=(c,N)=>{const rz=c.u,zz=c.Z-p.z;return N*(rz*c.norm[1]-zz*c.norm[0])};
- return {Nlo,Nhi,F,comforce,moment:-arm(p.lower,Nlo)-arm(p.upper,Nhi),valid:Nlo>=-1e-7&&Nhi>=-1e-7};
+ if(!p.response)return null;
+ const basis=[omega*omega,xd*xd,xdd],scale=mass/s.mass;
+ const d=Object.fromEntries(Object.entries(p.response).map(([key,row])=>[key,scale*row.reduce((s,c,i)=>s+c*basis[i],0)]));
+ d.valid=d.Nlo>=-1e-7&&d.Nhi>=-1e-7;return d;
 }
 /*__SECTION_VIEW__*/
 function update(){

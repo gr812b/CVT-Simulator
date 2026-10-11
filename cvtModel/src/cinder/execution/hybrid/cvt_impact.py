@@ -24,7 +24,7 @@ the familiar one-DOF ``m_old v_old = m_new v_new`` momentum projection.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from math import isfinite
 
@@ -52,9 +52,14 @@ class CVTImpactProjection:
     dissipated_energy: float
     constraint_residual: float
     momentum_residual: float
+    mechanism_impulse_margins: tuple[tuple[str, float], ...] = ()
+
+    def require_admissible_mechanism_impulses(self) -> None:
+        """Reject unsupported retained-contact impulses after selecting a reset."""
+        require_compressive_mechanism_impulses(self.mechanism_impulse_margins)
 
     def metadata(self) -> dict[str, float | str]:
-        return {
+        result = {
             "impact_model": "mass_metric_momentum_projection",
             "impact_pre_kinetic_energy_J": self.pre_kinetic_energy,
             "impact_post_kinetic_energy_J": self.post_kinetic_energy,
@@ -62,6 +67,9 @@ class CVTImpactProjection:
             "impact_constraint_residual": self.constraint_residual,
             "impact_momentum_residual": self.momentum_residual,
         }
+        for key, value in self.mechanism_impulse_margins:
+            result[f"mechanism_impulse_Ns:{key}"] = value
+        return result
 
 
 def project_cvt_velocity_topology(
@@ -249,7 +257,65 @@ def project_cvt_velocity_topology(
         dissipated_energy=float(loss),
         constraint_residual=constraint_residual,
         momentum_residual=momentum_residual,
+        mechanism_impulse_margins=mechanism_velocity_reset_margins(
+            model=model,
+            before=boundary_state,
+            after=CVTState.from_vector(successor),
+            from_topology=from_topology,
+            to_topology=to_topology,
+        ),
     )
+
+
+def require_compressive_mechanism_impulses(margins) -> None:
+    for key, value in margins:
+        if not isfinite(value) or value < -1e-9:
+            raise RuntimeError(
+                f"Unilateral pulley-mechanism impact is inadmissible: {key} "
+                f"requires {value:.9g} N s. Retained contact would require a "
+                "tensile impulse; lift-off/recontact is not modeled."
+            )
+
+
+def mechanism_velocity_reset_margins(
+    *,
+    model: MechanicalCVTPlant,
+    before: CVTState,
+    after: CVTState,
+    from_topology: CVTVelocityTopology,
+    to_topology: CVTVelocityTopology,
+    time: float = 0.0,
+) -> tuple[tuple[str, float], ...]:
+    """Resolve local velocity jumps at the common event configuration.
+
+    Candidate projections expose margins without raising, because the hybrid
+    resolver also evaluates hypothetical resets. The selected transition must
+    call require_compressive_mechanism_impulses before it is accepted.
+    """
+    before = replace(before, shift_position=after.shift_position)
+    geometries = [
+        _geometry_for_topology(
+            model=model, shift_position=after.shift_position, topology=t
+        )
+        for t in (from_topology, to_topology)
+    ]
+    margins = []
+    for side in ("primary", "secondary"):
+        actuator = getattr(model, f"{side}_actuator")
+        if not any(
+            hasattr(law, "impulse_contact_margins") for law in actuator.force_laws
+        ):
+            continue
+        context = getattr(model, f"{side}_actuation_context")
+        contexts = [
+            context(time=time, state=state, geometry=geometry)
+            for state, geometry in zip((before, after), geometries)
+        ]
+        margins.extend(
+            (f"{side}:{key}", value)
+            for key, value in actuator.impulse_contact_margins(*contexts)
+        )
+    return tuple(margins)
 
 
 def kinetic_energy_for_topology(

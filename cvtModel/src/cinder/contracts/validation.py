@@ -15,8 +15,10 @@ from typing import Literal
 
 from cinder.model.cvt.actuation import (
     AxialSpringForce,
+    CentrifugalInertiaForce,
     CentrifugalRampForce,
     FixedPivotFlyweightForce,
+    SlidingBlockFlyweightForce,
     HelicalTorqueReactionForce,
 )
 from cinder.model.system import CVTAssemblySpec, PulleySpec
@@ -210,6 +212,22 @@ def _validate_pulley(
     local_min, local_max = min(local_positions), max(local_positions)
     for index, force_law in enumerate(pulley.actuator.force_laws):
         law_location = f"{location}.components[{index}]"
+        if isinstance(force_law, SlidingBlockFlyweightForce):
+            findings.append(
+                _warning(
+                    "actuation.sliding_block_ideal_guide",
+                    "Sliding-block orientation uses an unlimited ideal guide; hardware force and moment capacities are unknown.",
+                    law_location,
+                )
+            )
+            if pulley.helical_coupling is not None:
+                findings.append(
+                    _error(
+                        "actuation.sliding_block_relative_rotation_unsupported",
+                        "Sliding-block contact tracks must co-rotate; a relative sheave helix is unsupported.",
+                        law_location,
+                    )
+                )
         if isinstance(force_law, CentrifugalRampForce):
             profile = force_law.spec.radial_displacement_profile
             if profile.x_min > local_min or profile.x_max < local_max:
@@ -220,16 +238,26 @@ def _validate_pulley(
                         law_location,
                     )
                 )
-        if isinstance(force_law, FixedPivotFlyweightForce):
-            mechanism_map = force_law.spec.mechanism_map
+        if isinstance(force_law, CentrifugalInertiaForce):
+            mechanism_map = force_law.inertia_map
             if (
                 mechanism_map.axial_position_min > local_min
                 or mechanism_map.axial_position_max < local_max
             ):
+                # Preserve the existing public finding for fixed-pivot designs.
+                fixed_pivot = isinstance(force_law, FixedPivotFlyweightForce)
                 findings.append(
                     _error(
-                        "actuation.fixed_pivot_map_does_not_cover_local_travel",
-                        "Fixed-pivot flyweight map does not cover the pulley local travel range.",
+                        (
+                            "actuation.fixed_pivot_map_does_not_cover_local_travel"
+                            if fixed_pivot
+                            else "actuation.inertia_map_does_not_cover_local_travel"
+                        ),
+                        (
+                            "Fixed-pivot flyweight map does not cover the pulley local travel range."
+                            if fixed_pivot
+                            else "Centrifugal inertia map does not cover the pulley local travel range."
+                        ),
                         law_location,
                     )
                 )

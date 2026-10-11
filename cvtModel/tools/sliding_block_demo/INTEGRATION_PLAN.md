@@ -1,5 +1,11 @@
 # Sliding block physical review and integration plan
 
+**Historical review and plan.** The core implementation and 1.2.0 version bump
+are now included in this PR. See the [canonical formulation index](../../docs/flyweight_mechanisms/README.md)
+for implemented scope and [release verification](../../docs/flyweight_mechanisms/VERIFICATION.md)
+for current checks. The application editor remains a separate PR. Statements
+below describing missing production features record the review baseline.
+
 Review date: 2026-10-11. Demo baseline: PR #520, `5262dede609c86dce81938f13ce82a6bd8fbda0b`.
 Boundary baseline: PR #519, `e80ade45ead41e5b8127f04b4a59f281939c6df7`.
 Both PRs were open when checked. The package and application pin were 1.1.5.

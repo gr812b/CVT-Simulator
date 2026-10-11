@@ -72,11 +72,34 @@ class PulleyActuator:
 
         margins: list[tuple[str, float]] = []
         for index, force_law in enumerate(self._force_laws):
+            named = getattr(force_law, "compressive_contact_margins", None)
+            if named is not None:
+                margins.extend(
+                    (f"{index}:{type(force_law).__name__}:{key}", float(value))
+                    for key, value in named(context, unknowns)
+                )
+                continue
             margin = getattr(force_law, "compressive_contact_margin", None)
             if margin is None:
                 continue
             value = float(margin(context=context, unknowns=unknowns))
             margins.append((f"{index}:{type(force_law).__name__}", value))
+        return tuple(margins)
+
+    def impulse_contact_margins(
+        self,
+        before: PulleyActuationContext,
+        after: PulleyActuationContext,
+    ) -> tuple[tuple[str, float], ...]:
+        """Mechanism-specific compressive impulses needed by a proposed reset."""
+        margins = []
+        for index, force_law in enumerate(self._force_laws):
+            hook = getattr(force_law, "impulse_contact_margins", None)
+            if hook is not None:
+                margins.extend(
+                    (f"{index}:{type(force_law).__name__}:{key}", float(value))
+                    for key, value in hook(before, after)
+                )
         return tuple(margins)
 
     def has_compressive_contacts(

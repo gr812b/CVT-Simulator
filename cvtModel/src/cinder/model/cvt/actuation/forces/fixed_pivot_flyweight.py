@@ -6,19 +6,14 @@ from dataclasses import dataclass
 from math import isfinite
 from sys import float_info
 
-from cinder.model.cvt.closure import (
-    AffineClosureScalar,
-    ClosureGains,
-    ClosureUnknowns,
-)
+from cinder.model.cvt.closure import ClosureUnknowns
 
-from ..fixed_pivot_flyweight import FixedPivotFlyweightMap
-from ..types import (
-    ActuationContribution,
-    PulleyActuationContext,
-    PulleyElementContribution,
-    PulleyKineticMode,
+from ..fixed_pivot_flyweight import (
+    FixedPivotFlyweightInertiaMap,
+    FixedPivotFlyweightMap,
 )
+from ..types import PulleyActuationContext
+from .centrifugal_inertia import CentrifugalInertiaForce
 
 # Match CINDER's existing roundoff guard convention used by impact and
 # relative-motion consistency checks. This is a numerical resolution
@@ -37,7 +32,7 @@ class FixedPivotFlyweightForceSpec:
             raise TypeError("mechanism_map must implement FixedPivotFlyweightMap.")
 
 
-class FixedPivotFlyweightForce:
+class FixedPivotFlyweightForce(CentrifugalInertiaForce):
     """Pulley-mounted fixed-pivot flyweight force and shaft coupling.
 
     For local pulley-closing coordinate ``x`` this element supplies
@@ -52,106 +47,34 @@ class FixedPivotFlyweightForce:
 
     The host context maps ``x_ddot`` into the shared shift-acceleration column,
     so the same class can be mounted on either pulley without named branches.
+    Force, shaft reaction, and kinetic modes use the common inertia evaluator;
+    the saved specification, inspection labels, and contact policy stay here.
     """
+
+    _inspection_terms = (
+        (
+            "fixed_pivot_flyweight_centrifugal",
+            "Fixed-pivot flyweight centrifugal drive",
+        ),
+        (
+            "fixed_pivot_flyweight_axial_inertia",
+            "Fixed-pivot flyweight reflected axial inertia",
+        ),
+        (
+            "fixed_pivot_flyweight_motion_ratio_curvature",
+            "Fixed-pivot flyweight motion-ratio curvature",
+        ),
+    )
 
     def __init__(self, spec: FixedPivotFlyweightForceSpec) -> None:
         if not isinstance(spec, FixedPivotFlyweightForceSpec):
             raise TypeError("spec must be a FixedPivotFlyweightForceSpec.")
         self._spec = spec
+        super().__init__(FixedPivotFlyweightInertiaMap(spec.mechanism_map))
 
     @property
     def spec(self) -> FixedPivotFlyweightForceSpec:
         return self._spec
-
-    def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
-        axial_acceleration = _require_axial_acceleration(context)
-        sample = self._spec.mechanism_map.evaluate(context.axial_position)
-        pivot_inertia = sample.pivot_inertia
-        motion_ratio = sample.angle_gradient
-        known_force = (
-            0.5 * context.shaft_speed**2 * sample.shaft_inertia_gradient
-            - pivot_inertia
-            * motion_ratio
-            * sample.angle_curvature
-            * context.axial_speed**2
-        )
-        return AffineClosureScalar.constant(known_force) + (
-            axial_acceleration.scaled(-pivot_inertia * motion_ratio**2)
-        )
-
-    def evaluate_element(
-        self, context: PulleyActuationContext
-    ) -> PulleyElementContribution:
-        channels = context.closure_channels
-        if channels is None:
-            raise ValueError(
-                "FixedPivotFlyweightForce requires host closure_channels so its "
-                "shaft inertia can enter the owning rotational balance."
-            )
-        sample = self._spec.mechanism_map.evaluate(context.axial_position)
-        shaft_torque = AffineClosureScalar(
-            bias=(
-                -sample.shaft_inertia_gradient
-                * context.axial_speed
-                * context.shaft_speed
-            ),
-            gains=ClosureGains.from_by_unknown(
-                {channels.shaft_angular_acceleration: (-sample.shaft_inertia)}
-            ),
-        )
-        return PulleyElementContribution(
-            closing_force=self.evaluate(context),
-            shaft_torque=shaft_torque,
-        )
-
-    def kinetic_modes(
-        self, context: PulleyActuationContext
-    ) -> tuple[PulleyKineticMode, ...]:
-        """Return shaft rotation and relative pivot rotation as separate modes."""
-
-        sample = self._spec.mechanism_map.evaluate(context.axial_position)
-        return (
-            PulleyKineticMode(
-                inertia=sample.shaft_inertia,
-                shaft_speed_coefficient=1.0,
-            ),
-            PulleyKineticMode(
-                inertia=sample.pivot_inertia,
-                axial_speed_coefficient=sample.angle_gradient,
-            ),
-        )
-
-    def inspect(
-        self, context: PulleyActuationContext
-    ) -> tuple[ActuationContribution, ...]:
-        axial_acceleration = _require_axial_acceleration(context)
-        sample = self._spec.mechanism_map.evaluate(context.axial_position)
-        pivot_inertia = sample.pivot_inertia
-        motion_ratio = sample.angle_gradient
-        return (
-            ActuationContribution(
-                key="fixed_pivot_flyweight_centrifugal",
-                label="Fixed-pivot flyweight centrifugal drive",
-                relation=AffineClosureScalar.constant(
-                    0.5 * context.shaft_speed**2 * sample.shaft_inertia_gradient
-                ),
-            ),
-            ActuationContribution(
-                key="fixed_pivot_flyweight_axial_inertia",
-                label="Fixed-pivot flyweight reflected axial inertia",
-                relation=axial_acceleration.scaled(-pivot_inertia * motion_ratio**2),
-            ),
-            ActuationContribution(
-                key="fixed_pivot_flyweight_motion_ratio_curvature",
-                label="Fixed-pivot flyweight motion-ratio curvature",
-                relation=AffineClosureScalar.constant(
-                    -pivot_inertia
-                    * motion_ratio
-                    * sample.angle_curvature
-                    * context.axial_speed**2
-                ),
-            ),
-        )
 
     def has_compressive_contact(
         self,
@@ -209,15 +132,3 @@ class FixedPivotFlyweightForce:
         if abs(raw_margin) <= roundoff_tolerance:
             return 0.0
         return raw_margin
-
-
-def _require_axial_acceleration(
-    context: PulleyActuationContext,
-) -> AffineClosureScalar:
-    relation = context.axial_acceleration
-    if relation is None:
-        raise ValueError(
-            "FixedPivotFlyweightForce requires the host local axial-acceleration "
-            "relation so pivot inertia can enter the shared closure solve."
-        )
-    return relation
