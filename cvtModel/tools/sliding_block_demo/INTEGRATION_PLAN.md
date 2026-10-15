@@ -1,8 +1,8 @@
 # Sliding block physical review and integration plan
 
 **Historical review and plan.** The core implementation and 1.2.0 version bump
-are now included in this PR. See the [canonical formulation index](../../docs/flyweight_mechanisms/README.md)
-for implemented scope and [release verification](../../docs/flyweight_mechanisms/VERIFICATION.md)
+are now included in this PR. See the [canonical formulation index](../../../docs/flyweight_mechanisms/README.md)
+for implemented scope and [release verification](../../../docs/flyweight_mechanisms/VERIFICATION.md)
 for current checks. The application editor remains a separate PR. Statements
 below describing missing production features record the review baseline.
 

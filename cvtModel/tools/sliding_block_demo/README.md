@@ -2,7 +2,7 @@
 
 This research viewer now imports its Python mechanics from CINDER. The production
 `SlidingBlockFlyweightForce` and canonical derivations are documented in
-[the formulation folder](../../docs/flyweight_mechanisms/README.md). The viewer
+[the formulation folder](../../../docs/flyweight_mechanisms/README.md). The viewer
 retains its illustrative inputs and assumed operating accelerations; the coupled
 CINDER element uses actual solved accelerations and checks selected reset impulses.
 

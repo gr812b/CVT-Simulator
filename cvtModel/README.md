@@ -78,4 +78,4 @@ CINDER is licensed under the Creative Commons
 Attribution-NonCommercial 4.0 International license (CC BY-NC 4.0).
 Commercial use requires separate permission. See `LICENSE`.
 
-The [canonical flyweight formulation set](https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.2.0/cvtModel/docs/flyweight_mechanisms) includes the shared four-quantity boundary, fixed-pivot weight/ramp mechanism, and fixed-orientation sliding-block mechanism. Each has a compiled PDF and separate LaTeX sources.
+The [canonical flyweight formulation set](https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.2.0/docs/flyweight_mechanisms) lives in the repository-root docs and includes the shared four-quantity boundary, fixed-pivot weight/ramp mechanism, and fixed-orientation sliding-block mechanism. Each PDF is beside its LaTeX source; software/API documentation remains in `cvtModel/docs/`.

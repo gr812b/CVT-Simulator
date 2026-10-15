@@ -2,6 +2,11 @@
 
 The folders and files for this documentation folder are organized as follows:
 
+- **[flyweight_mechanisms](flyweight_mechanisms/README.md):**
+  Physical formulations for the common centrifugal boundary, fixed-pivot roller
+  flyweights, and fixed-orientation sliding blocks. Each document's LaTeX and
+  PDF are kept together. CINDER software/API docs remain in `cvtModel/docs/`.
+
 - **Checklists:**  
   Contains various checklists used to verify that all critical aspects of the project have been addressed. Each checklist is available as a PDF generated from its LaTeX source.
 

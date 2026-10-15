@@ -5,7 +5,7 @@ DOCUMENTS := common_boundary fixed_pivot sliding_block
 all: $(DOCUMENTS)
 $(DOCUMENTS):
 	mkdir -p .build/$@
-	latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=$(CURDIR)/.build/$@ $@/latex/formulation.tex
+	latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=$(CURDIR)/.build/$@ $@/formulation.tex
 	cp .build/$@/formulation.pdf $@/formulation.pdf
 clean:
 	rm -rf .build

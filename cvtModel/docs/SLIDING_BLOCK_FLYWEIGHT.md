@@ -1,4 +1,4 @@
-# Flyweight and clamping mechanisms — CINDER 1.2.0
+# Sliding-block flyweight API — CINDER 1.2.0
 
 The common boundary is defined once by `CentrifugalInertiaSample`,
 `CentrifugalInertiaMap`, and `CentrifugalInertiaForce` in
@@ -6,24 +6,11 @@ The common boundary is defined once by `CentrifugalInertiaSample`,
 `M_f, M_f_prime, J_f, J_f_prime` payload. The common element owns closing force,
 shaft reaction, inspected force terms, and kinetic modes for energy and events.
 
-| Document | Final PDF | Editable source |
-| --- | --- | --- |
-| General boundary, based on the accepted Revision 4 derivation | [Common boundary](common_boundary/formulation.pdf) | [LaTeX](common_boundary/latex/formulation.tex) |
-| Fixed-pivot roller flyweight / weight-and-ramp mechanism | [Fixed-pivot mechanism](fixed_pivot/formulation.pdf) | [LaTeX](fixed_pivot/latex/formulation.tex) |
-| Fixed-orientation sliding blocks / CVTech-style mechanism | [Sliding-block mechanism](sliding_block/formulation.pdf) | [LaTeX](sliding_block/latex/formulation.tex) |
-
-The fixed-pivot `reference/` folder preserves the independent reconstruction
-and historical v1.1.5 comparison record cited in that document. Its optional
-`--repo` comparison deliberately requires the old source. Current behavior is
-covered by the package smoke tests, including the ten-second fixed-pivot
-launch regression. The sliding-block examples are synthetic, not measured
-CVTech dimensions or a validated CVTech product model.
-
-Build all three PDFs with `make` in this folder (TeX Live and `latexmk`). Each
-subfolder keeps its final PDF beside its own `latex/` source. Intermediate
-files stay in the ignored `.build/` folder. `make clean` removes only those
-intermediates. Equations and contents are linked; Previous view uses the PDF
-reader's navigation history. Cross-document links expect this folder layout.
+The physical derivations live in the repository-root
+[formulation folder](../../docs/flyweight_mechanisms/README.md), separate from
+these software/API docs. Each formulation's PDF and LaTeX source are side by
+side. The sliding-block examples are synthetic, not measured CVTech dimensions
+or a validated CVTech product model.
 
 ## Sliding-block input and use
 
@@ -31,7 +18,7 @@ The public construction types in `cinder.model.cvt.actuation` are
 `SlidingBlockProfile`, `SlidingBlockGeometry`, `SlidingBlockMass`,
 `SlidingBlockSpec`, `SlidingBlockInertiaMap`, and `SlidingBlockFlyweightForce`.
 The corresponding saved component kind is `sliding_block_flyweight`.
-[Three complete component records](../../examples/sliding_block/) live in
+[Three complete component records](../examples/sliding_block/) live in
 `cvtModel/examples/sliding_block/`. These component objects can be inserted
 in an assembly's `pulleys.primary.components` or `pulleys.secondary.components`.
 The host's local travel must be covered, and that pulley must not have a
@@ -97,4 +84,4 @@ geometry editor. Preserve input revision IDs so a stale preview cannot replace
 a newer design. Arbitrary CAD import, specified real guides, pressure/strength
 limits, friction, and post-liftoff dynamics remain separate extensions.
 
-[Verification and scope record](VERIFICATION.md) lists the checks performed for this PR.
+[Verification and scope record](../../docs/flyweight_mechanisms/VERIFICATION.md) lists the checks performed for this PR.

@@ -159,7 +159,7 @@ with existing geometry/contact signals.
 
 Assembly schema 1 gains the additive `sliding_block_flyweight` component kind.
 Its `geometry`, `mass`, and required `guide` fields are described in the
-[canonical mechanism documentation](flyweight_mechanisms/README.md) and public
+[sliding-block API documentation](SLIDING_BLOCK_FLYWEIGHT.md) and public
 JSON Schema. Existing component records keep their meanings. The component
 catalog adds a string-valued guide declaration alongside numerical/object
 parameters. Compilation rejects unsupported geometry before integration;

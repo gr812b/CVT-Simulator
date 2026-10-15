@@ -4,8 +4,7 @@ include pyproject.toml
 include setup.cfg
 
 recursive-include src/cinder *.py py.typed
-recursive-include docs *.md *.tex *.pdf *.py *.json
-include docs/flyweight_mechanisms/Makefile
+recursive-include docs *.md
 recursive-include examples *.py *.json
 
 prune launchTools

@@ -12,7 +12,7 @@ The Python types live in `cinder.model.cvt.actuation`:
 - `CentrifugalInertiaForce` mounts that provider on either pulley.
 - `FixedPivotFlyweightInertiaMap` adapts the existing fixed-pivot map.
 
-The complete derivation is maintained in the [common-boundary document](flyweight_mechanisms/common_boundary/formulation.pdf); this page is the API guide.
+The complete derivation is maintained in the [common-boundary document](../../docs/flyweight_mechanisms/common_boundary/formulation.pdf); this page is the API guide.
 
 ## Quantities and retained mechanics
 
@@ -103,7 +103,7 @@ kinetic energy, coupled closure, and stop projection with the previous q/I
 representation. A coefficient-only fixture checks the generic interface and
 its power balance without depending on fixed-pivot fields. CINDER 1.2.0 also supplies the fixed-orientation sliding-block provider. Its
 geometry, full guide wrench, and reset checks are documented in the
-[canonical formulation set](flyweight_mechanisms/README.md).
+[canonical formulation set](../../docs/flyweight_mechanisms/README.md).
 
 ## Full-trajectory equivalence regression
 

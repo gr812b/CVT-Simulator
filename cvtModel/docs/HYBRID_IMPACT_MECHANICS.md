@@ -135,4 +135,4 @@ callers must invoke `require_admissible_mechanism_impulses()` before acceptance.
 The operating hybrid system checks every selected reset and rejects tension
 with a named contact and impulse. Hypothetical projections used while selecting
 a regime may be inspected without prematurely raising. No flight or recontact
-topology is supplied by this policy. See the [sliding-block formulation](flyweight_mechanisms/sliding_block/formulation.pdf).
+topology is supplied by this policy. See the [sliding-block formulation](../../docs/flyweight_mechanisms/sliding_block/formulation.pdf).

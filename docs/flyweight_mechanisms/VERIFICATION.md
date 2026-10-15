@@ -61,9 +61,10 @@ cross-document targets were also checked. The fixed-pivot historical reference
 record is preserved with its own provenance, not relabelled as a new run.
 
 Black and flake8 pass on `src` and `test/smoke`; `git diff --check` passes.
-The 1.2.0 wheel and source distribution build successfully. The source bundle
-includes all three PDFs, their LaTeX, the example records and fixed-pivot
-reference sources. Production dependencies remain NumPy and SciPy;
+The 1.2.0 wheel and source distribution build successfully. After the layout
+correction, physical formulations and historical reference sources live in
+root `docs/flyweight_mechanisms/`, outside the package. The source bundle retains
+software/API docs and example records. Production dependencies remain NumPy and SciPy;
 `jsonschema` is added only to the development extras for contract tests.
 
 ## Brief review record
@@ -73,7 +74,7 @@ reference sources. Production dependencies remain NumPy and SciPy;
 | One canonical mechanical boundary | Both providers use `CentrifugalInertiaForce` for force, torque and kinetic modes | Mixed kinetic terms need a richer boundary |
 | Arbitrary mass distribution within the admitted motion | Datum/COM separation and full centroidal tensor; total-set convention | Imported mass properties must match real parts |
 | Block torque and contact feasibility | Full guide wrench; two solved force margins; retained-contact impulse checks | Ideal guide capacity and post-release dynamics are unknown |
-| Separate complete formulations with clean sources | Three final PDFs and three `latex/` folders | Measured CVTech hardware is not supplied |
+| Separate complete formulations with clean sources | Three document folders in root `docs/flyweight_mechanisms/`, each with its PDF beside its `.tex` | Measured CVTech hardware is not supplied |
 | Core/version first; application later | Core contracts, catalog and 1.2.0 metadata; demo consumes core | Backend pin, live editor and authoritative preview API are a later PR |
 
 The prose review preserved the accepted general Revision 4 derivation, updated

@@ -8,7 +8,8 @@ Start here:
 - `DOCUMENT_SCHEMA.md` — JSON Schema for the public simulation document.
 - `GEOMETRY_STUDY_API.md` — static geometry design/evaluation tools.
 - `ACTUATION_STUDY_API.md` — static actuator clamping-force studies.
-- [Canonical flyweight formulations](flyweight_mechanisms/README.md) — common boundary and both mechanisms, with PDFs and separate LaTeX sources.
+- [Sliding-block flyweight API](SLIDING_BLOCK_FLYWEIGHT.md) — construction, saved inputs, contact diagnostics, and limits.
+- [Canonical flyweight formulations](../../docs/flyweight_mechanisms/README.md) — physical derivations in root docs, with each PDF beside its LaTeX source.
 - `CENTRIFUGAL_INERTIA_BOUNDARY.md` — common M, M', J, J' mechanics and the fixed-pivot adapter.
 - `FIXED_PIVOT_FLYWEIGHT.md` — fixed-pivot roller-flyweight mechanics.
 - `HYBRID_IMPACT_MECHANICS.md` — momentum projection at captures and stops.
