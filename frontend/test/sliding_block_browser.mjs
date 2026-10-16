@@ -45,6 +45,10 @@ try {
   await page.getByRole('alert').filter({ hasText: 'Sample unavailable' }).waitFor();
   fail = false; await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await page.getByTestId('closure-value').waitFor();
+  await page.getByRole('alert').filter({ hasText: 'Face contact study' }).waitFor();
+  await page.getByText('Pressure dependent', { exact: true }).waitFor();
+  await page.getByTestId('moving-contact-span').waitFor();
+  assert.equal(await page.getByTestId('moving-contact-span').getAttribute('stroke-width'), '5');
   await page.locator('[data-testid="sliding-3d"] canvas').waitFor();
   const slider = page.getByRole('slider', { name: 'Sheave closure', exact: true });
   await slider.press('End');
@@ -54,6 +58,9 @@ try {
   await page.getByRole('switch', { name: 'Cutaway', exact: true }).uncheck();
   await page.getByRole('switch', { name: 'Cutaway', exact: true }).check();
   await page.getByRole('switch', { name: 'Contacts & normals' }).uncheck();
+  assert.equal(await page.getByTestId('moving-contact-span').count(), 0);
+  await page.getByRole('switch', { name: 'Contacts & normals' }).check();
+  await page.getByTestId('moving-contact-span').waitFor();
   await page.getByRole('button', { name: 'Reset view' }).click();
   await page.getByRole('button', { name: 'Return to open' }).click();
   await page.getByTestId('closure-value').filter({ hasText: '0.00' }).waitFor();

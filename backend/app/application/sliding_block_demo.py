@@ -1,25 +1,24 @@
 """One representative assembly. CINDER owns all block/contact motion.
 
 Cup/sheave backing is illustrative hardware material outside the contact
-profiles. The block is exactly the polygon between its two finite faces,
-extruded to a declared width; its uniform-steel mass properties follow that
-same solid. This is a held-position inspection, not an RPM-driven simulation.
+profiles. The block has a circular cup face and a flat face parallel to the
+movable ramp. Its smooth section defines the uniform-steel mass properties;
+the displayed polygon tessellates that section. This is a held-position
+geometry study, not a compiled sliding-block simulation component.
 """
 
 from functools import lru_cache
-from math import pi, tan
+from math import pi, sqrt, tan
 
 import cinder
 import numpy as np
 from cinder.model.cvt.actuation import (
-    SlidingBlockFlyweightForce,
     SlidingBlockGeometry,
     SlidingBlockMass,
     SlidingBlockProfile as Profile,
     SlidingBlockSpec,
 )
-from cinder.model.cvt.actuation.types import PulleyActuationContext
-from cinder.model.cvt.closure import AffineClosureScalar
+from cinder.model.cvt.actuation.sliding_block_geometry import Mechanism, calibrate_zero, evaluate
 
 from app.schemas.sliding_block_demo import (
     SlidingBlockDemoFrame,
@@ -30,19 +29,29 @@ TRAVEL = 0.015
 WIDTH = 0.024
 COUNT = 3
 RPM = 2500.0
+RAMP_SLOPE = -0.5
 
 
-def _block_mass(outline, width=WIDTH, count=COUNT):
-    """Exact area moments of a uniform polygon prism, in the local r,t,z frame."""
-    p = np.array(outline)
-    q = np.roll(p, -1, axis=0)
-    x, z, u, v = p[:, 0], p[:, 1], q[:, 0], q[:, 1]
-    cross = x * v - u * z
-    area = float(np.sum(cross) / 2)
-    cx, cz = np.sum((p + q) * cross[:, None], axis=0) / (6 * area)
-    var_x = float(np.sum((x * x + x * u + u * u) * cross) / (12 * area) - cx**2)
-    var_z = float(np.sum((z * z + z * v + v * v) * cross) / (12 * area) - cz**2)
-    cov = float(np.sum((2 * x * z + x * v + u * z + 2 * u * v) * cross) / (24 * area) - cx * cz)
+def _block_mass(lower, upper, width=WIDTH, count=COUNT):
+    """Integrate the smooth prism, independently of its display tessellation.
+
+    Gaussian quadrature resolves these analytic profiles to floating-point
+    precision. Moments use the local right-handed r,t,z frame.
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(96)
+    half = (lower.right - lower.left) / 2
+    r = (lower.left + lower.right) / 2 + half * nodes
+    lo, hi = (np.array([face.value(float(u)) for u in r]) for face in (lower, upper))
+
+    def integrate(values):
+        return float(half * (weights @ values))
+
+    area = integrate(hi - lo)
+    cx = integrate(r * (hi - lo)) / area
+    cz = integrate((hi**2 - lo**2) / 2) / area
+    var_x = integrate(r**2 * (hi - lo)) / area - cx**2
+    var_z = integrate((hi**3 - lo**3) / 3) / area - cz**2
+    cov = integrate(r * (hi**2 - lo**2) / 2) / area - cx * cz
     var_t = width**2 / 12
     return SlidingBlockMass(
         total_mass=7800 * area * width * count,
@@ -57,50 +66,53 @@ def _block_mass(outline, width=WIDTH, count=COUNT):
 
 
 @lru_cache(maxsize=1)
-def sample_force():
-    lower = Profile("line", 0, offset=-0.0125, slope=-0.35, left=-0.01, right=0.01)
-    upper = Profile("line", 0, offset=0.0125, slope=-1.65, left=-0.01, right=0.01)
-    outline = [
-        (-0.01, lower.value(-0.01)),
-        (0.01, lower.value(0.01)),
-        (0.01, upper.value(0.01)),
-        (-0.01, upper.value(-0.01)),
-    ]
+def sample_definition():
+    lower = Profile("circle", -0.008, radius=0.020, offset=-0.0125, left=-0.01, right=0.01)
+    # One slope is the source of truth for both mating flat faces.
+    upper = Profile("line", 0, offset=0.0125, slope=RAMP_SLOPE, left=-0.01, right=0.01)
+    outline = [(float(r), lower.value(float(r))) for r in np.linspace(-0.01, 0.01, 513)]
+    outline += [(0.01, upper.value(0.01)), (-0.01, upper.value(-0.01))]
+    mass = _block_mass(lower, upper)
     cup = Profile("circle", -0.03, radius=0.125, left=0.02, right=0.075)
-    # At zero closure the datum is (r,z)=(52 mm,0). Both finite-face
-    # endpoint contacts follow directly from their slope inequalities.
-    cup = Profile(
-        "circle",
-        -0.03,
-        radius=0.125,
-        offset=lower.value(0.01) - cup.value(0.062),
-        left=0.02,
-        right=0.075,
-    )
-    ramp = Profile("line", 0.042, offset=upper.value(-0.01), slope=-0.5, left=0.035, right=0.075)
-    spec = SlidingBlockSpec(
-        geometry=SlidingBlockGeometry(
+    ramp = Profile("line", 0.052, slope=RAMP_SLOPE, left=0.035, right=0.075)
+    # Explicit synthetic assembly datum: both gaps close at (52 mm,0,0).
+    # Never use this calibration to silently move measured user hardware.
+    mechanism = calibrate_zero(
+        Mechanism(
             cup,
             ramp,
+            lower,
+            upper,
+            total_mass=mass.total_mass,
+            gyration_radius=sqrt(mass.centroidal_inertia_per_mass[2][2]),
+            display_count=COUNT,
+            radius_ref=0.052,
+            x_max=TRAVEL,
+            com_offset=(mass.com_offset[0], mass.com_offset[2]),
+        )
+    )
+    spec = SlidingBlockSpec(
+        geometry=SlidingBlockGeometry(
+            mechanism.lower_track,
+            mechanism.upper_track,
             lower,
             upper,
             radial_min=0.05,
             radial_max=0.064,
             axial_position_min=0,
             axial_position_max=TRAVEL,
-            allow_end_contacts=True,
         ),
-        mass=_block_mass(outline),
+        mass=mass,
         guide="ideal_fixed_orientation",
     )
-    return SlidingBlockFlyweightForce(spec), outline
+    return spec, outline, mechanism
 
 
 @lru_cache(maxsize=1)
 def preview() -> SlidingBlockDemoResponse:
-    force, outline = sample_force()
-    g = force.spec.geometry
-    cup_inner = [(float(r), g.lower_track.value(float(r))) for r in np.linspace(0.02, 0.075, 257)]
+    spec, outline, mechanism = sample_definition()
+    g = spec.geometry
+    cup_inner = [(float(r), g.lower_track.value(float(r))) for r in np.linspace(0.02, 0.075, 1025)]
     cup_section = cup_inner + [(r, z - 0.0035) for r, z in reversed(cup_inner)]
     # A sleeve connects the cup to the shaft; all extra material belongs to
     # CVT hardware. The modelled track and the block faces are unmodified.
@@ -128,19 +140,24 @@ def preview() -> SlidingBlockDemoResponse:
     ]
     frames = []
     omega = RPM * 2 * pi / 60
+    guess = (mechanism.radius_ref, 0.0)
     for x in np.linspace(0, TRAVEL, 241):
         x = float(x)
-        p = force.inertia_map.pose(x)
-        reactions = force.inertia_map.reactions(x, omega=omega, alpha=0, xdot=0, xddot=0)
-        if not reactions.compressive:
-            raise ValueError("Sample requires a tensile held-position contact")
-        ctx = PulleyActuationContext(
-            time=0,
-            axial_position=x,
-            axial_speed=0,
-            shaft_speed=omega,
-            axial_acceleration=AffineClosureScalar.constant(0),
-        )
+        # CINDER's finite-profile inspection solves the gaps and canonical
+        # four-map force. Its strict simulation compiler rejects conformal
+        # faces. Force resultants are unique here; pressure location and the
+        # guide couple are not. Discard its arbitrary endpoint representative
+        # and contact-only moment; neither is a physical prediction.
+        p = evaluate(mechanism, x, omega=omega, guess=guess)
+        if not p.admissible:
+            raise ValueError(f"Invalid sample at {x:g}: {p.issues}")
+        rd, zd = p.radial - spec.mass.com_offset[0], p.axial - spec.mass.com_offset[2]
+        if not g.radial_min <= rd <= g.radial_max:
+            raise ValueError("Sample escaped its selected radial branch")
+        guess = (rd, zd)
+        span = [
+            (rd + u, zd + g.upper_face.value(u)) for u in (g.upper_face.left, g.upper_face.right)
+        ]
         # Context belt section, seated between the two drawn 20-degree cones.
         outer_width, height = 0.028, 0.012
         inner_width = outer_width - 2 * tan(half_angle) * height
@@ -155,27 +172,27 @@ def preview() -> SlidingBlockDemoResponse:
         frames.append(
             SlidingBlockDemoFrame(
                 closure_m=x,
-                datum_m=(p.datum_radial, p.datum_axial),
+                datum_m=(rd, zd),
                 com_m=(p.radial, p.axial),
                 fixed_contact_m=(p.lower.radial, p.lower.axial),
-                moving_contact_m=(p.upper.radial, p.upper.axial),
+                moving_contact_span_m=span,
                 fixed_normal=p.lower.normal,
                 moving_normal=p.upper.normal,
-                fixed_reaction_N=reactions.lower_normal,
-                moving_reaction_N=reactions.upper_normal,
-                closing_force_N=float(force.evaluate(ctx).bias),
-                guide_moment_Nm=reactions.guide_moment,
+                fixed_reaction_N=p.N_lower,
+                moving_reaction_N=p.N_upper,
+                closing_force_N=p.F_interface,
                 belt_section_m=belt,
             )
         )
     return SlidingBlockDemoResponse(
-        sample_id="curved-cup-linear-ramp-v1",
+        sample_id="rounded-block-matched-ramp-v2",
         cinder_version=cinder.__version__,
         name="Sliding-block primary",
-        description="Curved reaction cup · straight movable ramp",
+        description="Rounded cup face · matching flat ramp face",
+        simulation_ready=False,
         rpm=RPM,
         travel_m=TRAVEL,
-        total_mass_kg=force.spec.mass.total_mass,
+        total_mass_kg=spec.mass.total_mass,
         block_count=COUNT,
         block_width_m=WIDTH,
         block_outline_m=outline,

@@ -27,17 +27,29 @@ plays a retained recording and does not need a worker or account.
 
 `/demo/sliding-block` is a public geometry inspection page for one synthetic
 curved-cup/linear-ramp primary. It needs the API, but no worker or account.
-The API caches 241 exact CINDER poses across 15 mm of closure. The 3D assembly
+The API caches 241 CINDER finite-profile study poses across 15 mm of closure. The 3D assembly
 and axial section select the same frame; playback is a geometry scrub, while
 the displayed reactions are evaluated at held closure and 2,500 rpm.
-Cup and sheave backing is representative hardware. The block's drawn prism,
-uniform-steel mass, COM and tensor agree. This page does not yet edit or save
-mechanisms to the physical library.
+Cup and sheave backing is representative hardware. The block's circular cup
+face and flat ramp face define its smooth extruded solid, uniform-steel mass,
+COM and tensor. Display tessellation does not change those mass properties.
+One slope defines both mating flat faces; their contact span is highlighted.
+The normal arrow indicates direction, not pressure location or distribution.
+The study reports held force resultants from CINDER's geometry inspection.
+The CINDER 1.2 simulation provider rejects conformal face contact, so the page
+explicitly reports that it is not simulation-ready and does not report a
+unique guide couple. No endpoint representative or contact-only moment from
+the inspection utility is presented as a physical load location or full torque.
+This page does not yet edit or save mechanisms to the physical library.
 The belt is local groove context, rather than a solved belt loop. Dashed 3D
 tracks continue across removed hardware in cutaway mode. Regression browser
 checks consume the CINDER-generated sample exported with the contract artifacts.
 Clearance checks cover the sampled meridional sections. Circumferential contact
 and whole-solid 3D clearance are illustrative, as in the underlying 2D model.
+
+The [mechanism input design](docs/mechanism-input-design.md) compares dimensioned
+templates, constrained sketching, measured points and CAD import, and proposes
+the editing, mass-property, validation and preview contracts for the next PRs.
 
 ## Run and tune behavior
 

@@ -12,13 +12,13 @@ class SlidingBlockDemoFrame(BaseModel):
     datum_m: Point
     com_m: Point
     fixed_contact_m: Point
-    moving_contact_m: Point
+    # Entire conformal face, not a uniquely located pressure resultant.
+    moving_contact_span_m: tuple[Point, Point]
     fixed_normal: Point
     moving_normal: Point
     fixed_reaction_N: float
     moving_reaction_N: float
     closing_force_N: float
-    guide_moment_Nm: tuple[float, float, float]
     belt_section_m: list[Point]
 
 
@@ -29,6 +29,7 @@ class SlidingBlockDemoResponse(BaseModel):
     cinder_version: str
     name: str
     description: str
+    simulation_ready: bool
     rpm: float
     travel_m: float
     total_mass_kg: float

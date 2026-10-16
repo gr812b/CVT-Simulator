@@ -73,8 +73,8 @@ export function SlidingBlockDemo() {
           <Text className={styles.eyebrow}>MECHANISM LAB / SAMPLE 01</Text>
           <Title order={1}>Inside a sliding-block primary</Title>
           <Text c="dimmed" mt="xs">
-            A curved reaction cup, a straight ramp, and the solid hardware that
-            connects them.
+            A rounded block against a curved cup, with a flat face matched to
+            the movable ramp.
           </Text>
         </div>
         <Group gap="xs">
@@ -135,7 +135,7 @@ export function SlidingBlockDemo() {
               <Title order={2}>
                 Outward motion,
                 <br />
-            {' '}axial closure.
+                {' '}axial closure.
               </Title>
               <Text size="sm" c="dimmed">
                 The cup stays fixed along the shaft. The inclined track travels
@@ -202,13 +202,21 @@ export function SlidingBlockDemo() {
                 />
                 <Metric
                   label="Guide couple · per block"
-                  value={`${(Math.hypot(...frame.guide_moment_Nm) / data.block_count).toFixed(2)} N·m`}
+                  value="Pressure dependent"
                 />
               </div>
               <Text size="xs" c="dimmed">
                 Loads at {data.rpm.toLocaleString()} rpm with closure held.
                 Playback scrubs geometry; it is not a transient simulation.
               </Text>
+              {!data.simulation_ready && (
+                <Alert title="Face contact study" color="orange" mt="sm">
+                  The flat faces share one angle. The orange segment marks their
+                  contact span; the arrow shows normal direction. Pressure
+                  location and guide couple are undetermined. CINDER 1.2 does not
+                  yet accept this face contact in simulations.
+                </Alert>
+              )}
             </aside>
           </div>
           <section className={styles.sectionCard}>

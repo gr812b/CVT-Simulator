@@ -26,6 +26,8 @@ export function SlidingBlockSection({
   );
   const cupLabelPoint =
     data.cup_track_m[Math.floor(data.cup_track_m.length * 0.55)];
+  const [a, b] = frame.moving_contact_span_m;
+  const movingMidpoint: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   return (
     <svg
       viewBox="0 0 1000 500"
@@ -128,9 +130,16 @@ export function SlidingBlockSection({
       />
       {contacts && (
         <g>
+          <path
+            d={path(frame.moving_contact_span_m)}
+            fill="none"
+            stroke={colors.movingTrack}
+            strokeWidth="5"
+            data-testid="moving-contact-span"
+          />
           {[
             [frame.fixed_contact_m, frame.fixed_normal, colors.fixedTrack],
-            [frame.moving_contact_m, frame.moving_normal, colors.movingTrack],
+            [movingMidpoint, frame.moving_normal, colors.movingTrack],
           ].map(([point, normal, color], i) => {
             const p = point as Point,
               n = normal as Point;
@@ -145,14 +154,16 @@ export function SlidingBlockSection({
                   strokeWidth="2"
                   markerEnd="url(#sliding-arrow)"
                 />
-                <circle
-                  cx={sx(p[1])}
-                  cy={sy(p[0])}
-                  r="4"
-                  fill={color as string}
-                  stroke="#0c141c"
-                  strokeWidth="1.5"
-                />
+                {i === 0 && (
+                  <circle
+                    cx={sx(p[1])}
+                    cy={sy(p[0])}
+                    r="4"
+                    fill={color as string}
+                    stroke="#0c141c"
+                    strokeWidth="1.5"
+                  />
+                )}
               </g>
             );
           })}

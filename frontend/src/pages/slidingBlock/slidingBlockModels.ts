@@ -134,11 +134,21 @@ export function buildSlidingBlockModels(
       ['fixed', colors.fixedTrack],
       ['moving', colors.movingTrack],
     ] as const) {
-      const marker = new THREE.Mesh(
-        new THREE.SphereGeometry(0.0012, 16, 12),
-        new THREE.MeshBasicMaterial({ color })
-      );
-      marker.userData = { angle, key };
+      // The flat mating face has a contact span, not a known pressure point.
+      const marker =
+        key === 'fixed'
+          ? new THREE.Mesh(
+              new THREE.SphereGeometry(0.0012, 16, 12),
+              new THREE.MeshBasicMaterial({ color })
+            )
+          : new THREE.Line(
+              new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(),
+                new THREE.Vector3(),
+              ]),
+              new THREE.LineBasicMaterial({ color })
+            );
+      marker.userData = { angle, key, span: key === 'moving' };
       contacts.add(marker);
       const arrow = new THREE.ArrowHelper(
         new THREE.Vector3(0, 0, 1),
@@ -197,12 +207,26 @@ export function positionSlidingBlockModels(
   if (contacts) {
     contacts.visible = showContacts;
     contacts.children.forEach((object) => {
-      const { angle, key } = object.userData as {
+      const { angle, key, span } = object.userData as {
         angle: number;
         key: 'fixed' | 'moving';
+        span?: boolean;
       };
+      if (span && object instanceof THREE.Line) {
+        const positions = object.geometry.getAttribute('position');
+        frame.moving_contact_span_m.forEach(([r, z], i) =>
+          positions.setXYZ(i, r * Math.cos(angle), r * Math.sin(angle), z)
+        );
+        positions.needsUpdate = true;
+        object.geometry.computeBoundingSphere();
+        return;
+      }
+      const [a, b] = frame.moving_contact_span_m;
+      // The arrow indicates only normal direction, anchored at face midpoint.
       const point =
-        key === 'fixed' ? frame.fixed_contact_m : frame.moving_contact_m;
+        key === 'fixed'
+          ? frame.fixed_contact_m
+          : [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
       const normal = key === 'fixed' ? frame.fixed_normal : frame.moving_normal;
       object.position.set(
         point[0] * Math.cos(angle),
