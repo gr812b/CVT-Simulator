@@ -22,6 +22,13 @@ T_shaft,reaction = -J alpha - J' x_dot omega
 The same mechanism therefore contributes both axial clamping force and dynamic
 shaft coupling.
 
+`FixedPivotFlyweightInertiaMap` converts the existing runtime sample to
+`M = I q'^2`, `M' = 2 I q' q''`, `J`, and `J'`. `FixedPivotFlyweightForce`
+uses the common `CentrifugalInertiaForce` evaluator for force, shaft reaction,
+and kinetic modes while retaining its own contact policy. The contact builder,
+angle spline, mass properties, and saved component format are unchanged. See
+`CENTRIFUGAL_INERTIA_BOUNDARY.md` for the shared contract and its assumptions.
+
 ## Physical scope
 
 The current mechanism assumes:
@@ -31,8 +38,10 @@ The current mechanism assumes:
 3. pivot-to-roller-centre distance is rigid and constant;
 4. the roller has finite radius;
 5. the mechanism is planar in the axial-radial section;
-6. repeated flyweights are identical and circumferentially symmetric, or are
-   arranged so omitted cross/gyroscopic terms cancel;
+6. repeated flyweights are identical, with reflection symmetry of their mass
+   about the axial-radial plane or cancellation of the omitted mixed mass
+   moments in the complete set; repetition around the shaft alone does not
+   establish that cancellation;
 7. ramp contact is frictionless in the force law;
 8. roller spin inertia, bearing losses, local compliance, structural flex,
    backlash, and manufacturing clearance are not resolved;

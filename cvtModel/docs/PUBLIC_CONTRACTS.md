@@ -154,3 +154,13 @@ contact.secondary_tension_out
 
 The field definition is transmitted once and references these columns together
 with existing geometry/contact signals.
+
+## Sliding-block component (1.2.0)
+
+Assembly schema 1 gains the additive `sliding_block_flyweight` component kind.
+Its `geometry`, `mass`, and required `guide` fields are described in the
+[sliding-block API documentation](SLIDING_BLOCK_FLYWEIGHT.md) and public
+JSON Schema. Existing component records keep their meanings. The component
+catalog adds a string-valued guide declaration alongside numerical/object
+parameters. Compilation rejects unsupported geometry before integration;
+preflight reports the ideal guide assumption and rejects a relative sheave helix.

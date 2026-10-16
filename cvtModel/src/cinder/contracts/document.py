@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from copy import deepcopy
+from dataclasses import asdict
 from functools import lru_cache
 from math import degrees, radians
 from threading import RLock
@@ -29,6 +30,11 @@ from cinder.model.cvt.actuation import (
     PivotedRollerFollowerFlyweightMap,
     PivotedRollerFollowerGeometrySpec,
     PulleyActuator,
+    SlidingBlockFlyweightForce,
+    SlidingBlockGeometry,
+    SlidingBlockMass,
+    SlidingBlockProfile,
+    SlidingBlockSpec,
 )
 from cinder.model.cvt.actuation.fixed_pivot_flyweight import (
     CompiledPivotedRollerFollowerGeometry,
@@ -287,6 +293,13 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
 
 
 def _encode_force_law(force_law: object) -> dict[str, Any]:
+    if isinstance(force_law, SlidingBlockFlyweightForce):
+        data = asdict(force_law.spec)
+        data["mass"]["com_offset"] = list(data["mass"]["com_offset"])
+        data["mass"]["centroidal_inertia_per_mass"] = [
+            list(row) for row in data["mass"]["centroidal_inertia_per_mass"]
+        ]
+        return {"kind": "sliding_block_flyweight", **data}
     if isinstance(force_law, AxialSpringForce):
         spec = force_law.spec
         return {
@@ -457,6 +470,59 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
                         "radial_displacement_profile",
                     )
                 ),
+            )
+        )
+    if kind == "sliding_block_flyweight":
+        geometry = dict(_mapping(_require(payload, "geometry"), "geometry"))
+        for key in ("lower_track", "upper_track", "lower_face", "upper_face"):
+            profile = _mapping(_require(geometry, key), key)
+            values = {
+                k: _number(profile, k)
+                for k in (
+                    "origin",
+                    "offset",
+                    "slope",
+                    "curvature",
+                    "radius",
+                    "left",
+                    "right",
+                )
+            }
+            geometry[key] = SlidingBlockProfile(
+                kind=_string(profile, "kind"),
+                circle_sign=_integer(profile, "circle_sign"),
+                **values,
+            )
+        for key in (
+            "radial_min",
+            "radial_max",
+            "axial_position_min",
+            "axial_position_max",
+        ):
+            geometry[key] = _number(geometry, key)
+        mass = _mapping(_require(payload, "mass"), "mass")
+
+        def vector(value, label):
+            seq = _sequence(value, label)
+            if len(seq) != 3:
+                raise DesignDocumentError(f"{label} needs three components")
+            return tuple(_number({"value": v}, "value") for v in seq)
+
+        tensor = _sequence(
+            _require(mass, "centroidal_inertia_per_mass"), "centroidal_inertia_per_mass"
+        )
+        return SlidingBlockFlyweightForce(
+            SlidingBlockSpec(
+                geometry=SlidingBlockGeometry(**geometry),
+                mass=SlidingBlockMass(
+                    total_mass=_number(mass, "total_mass"),
+                    count=_integer(mass, "count"),
+                    com_offset=vector(_require(mass, "com_offset"), "com_offset"),
+                    centroidal_inertia_per_mass=tuple(
+                        vector(row, "tensor row") for row in tensor
+                    ),
+                ),
+                guide=_string(payload, "guide"),
             )
         )
     if kind == "fixed_pivot_roller_flyweight":

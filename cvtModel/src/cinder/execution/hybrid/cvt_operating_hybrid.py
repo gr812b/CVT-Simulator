@@ -35,6 +35,11 @@ from cinder.model.system.runtime import RuntimeEvaluation
 from cinder.model.system.ports import CVTShaftBoundaryValues
 
 from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
+from .cvt_impact import (
+    CVTVelocityTopology,
+    mechanism_velocity_reset_margins,
+    require_compressive_mechanism_impulses,
+)
 from .cvt_contact_events import build_cvt_contact_events
 from .cvt_contact_switching import CVTEventSwitchingTolerances
 from .cvt_operating_limits import CVTShiftOperatingLimits
@@ -497,7 +502,7 @@ class CVTOperatingHybridSystem:
             shaft_boundaries=shaft_boundaries,
             boundary_provider=boundary_provider,
         )
-        return resolve_cvt_operating_transition(
+        transition = resolve_cvt_operating_transition(
             evaluator=self.evaluator,
             deadzone_evaluator=self.deadzone_evaluator,
             time=time,
@@ -508,6 +513,37 @@ class CVTOperatingHybridSystem:
             switching_settings=self.switching_settings,
             shaft_boundaries=resolved_boundaries,
         )
+        # Also reject a candidate recorded by a resolver that terminates after
+        # evaluating its projected state; a terminating result is no exemption.
+        require_compressive_mechanism_impulses(
+            tuple(
+                (key, value)
+                for key, value in transition.metadata.items()
+                if key.startswith("mechanism_impulse_Ns:")
+            )
+        )
+        if transition.successor_state is not None and transition.next_mode is not None:
+            margins = mechanism_velocity_reset_margins(
+                model=self.evaluator.model,
+                time=time,
+                before=CVTState.from_vector(state),
+                after=CVTState.from_vector(transition.successor_state),
+                from_topology=CVTVelocityTopology(mode.engagement.value),
+                to_topology=CVTVelocityTopology(transition.next_mode.engagement.value),
+            )
+            require_compressive_mechanism_impulses(margins)
+            if margins:
+                transition = replace(
+                    transition,
+                    metadata={
+                        **transition.metadata,
+                        **{
+                            f"mechanism_impulse_Ns:{key}": value
+                            for key, value in margins
+                        },
+                    },
+                )
+        return transition
 
     def transition_with_boundaries(
         self,

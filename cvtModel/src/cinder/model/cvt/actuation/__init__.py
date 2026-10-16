@@ -1,5 +1,6 @@
 """Pulley-agnostic CVT actuation models."""
 
+from .centrifugal_inertia import CentrifugalInertiaMap, CentrifugalInertiaSample
 from .conventional import (
     CentrifugalActuatorSpec,
     FixedPivotCentrifugalActuatorSpec,
@@ -12,6 +13,7 @@ from .fixed_pivot_flyweight import (
     FixedPivotValidationReport,
     FixedPivotValidationFinding,
     ConcentratedTipHardwareMass,
+    FixedPivotFlyweightInertiaMap,
     FixedPivotFlyweightMap,
     FixedPivotFlyweightSample,
     FlyweightMassGeometry,
@@ -24,6 +26,7 @@ from .fixed_pivot_flyweight import (
 from .forces import (
     AxialSpringForce,
     AxialSpringForceSpec,
+    CentrifugalInertiaForce,
     CentrifugalRampForce,
     CentrifugalRampForceSpec,
     FixedPivotFlyweightForce,
@@ -32,6 +35,17 @@ from .forces import (
     HelicalTorqueReactionSpec,
 )
 from .pulley_actuator import PulleyActuator
+from .sliding_block import (
+    SlidingBlockCompilationReport,
+    SlidingBlockFlyweightForce,
+    SlidingBlockGeometry,
+    SlidingBlockInertiaMap,
+    SlidingBlockMass,
+    SlidingBlockPose,
+    SlidingBlockReactions,
+    SlidingBlockSpec,
+)
+from .sliding_block_geometry import Profile as SlidingBlockProfile
 from .types import (
     ActuationContribution,
     ActuatorInspection,
@@ -47,6 +61,15 @@ from .types import (
 )
 
 __all__ = [
+    "SlidingBlockCompilationReport",
+    "SlidingBlockFlyweightForce",
+    "SlidingBlockGeometry",
+    "SlidingBlockInertiaMap",
+    "SlidingBlockMass",
+    "SlidingBlockPose",
+    "SlidingBlockProfile",
+    "SlidingBlockReactions",
+    "SlidingBlockSpec",
     "FixedPivotValidationReport",
     "FixedPivotValidationFinding",
     "ConcentratedTipHardwareMass",
@@ -57,11 +80,15 @@ __all__ = [
     "AxialSpringForce",
     "AxialSpringForceSpec",
     "CentrifugalActuatorSpec",
+    "CentrifugalInertiaForce",
+    "CentrifugalInertiaMap",
+    "CentrifugalInertiaSample",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
     "FixedPivotCentrifugalActuatorSpec",
     "FixedPivotFlyweightForce",
     "FixedPivotFlyweightForceSpec",
+    "FixedPivotFlyweightInertiaMap",
     "FixedPivotFlyweightMap",
     "FixedPivotFlyweightSample",
     "FlyweightMassGeometry",

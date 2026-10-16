@@ -330,11 +330,129 @@ def _assembly_definitions() -> dict[str, Any]:
             },
             "additionalProperties": False,
         },
+        "assemblySlidingProfile": {
+            "type": "object",
+            "additionalProperties": False,
+            "description": "Finite meridional graph in SI: origin/offset/radius/left/right in m, slope dimensionless, curvature in 1/m.",
+            "properties": {
+                "kind": {"enum": ["line", "quadratic", "circle"]},
+                **{
+                    key: {"type": "number"}
+                    for key in (
+                        "origin",
+                        "offset",
+                        "slope",
+                        "curvature",
+                        "radius",
+                        "left",
+                        "right",
+                    )
+                },
+                "circle_sign": {"type": "integer", "enum": [-1, 1]},
+            },
+            "required": [
+                "kind",
+                "origin",
+                "offset",
+                "slope",
+                "curvature",
+                "radius",
+                "left",
+                "right",
+                "circle_sign",
+            ],
+        },
+        "assemblySlidingBlock": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "kind": {"const": "sliding_block_flyweight"},
+                "guide": {"const": "ideal_fixed_orientation"},
+                "geometry": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        **{
+                            key: {"$ref": "#/$defs/assemblySlidingProfile"}
+                            for key in (
+                                "lower_track",
+                                "upper_track",
+                                "lower_face",
+                                "upper_face",
+                            )
+                        },
+                        **{
+                            key: {
+                                "type": "number",
+                                "description": "Coordinate in metres.",
+                            }
+                            for key in (
+                                "radial_min",
+                                "radial_max",
+                                "axial_position_min",
+                                "axial_position_max",
+                            )
+                        },
+                        "allow_end_contacts": {"type": "boolean"},
+                    },
+                    "required": [
+                        "lower_track",
+                        "upper_track",
+                        "lower_face",
+                        "upper_face",
+                        "radial_min",
+                        "radial_max",
+                        "axial_position_min",
+                        "axial_position_max",
+                        "allow_end_contacts",
+                    ],
+                },
+                "mass": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "total_mass": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "description": "Mass of the complete identical set in kg.",
+                        },
+                        "count": {"type": "integer", "minimum": 1},
+                        "com_offset": {
+                            "type": "array",
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "items": {"type": "number"},
+                            "description": "COM from body datum in local (r,t,z), metres. Tangential component must be zero.",
+                        },
+                        "centroidal_inertia_per_mass": {
+                            "type": "array",
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "items": {
+                                "type": "array",
+                                "minItems": 3,
+                                "maxItems": 3,
+                                "items": {"type": "number"},
+                            },
+                            "description": "Symmetric physical 3x3 centroidal inertia per unit mass in local (r,t,z); m^2.",
+                        },
+                    },
+                    "required": [
+                        "total_mass",
+                        "count",
+                        "com_offset",
+                        "centroidal_inertia_per_mass",
+                    ],
+                },
+            },
+            "required": ["kind", "guide", "geometry", "mass"],
+        },
         "assemblyForceLaw": {
             "oneOf": [
                 {"$ref": "#/$defs/assemblyAxialSpring"},
                 {"$ref": "#/$defs/assemblyCentrifugalRamp"},
                 {"$ref": "#/$defs/assemblyFixedPivotFlyweight"},
+                {"$ref": "#/$defs/assemblySlidingBlock"},
                 {"$ref": "#/$defs/assemblyHelicalTorqueReaction"},
             ]
         },
@@ -370,6 +488,13 @@ def _assembly_definitions() -> dict[str, Any]:
                     "type": "array",
                     "minItems": 1,
                     "items": {"$ref": "#/$defs/assemblyForceLaw"},
+                    "contains": {
+                        "type": "object",
+                        "required": ["kind"],
+                        "properties": {"kind": {"const": "sliding_block_flyweight"}},
+                    },
+                    "minContains": 0,
+                    "maxContains": 1,
                 },
                 "helical_coupling": {"$ref": "#/$defs/assemblyHelicalCoupling"},
             },
