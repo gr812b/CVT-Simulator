@@ -17,13 +17,16 @@ export const colors = {
 };
 const angles = (count: number) =>
   Array.from({ length: count }, (_, i) => Math.PI + (2 * Math.PI * i) / count);
-const material = (color: string) =>
-  new THREE.MeshStandardMaterial({
+const material = (color: string) => {
+  const result = new THREE.MeshStandardMaterial({
     color,
     metalness: 0.3,
     roughness: 0.55,
     side: THREE.DoubleSide,
   });
+  result.userData.baseColor = color;
+  return result;
+};
 
 function shape(points: readonly Point[]) {
   return new THREE.Shape(points.map(([r, z]) => new THREE.Vector2(r, z)));
@@ -195,6 +198,20 @@ export function positionSlidingBlockModels(
   frame: SlidingBlockFrame,
   showContacts: boolean
 ) {
+  for (const id of ['cup', 'moving', 'fixed']) {
+    const interferes = frame.interference_pairs.some((pair) =>
+      pair.includes(id)
+    );
+    controller.getModel(id)?.object3D.traverse((object) => {
+      if (
+        object instanceof THREE.Mesh &&
+        object.material instanceof THREE.MeshStandardMaterial
+      )
+        object.material.color.set(
+          interferes ? '#ff6269' : object.material.userData.baseColor
+        );
+    });
+  }
   controller.getModel('blocks')?.object3D.children.forEach((block, i) => {
     const angle = angles(data.block_count)[i];
     block.position.set(

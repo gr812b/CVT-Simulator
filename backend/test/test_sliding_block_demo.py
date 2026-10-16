@@ -1,15 +1,20 @@
 """Matched-face geometry, independent mass integration, and held-state balance."""
 
-from math import pi
+from math import pi, asin, sqrt
 
 import numpy as np
 import pytest
-from scipy.integrate import quad
 from shapely.geometry import Polygon
 from cinder.model.cvt.actuation import SlidingBlockFlyweightForce, SlidingBlockProfile as Profile
 from cinder.model.cvt.actuation.sliding_block_geometry import evaluate
 
-from app.application.sliding_block_demo import _block_mass, preview, sample_definition
+from app.application.sliding_block_demo import (
+    _block_mass,
+    preview,
+    sample_definition,
+    DEFAULT_INPUTS,
+    _translation_sweep,
+)
 
 
 def test_public_sample_is_bounded_cached_and_honest_about_provider_support(api):
@@ -24,6 +29,9 @@ def test_public_sample_is_bounded_cached_and_honest_about_provider_support(api):
     assert data["simulation_ready"] is False
     assert "guide_moment_Nm" not in data["frames"][0]
     assert preview() is preview()
+    assert data["inputs"]["block_thickness_m"] == 0.04
+    assert data["findings"] == []
+    assert data["minimum_hardware_clearance_m"] > 0.001
     spec, _, _ = sample_definition()
     with pytest.raises(ValueError, match="conformal"):
         SlidingBlockFlyweightForce(spec)
@@ -36,9 +44,14 @@ def test_smooth_weight_mass_centroid_and_full_tensor_do_not_use_the_display_mesh
     assert lo.kind == "circle"
     assert hi.slope == spec.geometry.upper_track.slope
 
-    # Independent adaptive integrals, including the nonzero product of inertia.
+    # Independent Gaussian integration, including the nonzero product of inertia.
     def integral(fun):
-        return quad(fun, lo.left, lo.right, epsabs=1e-18, epsrel=1e-12)[0]
+        nodes, weights = np.polynomial.legendre.leggauss(128)
+        half = (lo.right - lo.left) / 2
+        return half * sum(
+            weight * fun((lo.left + lo.right) / 2 + half * node)
+            for node, weight in zip(nodes, weights)
+        )
 
     area = integral(lambda r: hi.value(r) - lo.value(r))
     cr = integral(lambda r: r * (hi.value(r) - lo.value(r))) / area
@@ -101,6 +114,9 @@ def test_all_poses_have_tangent_cup_contact_flush_ramp_and_clear_hardware():
         assert weight.is_valid and moving.is_valid
         for hardware in (cup, moving, fixed):
             assert weight.intersection(hardware).area < 1e-12
+        for a, b in ((cup, moving), (cup, fixed), (moving, fixed)):
+            assert a.intersection(b).area < 1e-12
+        assert frame.interference_pairs == []
         belt = Polygon(frame.belt_section_m)
         assert belt.is_valid
         for sheave in (moving, fixed):
@@ -128,3 +144,148 @@ def test_held_resultants_balance_and_canonical_force_agrees_with_rotational_ener
         points = [evaluate(mechanism, x + d, omega=omega) for d in (-h, 0, h)]
         energy_gradient = 0.5 * omega**2 * (points[2].J_f - points[0].J_f) / (2 * h)
         assert points[1].F_interface == pytest.approx(energy_gradient, rel=1e-7)
+
+
+def test_edits_rebuild_mass_and_motion_but_backing_does_not_change_weight():
+    base = preview()
+    wider = preview(DEFAULT_INPUTS.model_copy(update={"block_width_m": 0.030}))
+    assert wider.total_mass_kg == pytest.approx(base.total_mass_kg * 0.030 / 0.024)
+    assert wider.frames[-1].datum_m == base.frames[-1].datum_m
+    backing = preview(DEFAULT_INPUTS.model_copy(update={"cup_backing_m": 0.005}))
+    assert backing.total_mass_kg == base.total_mass_kg
+    assert backing.block_outline_m == base.block_outline_m
+    assert backing.cup_section_m != base.cup_section_m
+    for key, value in (
+        ("block_span_m", 0.018),
+        ("block_cup_radius_m", 0.019),
+        ("cup_radius_m", 0.13),
+        ("ramp_angle_rad", 0.4),
+        ("travel_m", 0.010),
+    ):
+        candidate = preview(DEFAULT_INPUTS.model_copy(update={key: value}))
+        assert not candidate.findings
+        assert len(candidate.frames) == 241
+        assert candidate.frames[-1].closure_m == candidate.travel_m
+
+
+def test_preview_reports_interference_and_contact_failure_without_losing_revision(api):
+    headers = {"X-Cinder-Client": "web"}
+    thin = api.post(
+        "/api/v1/demo/sliding-block/preview",
+        headers=headers,
+        json={"revision": 7, "inputs": {"block_thickness_m": 0.025}},
+    )
+    assert thin.status_code == 200
+    data = thin.json()
+    assert data["revision"] == 7
+    assert data["preview"] is not None
+    assert data["preview"]["minimum_hardware_clearance_m"] == 0
+    assert any(
+        f["code"] == "cup_moving_interference" and f["field"] == "block_thickness_m"
+        for f in data["findings"]
+    )
+    assert "cup_moving" in data["preview"]["frames"][0]["interference_pairs"]
+    assert data["preview"]["cup_touching_thickness_m"] < 0.04
+    bad = api.post(
+        "/api/v1/demo/sliding-block/preview",
+        headers=headers,
+        json={"revision": 8, "inputs": {"block_cup_radius_m": 0.005}},
+    ).json()
+    assert bad["revision"] == 8 and bad["preview"] is None
+    assert bad["findings"][0]["field"] == "block_cup_radius_m"
+    fixed = api.post(
+        "/api/v1/demo/sliding-block/preview", headers=headers, json={"revision": 9, "inputs": {}}
+    ).json()
+    assert fixed["revision"] == 9 and not fixed["findings"]
+    assert fixed["preview"]["minimum_hardware_clearance_m"] > 0.001
+    assert (
+        api.post(
+            "/api/v1/demo/sliding-block/preview",
+            headers=headers,
+            json={"revision": 1, "inputs": {"travel_m": 10}},
+        ).status_code
+        == 422
+    )
+    assert (
+        api.post(
+            "/api/v1/demo/sliding-block/preview",
+            headers=headers,
+            json={"revision": 1, "inputs": {"unknown": 1}},
+        ).status_code
+        == 422
+    )
+    assert (
+        api.post(
+            "/api/v1/demo/sliding-block/preview",
+            headers={**headers, "Origin": "https://unrelated.example"},
+            json={"revision": 1, "inputs": {}},
+        ).status_code
+        == 403
+    )
+
+
+def test_preview_admission_limits_expensive_work(api, monkeypatch):
+    from app.api.v1 import demo
+
+    assert demo._preview_slots.acquire(False)
+    assert demo._preview_slots.acquire(False)
+    try:
+        assert (
+            api.post(
+                "/api/v1/demo/sliding-block/preview",
+                headers={"X-Cinder-Client": "web"},
+                json={"revision": 1, "inputs": {}},
+            ).status_code
+            == 429
+        )
+    finally:
+        demo._preview_slots.release()
+        demo._preview_slots.release()
+    from app.core.errors import ApiProblem
+
+    def limited(*args, **kwargs):
+        raise ApiProblem(429, "preview_rate_limited", "Too many requests")
+
+    monkeypatch.setattr(demo, "throttle", limited)
+    assert (
+        api.post(
+            "/api/v1/demo/sliding-block/preview",
+            headers={"X-Cinder-Client": "web"},
+            json={"revision": 2, "inputs": {}},
+        ).status_code
+        == 429
+    )
+
+
+def test_sweep_detects_a_collision_between_clear_endpoints():
+    moving = [(0, 0), (1, 0), (1, 1), (0, 1)]
+    obstacle = Polygon([(0.25, 1.4), (0.75, 1.4), (0.75, 1.5), (0.25, 1.5)])
+    assert not obstacle.intersects(Polygon(moving))
+    assert not obstacle.intersects(Polygon([(r, z + 2) for r, z in moving]))
+    assert obstacle.intersection(_translation_sweep(moving, 2)).area == pytest.approx(obstacle.area)
+
+
+def test_near_semicircle_mass_matches_closed_form_and_intersecting_faces_fail(api):
+    spec, _, _ = sample_definition(
+        DEFAULT_INPUTS.model_copy(update={"block_cup_radius_m": 0.01800000001})
+    )
+    lo, hi = spec.geometry.lower_face, spec.geometry.upper_face
+
+    def circular_area(u):
+        d = u - lo.origin
+        return 0.5 * (d * sqrt(lo.radius**2 - d * d) + lo.radius**2 * asin(d / lo.radius))
+
+    area = (
+        (hi.offset - lo.offset - lo.radius) * (lo.right - lo.left)
+        + circular_area(lo.right)
+        - circular_area(lo.left)
+    )
+    assert spec.mass.total_mass == pytest.approx(area * 0.024 * 7800 * 3, rel=1e-11)
+    result = api.post(
+        "/api/v1/demo/sliding-block/preview",
+        headers={"X-Cinder-Client": "web"},
+        json={"revision": 10, "inputs": {"block_thickness_m": 0.002}},
+    )
+    assert result.status_code == 200
+    assert result.json()["preview"] is None
+    assert result.json()["findings"][0]["field"] == "block_thickness_m"

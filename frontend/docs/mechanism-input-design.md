@@ -1,8 +1,11 @@
 # Mechanism input design
 
-Status: proposal informed by the sliding-block demo and the published CINDER
-1.2.0 contracts. The editing endpoints and controls below are not implemented
-by this PR. The demo remains a bounded, read-only geometry study.
+Status: design proposal with a first implementation in the sliding-block demo,
+using the published CINDER 1.2.0 geometry study. The demo now has selectable
+section features, eight dimension inputs, linked ramp/block angles, live
+preview requests, undo/redo, input revision guards, body mass derivation and
+hardware interference feedback. General sketching, measured/CAD import,
+physical-library saving and simulation use remain proposed follow-up work.
 
 ## Recommendation
 
@@ -59,8 +62,9 @@ convert to the solver's dimensionless dz/dr once. The belt-facing cone angle
 is a separate property. It is not automatically the block/ramp angle.
 
 The section has equal physical axis scales while editing so an angle is
-visually meaningful. The present demo section uses unequal scales to fit its
-wide layout; it must not be reused unchanged as a dimensioning canvas.
+visually meaningful. The editable demo section now uses equal scales, with
+dimension guides for the focused field, including an explicit radial reference
+for the ramp angle.
 
 Use a shared angle when a user selects “block face parallel to ramp.” Do not
 store two independently editable angle values and hope they stay equal. The
@@ -151,7 +155,7 @@ required guide couple. A flat contact does not imply zero block torque, nor
 does it justify reporting a particular midpoint or endpoint pressure centre.
 
 The CINDER 1.2 compiled sliding provider conservatively rejects conformal
-contact. The read-only sample now uses CINDER's existing finite-profile
+contact. The editable, nonpersistent sample uses CINDER's existing finite-profile
 geometry inspection, whose four-map held force is independent of the arbitrary
 flat-face endpoint it chooses internally. The application discards that
 endpoint and its contact-only moment. It draws the full contact span and a
@@ -227,7 +231,9 @@ preview frames. Ignore responses from older revisions. Abort superseded
 browser requests, but do not assume that aborting HTTP cancels backend work.
 
 Bound compile cost, request rate, queue depth and cancellation server-side;
-the present anonymous endpoint remains a cached fixed sample. Cache compiled
+the anonymous template preview now has bounded inputs and frame count, a
+16-entry result cache, a two-slot per-worker concurrency limit and the existing
+database-backed IP throttle (90 requests per minute). Cache compiled
 motion by canonical geometry and CINDER version; mass-only changes can reuse
 geometry compilation. Cache mass properties separately by body/material input.
 Only visual hardware changes should leave the mechanical digest unchanged.

@@ -1,9 +1,17 @@
 import type { SlidingBlockDemo, SlidingBlockFrame } from '@api/client';
 import { colors } from './slidingBlockModels';
+import type { Feature, DimensionKey } from './SlidingBlockEditor';
+import type { KeyboardEvent } from 'react';
+import { useAuth } from '@contexts/AuthContext';
+import {
+  formatPreferredQuantity,
+  normalizeUnitPreferences,
+} from '@utils/units';
 
 type Point = readonly [number, number];
-const sx = (z: number) => 90 + (z + 0.07) * 3800;
-const sy = (r: number) => 248 - r * 2050;
+const SCALE = 3500;
+const sx = (z: number) => 90 + (z + 0.07) * SCALE;
+const sy = (r: number) => 400 - r * SCALE;
 function path(points: readonly Point[], shift = 0, mirror = false) {
   return points
     .map(
@@ -16,11 +24,19 @@ export function SlidingBlockSection({
   data,
   frame,
   contacts,
+  selected,
+  dimensionKey,
+  onSelect,
 }: {
   data: SlidingBlockDemo;
   frame: SlidingBlockFrame;
   contacts: boolean;
+  selected?: Feature;
+  dimensionKey?: DimensionKey;
+  onSelect?: (feature: Feature) => void;
 }) {
+  const { unitPreferences } = useAuth();
+  const preferences = normalizeUnitPreferences(unitPreferences);
   const block = data.block_outline_m.map(
     ([r, z]) => [r + frame.datum_m[0], z + frame.datum_m[1]] as const
   );
@@ -28,10 +44,49 @@ export function SlidingBlockSection({
     data.cup_track_m[Math.floor(data.cup_track_m.length * 0.55)];
   const [a, b] = frame.moving_contact_span_m;
   const movingMidpoint: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const dimension = data.dimensions.find(
+    (d) => d.key === dimensionKey && d.feature === selected
+  );
+  const dimensionPoints = dimension?.points_m.map(
+    ([r, z]) =>
+      [
+        r + (dimension.attachment === 'block' ? frame.datum_m[0] : 0),
+        z +
+          (dimension.attachment === 'block'
+            ? frame.datum_m[1]
+            : dimension.attachment === 'moving'
+              ? frame.closure_m
+              : 0),
+      ] as const
+  );
+  const isInterfering = (feature: string) =>
+    frame.interference_pairs.some((pair) =>
+      feature === 'cup'
+        ? pair.includes('cup')
+        : feature === 'ramp'
+          ? pair.includes('moving')
+          : pair.includes('fixed')
+    );
+  const selectProps = (feature: Feature) =>
+    onSelect
+      ? {
+          role: 'button' as const,
+          tabIndex: 0,
+          'aria-label': `Edit ${feature === 'cup' ? 'reaction cup' : feature === 'ramp' ? 'movable ramp' : 'block'} in section`,
+          onClick: () => onSelect(feature),
+          onKeyDown: (event: KeyboardEvent<SVGElement>) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onSelect(feature);
+            }
+          },
+          style: { cursor: 'pointer' },
+        }
+      : {};
   return (
     <svg
-      viewBox="0 0 1000 500"
-      role="img"
+      viewBox="0 0 1000 800"
+      role={onSelect ? 'group' : 'img'}
       aria-label="Axial section of the reaction cup, sliding block and movable sheave"
       data-testid="sliding-section"
     >
@@ -61,7 +116,7 @@ export function SlidingBlockSection({
           />
         </marker>
       </defs>
-      <rect width="1000" height="500" rx="12" fill="#101b24" />
+      <rect width="1000" height="800" rx="12" fill="#101b24" />
       <line
         x1="48"
         x2="950"
@@ -73,8 +128,8 @@ export function SlidingBlockSection({
       <rect
         x={sx(data.shaft_limits_m[0])}
         y={sy(data.shaft_radius_m)}
-        width={(data.shaft_limits_m[1] - data.shaft_limits_m[0]) * 3800}
-        height={data.shaft_radius_m * 4100}
+        width={(data.shaft_limits_m[1] - data.shaft_limits_m[0]) * SCALE}
+        height={data.shaft_radius_m * SCALE * 2}
         rx="3"
         fill={colors.shaft}
         opacity=".6"
@@ -86,12 +141,29 @@ export function SlidingBlockSection({
             [data.moving_section_m, colors.moving, frame.closure_m],
             [data.fixed_section_m, colors.fixed, 0],
           ].map(([points, color, shift], i) => (
-            <g key={i}>
+            <g
+              key={i}
+              {...(!mirror && i < 2
+                ? selectProps(i === 0 ? 'cup' : 'ramp')
+                : {})}
+            >
               <path
                 d={`${path(points as Point[], shift as number, mirror)} Z`}
                 fill={color as string}
-                stroke="#c2d0da"
-                strokeWidth="1"
+                stroke={
+                  isInterfering(i === 0 ? 'cup' : i === 1 ? 'ramp' : 'fixed')
+                    ? '#ff6269'
+                    : selected === (i === 0 ? 'cup' : 'ramp') && i < 2
+                      ? '#ffffff'
+                      : '#c2d0da'
+                }
+                strokeWidth={
+                  isInterfering(i === 0 ? 'cup' : i === 1 ? 'ramp' : 'fixed')
+                    ? 4
+                    : selected === (i === 0 ? 'cup' : 'ramp') && i < 2
+                      ? 2.5
+                      : 1
+                }
               />
               <path
                 d={`${path(points as Point[], shift as number, mirror)} Z`}
@@ -120,10 +192,11 @@ export function SlidingBlockSection({
         </g>
       ))}
       <path
+        {...selectProps('block')}
         d={`${path(block)} Z`}
         fill={colors.block}
-        stroke="#ffde9a"
-        strokeWidth="1.5"
+        stroke={selected === 'block' ? '#ffffff' : '#ffde9a'}
+        strokeWidth={selected === 'block' ? 3 : 1.5}
         data-testid="section-block"
         data-radial={frame.datum_m[0]}
         data-axial={frame.datum_m[1]}
@@ -175,7 +248,7 @@ export function SlidingBlockSection({
           />
           <text
             x={sx(frame.com_m[1]) - 12}
-            y={sy(frame.com_m[0]) - 10}
+            y={sy(frame.com_m[0]) + 18}
             fill="white"
             fontSize="12"
           >
@@ -183,7 +256,55 @@ export function SlidingBlockSection({
           </text>
         </g>
       )}
-      <g fill="#c3d1dc" fontSize="13" fontFamily="inherit">
+      {dimensionPoints && dimension && (
+        <g pointerEvents="none" data-testid="section-dimension">
+          <path
+            d={path(dimensionPoints)}
+            fill="none"
+            stroke="#a9cbff"
+            strokeWidth="2"
+            strokeDasharray="5 3"
+          />
+          {dimension.key === 'ramp_angle_rad' && (
+            <>
+              <line
+                x1={sx(dimensionPoints[0][1])}
+                x2={sx(dimensionPoints[0][1])}
+                y1={sy(dimensionPoints[0][0])}
+                y2={sy(dimensionPoints[1][0])}
+                stroke="#a9cbff"
+                strokeDasharray="3 3"
+              />
+              <path
+                d={`M${sx(dimensionPoints[0][1])},${sy(dimensionPoints[0][0]) - 32} A32,32 0 0 0 ${sx(dimensionPoints[0][1]) - 32 * Math.sin(data.inputs.ramp_angle_rad)},${sy(dimensionPoints[0][0]) - 32 * Math.cos(data.inputs.ramp_angle_rad)}`}
+                fill="none"
+                stroke="#a9cbff"
+                strokeWidth="2"
+              />
+            </>
+          )}
+          {dimensionPoints.map(([r, z], i) => (
+            <circle key={i} cx={sx(z)} cy={sy(r)} r="4" fill="#a9cbff" />
+          ))}
+          <text
+            x={sx(dimensionPoints[0][1]) + 8}
+            y={sy(dimensionPoints[0][0]) - 13}
+            fill="#c8dcff"
+            fontSize="17"
+            stroke="#101b24"
+            strokeWidth="4"
+            paintOrder="stroke"
+          >
+            {formatPreferredQuantity(
+              data.inputs[dimension.key],
+              dimension.key === 'ramp_angle_rad' ? 'angle' : 'length',
+              'hardware',
+              preferences
+            )}
+          </text>
+        </g>
+      )}
+      <g fill="#c3d1dc" fontSize="13" fontFamily="inherit" pointerEvents="none">
         <text x="68" y="38">
           Reaction cup
         </text>
@@ -203,11 +324,11 @@ export function SlidingBlockSection({
         <text x="830" y="72">
           Fixed sheave
         </text>
-        <text x="68" y="478">
+        <text x="68" y="778">
           One representative block in section · hardware section mirrored below
           shaft
         </text>
-        <text x="825" y="478">
+        <text x="825" y="778">
           Axial direction →
         </text>
       </g>

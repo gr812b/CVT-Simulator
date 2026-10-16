@@ -85,6 +85,7 @@ export function SlidingBlockScene({
       role="img"
       aria-label="Orbitable 3D sliding-block primary assembly"
       data-testid="sliding-3d"
+      data-hardware-interference={frame.interference_pairs.join(',')}
     >
       {error && (
         <Alert color="yellow" className={styles.sceneError}>
