@@ -1,6 +1,7 @@
 import { PublicHeader } from '@components/appShell/PublicHeader';
 import layout from '@components/appShell/PageGutter.module.scss';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Alert,
   Button,
@@ -39,6 +40,7 @@ export function Demo() {
           <PublicHeader />
           <Group>
             <Title order={1}>{demo?.name ?? 'Demo course'}</Title>
+            <Button component={Link} to="/demo/sliding-block" variant="light">Explore sliding-block mechanism</Button>
           </Group>
           <Text>
             {demo?.description ??

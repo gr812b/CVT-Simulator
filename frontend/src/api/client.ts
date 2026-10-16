@@ -92,6 +92,19 @@ export async function getDemoPlayback(signal?: AbortSignal): Promise<DemoPlaybac
   };
 }
 
+export type SlidingBlockDemo = Schema['SlidingBlockDemoResponse'];
+export type SlidingBlockFrame = Schema['SlidingBlockDemoFrame'];
+export type SlidingBlockInputs = SlidingBlockDemo['inputs'];
+export type SlidingBlockPreview = Schema['SlidingBlockPreviewResponse'];
+
+export async function getSlidingBlockDemo(signal?: AbortSignal): Promise<SlidingBlockDemo> {
+  return dataOrThrow(await client.GET('/api/v1/demo/sliding-block', { signal }));
+}
+
+export async function previewSlidingBlock(inputs: SlidingBlockInputs, revision: number, signal?: AbortSignal): Promise<SlidingBlockPreview> {
+  return dataOrThrow(await client.POST('/api/v1/demo/sliding-block/preview', { body: { inputs, revision }, signal }));
+}
+
 export type ProjectedField = Camel<Schema['ProjectedField']>;
 
 export type ProjectedScalar = Camel<Schema['ProjectedScalar']>;

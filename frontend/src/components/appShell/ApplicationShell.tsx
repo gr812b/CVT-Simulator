@@ -53,7 +53,10 @@ const sections = [
   },
   {
     label: 'Explore',
-    links: [{ to: '/catalog', label: 'Public library', icon: IconLibrary }],
+    links: [
+      { to: '/catalog', label: 'Public library', icon: IconLibrary },
+      { to: '/demo/sliding-block', label: 'Sliding-block demo', icon: IconGeometry },
+    ],
   },
   {
     label: 'Account',

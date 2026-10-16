@@ -33,7 +33,7 @@ class ComponentParameter(TypedDict):
     label: str
     canonical_unit: str
     dimension: NotRequired[str]
-    value_kind: Literal["number", "object"]
+    value_kind: Literal["number", "object", "string"]
     required: bool
     description: str
     minimum: NotRequired[float]

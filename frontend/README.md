@@ -25,6 +25,54 @@ such as `https://api.example.com`, not an origin with that prefix appended.
 The backend worker must share the API's database to process new runs. `/demo`
 plays a retained recording and does not need a worker or account.
 
+`/demo/sliding-block` is a public geometry inspection page for one synthetic
+curved-cup/linear-ramp primary. It needs the API, but no worker or account.
+The API caches 241 CINDER finite-profile study poses across the configured stroke
+(15 mm by default). The 3D assembly
+and axial section select the same frame; playback is a geometry scrub, while
+the displayed reactions are evaluated at held closure and 2,500 rpm.
+Cup and sheave backing is representative hardware. The block's circular cup
+face and flat ramp face define its smooth extruded solid, uniform-steel mass,
+COM and tensor. Display tessellation does not change those mass properties.
+One slope defines both mating flat faces; their contact span is highlighted.
+The normal arrow indicates direction, not pressure location or distribution.
+The study reports held force resultants from CINDER's geometry inspection.
+The CINDER 1.2 simulation provider rejects conformal face contact, so the page
+explicitly reports that it is not simulation-ready and does not report a
+unique guide couple. No endpoint representative or contact-only moment from
+the inspection utility is presented as a physical load location or full torque.
+Select the block, reaction cup or movable ramp in the equal-scale section,
+or choose Stroke, then edit its unit-aware dimensions. A 350 ms debounce
+refreshes both views through `POST /api/v1/demo/sliding-block/preview`.
+Undo/redo and Reset dimensions include incomplete quantity drafts. The last
+preview stays visibly stale while a newer edit is pending or cannot make
+contact; stale/invalid loads are hidden. Late responses cannot replace newer
+edits. Contact-valid geometry with hardware interference is displayed with
+the colliding bodies outlined in red at the current closure.
+
+The thicker default uses a 40 mm block datum thickness and clears all three
+cup/sheave pairings. A polygon translation sweep checks the complete moving
+hardware path between frames, and the UI reports the minimum section gap.
+The cup/ramp touching threshold is computed from their actual rim geometry;
+it is not a universal minimum block size. The 52 mm open body-datum radius is
+fixed in this synthetic construction; edits rebuild the contacting assembly
+at that reference. This is not an import/calibration tool for measured parts.
+
+Preview inputs and frame count are bounded, successful results use a 16-entry
+cache, expensive requests have a per-worker two-slot limit, and the existing
+database-backed IP throttle limits submissions to 90 per minute. No preview
+is saved or submitted to a worker. Physical-library saving remains follow-up work.
+The belt is local groove context, rather than a solved belt loop. Dashed 3D
+tracks continue across removed hardware in cutaway mode. Regression browser
+checks consume the CINDER-generated sample exported with the contract artifacts.
+Hardware sweep checks use tessellated meridional sections; weight/contact
+inspection uses the exported poses. Circumferential contact
+and whole-solid 3D clearance are illustrative, as in the underlying 2D model.
+
+The [mechanism input design](docs/mechanism-input-design.md) compares dimensioned
+templates, constrained sketching, measured points and CAD import, and proposes
+the remaining editor, mass-property, validation and preview contracts for the next PRs.
+
 ## Run and tune behavior
 
 Build a run selects a vehicle, CVT/belt, primary boundary, tune and load case.
