@@ -1,7 +1,7 @@
 # Backend runtime dependencies.
-# Install from backend/ after CINDER 1.1.5 has been published to PyPI.
+# Install from backend/ using the published CINDER distribution.
 # Production and contract generation use the same published distribution.
-cinder-cvt==1.1.5
+cinder-cvt==1.2.0
 
 fastapi>=0.116,<1.0
 uvicorn[standard]>=0.35,<1.0

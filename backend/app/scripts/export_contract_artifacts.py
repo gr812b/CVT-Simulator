@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 
 from app.application.cinder_gateway import CinderGateway
+from app.application.sliding_block_demo import preview as sliding_block_preview
 from app.main import create_app
 
 
@@ -35,6 +36,8 @@ def main() -> None:
 
     gateway = CinderGateway()
     _write_json(output / "openapi.json", create_app().openapi())
+    # Browser checks use CINDER-generated poses, rather than a second geometry law.
+    _write_json(output / "sliding_block_demo.json", sliding_block_preview().model_dump())
     _write_json(output / "cinder_assembly.schema.json", gateway.assembly_json_schema())
     _write_json(
         output / "cinder_simulation_case.schema.json",

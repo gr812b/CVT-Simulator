@@ -92,6 +92,13 @@ export async function getDemoPlayback(signal?: AbortSignal): Promise<DemoPlaybac
   };
 }
 
+export type SlidingBlockDemo = Schema['SlidingBlockDemoResponse'];
+export type SlidingBlockFrame = Schema['SlidingBlockDemoFrame'];
+
+export async function getSlidingBlockDemo(signal?: AbortSignal): Promise<SlidingBlockDemo> {
+  return dataOrThrow(await client.GET('/api/v1/demo/sliding-block', { signal }));
+}
+
 export type ProjectedField = Camel<Schema['ProjectedField']>;
 
 export type ProjectedScalar = Camel<Schema['ProjectedScalar']>;

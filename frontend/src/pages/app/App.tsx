@@ -17,6 +17,9 @@ const Dashboard = lazy(() =>
 const Demo = lazy(() =>
   import('@pages/demo/Demo').then(({ Demo: Page }) => ({ default: Page })),
 );
+const SlidingBlockDemo = lazy(() =>
+  import('@pages/slidingBlock/SlidingBlockDemo').then(({ SlidingBlockDemo: Page }) => ({ default: Page })),
+);
 const Input = lazy(() =>
   import('@pages/input/Input').then(({ Input: Page }) => ({ default: Page })),
 );
@@ -106,6 +109,7 @@ export const App = () => (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/demo" element={<Demo />} />
+      <Route path="/demo/sliding-block" element={<SlidingBlockDemo />} />
       <Route path="/login" element={<AuthPage key="login" mode="login" />} />
       <Route
         path="/register"

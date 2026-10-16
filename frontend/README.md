@@ -25,6 +25,20 @@ such as `https://api.example.com`, not an origin with that prefix appended.
 The backend worker must share the API's database to process new runs. `/demo`
 plays a retained recording and does not need a worker or account.
 
+`/demo/sliding-block` is a public geometry inspection page for one synthetic
+curved-cup/linear-ramp primary. It needs the API, but no worker or account.
+The API caches 241 exact CINDER poses across 15 mm of closure. The 3D assembly
+and axial section select the same frame; playback is a geometry scrub, while
+the displayed reactions are evaluated at held closure and 2,500 rpm.
+Cup and sheave backing is representative hardware. The block's drawn prism,
+uniform-steel mass, COM and tensor agree. This page does not yet edit or save
+mechanisms to the physical library.
+The belt is local groove context, rather than a solved belt loop. Dashed 3D
+tracks continue across removed hardware in cutaway mode. Regression browser
+checks consume the CINDER-generated sample exported with the contract artifacts.
+Clearance checks cover the sampled meridional sections. Circumferential contact
+and whole-solid 3D clearance are illustrative, as in the underlying 2D model.
+
 ## Run and tune behavior
 
 Build a run selects a vehicle, CVT/belt, primary boundary, tune and load case.
