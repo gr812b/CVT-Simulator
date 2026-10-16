@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureUnknowns
 
+from .sliding_block import SlidingBlockFlyweightForce
 from .types import (
     ActuationContribution,
     ActuatorInspection,
@@ -27,6 +28,11 @@ class PulleyActuator:
     def __init__(self, *force_laws: AxialForceLaw) -> None:
         if not force_laws:
             raise ValueError("PulleyActuator requires at least one force law.")
+        if sum(isinstance(law, SlidingBlockFlyweightForce) for law in force_laws) > 1:
+            raise ValueError(
+                "Only one sliding-block group may be mounted per pulley; "
+                "set its total_mass for the complete distributed group."
+            )
         self._force_laws = tuple(force_laws)
 
     @property

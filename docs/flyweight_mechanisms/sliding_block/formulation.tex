@@ -27,7 +27,7 @@
 \lstset{basicstyle=\small\ttfamily,breaklines=true,columns=fullflexible,frame=single}
 \begin{document}
 \begin{center}
-{\small CINDER TECHNICAL NOTE / OCTOBER 11, 2026}\par\vspace{.7em}
+{\small CINDER TECHNICAL NOTE / OCTOBER 16, 2026}\par\vspace{.7em}
 {\LARGE\bfseries Fixed-Orientation Sliding Blocks}\par\vspace{.4em}
 {\large Contact Geometry, Guide Wrench, and the Common Boundary}
 \end{center}
@@ -59,6 +59,10 @@ and $\et=\ez\times\er$. The local sheave coordinate $x$ is positive in closure;
 the moving contact track translates by $+x\ez$. The lower track is axially
 fixed in the shaft frame. Both tracks and the orientation guide co-rotate
 with the shaft at angular speed $\omega$ and acceleration $\alpha$.
+The origin of $x$ is arbitrary: positive denotes its direction, not a
+restriction $x\geq0$. In particular, CINDER's secondary opens into negative
+local coordinates during upshift. The supplied profiles and compiled interval
+must cover that signed travel.
 
 Let $(R(x),Z(x))$ locate a datum fixed in the block. The block does not rotate
 relative to these local axes. Its COM offset from the datum is the fixed
@@ -319,8 +323,9 @@ A specified real guide may transmit radial and axial forces too, in which case
 For the present ideal guide, the moving track delivers
 $F_x=-N_u n_{u,z}$. This agrees with \cref{eq:loads} for the exact constraint
 motion. The runtime contact policy uses both $N_\ell$ and $N_u$ at the actual
-solved accelerations. It rejects tension; it never replaces a negative normal
-by zero while retaining the same constrained mass map.
+solved accelerations. It rejects resolved tension. Raw reactions remain
+available; a numerical-resolution check described below distinguishes
+unresolved near-zero values from a required tensile contact.
 
 \section{Retaining the contacts through a velocity reset}
 \label{sec:impact}
@@ -384,6 +389,56 @@ interpolation diagnostics, distinct from the interval tests establishing the
 contact branch; they are not rigorous continuum bounds on interpolation error.
 The cache is keyed by the immutable geometry, so mass changes reuse the motion.
 Queries outside the compiled axial interval raise an error without extrapolation.
+
+One sliding-block element represents the entire distributed group on a pulley.
+Python construction and saved-document validation reject duplicate groups;
+change the total mass instead. If an insert also changes the distribution,
+update the COM and tensor rather than scaling mass alone.
+
+\subsection{Numerical resolution at zero contact load}
+
+A mathematically zero reaction can evaluate slightly below zero when large
+inertial terms cancel. There is also a small tangency discrepancy because the
+motion derivatives and profile normals are evaluated from a finite interpolant.
+Neither effect calls for a fixed allowance in newtons. Measure the discrepancy
+at the actual pose instead.
+
+Let $H=[\bm n_\ell\ \bm n_u]$ and $\bm v_x=(r',z')^T$. Exact closed-contact
+motion gives $\bm v_x^T\bm n_\ell=0$ and
+$\bm v_x^T\bm n_u=n_{u,z}$: the fixed track does no work and the moving
+track translates with unit axial speed per unit $\dot x$. Define the two
+computed residuals by
+\begin{equation}
+ (d_\ell,d_u)=\bm v_x^T H-(0,n_{u,z}),\qquad
+ E=|d_\ell N_\ell|+|d_u N_u|.
+ \label{eq:work-residual}
+\end{equation}
+Projecting \cref{eq:normals} onto $\bm v_x$ shows that
+$|F_x+N_u n_{u,z}|\leq E$, where $F_x$ is the common boundary's force
+from \cref{eq:loads}. Projection onto $\bm v_x-(0,1)^T$ gives the
+corresponding fixed-track identity. Thus $E/|n_{i,z}|$ measures each recovered
+normal's discrepancy from its scalar virtual-work identity.
+
+For arithmetic resolution, split the right side of \cref{eq:normals} into
+its acceleration, curvature and centrifugal vectors $\bm b_k$ and set
+\begin{equation}
+ S_i=\left[|H^{-1}|\sum_k|\bm b_k|\right]_i,\qquad
+ \eta_i=\frac{E}{|n_{i,z}|}
+       +4096\,\epsilon\max(N_0,S_i).
+ \label{eq:normal-resolution}
+\end{equation}
+Absolute values of vectors and matrices are componentwise. Here $\epsilon$
+is machine precision and $N_0=1\,\mathrm N$ is the reference scale in CINDER's
+existing roundoff convention. The inverse matrix accounts for amplification
+by the contact directions. Only the reported admissibility margin is snapped
+to zero when $|N_i|\leq\eta_i$; the raw reaction, guide wrench and common
+force law are unchanged. A normal below $-\eta_i$ is rejected.
+
+The same calculation applies to \cref{sec:impact}, using its momentum-jump
+vector in place of $\sum_k\bm b_k$, normal impulses in
+\cref{eq:work-residual}, and a $1\,\mathrm{N\,s}$ reference scale.
+These checks quantify local numerical consistency. They neither certify
+hardware capacity nor replace the compiler's separate interpolation diagnostics.
 
 \begin{center}\begin{tabularx}{\textwidth}{@{}p{.25\textwidth}Y@{}}
 \toprule

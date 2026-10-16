@@ -4,21 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
-from sys import float_info
 
 from cinder.model.cvt.closure import ClosureUnknowns
 
+from .._numerics import contact_roundoff_tolerance
 from ..fixed_pivot_flyweight import (
     FixedPivotFlyweightInertiaMap,
     FixedPivotFlyweightMap,
 )
 from ..types import PulleyActuationContext
 from .centrifugal_inertia import CentrifugalInertiaForce
-
-# Match CINDER's existing roundoff guard convention used by impact and
-# relative-motion consistency checks. This is a numerical resolution
-# multiplier, not a physical force threshold.
-_CONTACT_ROUNDOFF_MULTIPLIER = 4096.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,9 +121,7 @@ class FixedPivotFlyweightForce(CentrifugalInertiaForce):
             1.0,
             sum(abs(value) for value in contribution_values),
         )
-        roundoff_tolerance = (
-            _CONTACT_ROUNDOFF_MULTIPLIER * float_info.epsilon * calculation_scale
-        )
+        roundoff_tolerance = contact_roundoff_tolerance(calculation_scale)
         if abs(raw_margin) <= roundoff_tolerance:
             return 0.0
         return raw_margin

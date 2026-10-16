@@ -13,6 +13,7 @@ from cinder.contracts import (
     decode_assembly_document,
     encode_assembly_document,
     validate_assembly,
+    validate_assembly_document,
 )
 from cinder.contracts.document import _decode_force_law
 from cinder.contracts.schema import assembly_document_json_schema
@@ -28,6 +29,8 @@ from cinder.model.cvt.actuation import (
     PulleyActuator,
     PulleyActuationContext,
     PulleyClosureChannels,
+    AxialSpringForce,
+    AxialSpringForceSpec,
 )
 from cinder.model.cvt.actuation.sliding_block_geometry import evaluate as exact_evaluate
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknowns
@@ -71,6 +74,24 @@ def assembly(force=None):
         ),
     )
     return replace(base, pulleys=replace(base.pulleys, primary=primary))
+
+
+def shifted_law(force, origin_shift):
+    """Same physical assembly with x_new = x_old - origin_shift."""
+    g = force.spec.geometry
+    return SlidingBlockFlyweightForce(
+        replace(
+            force.spec,
+            geometry=replace(
+                g,
+                upper_track=replace(
+                    g.upper_track, offset=g.upper_track.offset + origin_shift
+                ),
+                axial_position_min=g.axial_position_min - origin_shift,
+                axial_position_max=g.axial_position_max - origin_shift,
+            ),
+        )
+    )
 
 
 def particle_oracle(force, x, omega, alpha, xd, xdd):
@@ -277,6 +298,193 @@ def test_public_document_round_trip_preflight_and_schema(name):
     import jsonschema
 
     jsonschema.validate(document, assembly_document_json_schema())
+
+
+@pytest.mark.parametrize("name", ["straight", "curved-cup", "both-curved"])
+@pytest.mark.parametrize("origin_shift", [-0.005, 0.005, 0.015, 0.02])
+def test_changing_axial_origin_preserves_physics(name, origin_shift):
+    original = law(name)
+    shifted = shifted_law(original, origin_shift)
+    for x in (0.0, 0.003113, 0.014879, 0.015):
+        new_x = x - origin_shift
+        sample, moved = original.inertia_map.evaluate(x), shifted.inertia_map.evaluate(
+            new_x
+        )
+        for key in (
+            "effective_mass",
+            "effective_mass_gradient",
+            "shaft_inertia",
+            "shaft_inertia_gradient",
+        ):
+            assert getattr(moved, key) == pytest.approx(getattr(sample, key), abs=2e-7)
+        r = original.inertia_map.reactions(x, omega=280, alpha=130, xdot=0.11, xddot=-8)
+        s = shifted.inertia_map.reactions(
+            new_x, omega=280, alpha=130, xdot=0.11, xddot=-8
+        )
+        assert (s.lower_normal, s.upper_normal, *s.guide_moment) == pytest.approx(
+            (r.lower_normal, r.upper_normal, *r.guide_moment), rel=1e-9, abs=1e-6
+        )
+        exact = exact_evaluate(shifted.spec.geometry.mechanism(), new_x, omega=280)
+        assert exact.radial == pytest.approx(
+            shifted.inertia_map.pose(new_x).radial, abs=3e-9
+        )
+
+
+def test_sliding_block_mounted_on_real_secondary_travel():
+    import jsonschema
+    from cinder.model.cvt.contact import ContactRegime, SlipDirection
+
+    base = assembly()
+    force = shifted_law(law(), 0.015)
+    secondary = replace(
+        base.pulleys.secondary, actuator=PulleyActuator(force), helical_coupling=None
+    )
+    obj = replace(base, pulleys=replace(base.pulleys, secondary=secondary))
+    document = encode_assembly_document(obj)
+    jsonschema.validate(document, assembly_document_json_schema())
+    restored = decode_assembly_document(document)
+    assert validate_assembly(restored).is_valid
+    plant = MechanicalCVTPlant.from_assembly(restored)
+    system = CVTOperatingHybridSystem(plant)
+    for shift in (0.005, 0.01, 0.015):
+        state = CVTState(350, 170, 8, shift, 0.03)
+        geometry = plant.geometry.evaluate(shift)
+        ctx = plant.secondary_actuation_context(time=0, state=state, geometry=geometry)
+        assert ctx.axial_position < 0
+        assert ctx.axial_speed < 0
+        assert ctx.axial_acceleration.gains.shift_acceleration < 0
+        assert len(plant.secondary_actuator.inspect(ctx).contributions) == 3
+        mode = CVTOperatingRegime.engaged_free(
+            contact_regime=ContactRegime.both_slip(
+                primary_direction=SlipDirection.BELT_LEADS_PULLEY,
+                secondary_direction=SlipDirection.PULLEY_LEADS_BELT,
+            )
+        )
+        result = system.evaluate_runtime(time=0, state=state.as_vector(), mode=mode)
+        assert np.all(np.isfinite(result.state_derivative.as_vector()))
+
+
+@pytest.mark.parametrize("name", ["straight", "curved-cup", "both-curved"])
+@pytest.mark.parametrize("mass_scale", [0.001, 1, 1000])
+def test_zero_moving_track_load_uses_numerical_resolution_not_a_force_deadband(
+    name, mass_scale
+):
+    spec = law(name).spec
+    force = SlidingBlockFlyweightForce(
+        replace(
+            spec, mass=replace(spec.mass, total_mass=spec.mass.total_mass * mass_scale)
+        )
+    )
+    for x in (0.001113, 0.002113, 0.007531):
+        for xd in (0, 0.11):
+            sample = force.inertia_map.evaluate(x)
+            xdd = (
+                0.5 * sample.shaft_inertia_gradient * 80**2
+                - 0.5 * sample.effective_mass_gradient * xd**2
+            ) / sample.effective_mass
+            margins = []
+            for delta in (-0.001, 0, 0.001):
+                ctx = context(x=x, omega=80, xd=xd, xdd=xdd + delta)
+                solved = ClosureUnknowns(shift_acceleration=1)
+                reactions = force.contact_reactions(ctx, solved)
+                margin = force.compressive_contact_margins(ctx, solved)[1][1]
+                margins.append(margin)
+                if delta == 0:
+                    assert abs(reactions.upper_normal) <= reactions.normal_tolerances[1]
+                    assert reactions.compressive
+                else:
+                    assert margin == reactions.upper_normal
+            assert margins[0] > 0 and margins[1] == 0 and margins[2] < 0
+
+
+@pytest.mark.parametrize(
+    "name,x", [("straight", 0.001), ("curved-cup", 0.0015), ("both-curved", 0.002)]
+)
+def test_coupled_zero_contact_load_and_resolved_tension(name, x):
+    force = law(name)
+    base = assembly(force)
+    omega = 80
+    sample = force.inertia_map.evaluate(x)
+    xdd = 0.5 * sample.shaft_inertia_gradient * omega**2 / sample.effective_mass
+    host_mass = base.inertias.primary.moving_sheave_mass
+    for extra_acceleration in (0, 0.001):
+        # A compressed closing spring accelerates the real positive-mass sheave.
+        # Its load makes the mechanism's moving-track reaction exactly zero,
+        # or slightly tensile. No massless host or detached contact is assumed.
+        stiffness = (
+            host_mass * xdd + (host_mass + sample.effective_mass) * extra_acceleration
+        ) / (0.03 - x)
+        spring = AxialSpringForce(AxialSpringForceSpec(stiffness, 0.03, -1))
+        primary = replace(base.pulleys.primary, actuator=PulleyActuator(force, spring))
+        obj = replace(base, pulleys=replace(base.pulleys, primary=primary))
+        assert validate_assembly(obj).is_valid
+        system = CVTOperatingHybridSystem(MechanicalCVTPlant.from_assembly(obj))
+        state = CVTState(omega, 0, 0, x, 0)
+        if extra_acceleration:
+            with pytest.raises(RuntimeError, match="moving_track"):
+                system.evaluate_runtime(
+                    time=0,
+                    state=state.as_vector(),
+                    mode=CVTOperatingRegime.deadzone_free(),
+                )
+        else:
+            result = system.evaluate_runtime(
+                time=0, state=state.as_vector(), mode=CVTOperatingRegime.deadzone_free()
+            )
+            assert result.state_derivative.as_vector()[4] == pytest.approx(xdd)
+
+
+@pytest.mark.parametrize("name", ["straight", "curved-cup", "both-curved"])
+def test_zero_fixed_track_reaction_and_resolved_tension(name):
+    force = law(name)
+    x, xd, omega = 0.002113, 0.11, 80
+    p = force.inertia_map.pose(x)
+    # The upper-track frame has virtual velocity (r', z'-1). At zero lower
+    # reaction its inertial force does no work along this allowed motion.
+    xdd = (
+        p.r_prime * p.radial * omega**2
+        - (p.r_prime * p.r_second + (p.z_prime - 1) * p.z_second) * xd**2
+    ) / (p.r_prime**2 + (p.z_prime - 1) * p.z_prime)
+    margins = []
+    for delta in (-0.001, 0, 0.001):
+        ctx = context(x=x, omega=omega, xd=xd, xdd=xdd + delta)
+        solved = ClosureUnknowns(shift_acceleration=1)
+        reactions = force.contact_reactions(ctx, solved)
+        margins.append(force.compressive_contact_margins(ctx, solved)[0][1])
+        if delta == 0:
+            assert reactions.upper_normal > 0
+            assert reactions.compressive
+    assert margins[0] < 0 and margins[1] == 0 and margins[2] > 0
+
+
+def test_one_distributed_sliding_block_group_per_pulley_in_python_and_documents():
+    import jsonschema
+
+    force = law()
+    heavier = SlidingBlockFlyweightForce(
+        replace(force.spec, mass=replace(force.spec.mass, total_mass=1.5))
+    )
+    with pytest.raises(ValueError, match="one sliding-block group.*total_mass"):
+        PulleyActuator(force, heavier)
+    obj = assembly(heavier)
+    assert len(obj.pulleys.primary.actuator.inspect(context()).contributions) == 4
+    document = encode_assembly_document(obj)
+    document["pulleys"]["primary"]["components"].append(
+        document["pulleys"]["primary"]["components"][0]
+    )
+    with pytest.raises(ValueError, match="one sliding-block group"):
+        decode_assembly_document(document)
+    report = validate_assembly_document(document)
+    assert not report.is_valid
+    assert "total_mass" in report.errors[0].message
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(document, assembly_document_json_schema())
+
+
+@pytest.mark.parametrize("circle_sign", [0, 2, True, 1.0])
+def test_inactive_profile_sign_also_obeys_saved_document_contract(circle_sign):
+    with pytest.raises(ValueError, match="circle_sign"):
+        replace(law().spec.geometry.lower_track, circle_sign=circle_sign)
 
 
 def test_named_running_contact_margins_and_liftoff():

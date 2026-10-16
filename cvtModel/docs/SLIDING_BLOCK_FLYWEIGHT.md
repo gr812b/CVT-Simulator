@@ -24,11 +24,21 @@ in an assembly's `pulleys.primary.components` or `pulleys.secondary.components`.
 The host's local travel must be covered, and that pulley must not have a
 relative sheave helix.
 
+The axial interval is signed and need not start at zero. CINDER's secondary
+local coordinate becomes negative as that pulley opens during upshift. Supply
+profiles and a compiled interval covering those actual coordinates; the three
+example records use the primary's positive travel and require a coordinate
+origin change before reuse on the secondary.
+
 All input fields use SI: metres, kilograms, dimensionless slopes, curvature
 in inverse metres, and centroidal inertia **per mass** in square metres.
 Profiles belong to the body datum; the COM offset is separate. The mass is
 for the complete identical set. Count only divides loads for per-block
 reporting. Cup, rigid-sheave and spring properties stay with the host.
+Only one sliding-block group is admitted per pulley, in Python construction
+and saved-document validation. Increase its `total_mass` for a heavier set;
+do not append duplicate groups. Update COM and tensor too when the mass
+distribution changes.
 
 ```python
 from cinder.model.cvt.actuation import SlidingBlockFlyweightForce
@@ -69,6 +79,16 @@ impulses. Direct projection callers must call
 `CVTOperatingHybridSystem.transition()` checks the selected reset automatically.
 A tensile impulse stops the calculation with its contact named. Flight,
 rocking, loss of orientation, and recontact require another model.
+
+`lower_normal` and `upper_normal` retain raw forces (or impulses).
+`normal_tolerances` reports each numerical resolution and `contact_margins`
+snaps only values within it to zero; `compressive` and runtime guards use those
+same margins. Resolution combines the existing fixed-pivot `4096 * eps * scale`
+roundoff convention with the local virtual-work discrepancy between compiled
+motion derivatives and contact normals. The roundoff scale includes contact
+matrix amplification. This is an operating-state-dependent numerical check,
+not a fixed force allowance or a hardware capacity. The formulation derives
+the residual and its propagation; resolved tension still fails.
 
 ## Scope of this release
 

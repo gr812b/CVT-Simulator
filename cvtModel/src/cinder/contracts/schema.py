@@ -488,6 +488,13 @@ def _assembly_definitions() -> dict[str, Any]:
                     "type": "array",
                     "minItems": 1,
                     "items": {"$ref": "#/$defs/assemblyForceLaw"},
+                    "contains": {
+                        "type": "object",
+                        "required": ["kind"],
+                        "properties": {"kind": {"const": "sliding_block_flyweight"}},
+                    },
+                    "minContains": 0,
+                    "maxContains": 1,
                 },
                 "helical_coupling": {"$ref": "#/$defs/assemblyHelicalCoupling"},
             },

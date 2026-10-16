@@ -16,6 +16,7 @@ import numpy as np
 from scipy.interpolate import BPoly
 from scipy.optimize import brentq
 
+from ._numerics import contact_roundoff_tolerance
 from .centrifugal_inertia import CentrifugalInertiaSample
 from .forces.centrifugal_inertia import CentrifugalInertiaForce
 from .sliding_block_geometry import (
@@ -59,8 +60,8 @@ class SlidingBlockGeometry:
                 raise ValueError(f"{key} must be finite")
         if not 0 < self.radial_min < self.radial_max:
             raise ValueError("radial branch window must be positive and ordered")
-        if not 0 <= self.axial_position_min < self.axial_position_max:
-            raise ValueError("axial branch interval must be nonnegative and ordered")
+        if not self.axial_position_min < self.axial_position_max:
+            raise ValueError("axial branch interval must be ordered")
         if not isinstance(self.allow_end_contacts, bool):
             raise ValueError("allow_end_contacts must be boolean")
         self.mechanism()  # Includes a global positive-thickness check.
@@ -82,6 +83,7 @@ class SlidingBlockGeometry:
             1.0,
             0.0,
             radius_ref=self.radial_min,
+            x_min=self.axial_position_min,
             x_max=self.axial_position_max,
         )
 
@@ -174,10 +176,26 @@ class SlidingBlockReactions:
     guide_moment: tuple[float, float, float]
     count: int
     capacity_status: str = "unknown (ideal guide)"
+    normal_tolerances: tuple[float, float] = (0.0, 0.0)
+
+    @property
+    def contact_margins(self) -> tuple[float, float]:
+        """Signed reactions with only numerically unresolved values snapped.
+
+        Raw forces/impulses remain in ``lower_normal`` and ``upper_normal``.
+        The resolution follows arithmetic and local tangency residuals, rather
+        than a fixed physical deadband.
+        """
+        return tuple(
+            0.0 if abs(value) <= tolerance else value
+            for value, tolerance in zip(
+                (self.lower_normal, self.upper_normal), self.normal_tolerances
+            )
+        )
 
     @property
     def compressive(self) -> bool:
-        return min(self.lower_normal, self.upper_normal) >= -1e-9
+        return min(self.contact_margins) >= 0.0
 
     @property
     def per_block_guide_moment(self) -> tuple[float, float, float]:
@@ -437,20 +455,18 @@ class SlidingBlockInertiaMap:
             raise ValueError("Operating state must be finite")
         p = self.pose(x)
         mass = self.spec.mass.total_mass
-        rhs = mass * np.array(
+        terms = mass * np.array(
             [
-                p.r_prime * xddot + p.r_second * xdot**2 - p.radial * omega**2,
-                p.z_prime * xddot + p.z_second * xdot**2,
+                [p.r_prime * xddot, p.r_second * xdot**2, -p.radial * omega**2],
+                [p.z_prime * xddot, p.z_second * xdot**2, 0.0],
             ]
         )
-        normals = np.linalg.solve(
-            np.column_stack([p.lower.normal, p.upper.normal]), rhs
-        )
+        normals, tolerances = self._resolve_normals(p, terms)
         force = mass * (p.radial * alpha + 2 * omega * p.r_prime * xdot)
         tensor = mass * np.array(self.spec.mass.centroidal_inertia_per_mass)
         spin = np.array([0.0, 0.0, omega])
         moment = tensor @ np.array([0.0, 0.0, alpha]) + np.cross(spin, tensor @ spin)
-        return self._wrench(p, normals, force, moment)
+        return self._wrench(p, normals, force, moment, tolerances)
 
     def impulses(
         self, x: float, *, delta_xdot: float, delta_omega: float
@@ -464,18 +480,38 @@ class SlidingBlockInertiaMap:
             raise ValueError("Velocity jumps must be finite")
         p = self.pose(x)
         mass = self.spec.mass.total_mass
-        normals = np.linalg.solve(
-            np.column_stack([p.lower.normal, p.upper.normal]),
-            mass * np.array([p.r_prime, p.z_prime]) * delta_xdot,
+        normals, tolerances = self._resolve_normals(
+            p, mass * np.array([[p.r_prime], [p.z_prime]]) * delta_xdot
         )
         moment = (
             mass
             * np.array(self.spec.mass.centroidal_inertia_per_mass)
             @ np.array([0.0, 0.0, delta_omega])
         )
-        return self._wrench(p, normals, mass * p.radial * delta_omega, moment)
+        return self._wrench(
+            p, normals, mass * p.radial * delta_omega, moment, tolerances
+        )
 
-    def _wrench(self, p, normals, force, moment):
+    @staticmethod
+    def _resolve_normals(p, terms):
+        directions = np.column_stack([p.lower.normal, p.upper.normal])
+        normals = np.linalg.solve(directions, np.sum(terms, axis=1))
+        # Exact constraint motion obeys q' . n_lower = 0 and
+        # q' . n_upper = n_upper,z. The interpolated motion leaves a small,
+        # directly measurable residual in these two virtual-work identities.
+        # Its absolute work error bounds the discrepancy of either recovered
+        # normal, after division by that contact's axial normal component.
+        residual = np.array([p.r_prime, p.z_prime]) @ directions
+        residual[1] -= p.upper.normal[1]
+        work_error = float(np.abs(residual) @ np.abs(normals))
+        scales = np.abs(np.linalg.inv(directions)) @ np.sum(np.abs(terms), axis=1)
+        tolerances = tuple(
+            work_error / abs(directions[1, i]) + contact_roundoff_tolerance(scale)
+            for i, scale in enumerate(scales)
+        )
+        return normals, tolerances
+
+    def _wrench(self, p, normals, force, moment, tolerances):
         for c, n in zip((p.lower, p.upper), normals):
             arm = np.array([c.radial - p.radial, 0.0, c.axial - p.axial])
             moment -= np.cross(arm, n * np.array([c.normal[0], 0.0, c.normal[1]]))
@@ -484,6 +520,7 @@ class SlidingBlockInertiaMap:
             float(force),
             tuple(map(float, moment)),
             self.spec.mass.count,
+            normal_tolerances=tolerances,
         )
 
 
@@ -524,8 +561,8 @@ class SlidingBlockFlyweightForce(CentrifugalInertiaForce):
     def compressive_contact_margins(self, context, unknowns):
         reactions = self.contact_reactions(context, unknowns)
         return (
-            ("fixed_track", reactions.lower_normal),
-            ("moving_track", reactions.upper_normal),
+            ("fixed_track", reactions.contact_margins[0]),
+            ("moving_track", reactions.contact_margins[1]),
         )
 
     def impulse_contact_margins(
@@ -542,6 +579,6 @@ class SlidingBlockFlyweightForce(CentrifugalInertiaForce):
             delta_omega=after.shaft_speed - before.shaft_speed,
         )
         return (
-            ("fixed_track", reactions.lower_normal),
-            ("moving_track", reactions.upper_normal),
+            ("fixed_track", reactions.contact_margins[0]),
+            ("moving_track", reactions.contact_margins[1]),
         )

@@ -57,9 +57,15 @@ class Profile:
                 raise ValueError(f"profile {name} must be finite")
         if not self.left < self.right:
             raise ValueError("profile needs left < right")
+        if (
+            isinstance(self.circle_sign, bool)
+            or not isinstance(self.circle_sign, int)
+            or self.circle_sign not in (-1, 1)
+        ):
+            raise ValueError("profile circle_sign must be an integer +/-1")
         if self.kind == "circle":
-            if self.radius <= 0 or self.circle_sign not in (-1, 1):
-                raise ValueError("circle needs positive radius and sign +/-1")
+            if self.radius <= 0:
+                raise ValueError("circle needs positive radius")
             if (
                 max(abs(self.left - self.origin), abs(self.right - self.origin))
                 >= self.radius
@@ -106,9 +112,10 @@ class Mechanism:
     x_max: float = 0.014
     name: str = "sliding weight"
     com_offset: tuple[float, float] = (0.0, 0.0)  # radial, axial from body datum
+    x_min: float = 0.0
 
     def __post_init__(self) -> None:
-        for name in ("total_mass", "gyration_radius", "radius_ref", "x_max"):
+        for name in ("total_mass", "gyration_radius", "radius_ref", "x_min", "x_max"):
             if not isfinite(getattr(self, name)):
                 raise ValueError(f"mechanism {name} must be finite")
         if isinstance(self.display_count, bool) or not isinstance(
@@ -117,8 +124,10 @@ class Mechanism:
             raise ValueError("display_count must be a positive integer")
         if self.total_mass <= 0 or self.gyration_radius < 0:
             raise ValueError("mass must be >0 and gyration radius nonnegative")
-        if self.display_count < 1 or self.radius_ref <= 0 or self.x_max <= 0:
-            raise ValueError("count, reference radius, and travel must be positive")
+        if self.display_count < 1 or self.radius_ref <= 0:
+            raise ValueError("count and reference radius must be positive")
+        if self.x_min >= self.x_max:
+            raise ValueError("axial travel interval must be ordered")
         if (self.lower_face.left, self.lower_face.right) != (
             self.upper_face.left,
             self.upper_face.right,
@@ -307,7 +316,7 @@ def evaluate(
         return _invalid(x, "non-finite operating state")
     if not isfinite(max_condition) or max_condition <= 1:
         raise ValueError("max_condition must be finite and greater than one")
-    if not (0 <= x <= m.x_max):
+    if not (m.x_min <= x <= m.x_max):
         return _invalid(x, "travel outside configured range")
     face = m.lower_face
     radius_min = max(m.lower_track.left, m.upper_track.left) - face.left
@@ -449,7 +458,7 @@ def evaluate(
 def sweep(m: Mechanism, *, n: int = 81, **operating_point: float) -> list[Point]:
     points: list[Point] = []
     guess = (m.radius_ref, 0.0)
-    for x in np.linspace(0, m.x_max, n):
+    for x in np.linspace(m.x_min, m.x_max, n):
         p = evaluate(m, float(x), guess=guess, **operating_point)
         points.append(p)
         if isfinite(p.radial) and isfinite(p.axial):

@@ -170,7 +170,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
         ComponentDescriptor(
             kind="sliding_block_flyweight",
             label="Sliding-block flyweight",
-            description="Fixed-orientation, finite-profile two-contact mechanism; total mass, full guide wrench and unilateral reset checks. Requires co-rotating tracks and an ideal guide.",
+            description="One distributed sliding-block group per pulley; finite-profile two-contact mechanism with total mass, full guide wrench and unilateral reset checks. Requires co-rotating tracks and an ideal guide.",
             parameters=(
                 ComponentParameter(
                     "geometry",
