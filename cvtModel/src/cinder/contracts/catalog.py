@@ -170,14 +170,14 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
         ComponentDescriptor(
             kind="sliding_block_flyweight",
             label="Sliding-block flyweight",
-            description="One distributed sliding-block group per pulley; finite-profile two-contact mechanism with total mass, full guide wrench and unilateral reset checks. Requires co-rotating tracks and an ideal guide.",
+            description="One distributed sliding-block group per pulley; user-defined smooth profiles, total mass, guide moment or pressure-location bounds, and unilateral reset checks. Requires co-rotating tracks and an ideal guide.",
             parameters=(
                 ComponentParameter(
                     "geometry",
                     "Finite contact profiles and branch",
                     "object",
                     True,
-                    "All lengths in metres; curvature in inverse metres. Body datum is independent of COM.",
+                    "Point-defined/piecewise polynomial graphs or exact primitives; SI units. Optional reference_radius selects an assembled branch in a folded search window. Smooth support changes are allowed; body datum is independent of COM.",
                     value_kind="object",
                     dimension="structure",
                 ),

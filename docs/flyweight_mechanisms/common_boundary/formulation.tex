@@ -34,7 +34,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small CINDER \enspace / \enspace General centrifugal mechanisms}
-\fancyhead[R]{\small CINDER 1.2.0}
+\fancyhead[R]{\small CINDER 1.2.1}
 \fancyfoot[L]{\small\Acrobatmenu{GoBack}{Previous view}}
 \fancyfoot[C]{\thepage}
 \fancyfoot[R]{\small\hyperlink{note-contents}{Contents}}
@@ -55,7 +55,7 @@
 \begin{document}
 \thispagestyle{plain}
 \begin{center}
-{\small CINDER TECHNICAL NOTE \quad $\cdot$ \quad REVISION 4 / CINDER 1.2.0 \quad $\cdot$ \quad OCTOBER 11, 2026}
+{\small CINDER TECHNICAL NOTE \quad $\cdot$ \quad REVISION 4 / CINDER 1.2.1 \quad $\cdot$ \quad OCTOBER 17, 2026}
 \vspace{0.7em}
 
 {\LARGE\bfseries General Centrifugal Mechanisms\par}
@@ -647,7 +647,14 @@ translation and a centroidal tensor. Their companion documents are
 \href{../fixed_pivot/formulation.pdf}{Fixed-Pivot Roller Flyweights} and
 \href{../sliding_block/formulation.pdf}{Fixed-Orientation Sliding Blocks}.
 The common evaluator owns the dynamics in both cases; each mechanism owns its
-contact conditions and geometric domain. Saved documents retain physical
+contact conditions and geometric domain. CINDER 1.2.1 extends the sliding-block
+contact construction to point-defined and piecewise polynomial profiles and
+common-normal contact sets. Its compiler separates contact topology from
+material motion, selects regular assembled branches and admits verified smooth
+support changes. Nonsmooth motion needs an event model, and unresolved
+numerical geometry is not classified as impossible hardware.
+Those geometry choices do not alter the boundary
+relations derived here. Saved documents retain physical
 geometry and mass properties, rather than independent fits of four functions.
 
 A kinetic projection is a candidate velocity reset, not a contact-feasibility

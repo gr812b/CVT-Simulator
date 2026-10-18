@@ -1,4 +1,100 @@
-# CINDER 1.2.0 mechanism verification
+# CINDER mechanism verification
+
+## CINDER 1.2.1 — generalized contact profiles
+
+This extension retains the common four-quantity force/torque/energy boundary.
+It expands sliding-block geometry to user-defined C2 piecewise polynomial
+profiles and common-normal contact sets. Existing 1.2.0 component documents
+retain their shape and meaning. Verification uses Python 3.12, NumPy 2.3.5
+and SciPy 1.17.0; the package version is prepared as 1.2.1 without publishing it.
+
+The final complete run passed **294 tests**: **231 CINDER smoke tests** and
+**63 research-demo tests**. Flake8 passed and Black checked all 156 core/test
+Python files. Both wheel and source distribution built successfully. Every
+Python source in the wheel was compared byte-for-byte with the tested source;
+the installed wheel was then checked outside the repository against all seven
+component examples, complete assembly round trips/preflight, point input and
+mass reduction. Distribution boundaries and inclusion of examples/API docs
+were checked separately.
+
+The common-boundary PDF (19 pages) and sliding-block PDF (11 pages) compiled
+without unresolved references or overfull boxes. Page overviews and detailed
+changed-page renders were inspected. Source and PDF remain together.
+
+The new checks exercise:
+
+- An analytical nonconvex quartic block with two separated contacts against an
+  affine cup and a matching flat ramp. Translation, both motion ratios,
+  effective inertia and held clamping have closed-form expectations.
+- A noncircular cup whose track-wide slopes overlap the opposing slope.
+  Active-contact enclosures establish the actual regular branch. An independent
+  bounded-minimization geometry oracle and Cartesian material trajectories
+  check positions, axial work and shaft torque.
+- All extreme pressure locations, with full centroidal spin demand, to check
+  guide-moment bounds for running loads and velocity-reset impulses.
+- Cubic and quintic point-defined, multi-piece profiles, their derivatives,
+  finite contact gaps, motion-map derivatives and root-free stable-path runtime
+  calls. Changing contact paths use finite-face queries at the compiled pose;
+  force-map evaluation and radial closure stay outside those queries.
+- Global minima for mixed arc/polynomial pairs, including changing curvature;
+  opposite circular branches must retain their central stationary point.
+- A competing-minimum switch placed between ordinary sampling positions. The
+  reachable-path enclosure rejects compilation rather than relying on samples.
+  The diagnostic names its numerical category, contact and radial interval.
+- Concave polygon mass moments against a sum of two cuboids, both winding
+  directions, self-intersection rejection, and smooth nearly semicircular
+  mass moments against closed-form truncated-half-disc integrals.
+- Axial datum translations of ±250 mm in both compilation and inspection,
+  after removing the inspection utility's old ±100 mm axial bound.
+- JSON/schema round trips for the new profile kind, unchanged legacy records,
+  complete distributed-group mass semantics and coupled angular-momentum
+  conservation with conformal contacts.
+
+The continuation checks additionally cover:
+
+- A flat block face sliding across recessed track material with one or two
+  contact intervals. Closed-form translation, inertia, clamping, and every
+  extreme pressure-centroid combination check the guide-moment range.
+- A cubic exchange between separated endpoint supports. Position and both
+  motion derivatives match an independent piecewise analytic envelope. A
+  quadratic switch with incompatible motion ratios requires a model event.
+- An isolated extra endpoint contact with a different curvature. The active
+  envelope uses the dominating candidate's second derivative; cached contact
+  data must not hide the isolated contact.
+- Two assembled branches in a folded radial search window. Both selected
+  branches work and schema-round-trip; omitted selection reports ambiguity.
+  A fictitious COM-axis crossing in unused search space does not reject the
+  reachable positive-radius motion.
+- A resolvable 0.001 slope difference, beyond the former condition-number cap,
+  with constant motion ratio 1000 and no invented interpolation curvature.
+- Forward integration through changing spans and the smooth endpoint switch,
+  with host axial/shaft inertia. Energy and shaft angular momentum remain
+  constant, and both running contact reactions remain compressive.
+
+The closed-form endpoint checks found and corrected an endpoint-curvature
+error in simultaneous-contact handling: a fixed endpoint does not use the
+interior tangency migration formula. Higher-precision endpoint polynomial
+root isolation distinguishes repeated roots from subtraction artifacts.
+
+Numerical branch enclosures and sampled interpolation diagnostics are separate
+checks. A numerical enclosure failure is not a declaration that real hardware
+is impossible. The provider remains an ideal, fixed-orientation, frictionless
+meridional-graph model. Smooth changing support sets are admitted by the
+implemented envelope constructions. This is not a completeness proof for every
+well-posed graph: degenerate tangencies and unresolved interior competing
+minima can still produce numerical errors. Independent rocking, overhang/3D
+contact, nonsmooth impact/release continuation, pressure laws,
+friction/compliance, actual guide
+capacity, full-solid clearance and post-release dynamics are not implemented.
+The generalized common boundary is not restricted to this geometry provider.
+
+Canonical LaTeX and PDF remain colocated in each root mechanism subfolder.
+The sliding-block note now derives determinate clamping with unknown pressure
+location and the resulting guide-moment range. The common note documents the
+new provider scope without changing its force relations. The frontend demo is
+a separate PR and its controls are not updated by this core release.
+
+## Historical CINDER 1.2.0 verification
 
 This PR incorporates the four-quantity boundary from PR #519 into PR #520 and
 adds a constrained sliding-block provider. Verification used Python 3.12.14,

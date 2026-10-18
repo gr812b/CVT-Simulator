@@ -34,3 +34,8 @@ boundary for both mechanisms. See the
 These formulations are repository-level documents. CINDER's package
 distributions retain software documentation and examples; they do not bundle
 this root documentation folder.
+
+CINDER 1.2.1 expands the sliding-block contact construction to user-defined
+C2 profiles and common-normal contact sets. The common force boundary is
+unchanged. The sliding-block note derives why clamping can remain unique when
+pressure location is unknown, and how the guide-moment range is calculated.

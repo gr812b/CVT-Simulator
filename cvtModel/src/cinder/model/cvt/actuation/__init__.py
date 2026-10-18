@@ -45,7 +45,10 @@ from .sliding_block import (
     SlidingBlockReactions,
     SlidingBlockSpec,
 )
-from .sliding_block_geometry import Profile as SlidingBlockProfile
+from .sliding_block_geometry import (
+    Profile as SlidingBlockProfile,
+    SlidingBlockGeometryError,
+)
 from .types import (
     ActuationContribution,
     ActuatorInspection,
@@ -64,6 +67,7 @@ __all__ = [
     "SlidingBlockCompilationReport",
     "SlidingBlockFlyweightForce",
     "SlidingBlockGeometry",
+    "SlidingBlockGeometryError",
     "SlidingBlockInertiaMap",
     "SlidingBlockMass",
     "SlidingBlockPose",
