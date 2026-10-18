@@ -169,7 +169,10 @@ The lower contact gives $Z=A(R)$ and the upper contact gives
 \end{equation}
 Disjoint bounds on the slopes of the active tracks establish that the
 derivative of this function is nonzero. A bracketed scalar solve then gives
-the unique $R$ within the declared radial window. Track-wide bounds are tried
+the unique $R$ on a selected regular component of the radial search window.
+If the window contains a fold, subdivision isolates monotone components.
+The component must cover the full requested axial travel; an optional
+\texttt{reference\_radius} selects the assembly when several components fit. Track-wide bounds are tried
 first. If they overlap, a contact enclosure excludes regions of the face
 which cannot attain the minimum gap, and the radial window is subdivided.
 To see the exclusion, let a trial face point give a uniform upper bound on
@@ -187,9 +190,21 @@ its envelope remains smooth. \Cref{sec:distributed} treats the associated loads.
 
 A numerical enclosure failure is not proof that the proposed hardware is
 impossible. The implementation reports the unresolved interval and contact.
-It does not hide a transition by blending two motion curves. Changes of
-contact-set cardinality currently require separate branch handling. The
-bounds use floating-point stationary-root calculations; the subsequent
+It does not hide a corner by blending two body-motion curves. Contact-set
+cardinality may change while the body motion remains smooth. For example,
+a flat block face can span several coplanar pads. Subtracting its slope from
+the track leaves a constant extremum on each pad. If at least one extremal
+pad intersects the footprint at every $R$, the envelope is affine, even as
+its contact intervals split or disappear.
+
+A concave gap has only two endpoint candidates. Their polynomial crossings
+are isolated with 80-digit arithmetic and their winning branches compared
+on either side. A switch with matching value and first two derivatives
+retains a $C^2$ body motion and becomes an interpolation boundary. A switch
+with incompatible derivatives requires a nonsmooth event model and is
+reported as outside this smooth provider, rather than invalid hardware.
+Other unresolved competing minima remain numerical failures. General
+profile extrema still use floating-point stationary-root calculations;
 interpolation diagnostics are separate sampled checks.
 
 Endpoint contact is allowed only when explicitly requested. It is an ideal
@@ -215,8 +230,9 @@ Consequently,
 \end{equation}
 The constraint Jacobian has rows $(-s_\ell,1)$ and $(s_u,-1)$.
 As $D$ approaches zero the geometry ceases to determine a regular translation.
-The implementation bounds its condition number over the branch and rejects
-ill-conditioned windows rather than clipping the motion ratio.
+The implementation compares slope separation with arithmetic resolution
+and checks the resulting motion accuracy. It does not impose the earlier
+fixed condition-number cutoff or clip a large motion ratio.
 
 Curvature changes the active track slope as the block moves. At an interior
 contact, differentiation of the tangency condition with respect to $R$ yields
@@ -225,7 +241,11 @@ contact, differentiation of the tangency condition with respect to $R$ yields
  s_{i,R}=f_i''(1+u_{i,R}).
  \label{eq:contact-migration}
 \end{equation}
-At a retained endpoint $u_{i,R}=0$. All profile derivatives in this expression
+At a retained endpoint $u_{i,R}=0$, including a pose where both endpoints
+touch. When several support candidates share their value and slope, the
+lower maximum envelope takes the greatest candidate second derivative;
+the upper minimum takes the least. An isolated touching candidate need not
+remain active on either side. All profile derivatives in this expression
 are evaluated at the active material coordinates. Thus the second motion
 ratios are
 \begin{equation}
@@ -491,26 +511,35 @@ entries are square metres. The JSON examples in the package example folder provi
 records, including a noncircular cup and a nonconvex multi-contact weight;
 they are not full CVT assemblies.
 
-The compiler solves geometry outside the runtime RHS and constructs a common
-$C^2$ piecewise quintic Hermite representation of $R,Z$ and cached paths for
-the contact-set endpoints. Values and the first two body-motion derivatives
-come from the same contact construction. Contact coordinates need accurate
-values; their second derivatives need not agree across a $C^2$ profile seam. Both inertia
-functions and their derivatives use this one compiled motion. Contact
-locations and normals also use the cached representation; no root solve is
-performed inside the closure iteration.
+The compiler solves radial closure before integration and constructs a
+common $C^2$ piecewise quintic Hermite representation of $R,Z$. Both inertia
+functions and their derivatives use this same material motion. Affine track
+pairs give an exactly linear motion representation, avoiding artificial
+curvature from endpoint rounding over a very short axial interval.
 
-Starting from eight intervals, the compiler tests three interior points per
-cell and subdivides failed cells. Position errors include the contact-set
-endpoints; derivative errors concern $R,Z$. Its absolute tolerances are
-$2\times10^{-10}\,\mathrm m$ for positions,
+Contact locations are separate geometric data. Stable contact sets retain
+cached endpoint paths. A changing or insufficiently smooth contact path
+instead uses a global finite-face query at the compiled body pose when
+reactions, impulses or a preview need contact locations. This query can
+perform polynomial root searches, but does not re-solve radial closure.
+Inertia-map evaluation always remains free of geometry solves. The
+compilation report identifies the contact-query strategy.
+
+Starting from eight intervals and the identified smooth transition boundaries,
+the compiler tests three interior points per cell and subdivides failed cells.
+Its body-motion tolerances are $2\times10^{-10}\,\mathrm m$ for positions,
 $2\times10^{-7}$ for first derivatives, and
-$2\times10^{-4}\,\mathrm{m^{-1}}$ for second derivatives.
-The compilation report records the largest observed errors. These are sampled
-interpolation diagnostics, distinct from the interval tests establishing the
-contact branch; they are not rigorous continuum bounds on interpolation error.
-The cache is keyed by the immutable geometry, so mass changes reuse the motion.
-Queries outside the compiled axial interval raise an error without extrapolation.
+$2\times10^{-4}\,\mathrm{m^{-1}}$ for second derivatives. Cached contact paths
+have a separate sampled position tolerance of $2\times10^{-10}\,\mathrm m$.
+The report records the largest observed errors, the selected radial component,
+and observed contact counts. These are sampled interpolation diagnostics,
+not rigorous continuum bounds. Contact-count changes do not reject a regular
+body motion. Conservative regularity enclosures can still fail on valid
+inputs; this construction does not establish completeness for all graphs.
+
+The cache is keyed by immutable geometry, so mass changes reuse the motion.
+Positive COM radius is required over reachable travel. Queries outside the
+compiled axial interval raise an error without extrapolation.
 
 One sliding-block element represents the entire distributed group on a pulley.
 Python construction and saved-document validation reject duplicate groups;
@@ -568,8 +597,8 @@ Limit & Implemented response\\\midrule
 Invalid inputs & Reject non-finite values, impossible tensors, nonpositive thickness,
 invalid domains/count, and a nonzero tangential COM offset.\\[.4em]
 Geometric branch & Search all finite-face minima. Establish regular reachable
-motion; report unresolved enclosures, contact-set transitions, insufficient
-support and ill-conditioned kinematics separately. Flat common-normal contact
+motion and support smooth contact-set changes. Report unresolved enclosures,
+ambiguous assembly, insufficient support and nonsmooth motion separately. Flat common-normal contact
 sets retain clamping and guide-moment bounds.\\[.4em]
 Operating state & Evaluate both normal forces with the solved local acceleration;
 reject contact loss. Report the complete ideal-guide demand separately.\\[.4em]

@@ -649,7 +649,11 @@ translation and a centroidal tensor. Their companion documents are
 The common evaluator owns the dynamics in both cases; each mechanism owns its
 contact conditions and geometric domain. CINDER 1.2.1 extends the sliding-block
 contact construction to point-defined and piecewise polynomial profiles and
-common-normal contact sets. Those geometry choices do not alter the boundary
+common-normal contact sets. Its compiler separates contact topology from
+material motion, selects regular assembled branches and admits verified smooth
+support changes. Nonsmooth motion needs an event model, and unresolved
+numerical geometry is not classified as impossible hardware.
+Those geometry choices do not alter the boundary
 relations derived here. Saved documents retain physical
 geometry and mass properties, rather than independent fits of four functions.
 

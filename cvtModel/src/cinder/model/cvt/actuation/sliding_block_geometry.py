@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from bisect import bisect_right
+from decimal import Decimal, localcontext
 from functools import lru_cache
 from math import hypot, isfinite, sqrt
 from typing import Literal
@@ -239,6 +240,10 @@ class Profile:
 
     def bounds(self, a, b, order=0):
         """Extrema from polynomial stationary roots, or analytic circular extrema."""
+        if a == b:
+            value = self.derivative(a, order)
+            padding = 64 * np.finfo(float).eps * max(abs(value), np.finfo(float).tiny)
+            return value - padding, value + padding
         cuts = sorted({a, b, *(v for v in self.knots if a < v < b)})
         values = []
         for left, right in zip(cuts, cuts[1:]):
@@ -523,10 +528,11 @@ def _contact_minima(m, radial, *, lower):
     face = m.lower_face if lower else m.upper_face
     track = m.lower_track if lower else m.upper_track
     if lower:
-        return _gap_minima(face, track, radial, face.left, face.right)[1]
-    _, spans = _gap_minima(
-        track, face, -radial, radial + face.left, radial + face.right
-    )
+        spans = _gap_minima(face, track, radial, face.left, face.right)[1]
+    else:
+        _, spans = _gap_minima(
+            track, face, -radial, radial + face.left, radial + face.right
+        )
     tolerance = (
         32
         * np.finfo(float).eps
@@ -541,7 +547,131 @@ def _contact_minima(m, radial, *, lower):
             return face.right
         return u
 
-    return tuple((local(a), local(b)) for a, b in spans)
+    if not lower:
+        spans = tuple((local(a), local(b)) for a, b in spans)
+    slopes = [track.gradient(radial + (a + b) / 2) for a, b in spans]
+    if (
+        len(spans) > 1
+        and all(a == b for a, b in spans)
+        and (max(slopes) - min(slopes) > 2e-10 * max(1.0, *(abs(v) for v in slopes)))
+    ):
+        # Close unequal minima can fall inside the double-precision gap tie
+        # tolerance, especially near a smooth cubic envelope switch. Re-evaluate
+        # their values at higher precision before inventing multiple normals.
+        with localcontext() as context:
+            context.prec = 60
+            values = []
+            for a, _ in spans:
+                u = Decimal.from_float(float(a))
+                R = Decimal.from_float(float(radial)) + u
+                gap = _decimal_profile(face, u) - _decimal_profile(track, R)
+                values.append(gap if lower else -gap)
+            minimum = min(values)
+            tolerance = Decimal("1e-24") * max(
+                Decimal("0.001"), *(abs(v) for v in values)
+            )
+            spans = tuple(
+                span
+                for span, value in zip(spans, values)
+                if value - minimum <= tolerance
+            )
+    return spans
+
+
+def _decimal_profile(p, r):
+    """Evaluate the supplied float geometry, without subtraction roundoff."""
+
+    def d(v):
+        return Decimal.from_float(float(v))
+
+    if p.kind == "spline":
+        i = min(max(bisect_right(p.knots, float(r)) - 1, 0), len(p.coefficients) - 1)
+        t = (r - d(p.knots[i])) / (d(p.knots[i + 1]) - d(p.knots[i]))
+        value = Decimal(0)
+        for c in reversed(p.coefficients[i]):
+            value = value * t + d(c)
+        return value + d(p.offset)
+    dr = r - d(p.origin)
+    if p.kind == "circle":
+        return d(p.offset) + p.circle_sign * (
+            d(p.radius) - (d(p.radius) ** 2 - dr**2).sqrt()
+        )
+    return (
+        d(p.offset)
+        + d(p.slope) * dr
+        + (d(p.curvature) * dr**2 / 2 if p.kind == "quadratic" else 0)
+    )
+
+
+def _decimal_polynomial(p, left, right, shift):
+    """Polynomial for p(left + (right-left)*t + shift), in current precision."""
+
+    def d(v):
+        return Decimal.from_float(float(v))
+
+    a, width = d(left) + d(shift), d(right) - d(left)
+    if p.kind == "spline":
+        i = min(
+            max(bisect_right(p.knots, (left + right) / 2 + shift) - 1, 0),
+            len(p.coefficients) - 1,
+        )
+        h = d(p.knots[i + 1]) - d(p.knots[i])
+        a, width = (a - d(p.knots[i])) / h, width / h
+        coefficients = list(map(d, p.coefficients[i]))
+    else:
+        a -= d(p.origin)
+        coefficients = [d(p.offset), d(p.slope)]
+        if p.kind == "quadratic":
+            coefficients.append(d(p.curvature) / 2)
+    result = [Decimal(0)]
+    for value in reversed(coefficients):
+        out = [Decimal(0)] * (len(result) + 1)
+        for i, c in enumerate(result):
+            out[i] += a * c
+            out[i + 1] += width * c
+        out[0] += value
+        result = out
+    if p.kind == "spline":
+        result[0] += d(p.offset)
+    while len(result) > 1 and result[-1] == 0:
+        result.pop()
+    return result
+
+
+def _decimal_roots(coefficients):
+    """Derivative-isolated roots in (0,1), for the high-precision endpoint check."""
+    c = list(coefficients)
+    while len(c) > 1 and c[-1] == 0:
+        c.pop()
+    if len(c) < 2:
+        return []
+    if len(c) == 2:
+        root = -c[0] / c[1]
+        return [root] if 0 < root < 1 else []
+
+    def value(x):
+        y = Decimal(0)
+        for coefficient in reversed(c):
+            y = y * x + coefficient
+        return y
+
+    critical = _decimal_roots([i * v for i, v in enumerate(c)][1:])
+    tolerance = max(map(abs, c)) * Decimal("1e-55")
+    roots = [x for x in critical if abs(value(x)) <= tolerance]
+    cuts = [Decimal(0), *critical, Decimal(1)]
+    for a, b in zip(cuts, cuts[1:]):
+        va, vb = value(a), value(b)
+        if abs(va) <= tolerance or abs(vb) <= tolerance or va * vb >= 0:
+            continue
+        for _ in range(190):
+            middle = (a + b) / 2
+            vm = value(middle)
+            if va * vm <= 0:
+                b = middle
+            else:
+                a, va = middle, vm
+        roots.append((a + b) / 2)
+    return sorted(roots)
 
 
 def calibrate_zero(m: Mechanism) -> Mechanism:
@@ -574,8 +704,12 @@ def _contact(
         du_dr = 0.0
         mode = "interior tangent"
     elif not endpoint:
-        raise ValueError(
-            "Contact migration is singular; local geometry does not determine its derivatives"
+        raise SlidingBlockGeometryError(
+            "Contact migration is degenerate; this derivative construction cannot establish the body envelope",
+            code="contact_derivative_unresolved",
+            category="numerical",
+            axial_position=x,
+            contact="lower" if lower else "upper",
         )
     else:
         du_dr = 0.0
@@ -589,20 +723,33 @@ def _contact(
             else:
                 slopes.append(track.gradient(radial + a))
                 f2, b2 = track.second(radial + a), face.second(a)
-                if f2 == 0:
+                if a in (face.left, face.right):
+                    second.append(f2)
+                elif f2 == 0:
                     second.append(0.0)
                 elif abs(b2 - f2) <= 128 * np.finfo(float).eps * max(abs(b2), abs(f2)):
-                    raise ValueError("Contact set contains singular contact migration")
+                    raise SlidingBlockGeometryError(
+                        "A contact candidate has unresolved degenerate migration",
+                        code="contact_derivative_unresolved",
+                        category="numerical",
+                        axial_position=x,
+                        contact="lower" if lower else "upper",
+                    )
                 else:
                     second.append(f2 * b2 / (b2 - f2))
         if max(slopes) - min(slopes) > 2e-10 * max(1.0, max(abs(v) for v in slopes)):
-            raise ValueError(
-                "Contact set has different normal directions; it cannot define regular two-contact translation"
+            raise SlidingBlockGeometryError(
+                "Contact set has different envelope slopes; nonsmooth motion requires an event model",
+                code="nonsmooth_contact_transition",
+                category="model",
+                axial_position=x,
+                contact="lower" if lower else "upper",
             )
-        if max(second) - min(second) > 2e-8 * max(1.0, max(abs(v) for v in second)):
-            raise ValueError(
-                "Contact set has inconsistent envelope curvature; motion is not twice differentiable"
-            )
+        # When candidates share their value and first derivative, the maximum
+        # lower support selects the greatest curvature; the minimum upper
+        # support selects the least. A candidate touching only at this pose
+        # need not have the active envelope's curvature on either side.
+        envelope_second = (max if lower else min)(second)
         du_dr = fc / (bc - fc) if bc != fc else 0.0
         mode = (
             "conformal (undetermined contact distribution)"
@@ -610,6 +757,8 @@ def _contact(
             else "multiple points (undetermined contact distribution)"
         )
     slope_derivative = fc * (1 + du_dr)
+    if intervals and (len(intervals) > 1 or intervals[0][1] - intervals[0][0] > 2e-13):
+        slope_derivative = envelope_second
     if lower:
         nr, nz = -slope, 1.0
         world_axial = track.value(R)

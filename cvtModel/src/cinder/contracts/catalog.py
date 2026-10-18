@@ -177,7 +177,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "Finite contact profiles and branch",
                     "object",
                     True,
-                    "Point-defined/piecewise polynomial graphs or exact primitives; SI units. Body datum is independent of COM.",
+                    "Point-defined/piecewise polynomial graphs or exact primitives; SI units. Optional reference_radius selects an assembled branch in a folded search window. Smooth support changes are allowed; body datum is independent of COM.",
                     value_kind="object",
                     dimension="structure",
                 ),

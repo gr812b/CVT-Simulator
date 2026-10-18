@@ -434,6 +434,10 @@ def _assembly_definitions() -> dict[str, Any]:
                             )
                         },
                         "allow_end_contacts": {"type": "boolean"},
+                        "reference_radius": {
+                            "type": "number",
+                            "description": "Metres; select a regular radial branch when several assembled configurations exist.",
+                        },
                     },
                     "required": [
                         "lower_track",

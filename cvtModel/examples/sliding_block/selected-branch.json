@@ -1,0 +1,82 @@
+{
+  "kind": "sliding_block_flyweight",
+  "geometry": {
+    "lower_track": {
+      "kind": "quadratic",
+      "origin": 0.06,
+      "offset": -0.001,
+      "slope": 0,
+      "curvature": 64,
+      "radius": 0.0,
+      "circle_sign": 1,
+      "left": 0.015,
+      "right": 0.105
+    },
+    "upper_track": {
+      "kind": "line",
+      "origin": 0,
+      "offset": 0.048,
+      "slope": 0.0,
+      "curvature": 0.0,
+      "radius": 0.0,
+      "circle_sign": 1,
+      "left": 0.015,
+      "right": 0.105
+    },
+    "lower_face": {
+      "kind": "quadratic",
+      "origin": 0,
+      "offset": 0.0,
+      "slope": 0.0,
+      "curvature": -1000,
+      "radius": 0.0,
+      "circle_sign": 1,
+      "left": 0,
+      "right": 0.004
+    },
+    "upper_face": {
+      "kind": "line",
+      "origin": 0,
+      "offset": 0.04,
+      "slope": 0.0,
+      "curvature": 0.0,
+      "radius": 0.0,
+      "circle_sign": 1,
+      "left": 0,
+      "right": 0.004
+    },
+    "radial_min": 0.025,
+    "radial_max": 0.09,
+    "axial_position_min": 0,
+    "axial_position_max": 0.002,
+    "allow_end_contacts": true,
+    "reference_radius": 0.08
+  },
+  "mass": {
+    "total_mass": 0.6,
+    "count": 3,
+    "com_offset": [
+      0.0020625,
+      0.0,
+      0.0186
+    ],
+    "centroidal_inertia_per_mass": [
+      [
+        0.00020261142857142856,
+        0.0,
+        1.3625000000000003e-06
+      ],
+      [
+        0.0,
+        0.00015595752232142857,
+        0.0
+      ],
+      [
+        1.3625000000000003e-06,
+        0.0,
+        4.934609375e-05
+      ]
+    ]
+  },
+  "guide": "ideal_fixed_orientation"
+}

@@ -60,24 +60,54 @@ may change sign and multiple local minima are allowed. Circular/polynomial
 stationarity is reduced to a polynomial, with candidates checked in the original
 unsquared equation. No coarse contact grid selects the minimum.
 
-Declare a positive radial branch window and a signed local axial interval.
-Bounds on track slopes establish monotone closure and nonsingular translation.
+Declare a positive radial **search window** and a signed local axial interval.
+Bounds on the active track slopes establish monotone closure. When the window
+contains a fold, subdivision isolates regular components and selects a component
+that covers the requested travel. If several components fit, set the optional
+`reference_radius` to a radius inside the intended component. This selects an
+assembled branch; it is not a cup dimension or a physical stop. The compilation
+report records `selected_radial_interval`.
+
 Where track-wide bounds overlap, active-contact enclosures eliminate face
-regions which cannot minimize the gap, and the radial interval is subdivided.
-Separate reachable-path checks establish isolated regular nonlinear contacts
-or retained endpoints; affine tracks also admit fixed multiple minima and flat
-contact spans. The compiler does not smooth across an unestablished envelope
-transition. Conservative floating-point enclosures can fail to establish a
-valid branch; such a failure is reported as numerical, not proof of impossible
-hardware.
+regions that cannot minimize the gap. Concave gaps need only their endpoints.
+The old fixed condition-number cap is removed: slope separation is compared
+with arithmetic resolution, and motion/interpolation must still meet tolerances.
+Affine tracks use an exactly linear body interpolant to avoid fictitious
+curvature from rounding over short axial intervals.
+
+Contact locations and the mass motion have separate representations. An affine
+block face may slide across several coplanar support pads: contact spans can
+split, appear, disappear or cross a face endpoint while the body envelope stays
+affine. Endpoint candidates of a concave gap may also exchange support with
+matching value, first and second derivatives. Their polynomial crossings are
+isolated at 80-digit precision, both one-sided jets are checked, and smooth
+crossings become interpolation boundaries. A change in contact count alone is
+no longer a rejection condition. Endpoint policy still applies to isolated
+endpoint contacts, including simultaneous endpoints.
+
+A genuine corner in the **body** motion requires an additional nonsmooth event
+model. It is reported as `nonsmooth_contact_transition` in category `model`,
+not as impossible hardware. Interior competing minima or degenerate tangency
+can still defeat the conservative envelope construction; `contact_regularity`
+and `contact_derivative_unresolved` mean numerical uncertainty. This provider
+cannot promise acceptance of every well-posed graph geometry.
 
 The compiled C2 body motion supplies both inertia functions and their actual
-derivatives. Contact paths use the same cached representation. Position errors
-include contact coordinates; derivative errors concern body motion. The report's
-three interior checks per final cell are sampled interpolation diagnostics,
-not rigorous continuum error bounds. Runtime force, reactions and impulses
-perform no contact root solves and never extrapolate beyond declared travel.
-Identical geometry reuses compilation when mass changes.
+derivatives. Inertia/force-map evaluation performs no geometry root solves.
+Stable contact paths retain their separately cached interpolants. Changing or
+insufficiently smooth contact paths instead query global finite-face minima
+at the compiled body pose when `pose`, reactions or impulses are requested;
+there is no radial closure solve in those queries. This fallback costs more
+than cached contact paths. `contact_queries` reports which path was chosen.
+
+The report's body position/derivative errors and optional
+`max_contact_position_error` are sampled diagnostics at three interior points
+per final cell, not rigorous continuum error bounds. `contact_interval_counts`
+records the largest count seen during compilation, not a fixed topology.
+`pose(...).lower/upper.u_intervals` is the contact set at the requested pose.
+Queries never extrapolate beyond declared travel. Identical geometry reuses
+compilation when mass changes; positive COM radius is checked over reachable
+travel rather than irrelevant parts of the search window.
 
 ## Flat faces and pressure location
 
@@ -174,8 +204,9 @@ tension is rejected. Flight, rocking and recontact require additional dynamics.
 `axial_position`, `radial_interval` and `contact`. For example,
 `branch_domain` means no double contact in the declared window at the named
 closure; `branch_enclosure`/`contact_regularity` are numerical enclosure failures;
-`contact_topology_transition` identifies an unimplemented change in contact-set
-cardinality. An application must keep these distinct from invalid dimensions,
+`ambiguous_branch` requests an assembled-branch selection; `branch_precision`
+means slope separation or motion derivatives could not be resolved;
+`nonsmooth_contact_transition` requires additional event physics. An application must keep these distinct from invalid dimensions,
 actual loss of contact and clearance of separately supplied solids.
 
 ## Saved records and compatibility
@@ -186,7 +217,8 @@ record contains `kind`, `knots`, `coefficients`, and optional `offset`. The publ
 encoder emits normalized coefficients, not independent fitted force maps.
 The schema, decoder, catalog and production force provider all admit the new
 representation. [Examples](../examples/sliding_block/) include a noncircular
-cup with a matching flat ramp and a nonconvex two-point contact case.
+cup with a matching flat ramp, a nonconvex two-point contact case, changing
+support spans, and a selected branch in a folded search window.
 
 CINDER 1.2.1 changes the core and its canonical documentation. The editable web
 demo remains a separate application PR; this release does not update its old

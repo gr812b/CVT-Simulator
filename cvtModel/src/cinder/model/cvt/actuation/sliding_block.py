@@ -7,9 +7,10 @@ mass in the local right-handed (radial, tangential, shaft-axial) frame.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from math import isfinite
+from decimal import Decimal, localcontext
 from typing import Literal
 
 import numpy as np
@@ -28,7 +29,12 @@ from .sliding_block_geometry import (
     _contact,
     _min_gap,
     _contact_minima,
+    _real_roots,
+    _decimal_profile,
+    _decimal_polynomial,
+    _decimal_roots,
 )
+from numpy.polynomial import Polynomial
 from .types import PulleyActuationContext
 from cinder.model.cvt.closure import ClosureUnknowns
 
@@ -50,6 +56,7 @@ class SlidingBlockGeometry:
     axial_position_min: float
     axial_position_max: float
     allow_end_contacts: bool = False
+    reference_radius: float | None = None
 
     def __post_init__(self):
         for key in (
@@ -66,6 +73,13 @@ class SlidingBlockGeometry:
             raise ValueError("axial branch interval must be ordered")
         if not isinstance(self.allow_end_contacts, bool):
             raise ValueError("allow_end_contacts must be boolean")
+        if self.reference_radius is not None and (
+            not isfinite(self.reference_radius)
+            or not self.radial_min <= self.reference_radius <= self.radial_max
+        ):
+            raise ValueError(
+                "reference_radius must lie inside the radial search window"
+            )
         self.mechanism()  # Includes a global positive-thickness check.
         for track in (self.lower_track, self.upper_track):
             if (
@@ -399,6 +413,137 @@ class SlidingBlockCompilationReport:
     gradient_tolerance: float = 2e-7
     curvature_tolerance: float = 2e-4
     contact_interval_counts: tuple[int, int] = (1, 1)
+    selected_radial_interval: tuple[float, float] = (0.0, 0.0)
+    contact_queries: str = "global finite-face minima at the compiled body pose"
+    regularity_subintervals: int = 1
+    max_contact_position_error: float | None = None
+
+
+def _affine(p):
+    """Return the global slope/intercept only for an exactly affine profile."""
+    if p.kind == "line" or (p.kind == "quadratic" and p.curvature == 0):
+        return p.slope, p.offset - p.slope * p.origin
+    if p.kind == "spline" and all(
+        all(v == 0 for v in row[2:]) for row in p.coefficients
+    ):
+        slope = p.gradient(p.left)
+        if all(p.gradient(v) == slope for v in p.knots):
+            return slope, p.value(p.left) - slope * p.left
+    return None
+
+
+def _flat_support_envelope(m, r0, r1, lower):
+    """Certify a moving affine face supported by one or more flat track pads.
+
+    Subtract the face slope from the track. Its global extremum must be attained
+    on a constant interval whose footprint covers every R under consideration.
+    This proves the body envelope is affine even when contact spans split,
+    appear, disappear, or cross face endpoints.
+    """
+    face = m.lower_face if lower else m.upper_face
+    track = m.lower_track if lower else m.upper_track
+    affine = _affine(face)
+    if affine is None or track.kind == "circle":
+        return False
+    slope, _ = affine
+    a, b = r0 + face.left, r1 + face.right
+    cuts = sorted({a, b, *(v for v in track.knots if a < v < b)})
+    pieces, values = [], []
+    for left, right in zip(cuts, cuts[1:]):
+        p = track.polynomial((left + right) / 2, left, right)
+        p -= slope * Polynomial([left, right - left])
+        candidates = [0.0, 1.0, *_real_roots(p.deriv(), 0, 1)]
+        values.extend(float(p(t)) for t in candidates)
+        if all(v == 0 for v in p.coef[1:]):
+            pieces.append((left, right, float(p(0))))
+    extremum = (max if lower else min)(values)
+    tolerance = 128 * np.finfo(float).eps * max(1e-3, abs(extremum))
+    supports = sorted(
+        (a - face.right, b - face.left)
+        for a, b, value in pieces
+        if abs(value - extremum) <= tolerance
+    )
+    covered = r0
+    for a, b in supports:
+        if a > covered + 32 * np.finfo(float).eps * max(abs(covered), 1e-3):
+            break
+        if b >= covered:
+            covered = b
+        if covered >= r1:
+            return True
+    return False
+
+
+@lru_cache(maxsize=512)
+def _endpoint_envelope(m, r0, r1, lower, return_transitions=False):
+    """Enumerate concave-gap endpoint switches and compare both one-sided jets.
+
+    Eighty-digit arithmetic resolves repeated roots without manufacturing small
+    corners through subtractive cancellation of the supplied float profiles.
+    """
+    face = m.lower_face if lower else m.upper_face
+    track = m.lower_track if lower else m.upper_track
+    if track.kind == "circle":
+        return () if return_transitions else False
+    a, b = face.left, face.right
+    cuts = sorted(
+        {r0, r1, *(v - u for v in track.knots for u in (a, b) if r0 < v - u < r1)}
+    )
+    candidates = list(cuts)
+    touches = set()
+    with localcontext() as context:
+        context.prec = 80
+        for left, right in zip(cuts, cuts[1:]):
+            pa = _decimal_polynomial(track, left, right, a)
+            pb = _decimal_polynomial(track, left, right, b)
+            pa[0] -= _decimal_profile(face, Decimal.from_float(a))
+            pb[0] -= _decimal_profile(face, Decimal.from_float(b))
+            size = max(len(pa), len(pb))
+            delta = [
+                (pa[i] if i < len(pa) else Decimal(0))
+                - (pb[i] if i < len(pb) else Decimal(0))
+                for i in range(size)
+            ]
+            roots = [left + (right - left) * float(t) for t in _decimal_roots(delta)]
+            candidates.extend(roots)
+            touches.update(roots)
+        candidates = sorted(set(candidates))
+
+        def winner(r):
+            R = Decimal.from_float(r)
+            values = [
+                _decimal_profile(track, R + Decimal.from_float(u))
+                - _decimal_profile(face, Decimal.from_float(u))
+                for u in (a, b)
+            ]
+            return (values[0] >= values[1]) if lower else (values[0] <= values[1])
+
+        transitions = []
+        for i, R in enumerate(candidates[1:-1], 1):
+            before = winner((candidates[i - 1] + R) / 2)
+            after = winner((R + candidates[i + 1]) / 2)
+            if R in touches:
+                transitions.append(R)
+            if before == after:
+                continue
+            for order, tolerance in ((0, 2e-10), (1, 2e-9), (2, 2e-7)):
+                va = track.derivative(R + a, order) - (
+                    face.value(a) if order == 0 else 0
+                )
+                vb = track.derivative(R + b, order) - (
+                    face.value(b) if order == 0 else 0
+                )
+                if abs(va - vb) > tolerance * max(1.0, abs(va), abs(vb)):
+                    raise SlidingBlockGeometryError(
+                        "Contact switch has incompatible motion derivatives; a nonsmooth event model is required",
+                        code="nonsmooth_contact_transition",
+                        category="model",
+                        radial_interval=(R, R),
+                        contact="lower" if lower else "upper",
+                    )
+            if R not in transitions:
+                transitions.append(R)
+    return tuple(transitions) if return_transitions else True
 
 
 def _slope_bounds(p: Profile, a: float, b: float):
@@ -414,6 +559,31 @@ def _active_slope_bounds(m, r0, r1, lower):
     """
     face = m.lower_face if lower else m.upper_face
     track = m.lower_track if lower else m.upper_track
+    if _flat_support_envelope(m, r0, r1, lower):
+        slope = _affine(face)[0]
+        return (slope, slope), [(face.left, face.right)]
+    fl, fh = face.bounds(face.left, face.right, 2)
+    tl, th = track.bounds(r0 + face.left, r1 + face.right, 2)
+    concave = fh - tl < 0 if lower else th - fl < 0
+    if concave:
+        endpoints = [face.left, face.right]
+        values = [track.bounds(r0 + u, r1 + u) for u in endpoints]
+        # For a concave gap the minimum is at an endpoint. Exclude a losing
+        # endpoint only when its entire value enclosure establishes dominance.
+        supports = [
+            (lo - face.value(u), hi - face.value(u))
+            for u, (lo, hi) in zip(endpoints, values)
+        ]
+        if lower:
+            keep = [i for i in range(2) if supports[i][1] >= supports[1 - i][0]]
+        else:
+            keep = [i for i in range(2) if supports[i][0] <= supports[1 - i][1]]
+        slopes = [
+            v
+            for i in keep
+            for v in track.bounds(r0 + endpoints[i], r1 + endpoints[i], 1)
+        ]
+        return (min(slopes), max(slopes)), [(endpoints[i], endpoints[i]) for i in keep]
     middle = (r0 + r1) / 2
     spans = _contact_minima(m, middle, lower=lower)
     u = sum(spans[0]) / 2
@@ -444,6 +614,8 @@ def _regular_contact_cell(m, r0, r1, lower):
     face = m.lower_face if lower else m.upper_face
     track = m.lower_track if lower else m.upper_track
     a, b = face.left, face.right
+    if _flat_support_envelope(m, r0, r1, lower):
+        return True
     # A single affine track separates the gap into a function of u and an
     # affine function of R. Any isolated minima or flat spans stay fixed;
     # multiple equal minima do not make translation ambiguous.
@@ -478,6 +650,8 @@ def _regular_contact_cell(m, r0, r1, lower):
         if curvature[0] > 0 and da[1] < 0 and db[0] > 0:
             return True
         if curvature[1] < 0 and allow_left and allow_right:
+            if _endpoint_envelope(m, r0, r1, lower):
+                return True
             middle = (r0 + r1) / 2
             delta = sign * (
                 face.value(a)
@@ -502,10 +676,12 @@ def _regular_contact_cell(m, r0, r1, lower):
 
 def _check_contact_regularity(m, r0, r1):
     pending = [(min(r0, r1), max(r0, r1), 0)]
+    accepted = 0
     while pending:
         a, b, depth = pending.pop()
         valid = [_regular_contact_cell(m, a, b, lower) for lower in (True, False)]
         if all(valid):
+            accepted += 1
             continue
         if depth >= 12:
             contact = "lower" if not valid[0] else "upper"
@@ -518,6 +694,24 @@ def _check_contact_regularity(m, r0, r1):
             )
         middle = (a + b) / 2
         pending.extend(((a, middle, depth + 1), (middle, b, depth + 1)))
+    return accepted
+
+
+def _branch_direction(m, a, b):
+    low = _slope_bounds(m.lower_track, a + m.lower_face.left, b + m.lower_face.right)
+    high = _slope_bounds(m.upper_track, a + m.upper_face.left, b + m.upper_face.right)
+    if max(low[0] - high[1], high[0] - low[1]) <= 0:
+        low, _ = _active_slope_bounds(m, a, b, True)
+        high, _ = _active_slope_bounds(m, a, b, False)
+    separation = max(low[0] - high[1], high[0] - low[1])
+    resolution = (
+        128
+        * np.finfo(float).eps
+        * max(*(abs(v) for v in (*low, *high)), np.finfo(float).tiny)
+    )
+    if separation > resolution:
+        return 1 if low[0] > high[1] else -1
+    return 0
 
 
 def _check_branch(m, r0, r1):
@@ -525,23 +719,10 @@ def _check_branch(m, r0, r1):
     pending, signs = [(r0, r1, 0)], set()
     while pending:
         a, b, depth = pending.pop()
-        low = _slope_bounds(
-            m.lower_track, a + m.lower_face.left, b + m.lower_face.right
-        )
-        high = _slope_bounds(
-            m.upper_track, a + m.upper_face.left, b + m.upper_face.right
-        )
-        if max(low[0] - high[1], high[0] - low[1]) <= 0:
-            low, _ = _active_slope_bounds(m, a, b, True)
-            high, _ = _active_slope_bounds(m, a, b, False)
-        separation = max(low[0] - high[1], high[0] - low[1])
-        if separation > 0:
-            condition = (
-                2 + max(abs(v) for v in low) ** 2 + max(abs(v) for v in high) ** 2
-            ) / separation
-            if condition < 1e3:
-                signs.add(1 if low[0] > high[1] else -1)
-                continue
+        direction = _branch_direction(m, a, b)
+        if direction:
+            signs.add(direction)
+            continue
         if depth >= 12:
             raise SlidingBlockGeometryError(
                 "Numerical branch enclosure cannot establish unique regular motion in radial interval "
@@ -558,21 +739,116 @@ def _check_branch(m, r0, r1):
         )
 
 
+def _closure_at_radius(m, r):
+    low, _ = _min_gap(m, r, 0.0, 0.0, lower=True)
+    high, _ = _min_gap(m, r, 0.0, 0.0, lower=False)
+    return -low - high, -low
+
+
+def _select_branch(g):
+    """Isolate regular monotone components; keep only reachable full-travel ones.
+
+    A reference radius selects a component when several assembled branches fit.
+    Unresolved regions are kept distinct from a proof that no assembly exists.
+    """
+    m = g.mechanism()
+    affine = [_affine(p) for p in (m.lower_track, m.upper_track)]
+    if all(v is not None for v in affine) and affine[0][0] == affine[1][0]:
+        raise SlidingBlockGeometryError(
+            "Parallel tracks do not determine unique translation",
+            code="singular_branch",
+            category="configuration",
+            radial_interval=(g.radial_min, g.radial_max),
+        )
+    # Common case: the user window already identifies one regular branch.
+    try:
+        _check_branch(m, g.radial_min, g.radial_max)
+        return g
+    except (SlidingBlockGeometryError, ValueError):
+        pass
+    pending = [(g.radial_min, g.radial_max, 0)]
+    cells, unresolved = [], []
+    budget = 4096
+    while pending:
+        a, b, depth = pending.pop()
+        direction = _branch_direction(m, a, b)
+        budget -= 1
+        if direction:
+            cells.append((a, b, direction))
+        elif depth >= 16 or budget <= 0:
+            unresolved.append((a, b))
+        else:
+            c = (a + b) / 2
+            pending.extend(((c, b, depth + 1), (a, c, depth + 1)))
+    intervals = []
+    for a, b, direction in sorted(cells):
+        if intervals and a == intervals[-1][1] and direction == intervals[-1][2]:
+            intervals[-1] = (intervals[-1][0], b, direction)
+        else:
+            intervals.append((a, b, direction))
+    candidates = []
+    for a, b, _ in intervals:
+        xa, xb = sorted((_closure_at_radius(m, a)[0], _closure_at_radius(m, b)[0]))
+        if xa <= g.axial_position_min and xb >= g.axial_position_max:
+            if g.reference_radius is None or a <= g.reference_radius <= b:
+                candidates.append((a, b))
+    if len(candidates) == 1:
+        # Without a reference, uncertainty at another possible initial assembly
+        # must not silently select the one root the search managed to establish.
+        uncertain = False
+        if g.reference_radius is None:
+            for a, b in unresolved:
+                middle = (a + b) / 2
+                value = _closure_at_radius(m, middle)[0]
+                lipschitz = sum(
+                    max(abs(v) for v in track.bounds(a + face.left, b + face.right, 1))
+                    for track, face in (
+                        (m.lower_track, m.lower_face),
+                        (m.upper_track, m.upper_face),
+                    )
+                )
+                radius = lipschitz * (b - a) / 2
+                if value - radius <= g.axial_position_min <= value + radius:
+                    uncertain = True
+                    break
+        if not uncertain:
+            return replace(g, radial_min=candidates[0][0], radial_max=candidates[0][1])
+    if len(candidates) > 1:
+        raise SlidingBlockGeometryError(
+            f"Multiple assembled branches cover the travel: {candidates}; set reference_radius to select one",
+            code="ambiguous_branch",
+            category="configuration",
+            radial_interval=(g.radial_min, g.radial_max),
+        )
+    raise SlidingBlockGeometryError(
+        "Cannot establish a unique reachable branch; set reference_radius or refine the radial search window",
+        code="branch_enclosure",
+        category="numerical",
+        radial_interval=(g.radial_min, g.radial_max),
+    )
+
+
 def _exact_pose(
     g: SlidingBlockGeometry, x: float
 ) -> tuple[np.ndarray, tuple[Contact, Contact]]:
     m = g.mechanism()
 
     def pose_at_radius(r):
-        l, _ = _min_gap(m, r, 0.0, 0.0, lower=True)
-        h, _ = _min_gap(m, r, 0.0, 0.0, lower=False)
-        return -l - h, -l
+        return _closure_at_radius(m, r)
 
     def residual(r):
         return pose_at_radius(r)[0] - x
 
     try:
-        r = brentq(residual, g.radial_min, g.radial_max, xtol=5e-16)
+        width = g.radial_max - g.radial_min
+        t = brentq(
+            lambda t: residual(g.radial_min + width * t),
+            0,
+            1,
+            xtol=4 * np.finfo(float).eps,
+            maxiter=256,
+        )
+        r = g.radial_min + width * t
     except ValueError as exc:
         raise SlidingBlockGeometryError(
             f"No double contact at x={x:g} within the selected radial window: {exc}",
@@ -589,6 +865,8 @@ def _exact_pose(
             contacts.append(
                 _contact(m, r, x, sum(spans[0]) / 2, lower=lower, intervals=spans)
             )
+        except SlidingBlockGeometryError:
+            raise
         except ValueError as exc:
             raise SlidingBlockGeometryError(
                 str(exc),
@@ -599,13 +877,41 @@ def _exact_pose(
             ) from exc
     contacts = tuple(contacts)
     lo, hi = contacts
-    if np.linalg.cond([[-lo.slope, 1], [hi.slope, -1]]) >= 1e3:
-        raise ValueError("Ill-conditioned contact kinematics")
-    rp = 1 / (lo.slope - hi.slope)
+    difference = lo.slope - hi.slope
+    resolution = (
+        128
+        * np.finfo(float).eps
+        * max(abs(lo.slope), abs(hi.slope), np.finfo(float).tiny)
+    )
+    if abs(difference) <= resolution:
+        raise SlidingBlockGeometryError(
+            "Contact slopes do not resolve a regular motion ratio",
+            code="branch_precision",
+            category="numerical",
+            axial_position=x,
+        )
+    rp = 1 / difference
     zp = lo.slope * rp
     rpp = -(lo.slope_derivative - hi.slope_derivative) * rp**3
     zpp = lo.slope * rpp + lo.slope_derivative * rp**2
     data = [[r, z], [rp, zp], [rpp, zpp]]
+    if not np.all(np.isfinite(data)):
+        raise SlidingBlockGeometryError(
+            "Motion derivatives exceed numerical range",
+            code="branch_precision",
+            category="numerical",
+            axial_position=x,
+        )
+    return np.array(data), contacts
+
+
+def _contact_path_data(g, body, contacts):
+    data = body.tolist()
+    r, z = body[0]
+    rp, zp = body[1]
+    rpp, zpp = body[2]
+    m = g.mechanism()
+    sets = tuple(c.u_intervals for c in contacts)
     for c, spans, face, track in zip(
         contacts, sets, (m.lower_face, m.upper_face), (m.lower_track, m.upper_track)
     ):
@@ -638,43 +944,152 @@ def _exact_pose(
                         up, upp = ur * rp, ur * rpp + urr * rp**2
                 for row, value in zip(data, (u, up, upp)):
                     row.append(value)
-    return np.array(data), contacts
+    return np.array(data)[:, 2:]
+
+
+@lru_cache(maxsize=1024)
+def _contacts_at_pose(m, r, x):
+    contacts = []
+    for lower in (True, False):
+        spans = _contact_minima(m, r, lower=lower)
+        contacts.append(
+            _contact(m, r, x, sum(spans[0]) / 2, lower=lower, intervals=spans)
+        )
+    return tuple(contacts)
+
+
+def _compile_contact_paths(g, knots, counts):
+    """Optional fast path. A changing or nonsmooth contact set uses exact queries.
+
+    Failure here never rejects a valid body motion: pressure locations are not
+    material coordinates and need not have the smoothness of the mass motion.
+    """
+
+    def sample(x):
+        body, contacts = _exact_pose(g, x)
+        if tuple(len(c.u_intervals) for c in contacts) != counts:
+            return None
+        try:
+            return _contact_path_data(g, body, contacts)
+        except ValueError:
+            return None
+
+    knots = list(knots)
+    values = {x: sample(x) for x in knots}
+    if any(v is None for v in values.values()):
+        return None
+    for _ in range(7):
+        path = BPoly.from_derivatives(
+            knots, [values[x] for x in knots], extrapolate=False
+        )
+        failed = []
+        worst = 0.0
+        for a, b in zip(knots, knots[1:]):
+            for fraction in (0.25, 0.5, 0.75):
+                x = a + (b - a) * fraction
+                target = sample(x)
+                if target is None:
+                    return None
+                error = float(np.max(np.abs(path(x) - target[0])))
+                worst = max(worst, error)
+                if error > 2e-10:
+                    failed.append(x)
+                    values[x] = target
+        if not failed:
+            path.c.setflags(write=False)
+            path.x.setflags(write=False)
+            return path, worst
+        knots = sorted(set(knots + failed))
+        if len(knots) > 513:
+            return None
+    return None
+
+
+def _check_endpoint_policy(g, contacts, x):
+    if g.allow_end_contacts:
+        return
+    for name, c, face in zip(
+        ("lower", "upper"), contacts, (g.lower_face, g.upper_face)
+    ):
+        if any(a == b and a in (face.left, face.right) for a, b in c.u_intervals):
+            raise SlidingBlockGeometryError(
+                f"End contacts require explicit allow_end_contacts=True (x={x:g})",
+                code="end_contact_policy",
+                category="configuration",
+                axial_position=x,
+                contact=name,
+            )
 
 
 @lru_cache(maxsize=32)
 def _compile_motion(g: SlidingBlockGeometry):
+    g = _select_branch(g)
     m = g.mechanism()
-    _check_branch(m, g.radial_min, g.radial_max)
     initial, contacts = _exact_pose(g, g.axial_position_min)
     final, _ = _exact_pose(g, g.axial_position_max)
-    _check_contact_regularity(m, float(initial[0, 0]), float(final[0, 0]))
-    counts = tuple(len(c.u_intervals) for c in contacts)
+    regularity_count = _check_contact_regularity(
+        m, float(initial[0, 0]), float(final[0, 0])
+    )
+    counts = [len(c.u_intervals) for c in contacts]
     modes_seen = [set(), set()]
 
     def exact(x):
         data, contacts = _exact_pose(g, x)
-        if tuple(len(c.u_intervals) for c in contacts) != counts:
-            raise SlidingBlockGeometryError(
-                f"Contact-set topology changes at x={x:g}; split at the transition and check motion regularity",
-                code="contact_topology_transition",
-                category="implementation",
-                axial_position=x,
-            )
+        _check_endpoint_policy(g, contacts, x)
         for i, c in enumerate(contacts):
-            if "end contact" in c.mode and not g.allow_end_contacts:
-                raise ValueError(
-                    f"End contacts require explicit allow_end_contacts=True (x={x:g})"
-                )
+            counts[i] = max(counts[i], len(c.u_intervals))
             modes_seen[i].add(c.mode)
         return data
 
     knots = list(np.linspace(g.axial_position_min, g.axial_position_max, 9))
+    r0, r1 = sorted((float(initial[0, 0]), float(final[0, 0])))
+    radial_cuts = set()
+    for lower in (True, False):
+        face = m.lower_face if lower else m.upper_face
+        track = m.lower_track if lower else m.upper_track
+        radial_cuts.update(
+            v - u
+            for v in track.knots
+            for u in (face.left, face.right)
+            if r0 < v - u < r1
+        )
+        fl, fh = face.bounds(face.left, face.right, 2)
+        tl, th = track.bounds(r0 + face.left, r1 + face.right, 2)
+        if fh - tl < 0 if lower else th - fl < 0:
+            radial_cuts.update(_endpoint_envelope(m, r0, r1, lower, True))
+    for R in sorted(radial_cuts):
+        x = _closure_at_radius(m, R)[0]
+        resolution = (
+            128
+            * np.finfo(float).eps
+            * max(abs(x), g.axial_position_max - g.axial_position_min)
+        )
+        if g.axial_position_min < x < g.axial_position_max and all(
+            abs(x - v) > resolution for v in knots
+        ):
+            knots.append(x)
+    knots.sort()
     samples = {x: exact(x) for x in knots}
     tolerances = np.array([2e-10, 2e-7, 2e-4])
+    affine_motion = all(
+        _affine(track) is not None for track in (m.lower_track, m.upper_track)
+    )
     for _ in range(10):
-        spline = BPoly.from_derivatives(
-            knots, [samples[x] for x in knots], extrapolate=False
-        )
+        if affine_motion:
+            # An affine envelope gives exact constant motion ratios. A linear
+            # interpolant avoids amplifying endpoint rounding into fictitious
+            # curvature on very short axial intervals.
+            dx = g.axial_position_max - g.axial_position_min
+            coefficients = np.array([[initial[0]], [initial[0] + initial[1] * dx]])
+            spline = BPoly(
+                coefficients,
+                [g.axial_position_min, g.axial_position_max],
+                extrapolate=False,
+            )
+        else:
+            spline = BPoly.from_derivatives(
+                knots, [samples[x] for x in knots], extrapolate=False
+            )
         failed, worst = [], np.zeros(3)
         for left, right in zip(knots[:-1], knots[1:]):
             for fraction in (0.25, 0.5, 0.75):
@@ -683,8 +1098,8 @@ def _compile_motion(g: SlidingBlockGeometry):
                 difference = np.abs(
                     np.array([spline(x, nu=i) for i in range(3)]) - target
                 )
-                # Contact coordinates need accurate values, not globally C2
-                # derivatives. Only body motion derivatives enter the boundary.
+                # Only the body motion enters the common inertia boundary.
+                # Contact sets are queried separately and may change topology.
                 error = np.array(
                     [
                         np.max(difference[0]),
@@ -700,12 +1115,22 @@ def _compile_motion(g: SlidingBlockGeometry):
             spline.c.setflags(write=False)
             spline.x.setflags(write=False)
             report = SlidingBlockCompilationReport(
-                len(knots) - 1,
+                len(spline.x) - 1,
                 tuple(" / ".join(sorted(v)) for v in modes_seen),
                 *map(float, worst),
-                contact_interval_counts=counts,
+                contact_interval_counts=tuple(counts),
+                selected_radial_interval=(g.radial_min, g.radial_max),
+                regularity_subintervals=regularity_count,
             )
-            return spline, report
+            paths = _compile_contact_paths(g, knots, tuple(counts))
+            if paths is not None:
+                paths, error = paths
+                report = replace(
+                    report,
+                    contact_queries="cached contact paths",
+                    max_contact_position_error=error,
+                )
+            return spline, paths, report
         knots = sorted(set(knots + failed))
         if len(knots) > 4097:
             break
@@ -723,9 +1148,15 @@ class SlidingBlockInertiaMap:
         if not isinstance(spec, SlidingBlockSpec):
             raise TypeError("Expected SlidingBlockSpec")
         self._spec = spec
-        self._motion, self.compilation_report = _compile_motion(spec.geometry)
-        # Positive COM radius throughout the selected radial window.
-        if spec.geometry.radial_min + spec.mass.com_offset[0] <= 0:
+        self._motion, self._contact_paths, self.compilation_report = _compile_motion(
+            spec.geometry
+        )
+        # Only the reachable part of a selected monotone branch carries mass.
+        reachable_min = min(
+            float(self._motion(x)[0])
+            for x in (self.axial_position_min, self.axial_position_max)
+        )
+        if reachable_min + spec.mass.com_offset[0] <= 0:
             raise ValueError("COM crosses or reaches the shaft axis")
 
     @property
@@ -764,21 +1195,29 @@ class SlidingBlockInertiaMap:
         (r, z), (rp, zp), (rpp, zpp) = self._kinematics(x)
         m = self.spec.geometry
         rd, zd = r - self.spec.mass.com_offset[0], z - self.spec.mass.com_offset[2]
-        contacts = []
-        cursor = 2
-        paths = self._motion(x)
-        for lower, count in zip(
-            (True, False), self.compilation_report.contact_interval_counts
-        ):
-            face = m.lower_face if lower else m.upper_face
-            spans = []
-            for _ in range(count):
-                a, b = map(float, paths[cursor : cursor + 2])
-                a, b = (min(face.right, max(face.left, v)) for v in (a, b))
-                spans.append((a, b))
-                cursor += 2
-            u = sum(spans[0]) / 2
-            contacts.append(_contact(m, rd, x, u, lower=lower, intervals=tuple(spans)))
+        if self._contact_paths is None:
+            contacts = _contacts_at_pose(m, rd, x)
+        else:
+            coordinates = self._contact_paths(x)
+            contacts, cursor = [], 0
+            for lower, count in zip(
+                (True, False), self.compilation_report.contact_interval_counts
+            ):
+                face = m.lower_face if lower else m.upper_face
+                spans = []
+                for _ in range(count):
+                    a, b = (
+                        min(face.right, max(face.left, float(v)))
+                        for v in coordinates[cursor : cursor + 2]
+                    )
+                    spans.append((a, b))
+                    cursor += 2
+                contacts.append(
+                    _contact(
+                        m, rd, x, sum(spans[0]) / 2, lower=lower, intervals=tuple(spans)
+                    )
+                )
+        _check_endpoint_policy(m, contacts, x)
         return SlidingBlockPose(
             *map(float, (rd, zd, r, z, rp, zp, rpp, zpp)), *contacts
         )

@@ -295,6 +295,8 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
 def _encode_force_law(force_law: object) -> dict[str, Any]:
     if isinstance(force_law, SlidingBlockFlyweightForce):
         data = asdict(force_law.spec)
+        if data["geometry"]["reference_radius"] is None:
+            del data["geometry"]["reference_radius"]
         for key in ("lower_track", "upper_track", "lower_face", "upper_face"):
             profile = data["geometry"][key]
             if profile["kind"] == "spline":
@@ -544,6 +546,8 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
             "axial_position_max",
         ):
             geometry[key] = _number(geometry, key)
+        if "reference_radius" in geometry:
+            geometry["reference_radius"] = _number(geometry, "reference_radius")
         mass = _mapping(_require(payload, "mass"), "mass")
 
         def vector(value, label):
