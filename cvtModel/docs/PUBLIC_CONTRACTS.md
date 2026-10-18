@@ -164,3 +164,11 @@ JSON Schema. Existing component records keep their meanings. The component
 catalog adds a string-valued guide declaration alongside numerical/object
 parameters. Compilation rejects unsupported geometry before integration;
 preflight reports the ideal guide assumption and rejects a relative sheave helix.
+
+CINDER 1.2.1 extends the existing profile record with `kind="spline"`, ordered
+`knots`, normalized ascending polynomial `coefficients`, and optional axial
+`offset`. Cubic/quintic point interpolation is available through the Python
+profile constructor. Legacy primitive records retain their fields and values.
+Flat common-normal contact sets are admitted by the production provider; a
+pressure-dependent guide moment is returned as bounds rather than a guessed
+application point. The assembly schema version remains 1.

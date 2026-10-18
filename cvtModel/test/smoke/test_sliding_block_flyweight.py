@@ -278,9 +278,17 @@ def test_ambiguous_branch_missing_support_end_policy_and_guide_are_rejected():
     with pytest.raises(ValueError, match="guide"):
         replace(spec, guide="unspecified")
     curved = law("both-curved").spec
-    with pytest.raises(ValueError, match="mode changes"):
-        SlidingBlockInertiaMap(
-            replace(curved, geometry=replace(curved.geometry, radial_max=0.069))
+    wider = SlidingBlockInertiaMap(
+        replace(curved, geometry=replace(curved.geometry, radial_max=0.069))
+    )
+    original = SlidingBlockInertiaMap(curved)
+    for x in np.linspace(0, 0.015, 13):
+        a, b = wider.evaluate(x), original.evaluate(x)
+        np.testing.assert_allclose(
+            tuple(getattr(a, k) for k in a.__dataclass_fields__),
+            tuple(getattr(b, k) for k in b.__dataclass_fields__),
+            rtol=1e-9,
+            atol=1e-10,
         )
 
 
@@ -570,8 +578,9 @@ def test_selected_hybrid_reset_cannot_bypass_impulse_guard(monkeypatch):
         system.transition(0, state.as_vector(), mode, ("test",))
 
 
-def test_coupled_smooth_motion_preserves_primary_angular_momentum():
-    plant = MechanicalCVTPlant.from_assembly(assembly())
+@pytest.mark.parametrize("name", ["straight", "multiple-contact"])
+def test_coupled_smooth_motion_preserves_primary_angular_momentum(name):
+    plant = MechanicalCVTPlant.from_assembly(assembly(law(name)))
     system = CVTOperatingHybridSystem(plant)
     initial = CVTState(100, 0, 0, 0.001, 0.005)
     mode = CVTOperatingRegime.deadzone_free()

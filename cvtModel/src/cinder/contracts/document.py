@@ -295,6 +295,19 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
 def _encode_force_law(force_law: object) -> dict[str, Any]:
     if isinstance(force_law, SlidingBlockFlyweightForce):
         data = asdict(force_law.spec)
+        for key in ("lower_track", "upper_track", "lower_face", "upper_face"):
+            profile = data["geometry"][key]
+            if profile["kind"] == "spline":
+                data["geometry"][key] = {
+                    k: profile[k] for k in ("kind", "offset", "knots", "coefficients")
+                }
+                data["geometry"][key]["knots"] = list(profile["knots"])
+                data["geometry"][key]["coefficients"] = [
+                    list(row) for row in profile["coefficients"]
+                ]
+            else:
+                profile.pop("knots")
+                profile.pop("coefficients")
         data["mass"]["com_offset"] = list(data["mass"]["com_offset"])
         data["mass"]["centroidal_inertia_per_mass"] = [
             list(row) for row in data["mass"]["centroidal_inertia_per_mass"]
@@ -476,6 +489,37 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
         geometry = dict(_mapping(_require(payload, "geometry"), "geometry"))
         for key in ("lower_track", "upper_track", "lower_face", "upper_face"):
             profile = _mapping(_require(geometry, key), key)
+            if _string(profile, "kind") == "spline":
+                unknown = set(profile) - {"kind", "offset", "knots", "coefficients"}
+                if unknown:
+                    raise DesignDocumentError(
+                        f"Unknown spline fields: {sorted(unknown)}"
+                    )
+                knots = tuple(
+                    _number({"v": v}, "v")
+                    for v in _sequence(_require(profile, "knots"), "knots")
+                )
+                coefficients = tuple(
+                    tuple(
+                        _number({"v": v}, "v")
+                        for v in _sequence(row, "coefficient row")
+                    )
+                    for row in _sequence(
+                        _require(profile, "coefficients"), "coefficients"
+                    )
+                )
+                if len(knots) < 2:
+                    raise DesignDocumentError("spline needs at least two knots")
+                geometry[key] = SlidingBlockProfile(
+                    "spline",
+                    0.0,
+                    offset=_optional_number(profile, "offset", default=0.0),
+                    left=knots[0],
+                    right=knots[-1],
+                    knots=knots,
+                    coefficients=coefficients,
+                )
+                continue
             values = {
                 k: _number(profile, k)
                 for k in (

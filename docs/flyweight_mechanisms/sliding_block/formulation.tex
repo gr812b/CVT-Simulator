@@ -17,7 +17,7 @@
 \setlist{itemsep=.3em,topsep=.3em}
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{\small CINDER / Fixed-orientation sliding blocks}
-\fancyhead[R]{\small CINDER 1.2.0}
+\fancyhead[R]{\small CINDER 1.2.1}
 \fancyfoot[L]{\small\Acrobatmenu{GoBack}{Previous view}}
 \fancyfoot[C]{\thepage}\fancyfoot[R]{\small\hyperlink{contents}{Contents}}
 \newcommand{\half}{\tfrac12}
@@ -27,7 +27,7 @@
 \lstset{basicstyle=\small\ttfamily,breaklines=true,columns=fullflexible,frame=single}
 \begin{document}
 \begin{center}
-{\small CINDER TECHNICAL NOTE / OCTOBER 16, 2026}\par\vspace{.7em}
+{\small CINDER TECHNICAL NOTE / OCTOBER 17, 2026}\par\vspace{.7em}
 {\LARGE\bfseries Fixed-Orientation Sliding Blocks}\par\vspace{.4em}
 {\large Contact Geometry, Guide Wrench, and the Common Boundary}
 \end{center}
@@ -108,30 +108,54 @@ requires the minimum gap on that face to be zero. This compares the full
 finite face, rather than selecting a tangent while ignoring another part of
 the same face that might penetrate the track.
 
-The implementation supports lines, quadratics, and circular-arc graphs:
-\begin{align}
- f(\rho)&=f_0+s(\rho-\rho_0) &&\text{(line)},\\
- f(\rho)&=f_0+s(\rho-\rho_0)+\half k(\rho-\rho_0)^2
-                &&\text{(quadratic)},\\
- f(\rho)&=f_0+\sigma\bigl[a-\sqrt{a^2-(\rho-\rho_0)^2}\bigr]
-                &&\text{(circular arc)},
-\end{align}
-with $a>0$, $\sigma=\pm1$, and the circle's domain strictly inside
-$|\rho-\rho_0|<a$. These are radial-coordinate graphs, not arbitrary rotated
-arcs or a general CAD representation. Overhangs and saddle contacts require a
-different contact construction.
+The contact equations above do not prescribe a circular cup or a particular
+block outline. CINDER 1.2.1 accepts user-defined twice continuously
+differentiable piecewise polynomial graphs, alongside exact lines, quadratics
+and circular-arc graphs. On a radial interval $[a_j,a_{j+1}]$, a polynomial
+profile is stored as
+\begin{equation}
+ f(\rho)=f_0+\sum_{k=0}^{d_j}c_{jk}t^k,
+ \qquad t=\frac{\rho-a_j}{a_{j+1}-a_j}.
+ \label{eq:profile-polynomial}
+\end{equation}
+The coefficients are axial lengths. Normalizing the independent coordinate
+avoids powers of very small metre-valued intervals in the root calculation.
+Seams agree through the second derivative. Point input explicitly interpolates
+a cubic spline, or a quintic when requested; it does not silently fit or smooth
+measurement noise. Curves and their actual derivatives, rather than a display
+mesh, determine contact.
 
-\subsection{Selecting a branch without hiding another minimum}
+These remain meridional graphs. Overhangs, independent rocking and
+three-dimensional saddle contact require a different contact construction.
+That is a scope of this translation provider, not a restriction of the common
+material-motion boundary. The block's full mass distribution remains separate
+from its selected contacting faces.
 
-The radial window $[R_{\min},R_{\max}]$ is part of the input. Exact bounds on
-profile second derivatives determine whether each gap is convex or concave
-over this window. A convex gap has its minimum at an endpoint or at its unique
-stationary point; a concave gap has its minimum at an endpoint. An ambiguous
-curvature bound is rejected. Strict derivative or endpoint-gap inequalities
-then establish that the same endpoint or interior contact remains active
-throughout the window. Conformal contacts and mode switches are rejected;
-their pressure distribution or new branch cannot be obtained by blending the
-old motion curves.
+\subsection{Finding the whole contact set}
+
+The minimum gap can occur at an endpoint, at a profile seam, at any stationary
+point, or throughout a constant-gap interval. The implementation enumerates
+all of these candidates over the finite face. For polynomial pieces, the gap
+is polynomial and its derivative roots supply all interior candidates,
+including repeated stationary roots. Derivative roots partition the normalized
+interval into monotone pieces for bracketed root isolation. Curvature may
+change sign and there may be several local minima; neither condition is a
+reason to select only one guessed tangent.
+
+With a circular graph, stationarity involves a square root. Squaring produces
+a polynomial candidate equation. Every candidate is then checked against the
+original unsquared slope equation to remove extraneous roots. The opposite
+branches of a circle are not mistaken for a constant gap merely because their
+squared derivative expressions agree. These constructions are evaluated in
+floating-point arithmetic with declared numerical resolutions.
+
+Retain all candidates attaining the minimum to that resolution. A pair
+$(u,u)$ denotes a point and $[a,b]$ a complete flat contact interval. The
+representative coordinate used to draw a normal is not a pressure centroid.
+This distinction will matter for the guide moment even when the clamping
+resultant is determined.
+
+\subsection{Establishing a regular configuration branch}
 
 To reduce the two equations, put
 \begin{equation}
@@ -143,10 +167,30 @@ The lower contact gives $Z=A(R)$ and the upper contact gives
  x=A(R)-C(R).
  \label{eq:inverse}
 \end{equation}
-Disjoint track-slope bounds establish a nonzero derivative of this function
-throughout the selected window. A bracketed scalar solve then gives the unique
-$R$ in that window. This is a statement about the declared branch window, not
-about every possible assembly elsewhere in the geometry.
+Disjoint bounds on the slopes of the active tracks establish that the
+derivative of this function is nonzero. A bracketed scalar solve then gives
+the unique $R$ within the declared radial window. Track-wide bounds are tried
+first. If they overlap, a contact enclosure excludes regions of the face
+which cannot attain the minimum gap, and the radial window is subdivided.
+To see the exclusion, let a trial face point give a uniform upper bound on
+the minimum gap over a radial interval. Any face subinterval whose lower gap
+bound exceeds it cannot contain contact. Profile extrema bound both values
+and derivatives throughout each interval.
+
+Monotone closure alone does not establish smooth motion: the identity of the
+minimum can switch between separated parts of a curved track. On the reachable
+radial path, additional local bounds establish an isolated regular minimum or
+a retained endpoint. Affine tracks admit an important further case: the gap
+separates into a function of $u$ and an affine function of $R$. Its minimizing
+contact set is fixed even if it contains several points or a whole face, so
+its envelope remains smooth. \Cref{sec:distributed} treats the associated loads.
+
+A numerical enclosure failure is not proof that the proposed hardware is
+impossible. The implementation reports the unresolved interval and contact.
+It does not hide a transition by blending two motion curves. Changes of
+contact-set cardinality currently require separate branch handling. The
+bounds use floating-point stationary-root calculations; the subsequent
+interpolation diagnostics are separate sampled checks.
 
 Endpoint contact is allowed only when explicitly requested. It is an ideal
 point contact at a finite face endpoint with the smooth track's normal.
@@ -191,6 +235,17 @@ ratios are
 \end{equation}
 The fixed COM offset does not affect these derivatives: $r'=R'$, $z'=Z'$,
 and likewise for second derivatives.
+
+\subsection{Mass geometry is independent of contact selection}
+
+The contact faces determine compatible motion; the retained material determines
+mass, COM and inertia. A uniform extruded polygon can be reduced using its area
+moments. A smooth body bounded by two profiles can instead be integrated
+directly, without using the tessellated drawing. Both constructions return
+the COM and full centroidal tensor per unit mass in the body datum; the
+supplied total group mass fixes the uniform density. Inserts or nonuniform
+material require their actual moments. Additional cup or sheave backing is
+CVT material and never enters this weight-mass reduction.
 
 \section{Mass motion supplies the four quantities}
 \label{sec:inertia}
@@ -327,6 +382,69 @@ solved accelerations. It rejects resolved tension. Raw reactions remain
 available; a numerical-resolution check described below distinguishes
 unresolved near-zero values from a required tensile contact.
 
+\section{Clamping with an undetermined pressure location}
+\label{sec:distributed}
+
+Two matching flat faces need not determine a single pressure application point.
+Nevertheless, the flat moving track has one normal direction and supplies one
+closed-gap equation. For $b_u(u)=b_0+s_u u$ and
+$f_u(R+u)=f_0+s_u(R+u)$, that equation is
+\begin{equation}
+ Z=f_0-b_0+s_uR+x.
+\end{equation}
+The coordinate $u$ has cancelled. Combined with the fixed-cup envelope
+$Z=A(R)$, it can determine a unique regular translation. Its derivatives and
+the four inertia quantities follow as before. The two common normal directions
+then determine the total forces in \cref{eq:normals}. Thus unknown pressure
+location does not, by itself, make clamping undetermined.
+
+A nonconvex block may likewise touch an affine track at two separated points.
+Both normals have the same direction, and their nonnegative pressures add to
+one force resultant. The pressure centroid can lie in the convex hull of the
+contact set, even if the material between the two points is not in contact.
+The API retains the actual separate points instead of drawing this convex
+hull as a physical contact patch.
+
+The remaining ambiguity concerns moment. Let $\mathcal U_i$ be the contact set
+on face $i$ and put
+\begin{equation}
+ \bm q_i(u)=-\bm a_i(u)\times[N_i\bm n_i],\qquad
+ \bm G_0=M\bm K(\alpha\ez)
+   +(\omega\ez)\times[M\bm K(\omega\ez)].
+\end{equation}
+For each component $k$, the ideal-guide demand is bounded by
+\begin{equation}
+ G_{0,k}+\sum_i\min_{u\in\mathcal U_i}q_{i,k}(u)
+ \ \leq G_{C,k}\leq\
+ G_{0,k}+\sum_i\max_{u\in\mathcal U_i}q_{i,k}(u).
+ \label{eq:guide-bounds}
+\end{equation}
+For the admitted common-normal meridional contacts, only the tangential
+component has pressure-location uncertainty. On a flat interval its moment
+is affine in $u$, so the endpoints determine its extrema; isolated contact
+points are evaluated individually. These bounds include the full centroidal
+spin demand. A unique contact point gives coincident bounds and recovers
+\cref{eq:guide-moment}. When these bounds differ, the single guide moment is marked undetermined.
+Coincident bounds still give a unique moment, including the unloaded case. The same construction applies to
+impulses using $P_i$ and the centroidal angular-momentum jump.
+
+As a closed-form check, take a fixed affine cup of slope $0.8$, a matching
+moving face of slope $-0.5$, and a lower block face
+\begin{equation}
+ b_\ell(u)=0.8u+c(u^2-a^2)^2,
+ \quad a=0.004\,\mathrm m,\quad c=10^6\,\mathrm{m^{-3}}.
+\end{equation}
+The lower face contacts at the two distinct points $u=\pm a$.
+With the open datum $R_0=0.05\,\mathrm m$, $Z_0=0$, and suitable upper-face
+thickness, the two gap constraints give
+\begin{equation}
+ R=R_0+\frac{x}{1.3},\qquad Z=\frac{0.8x}{1.3}.
+\end{equation}
+For zero COM offset and held closure, the mechanism's closing contribution is
+$F_x=Mr\omega^2/1.3$. Springs and belt loads enter the host balance separately. It is unique although the guide moment has a finite
+pressure-dependent range. This example tests multiple global minima and flat
+face contact without using the compiled motion as its expected solution.
+
 \section{Retaining the contacts through a velocity reset}
 \label{sec:impact}
 
@@ -360,7 +478,7 @@ selected transition. Resolving what happens after release needs a different
 contact topology or an additional dynamic coordinate; this version does not
 invent that motion.
 
-\section{Compilation, inputs, and limits in CINDER 1.2.0}
+\section{Compilation, inputs, and limits in CINDER 1.2.1}
 
 \texttt{SlidingBlockGeometry} stores the four profiles, radial branch window,
 local axial interval, and explicit endpoint-contact policy.
@@ -369,18 +487,22 @@ centroidal tensor per mass. \texttt{SlidingBlockSpec} combines these with the
 required \texttt{ideal\_fixed\_orientation} guide declaration.
 The saved component kind is \texttt{sliding\_block\_flyweight}. Distances are
 metres, mass is kilograms, profile curvature is inverse metres, and tensor
-entries are square metres. The three JSON examples adjacent to the package
-examples provide complete component records; they are not full CVT assemblies.
+entries are square metres. The JSON examples in the package example folder provide complete component
+records, including a noncircular cup and a nonconvex multi-contact weight;
+they are not full CVT assemblies.
 
 The compiler solves geometry outside the runtime RHS and constructs a common
-$C^2$ piecewise quintic Hermite representation of $R,Z,u_\ell,u_u$. Values and
-first two derivatives come from the same contact construction. Both inertia
+$C^2$ piecewise quintic Hermite representation of $R,Z$ and cached paths for
+the contact-set endpoints. Values and the first two body-motion derivatives
+come from the same contact construction. Contact coordinates need accurate
+values; their second derivatives need not agree across a $C^2$ profile seam. Both inertia
 functions and their derivatives use this one compiled motion. Contact
 locations and normals also use the cached representation; no root solve is
 performed inside the closure iteration.
 
 Starting from eight intervals, the compiler tests three interior points per
-cell and subdivides failed cells. Its absolute tolerances are
+cell and subdivides failed cells. Position errors include the contact-set
+endpoints; derivative errors concern $R,Z$. Its absolute tolerances are
 $2\times10^{-10}\,\mathrm m$ for positions,
 $2\times10^{-7}$ for first derivatives, and
 $2\times10^{-4}\,\mathrm{m^{-1}}$ for second derivatives.
@@ -445,8 +567,10 @@ hardware capacity nor replace the compiler's separate interpolation diagnostics.
 Limit & Implemented response\\\midrule
 Invalid inputs & Reject non-finite values, impossible tensors, nonpositive thickness,
 invalid domains/count, and a nonzero tangential COM offset.\\[.4em]
-Geometric branch & Reject unsupported gap curvature, ambiguous/conformal contact,
-mode changes, insufficient track support, and ill-conditioned kinematics.\\[.4em]
+Geometric branch & Search all finite-face minima. Establish regular reachable
+motion; report unresolved enclosures, contact-set transitions, insufficient
+support and ill-conditioned kinematics separately. Flat common-normal contact
+sets retain clamping and guide-moment bounds.\\[.4em]
 Operating state & Evaluate both normal forces with the solved local acceleration;
 reject contact loss. Report the complete ideal-guide demand separately.\\[.4em]
 Velocity reset & Resolve both normal impulses and reject a selected reset requiring
@@ -459,8 +583,9 @@ and checks; no universal safe RPM is derived from these profiles.\\\bottomrule
 The mechanism may mount on either pulley when both contact tracks co-rotate
 with its shaft. A relative sheave helix is rejected. The host retains the full
 local-to-shared acceleration relation and the separate sheave/cup mass
-ownership. The frontend editor and authoritative preview service are a
-subsequent application change. The research viewer now imports CINDER's Python
+ownership. Point/segment authoring and the frontend preview service remain a separate
+application change; no template cup radius, backing thickness or arbitrary
+sample dimension bound is introduced by this core contact representation. The research viewer now imports CINDER's Python
 mechanics and contracts exported response coefficients in JavaScript; it does
 not maintain another contact-force equation.
 
@@ -509,7 +634,7 @@ does not assign a smoothed corner motion.
 
 \begin{thebibliography}{9}
 \bibitem{common} \emph{General Centrifugal Mechanisms: From Compatible Motion to
-Clamping Force and Shaft Coupling}. Revision 4; canonical CINDER 1.2.0 edition.
+Clamping Force and Shaft Coupling}. Revision 4; canonical CINDER 1.2.1 edition.
 \href{../common_boundary/formulation.pdf}{Common-boundary document}.
 \bibitem{fixed} \emph{Clamping Mechanism Implementations: The Fixed-Pivot Roller
 Flyweight}. CINDER 1.2.0 edition.

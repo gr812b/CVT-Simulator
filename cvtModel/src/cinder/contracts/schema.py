@@ -335,7 +335,7 @@ def _assembly_definitions() -> dict[str, Any]:
             "additionalProperties": False,
             "description": "Finite meridional graph in SI: origin/offset/radius/left/right in m, slope dimensionless, curvature in 1/m.",
             "properties": {
-                "kind": {"enum": ["line", "quadratic", "circle"]},
+                "kind": {"enum": ["line", "quadratic", "circle", "spline"]},
                 **{
                     key: {"type": "number"}
                     for key in (
@@ -349,17 +349,57 @@ def _assembly_definitions() -> dict[str, Any]:
                     )
                 },
                 "circle_sign": {"type": "integer", "enum": [-1, 1]},
+                "knots": {"type": "array", "minItems": 2, "items": {"type": "number"}},
+                "coefficients": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "number"},
+                    },
+                },
             },
-            "required": [
-                "kind",
-                "origin",
-                "offset",
-                "slope",
-                "curvature",
-                "radius",
-                "left",
-                "right",
-                "circle_sign",
+            "required": ["kind"],
+            "allOf": [
+                {
+                    "if": {"properties": {"kind": {"const": "spline"}}},
+                    "then": {
+                        "required": ["knots", "coefficients"],
+                        "not": {
+                            "anyOf": [
+                                {"required": [key]}
+                                for key in (
+                                    "origin",
+                                    "slope",
+                                    "curvature",
+                                    "radius",
+                                    "left",
+                                    "right",
+                                    "circle_sign",
+                                )
+                            ]
+                        },
+                    },
+                    "else": {
+                        "required": [
+                            "origin",
+                            "offset",
+                            "slope",
+                            "curvature",
+                            "radius",
+                            "left",
+                            "right",
+                            "circle_sign",
+                        ],
+                        "not": {
+                            "anyOf": [
+                                {"required": ["knots"]},
+                                {"required": ["coefficients"]},
+                            ]
+                        },
+                    },
+                }
             ],
         },
         "assemblySlidingBlock": {
