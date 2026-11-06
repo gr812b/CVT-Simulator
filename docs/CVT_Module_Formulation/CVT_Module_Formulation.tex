@@ -11276,15 +11276,25 @@ Within the sampled static and expanded ranges, the fixed-traction mechanical sys
 \section{Independent Transient-Model Benchmark}
 \label{sec:results_ballew_benchmark}
 
-The preceding checks establish the consistency of CINDER's calculated motion.
-A comparison with an independent formulation now examines the response under reconstructed common external conditions, using a model with a more detailed belt description. Ballew's discretized
-rubber-belt model provides a five-second ATV acceleration case with published
-shaft-speed histories, primary clamping force and controller gains
-\citep{Ballew2015}. Its speeds are produced under feedback, however, so the
-comparison must consider both the motion and the force used to obtain it.
-Reconstructing the feedback allows the controller to adjust CINDER's clamp
-demand; imposing Ballew's published force instead tests the response to a
-common force history.
+The internal checks establish how consistently CINDER solves its own
+formulation. Comparing it with another transient belt model asks a different
+question: does the same external loading lead to a similar response when the
+belt is represented differently? This is not answered by comparing shaft
+speeds alone if a controller is free to adjust the primary clamping force.
+Two models might follow similar speed histories while requiring different
+forces to produce them.
+
+Ballew's discretized rubber-belt model provides a five-second ATV
+acceleration with published shaft-speed histories, primary clamping force,
+and controller gains \citep{Ballew2015}. We use two complementary comparisons.
+First, reconstructed feedback can choose CINDER's primary clamp, so both
+the controlled speed and the force required to obtain it can be examined.
+Second, Ballew's published clamp history is imposed directly on CINDER,
+removing the controller's ability to compensate. Together these tests
+examine whether agreement in selected controlled histories also represents
+agreement in the force--motion response. Differences in the reconstructed
+inputs and belt descriptions still limit what can be inferred about the
+physical source of any mismatch.
 
 \subsection{Benchmark Reconstruction}
 \label{sec:results_ballew_reconstruction}
@@ -11322,19 +11332,21 @@ conditions without making the internal initial states identical.
 \label{sec:results_ballew_closed_loop}
 \label{sec:results_ballew_force_replay}
 
-In the closed-loop protocol, the primary clamp regulates speed toward
+The two protocols differ in what is supplied and what can adjust.
+In the feedback test, the primary clamp regulates speed toward
 \(2500~\mathrm{rpm}\). Ballew reports the PI and feed-forward gains but does
-not fully specify the controller equation. The reconstruction uses those
-gains in the force law of \Cref{eq:ballew_pi_force_law}, with zero initial
-integral error and no added saturation. The published force is an output
-reference for this comparison.
+not fully specify the controller equation. The reconstruction therefore
+uses those gains in the law of \Cref{eq:ballew_pi_force_law}, with zero initial
+integral error and no added saturation. The clamp is an output in this
+test, and the published force is its comparison reference.
 
-The open-loop protocol instead prescribes that force. Ballew's digitized
-Figure~45 history is applied by piecewise-linear interpolation, with its first
-visible value held back to \(t=0\). All other reconstructed inputs are
-unchanged. The two columns of \Cref{fig:results_ballew_protocols} therefore
-compare the same shaft quantities while distinguishing a force calculated
-by feedback from one supplied as an input.
+In force replay, the clamp is instead an input. Ballew's digitized
+Figure~45 history is applied through piecewise-linear interpolation,
+with its first visible value held back to \(t=0\). Every other
+reconstructed input is unchanged. The two columns of
+\Cref{fig:results_ballew_protocols} therefore answer distinct questions:
+what clamp does CINDER require under feedback, and what shaft motion follows
+when it receives Ballew's prescribed clamp?
 
 \begin{figure}[H]
   \centering
@@ -11348,16 +11360,33 @@ by feedback from one supplied as an input.
   \label{fig:results_ballew_protocols}
 \end{figure}
 
-With feedback, the primary speed remains near the target but oscillates much
-more strongly than the published history. The secondary speed also differs
-in shape: CINDER levels off near \(1200~\mathrm{rpm}\), while Ballew's result
-continues toward \(1270~\mathrm{rpm}\). Their speed RMSE values are
-\(110\) and \(33~\mathrm{rpm}\), respectively
-(\Cref{tab:results_ballew_comparison}). The primary-clamp RMSE is much larger
-relative to its reference, at \SI{1.20}{kN}, or \(46.66\%\).
-Thus the modest shaft-speed errors coexist with a substantially different
-force demand. Because clamping governs both the shift balance and available
-traction, that difference matters to the transmission response.
+With feedback, the primary speedWith feedback, the primary speed remains near the target, although CINDER's
+oscillation is much stronger than in the published history. The secondary
+speed differs in shape as well: CINDER levels off near \(1200~\mathrm{rpm}\),
+while Ballew's result continues toward \(1270~\mathrm{rpm}\). Their
+primary- and secondary-speed RMSE values are \(110\) and
+\(33~\mathrm{rpm}\), respectively
+(\Cref{tab:results_ballew_comparison}).
+
+The required clamping force tells a different story. Its RMSE is
+\SI{1.20}{kN}, or \(46.66\%\) relative to the reference. This is not
+merely an incidental input difference: clamping participates in the
+shift balance and governs available traction. By changing that force,
+feedback can keep the controlled shaft history relatively close even
+when the modeled transmission requires different internal loading.
+Agreement in regulated speed therefore does not establish agreement
+in the underlying force--motion relationship.
+
+
+Removing the controller's adjustmentPrescribing Ballew's force removes that adjustment. CINDER's primary
+speed now falls to roughly \(500~\mathrm{rpm}\) after the initial
+transient rather than staying near \(2500~\mathrm{rpm}\).
+The primary-speed and shaft-ratio errors approach \(78\%\).
+The secondary-speed history is actually closer to the published result
+than it was under feedback, which illustrates why agreement in one
+output must not stand for agreement in the coupled response. Under
+feedback the controller can compensate by changing clamp; under the
+same imposed clamp, the primary response differs greatly.
 
 \begin{table}[H]
   \centering\small
@@ -11380,29 +11409,26 @@ traction, that difference matters to the transmission response.
   \label{tab:results_ballew_comparison}
 \end{table}
 
-Removing the controller's adjustment makes the primary-speed discrepancy much
-larger. Under force replay, CINDER's primary speed falls to roughly
-\(500~\mathrm{rpm}\) after the initial transient, rather than remaining near
-\(2500~\mathrm{rpm}\). Its primary-speed and shaft-ratio errors approach
-\(78\%\), even though the secondary speed is closer to Ballew's result than
-in the controlled case. Agreement at the output shaft alone would therefore
-conceal a very different relation between the two shaft motions.
-
 \subsection{Internal Motion and Slip}
 \label{sec:results_ballew_internal_motion}
 
-The controlled case also illustrates why similar shaft speeds need not imply
-similar belt motion. This benchmark has no relative sheave-rotation mechanism,
-so \(\omega_p/\omega_s\) would equal
-\(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\) if both contacts were sticking.
-\Cref{fig:results_ballew_internal_response}(a,b) compares these ratios within
-CINDER. The shaft-speed ratio stays near two, while the radius ratio repeatedly
-moves between approximately \(0.46\) and \(2.49\), reaching the low-ratio seat.
-The difference between them shows that the shaft speeds do not track the
-large excursions of the belt along the pulleys. Tangential slip allows the belt transport speed to differ from the pulley surface speeds and dissipates energy at those contacts. Panel~(c) shows \SI{19.7}{kJ} of
-cumulative modeled slip loss over the five seconds, contributed by both
-contacts. These internal quantities describe CINDER's response; corresponding
-histories are not available from the published benchmark for comparison.
+The force comparison raises a further question: what happens inside
+CINDER while the controller maintains an approximately steady shaft
+ratio? This reconstructed benchmark has no relative sheave-rotation
+mechanism. If both contacts were sticking, the shaft-speed ratio
+\(\omega_p/\omega_s\) would equal the effective-radius ratio
+\(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\).
+
+In \Cref{fig:results_ballew_internal_response}(a,b), the shaft ratio
+stays near two while the radius ratio repeatedly ranges from
+approximately \(0.46\) to \(2.49\), reaching the low-ratio seat.
+The regulated shaft histories thus conceal large modeled excursions
+of the belt's running geometry. Slip allows the independent belt
+transport speed to differ from the pulley surfaces and dissipates
+energy. Panel~(c) records \SI{19.7}{kJ} of cumulative modeled slip loss
+over five seconds, with contributions from both contacts. These
+quantities describe CINDER's internal response; corresponding Ballew
+histories are not available for direct comparison.
 
 \begin{figure}[H]
   \centering
@@ -11431,16 +11457,22 @@ resolution.
 \subsection{Interpretation of the Benchmark Differences}
 \label{sec:results_ballew_interpretation}
 
-Force replay shows that the discrepancy does not arise solely from the
-reconstructed controller: the models also respond differently when its
-adjustment is removed. The principal difference in the belt descriptions is
-the motion each can represent. Ballew resolves internal deformation and local
-nodal motion, whereas the present formulation uses a fixed belt length, one
-transport speed and a prescribed path controlled by the shift coordinate.
-Local deformation and force
-redistribution can therefore alter the response to a given clamp. The
-unmatched initial tension and other necessary reconstruction choices still
-limit how directly this difference can be assigned to any one belt mechanism.
+The two protocols do more than compare individual curves. Under
+feedback, the reconstructed models produce relatively close controlled
+speeds with substantially different primary clamp demand. When that
+force is held to Ballew's published history, the large primary-speed
+discrepancy shows that their reconstructed force--motion responses are
+not interchangeable. CINDER's internal histories illustrate why an
+apparently similar shaft history cannot specify the ratio and slip
+response that produced it.
+
+Ballew resolves internal belt deformation and local nodal motion,
+whereas CINDER retains fixed belt length, one transport speed, and
+a prescribed path controlled by the shift coordinate. These
+differences can change the response to a given clamp. However,
+the unmatched initial tension and necessary reconstruction choices
+also remain. The present comparison cannot isolate one omitted belt
+mechanism as the cause of the discrepancy.
 
 \begin{samepage}
 Compliance and damping have different roles in that explanation. Compliance
@@ -11452,14 +11484,14 @@ attributed to the added linear damper used in his separate comparison
 controlled changes to the belt descriptions.
 \end{samepage}
 
-Taken together, the two protocols show that matching a controlled speed is an
-incomplete test of a CVT model. The required clamp and the response when that
-clamp is imposed provide additional, distinct information. Here they reveal
-a substantial difference in the reconstructed relation between clamp force,
-shift and slip, despite the closer controlled shaft histories. The benchmark
-therefore identifies where the present formulation's reduced belt description
-needs further physical assessment; it is an independent model comparison, not
-experimental validation of either formulation.
+Taken together, the two protocols showThe benchmark therefore establishes a specific limitation of
+trajectory-only agreement. Feedback can produce relatively close
+selected shaft histories despite substantially different clamping
+demand; a common prescribed force exposes a far larger primary
+response difference. Neither protocol determines which model is
+physically correct. Together they identify where the reconstructed
+clamp--motion and internal-slip response requires further assessment,
+not experimental validation of either formulation.
 \FloatBarrier
 
 \section{Dynamic Mechanics Retained in the Formulation}
