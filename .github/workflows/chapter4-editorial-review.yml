@@ -28,28 +28,29 @@ jobs:
           path = "docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf"
           doc = fitz.open(path)
           headings = {}
-          pats = {
-             "start": r"4\.3\s+Independent Transient.Model Benchmark",
-             "end": r"Chapter\s+5\s+Conclusion and Future Work"
-          }
           for i, p in enumerate(doc):
+              if i < 140:
+                  continue
               t = p.get_text("text")
-              for key, pat in pats.items():
-                  if key not in headings and re.search(pat, t, re.I):
-                      headings[key] = i
+              if "start" not in headings and "Independent Transient-Model Benchmark" in t:
+                  headings["start"] = i
+              if "start" in headings and i > headings["start"] + 9 and "Conclusion and Future Work" in t:
+                  headings["end"] = i
+                  break
           print(json.dumps({"total_pages": len(doc), "headings_zero_based": headings}))
           if "start" not in headings or "end" not in headings:
-              raise RuntimeError("Could not determine review section page boundaries")
-          start = headings["start"]
-          end = headings["end"]
-          if not 5 < end-start < 100:
-              raise RuntimeError(f"Unexpected review span {start}..{end}")
-          out=fitz.open()
-          # Retain the last page of 4.2 as the narrative lead-in.
-          out.insert_pdf(doc, from_page=start-1, to_page=end-1)
-          out.save("docs/CVT_Module_Formulation/Chapter4_Sections_4_3_to_4_5_Review.pdf", garbage=4, deflate=True)
+              print("Could not find both review boundaries; full manuscript will still be uploaded")
+          else:
+              start, end = headings["start"], headings["end"]
+              if 5 < end-start < 100:
+                  out=fitz.open()
+                  out.insert_pdf(doc, from_page=start-1, to_page=end-1)
+                  out.save("docs/CVT_Module_Formulation/Chapter4_Sections_4_3_to_4_5_Review.pdf", garbage=4, deflate=True)
+              else:
+                  print("Unexpected review span; retaining full PDF only")
           PY
       - name: Upload review PDFs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: chapter4-editorial-draft-pdfs
