@@ -1,0 +1,59 @@
+name: Chapter 4 editorial review PDF
+on:
+  push:
+    branches:
+      - review/ch4-results-editorial-pass-2026-11-06
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build manuscript with frozen figures
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: CVT_Module_Formulation.tex
+          working_directory: docs/CVT_Module_Formulation
+          latexmk_use_xelatex: false
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+      - name: Extract Chapter 4 review and record page boundaries
+        run: |
+          python -m pip install --quiet pymupdf
+          python - <<'PY'
+          import fitz, re, json
+          path = "docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf"
+          doc = fitz.open(path)
+          headings = {}
+          pats = {
+             "start": r"4\.3\s+Independent Transient.Model Benchmark",
+             "end": r"Chapter\s+5\s+Conclusion and Future Work"
+          }
+          for i, p in enumerate(doc):
+              t = p.get_text("text")
+              for key, pat in pats.items():
+                  if key not in headings and re.search(pat, t, re.I):
+                      headings[key] = i
+          print(json.dumps({"total_pages": len(doc), "headings_zero_based": headings}))
+          if "start" not in headings or "end" not in headings:
+              raise RuntimeError("Could not determine review section page boundaries")
+          start = headings["start"]
+          end = headings["end"]
+          if not 5 < end-start < 100:
+              raise RuntimeError(f"Unexpected review span {start}..{end}")
+          out=fitz.open()
+          # Retain the last page of 4.2 as the narrative lead-in.
+          out.insert_pdf(doc, from_page=start-1, to_page=end-1)
+          out.save("docs/CVT_Module_Formulation/Chapter4_Sections_4_3_to_4_5_Review.pdf", garbage=4, deflate=True)
+          PY
+      - name: Upload review PDFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: chapter4-editorial-draft-pdfs
+          path: |
+            docs/CVT_Module_Formulation/Chapter4_Sections_4_3_to_4_5_Review.pdf
+            docs/CVT_Module_Formulation/CVT_Module_Formulation.pdf
+          retention-days: 30
