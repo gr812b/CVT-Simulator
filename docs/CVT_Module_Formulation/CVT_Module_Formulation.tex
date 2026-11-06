@@ -12405,27 +12405,20 @@ changed consistently.
   \end{tabular}
 \end{table}
 
-The cases span several ways of changing the forces and motion inside a
-mechanically actuated CVT. W85 changes the flyweight mass properties that
-produce the primary centrifugal action. P300 changes the primary spring rate
-while matching its force to R00 at the low-ratio engagement geometry, allowing
-the spring characteristic to be changed without simply beginning from a
-larger or smaller opposing force. RC10, R26B7, and RC40L alter different
-portions of the physical ramp followed by the roller, so the effect of changing
-that contact geometry can be examined without replacing the flyweight
-mechanism itself. H28 makes the corresponding comparison on the secondary by
-changing the helix geometry that couples reacted torque to axial motion.
+The cases span several ways of changing the forces and motionThe variants change different parts of this coupled mechanism. W85 and
+P300 alter the primary centrifugal and spring characteristics. RC10,
+R26B7 and RC40L change different regions of the primary roller ramp;
+H28 changes the secondary helix that converts torque reaction into
+axial closing. Their responses let us distinguish an altered operating
+speed from a change in the shape or timing of the shift.
 
-U55, D01, and D02 extend the comparison farther from the nominal hardware. U55 continues the flyweight-mass change to a more severe value. D01 combines changes in both primary and secondary actuation, whereas D02 combines changes in primary flyweight tip mass and installed spring compression. They are
-included to expose whether the more demanding parts of the road bring out
-limitations that are not apparent near the reference configuration. D02\_M and
-D02\_P then separate two of the primary-side changes contained in D02 by
-restoring, one at a time, the nominal flyweight mass and the nominal primary
-spring preload. D02\_M170 extends the mass correction to test how stronger
-primary closing affects both clamping and backshift. Together, the set
-provides several distinct mechanical routes
-away from the reference before any of their course responses are interpreted.
-
+U55, D01 and D02 move farther from the reference hardware so that
+the more demanding road features can expose limits not reached near
+the nominal configuration. The remaining D02 variants restore or
+strengthen selected primary components; their purpose becomes clearer
+after the unmodified D02 failure has been examined. The table defines
+all changes in advance, but the corresponding mechanical explanations
+are introduced where the cases become relevant.
 
 \subsection{Launch and the Shape of the Shift Curve}
 \label{sec:results_launch_upshift}
@@ -13001,28 +12994,34 @@ same coupled shaft, belt and support mechanics used earlier for forward drive.
 \subsection{What the Common Course Establishes}
 \label{sec:results_course_synthesis}
 
-The common course has shown the CVT responding as one coupled transmission
-between the engine and vehicle. Its motion and the internal
-conditions needed to sustain it have been determined together as the
-loading changes. Successful drive and loss of progress have therefore been
-explained within the same formulation, through the forces carried by the
-hardware and the limits of its contacts and supports.
+The course distinguishes several responses that would be easy to
+misinterpret from speed or shift position alone. On the severe climb,
+D01 retains unused backshift and loses useful engine power while its belt
+contacts stick. D02 instead exhausts its backshift and then loses primary
+traction as the falling shaft speed weakens its clamping. Restoring
+clamping prevents that slip, but increasing primary closing still further
+can oppose backshift and reduce climbing performance. Two successful
+repairs can also climb at nearly the same speed with very different
+traction reserves.
 
-The sheaves that squeeze the belt also set its running radii, so the
-actuation responsible for grip participates in changing or holding the
-ratio. While both contacts stick, that ratio links engine and vehicle
-speeds. The resulting shaft speeds and transmitted torque influence primary
-centrifugal and secondary helix action, while sheave motion changes spring
-loading and actuator geometry. A hardware change therefore alters the
-forces and the operating conditions under which those forces are produced.
+Elsewhere, nearly stationary sheaves have two different explanations.
+They may be held at a travel stop, where the changing load is carried
+by a reaction, or settle at an interior balance without stop support.
+Likewise, two tunes can reach similar climbing speeds with different
+ratios and engine speeds when both operate near the engine's
+constant-power region. Reversed power on the descent still passes
+through the same signed belt, shaft and support mechanics, subject
+to the imposed engine boundary.
 
-A tune must consequently be judged by the loaded drive it produces.
-Enough traction and a ratio that makes useful engine power available have
-to be achieved by the same hardware as it responds to changing loads.
-Within the adopted component and boundary laws, the formulation makes that
-connection traceable. A vehicle response can be followed back to the forces
-and constraints that produced it, and a proposed hardware change can be
-followed forward through the operating conditions it creates.
+These distinctions give the complete simulation its practical value.
+Primary closing action supplies grip but also resists backshift;
+the secondary helix responds to torque while participating in that
+shift; and the ratio determines where the loaded engine operates.
+The same hardware must establish sufficient traction \emph{and}
+a useful operating ratio as conditions change. The computed
+vehicle trajectory is therefore an outcome to explain through
+clamping, support, slip and engine power, not a sufficient
+description of the CVT on its own.
 
 \chapter{Conclusion and Future Work}
 \label{sec:conclusion_and_future_work}
