@@ -11497,13 +11497,20 @@ not experimental validation of either formulation.
 \section{Dynamic Mechanics Retained in the Formulation}
 \label{sec:results_dynamic_mechanics}
 
-The preceding consistency checks, numerical refinements and comparison with
-Ballew provide a basis for examining the additional dynamics retained in the
-formulation. The primary flyweights, secondary helix and belt are considered in
-turn to determine how large these contributions become and how much they
-change the predicted motion. Their force and torque contributions are
-evaluated along the full-model motion; separately integrating a reduced
-model establishes the effect of omitting them.
+The benchmark shows why the force required to produce a motion must be
+examined alongside the motion itself. Here we ask a more targeted question
+within CINDER: when do the dynamic contributions retained in the primary,
+secondary and reduced belt matter, and what do they change?
+
+Three measures must be kept distinct. An inertia coefficient describes
+how strongly the mechanism resists a specified acceleration. The
+corresponding force depends on the acceleration that actually occurs.
+A change in force, in turn, need not produce an equally large change in
+the independently calculated shift history. We therefore examine
+contributions along the full-model motion and, where an omission is
+tested, integrate the reduced model separately. This lets the results
+distinguish a large coefficient, an appreciable force correction, and
+a resolved trajectory effect rather than treating them as interchangeable.
 
 \subsection{Primary Actuation Dynamics}
 \label{sec:results_primary_actuator_dynamics}
@@ -11568,12 +11575,14 @@ impulse at capture.
   \label{fig:results_primary_dynamics}
 \end{figure}
 
-The later shifting is much gentler. Over the sampled engaged motion from
-\SI{0.1}{s} to \SI{10}{s}, the largest pivot-force correction is only
-\SI{0.045}{N}, and the largest magnitude relative to the simultaneous
-centrifugal force is \num{0.00147}\%. The distinction is the motion of the
-flyweights: the same mechanism that changes the engagement response operates
-very close to its quasi-static axial-force law during the subsequent shift.
+The later shifting is much gentler. From \SI{0.1}{s} to \SI{10}{s},
+the largest sampled pivot-force correction is only \SI{0.045}{N}, or at
+most \num{0.00147}\% of the simultaneous centrifugal force. The
+flyweight inertia has not disappeared. Instead, the much smaller
+accelerations and motion-ratio changes produce little additional
+axial force. The same mechanism can therefore alter engagement without
+materially changing the quasi-static closing force during the subsequent
+smooth shift.
 
 Changing the applied torque tests whether this remains true away from that
 smooth drive. The primary torque is increased or decreased by
@@ -11621,14 +11630,15 @@ accompanied by a small, numerically resolved change in the motion.
   \label{fig:results_primary_ramps}
 \end{figure}
 
-For this primary mechanism, the centrifugal approximation consequently
-reproduces the full-model response closely for the smooth shifting and torque
-changes examined here. Engagement requires a different level of detail: the
-rapid flyweight motion changes both the approach to contact and the force
-subsequently delivered to the sheave. Retaining the primary dynamics allows
-both parts of the same drive to be represented without applying the
-quasi-static reduction to the engagement motion where the two responses
-separate.
+The primary comparison therefore has a clear division. During
+engagement, rapid flyweight motion changes both the approach to contact
+and the closing force immediately afterward. In the smooth shift and
+engaged torque changes examined here, the additional force is small and
+the independently integrated quasi-static response stays close.
+The centrifugal approximation is useful in the latter conditions, but
+the agreement there does not justify applying it to the rapid motion
+at engagement. Retaining the dynamics lets the same formulation cover
+both without choosing that reduction in advance.
 \FloatBarrier
 
 \subsection{Secondary Helix Dynamics and Transient Sensitivity}
@@ -11798,11 +11808,14 @@ and motion differences persist under tighter integration
 \label{sec:results_secondary_continuous}
 
 The reference Baja secondary is relatively small compared with some
-commercial rubber-belt CVT assemblies. A larger movable inertia offers
-another way to increase the dynamic contribution without requiring the
-same severe applied load. The helix geometry matters too: it determines
-both the relative rotation caused by axial travel and the conversion of
-reaction torque into closing force.
+commercial rubber-belt CVT assemblies. Changing its hardware can increase
+the dynamic correction without imposing an equally severe external
+load. But inertia alone does not determine the change. The helix motion
+ratio governs how much relative rotation accompanies axial motion and
+how torque is converted to closing force. It enters once in the
+shaft-acceleration force coefficient and twice in the axial-acceleration
+coefficient. The two effects therefore need not scale together when
+both inertia and geometry change.
 
 \Cref{tab:secondary_hardware_scale} compares the reference with an
 engineering estimate based on a Yamaha Sidewinder secondary and a Dalton
@@ -11871,29 +11884,42 @@ as a whole, rather than an inertia-only change.
 \Cref{tab:secondary_estimate_range} gives the corresponding inputs and
 motion differences.
 
-The secondary can therefore remain close to its quasi-static force law
-through gentle shifting while departing appreciably from it under a load
-change. Shaft and relative sheave accelerations can reinforce or partly
-cancel in the reaction, while movable inertia and helix geometry set the
-size of both contributions. The resulting closing force also changes the
-motion that produces those accelerations. A static torque-to-clamp
-characteristic alone cannot determine the size of this transient effect:
-the hardware must be considered with the motion it produces. Retaining
-the secondary dynamics allows both the force correction and its effect on
-shift to be established, without assuming that a large inertia share or
-force correction implies an equally large change in the trajectory.
+The secondary results illustrate why these measures must stay separate.
+The helix supplies a large share of the reflected shift inertia, yet
+gentle motion produces little force correction. Sustained shaft
+deceleration under added load makes the movable sheave's angular
+momentum contribute appreciably to closing thrust. Independent
+integration of the reduced model then reveals a smaller, but
+numerically resolved, change in backshift and shaft speed. The size
+depends jointly on inertia, helix geometry and the accelerations the
+hardware produces. A static torque-to-clamp law cannot recover that
+transient force, and a large inertia share is not itself a prediction
+of a large trajectory change.
 \FloatBarrier
 
 \subsection{Reduced-Belt Transient Mechanics}
 \label{sec:results_reduced_belt_mechanics}
 
-The preceding comparisons examined how actuator inertia changes the forces
-available to clamp and shift the belt. The belt itself must also accelerate,
-both as its circulation speed changes and as shifting moves it between pulley
-radii. The question here is which transient belt contributions materially
-affect the closed-loop tension balance, what motions bring them into
-prominence, and whether the smaller terms can be omitted without changing the
-predicted response.
+The actuator comparisons examined the forces that squeeze and shift
+the belt. For the belt itself, the important transient question lies
+in how the two pulley wraps are joined by tension while the belt
+circulates and moves between radii. The relevant balance is a
+\emph{difference} between contributions from the wraps, not a
+comparison of each inertial term with a gross clamping load.
+
+An existing reference free-shift state shows the scale. At \SI{1.5}{s},
+the normal-load contributions to the two wrap-boundary tension sums
+are \SI{785.721}{N} and \SI{785.536}{N}. Their difference is only
+\SI{0.185}{N}, almost balanced by the \SI{-0.186}{N} contribution
+from changing circulation speed
+(\Cref{app:study_belt_dynamics}). A term small beside either
+gross loading contribution can therefore supply the leading
+inertial adjustment to their difference.
+
+We now separate the exact closed-loop relation into its contact-loading
+and acceleration contributions, identify which motions make them
+important, and test the consequences of omitting the terms that
+remain small.
 
 The centrifugal-corrected capstan limit of the wrap solution,
 \Cref{eq:gerbert_inertia_corrected_relation}, accounts for the tension needed
@@ -12002,7 +12028,9 @@ units of force, with \(\rho_bA_b\) giving the belt mass per unit length.
  \label{tab:results_belt_terms}
 \end{table}
 
-The closed-loop tension relation then becomes
+These are five signed contributions to one wrap-boundary tension
+balance, not five independent fractions of pulley clamping force.
+Their sum vanishes:
 \begin{equation}
  F_N+F_{\dot v_b}+F_{\ddot s}+F_{\dot s^2}+F_{\dot s v_b}=0.
  \label{eq:results_belt_term_balance}
@@ -12027,8 +12055,12 @@ full-throttle engine and vehicle boundaries of the preceding actuator
 comparisons, starting with the vehicle and belt at rest and the primary at
 \SI{1800}{rpm}. To compare the five contributions over a period of this
 motion, each term's magnitude is integrated over that period and divided by
-the sum of the five magnitude integrals. The resulting shares sum to
-100\%; a pair near 50\% each therefore carries almost the entire balance.
+the sum of the five magnitude integrals. The shares sum to 100\%. Because the signed terms add to zero
+at every instant, one magnitude cannot exceed the sum of
+the other four. No one term can exceed 50\% under this
+integrated absolute-magnitude normalization. A contribution near
+50\% balances almost all the others together; it is not
+half of either pulley's clamping load.
 \Cref{tab:results_belt_hierarchy} gives these shares alongside the largest
 force magnitude reached by each term during the same period.
 
@@ -12122,10 +12154,14 @@ together they oppose the belt-speed acceleration contribution near
 part of the balance previously carried by \(F_N\), while the terms
 proportional to \(\dot s^2\) and \(\dot s v_b\) remain small.
 
-Radial inertia is also appreciable when a load rise reverses the shift.
-A separate load-rise case beginning near 59\% of engaged travel reverses the upshift and gives
-\(F_{\ddot s}\) a 21.2\% share during the rise
-(\Cref{fig:results_belt_shift_transient}).
+Radial inertia is also appreciable when a load rise reverses the
+shift. A separate case beginning near 59\% of engaged travel
+reverses the upshift and gives \(F_{\ddot s}\) a 21.2\% share during
+the rise (\Cref{fig:results_belt_shift_transient}). These comparisons
+show when radial acceleration is appreciable \emph{in the tension
+balance}. They do not independently integrate a model omitting
+that term, so a 21.2\% balance share is not a measured trajectory
+error from its omission.
 
 \subsubsection{The two contributions that depend on shift speed}
 \label{sec:results_belt_velocity_terms}
@@ -12205,9 +12241,13 @@ enlarge the curvature force, and changes in traction or geometry can weaken
 the wrap cancellation. The interval shares also allow brief larger
 instantaneous percentages when the rest of the balance becomes small.
 
-Because the small net moving-radius force combines larger local
-contributions, omitting the two terms from the wrap equations requires a
-separate check of the resulting motion. Seven full-model cases were paired
+Small shares in the tension balance do not by themselves
+show that terms can safely be deleted from the equations. The
+moving-radius term, in particular, is a small difference between
+larger local contributions. Its effect on the calculated motion
+must therefore be checked separately. We independently integrate
+seven cases with both shift-speed terms omitted and compare them
+with the corresponding full-model histories. Seven full-model cases were paired
 with independent integrations omitting both terms. At the tighter numerical
 settings, the largest shift-position difference is less than
 \SI{0.017}{\micro\metre}; in every pair it is smaller than the change
@@ -12227,24 +12267,26 @@ establishes a difference between these reductions, not the exact massless-belt
 limit. The archived comparisons are documented in
 \Cref{app:study_belt_dynamics}.
 
-Taken together, the belt studies separate the roles of the retained transient
-terms. Changing circulation speed supplies the principal inertial adjustment
-during gentle free shift, while rapid changes in shift speed can make radial
-acceleration an appreciable part of the closed-loop balance. This motion
-dependence places a useful boundary on the simplification adopted by
-\citet{Sorge2008}, whose one-dimensional shift formulation treats inertia
-forces associated with shifting motion as negligible relative to the other
-belt forces. The two reduced descriptions are not identical, but in the
-present formulation the analogous shift-related contributions are not
-uniformly negligible: the radial contribution associated with shift
-acceleration becomes appreciable during engagement and rapid load-induced
-changes in shift speed. By contrast, the curvature and moving-radius
-contributions remain small over the motions examined here, and independently
-omitting them together changes the calculated shift histories by less than
-numerical refinement while preserving the ordered contact and support changes.
-The transport comparison adds a separate point: changing one occurrence of
-belt inertia is not equivalent to reducing the common belt density throughout
-the coupled belt description.
+The belt comparisons establish a hierarchy that depends on the motion.
+During gentle shifting, changing circulation speed supplies the leading
+inertial adjustment between nearly balancing wrap loads. Engagement and
+rapid load changes bring radial acceleration into that balance. The
+curvature and moving-radius contributions remain small in the tested
+conditions for identifiable reasons: the actual shift speeds are small,
+and contributions from the two wraps nearly cancel. Independently
+omitting those two terms together also changes the computed shift
+histories by less than the numerical refinement differences in the
+seven examined cases, without altering their ordered contact and
+support changes.
+
+This places a specific limit on the neglect of shift-associated belt
+inertia discussed by \citet{Sorge2008}. The two models are not identical,
+and the load-rate studies do not quantify the trajectory error from
+omitting the shift-acceleration contribution. They do establish that
+its participation in the present tension balance is not uniformly
+negligible. The separate transport experiment demonstrates another
+distinction: removing one occurrence of belt inertia is not equivalent
+to reducing the belt density consistently throughout the formulation.
 \FloatBarrier
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
