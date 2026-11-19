@@ -11276,57 +11276,49 @@ Within the sampled static and expanded ranges, the fixed-traction mechanical sys
 \section{Independent Transient-Model Benchmark}
 \label{sec:results_ballew_benchmark}
 
-The internal checks establish how consistently CINDER solves its own
-formulation. Comparing it with another transient belt model asks a different
-question: does the same external loading lead to a similar response when the
-belt is represented differently? This is not answered by comparing shaft
-speeds alone if a controller is free to adjust the primary clamping force.
-Two models might follow similar speed histories while requiring different
-forces to produce them.
+The internal checks establish that CINDER solves its own formulation
+consistently. The independent-model benchmark now examines where its
+predicted response agrees with, or differs from, a model using a more
+detailed belt representation under reconstructed common operating
+conditions.
 
-Ballew's discretized rubber-belt model provides a five-second ATV
-acceleration with published shaft-speed histories, primary clamping force,
-and controller gains \citep{Ballew2015}. We use two complementary comparisons.
-First, reconstructed feedback can choose CINDER's primary clamp, so both
-the controlled speed and the force required to obtain it can be examined.
-Second, Ballew's published clamp history is imposed directly on CINDER,
-removing the controller's ability to compensate. Together these tests
-examine whether agreement in selected controlled histories also represents
-agreement in the force--motion response. Differences in the reconstructed
-inputs and belt descriptions still limit what can be inferred about the
-physical source of any mismatch.
+Ballew's discretized rubber-belt model reports a five-second ATV
+acceleration with shaft speeds, primary clamping force and controller
+gains \citep{Ballew2015}. The primary speed is regulated by adjusting
+the clamp, so a close speed history alone would not establish agreement
+in the force required to produce it. We therefore compare both the
+controlled speeds and the calculated clamp, then prescribe Ballew's
+published clamp history directly to CINDER. The second comparison
+reveals how the two formulations respond when feedback can no longer
+compensate by changing that force.
 
 \subsection{Benchmark Reconstruction}
 \label{sec:results_ballew_reconstruction}
 
-These benchmark cases replace the reference mechanical actuator laws with
-the axial-force inputs used in Ballew's model. The comparison therefore tests
-CINDER's shaft, shift and belt response under the reconstructed benchmark
-loading rather than the reference Baja actuator mechanics.
+The reconstruction matches Ballew's published case wherever the two
+formulations have corresponding inputs, rather than using the Baja
+reference actuators and vehicle. Both protocols share the reconstructed
+belt geometry, published belt mass and combined shaft inertias, ATV
+road-load boundary, constant primary torque of \SI{18}{N.m}, and
+secondary closing force of \SI{2000}{N}. The initial shaft speeds
+are Ballew's tabulated \(2500\) and \(1136~\mathrm{rpm}\); CINDER's
+compatible initial belt speed and shift position follow from that
+geometry. No physical parameter or controller gain is fitted to the
+published histories.
 
-Both protocols use the same reconstructed belt geometry, shaft inertias and
-ATV road-load boundary, with a constant primary torque of \SI{18}{N.m} and
-secondary closing force of \SI{2000}{N}. The initial shaft speeds are Ballew's
-tabulated \(2500\) and \(1136~\mathrm{rpm}\); a compatible belt speed and shift
-position follow from the reconstructed geometry. These inputs belong to the
-published benchmark rather than the Baja reference. \Cref{app:study_ballew}
-gives the source quantities, their translation into CINDER and the numerical
-settings. The accompanying
-\ResultsCode{studies/ballew-2015/provenance/RECONSTRUCTION.md}{reconstruction record}
-identifies the source locations, digitization procedure and choices needed to
-re-create the case. No physical parameter or controller gain is fitted to the
-reference histories.
-
-The translations preserve the published belt mass and combined shaft
-inertias. Friction coefficients are converted between the two normal-force
-conventions so that the same clamp gives the same gross tangential capacity.
-Both translating sheave masses are set to zero because Ballew obtains
-radial position from an algebraic axial-force balance. The reconstruction
-retains the present formulation's belt inertia and reduced shift dynamics.
-Ballew also initializes internal belt-deformation states, including zero
-longitudinal tension, that have no direct counterpart in the present
-formulation. The reconstruction therefore matches the specified external
-conditions without making the internal initial states identical.
+Some differences cannot be removed by matching inputs. The friction
+coefficients are converted between normal-force conventions so that
+the same clamp gives the same gross tangential capacity. Translating
+sheave masses are set to zero to reflect Ballew's algebraic
+axial-force balance, while CINDER retains its reduced shift dynamics
+and belt inertia. Ballew also specifies internal deformation states,
+including zero initial longitudinal tension, which have no direct
+equivalent in CINDER's reduced belt description. The comparison
+therefore matches the available external conditions without claiming
+identical internal states or equations. The exact reconstruction,
+source values and numerical settings are documented in
+\Cref{app:study_ballew} and the accompanying
+\ResultsCode{studies/ballew-2015/provenance/RECONSTRUCTION.md}{reconstruction record}.
 
 \subsection{Closed- and Open-Loop Comparisons}
 \label{sec:results_ballew_closed_loop}
@@ -11344,9 +11336,10 @@ In force replay, the clamp is instead an input. Ballew's digitized
 Figure~45 history is applied through piecewise-linear interpolation,
 with its first visible value held back to \(t=0\). Every other
 reconstructed input is unchanged. The two columns of
-\Cref{fig:results_ballew_protocols} therefore answer distinct questions:
-what clamp does CINDER require under feedback, and what shaft motion follows
-when it receives Ballew's prescribed clamp?
+\Cref{fig:results_ballew_protocols} show these protocols side by side.
+The feedback comparison reports CINDER's clamp demand alongside the
+regulated shaft speeds; the replay comparison shows the shaft response
+to Ballew's prescribed clamp.
 
 \begin{figure}[H]
   \centering
@@ -11412,10 +11405,11 @@ same imposed clamp, the primary response differs greatly.
 \subsection{Internal Motion and Slip}
 \label{sec:results_ballew_internal_motion}
 
-The force comparison raises a further question: what happens inside
-CINDER while the controller maintains an approximately steady shaft
-ratio? This reconstructed benchmark has no relative sheave-rotation
-mechanism. If both contacts were sticking, the shaft-speed ratio
+The controlled shaft histories also leave the belt's running geometry
+and slip unresolved. We therefore examine CINDER's effective-radius
+ratio alongside its shaft-speed ratio during the feedback run. This
+reconstructed benchmark has no relative sheave-rotation mechanism.
+If both contacts were sticking, the shaft-speed ratio
 \(\omega_p/\omega_s\) would equal the effective-radius ratio
 \(r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}\).
 
@@ -11484,23 +11478,25 @@ attributed to the added linear damper used in his separate comparison
 controlled changes to the belt descriptions.
 \end{samepage}
 
-The benchmark therefore establishes a specific limitation of
-trajectory-only agreement. Feedback can produce relatively close
-selected shaft histories despite substantially different clamping
-demand; a common prescribed force exposes a far larger primary
-response difference. Neither protocol determines which model is
-physically correct. Together they identify where the reconstructed
-clamp--motion and internal-slip response requires further assessment,
-not experimental validation of either formulation.
+The comparison therefore reveals a meaningful difference that the
+controlled shaft histories alone would conceal. Feedback produces
+relatively close selected speeds while demanding substantially
+different clamping forces; imposing the published force instead
+produces a much larger primary-speed discrepancy. Alongside the
+predicted radius excursions and slip loss, these results identify
+the clamp--motion and belt-contact response as important targets
+for further comparison. They do not, on their own, determine which
+formulation more faithfully represents the physical transmission.
 \FloatBarrier
 
 \section{Dynamic Mechanics Retained in the Formulation}
 \label{sec:results_dynamic_mechanics}
 
 The benchmark shows why the force required to produce a motion must be
-examined alongside the motion itself. Here we ask a more targeted question
-within CINDER: when do the dynamic contributions retained in the primary,
-secondary and reduced belt matter, and what do they change?
+examined alongside the motion itself. We next isolate the dynamic
+contributions retained in CINDER's primary actuator, secondary helix
+and reduced belt, examining when each contributes appreciably to
+the force balances and how the predicted motion responds.
 
 Three measures must be kept distinct. An inertia coefficient describes
 how strongly the mechanism resists a specified acceleration. The
@@ -11515,7 +11511,7 @@ a resolved trajectory effect rather than treating them as interchangeable.
 \subsection{Primary Actuation Dynamics}
 \label{sec:results_primary_actuator_dynamics}
 
-For the primary, the question is how much the flyweights' pivot motion changes
+The primary study isolates how the flyweights' pivot motion changes
 the closing force and the resulting shift. The quasi-static flyweight force,
 denoted \(F_{\mathrm{fw},x_p}^{\mathrm{QS}}\), is the centrifugal closing
 force at a given shaft speed and sheave position. As the sheave moves, the
@@ -11901,9 +11897,9 @@ of a large trajectory change.
 \label{sec:results_reduced_belt_mechanics}
 
 The actuator comparisons examined the forces that squeeze and shift
-the belt. For the belt itself, the important transient question lies
-in how the two pulley wraps are joined by tension while the belt
-circulates and moves between radii. The relevant balance is a
+the belt. For the belt itself, the key transient balance joins the two
+pulley wraps through tension while the belt circulates and moves
+between radii. The relevant balance is a
 \emph{difference} between contributions from the wraps, not a
 comparison of each inertial term with a gross clamping load.
 
@@ -12290,15 +12286,14 @@ to reducing the belt density consistently throughout the formulation.
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
 \label{sec:results_coupled_regimes}
 
-The preceding studies examined the formulation in controlled pieces: whether
-its coupled balances remain mechanically and numerically consistent, how its
-transient response compares with an independent model, and when the retained
-actuator and belt dynamics alter the predicted motion. Those questions are
-necessary, but they stop short of the problem that motivated the complete CVT
-formulation. If the engine and vehicle supply the loading at the two shafts, can
-the same internal mechanics carry the transmission through the changing
-conditions of a drive, and can the resulting behaviour be followed back to the
-hardware that produced it?
+The preceding studies established the numerical consistency of the
+formulation, compared its response with an independent model and
+examined the effects of individual dynamic contributions. The common
+course now brings these mechanics together under engine and vehicle
+loads that change throughout a continuous drive. It tests how different
+hardware configurations engage, shift and transmit power across those
+conditions, and connects their vehicle responses to the clamping,
+traction, support and actuator forces responsible.
 
 To answer that question, each configuration begins from the same initial
 state and uses the same engine and vehicle boundary laws over the same
@@ -12336,9 +12331,9 @@ a different feature. The complete course is shown in
   \label{fig:results_course_overview}
 \end{figure}
 
-Each part of the road is included to ask a different mechanical question. The
-opening flat gives the CVT room to engage and move through its ratio range
-before a large road load is introduced. The \(38^\circ\) climb then places a
+Each part of the road exercises a different aspect of the coupled
+response. The opening flat lets the CVT engage and move through its
+ratio range before a large road load is introduced. The \(38^\circ\) climb then places a
 much larger demand on the drivetrain, allowing limitations in available ratio
 or belt traction to appear if the hardware drives the transmission toward
 them. After a level recovery, the six-cycle region applies repeated changes in
@@ -12551,10 +12546,9 @@ at a higher primary speed. A stiffer primary spring can leave the beginning of
 that progression nearly unchanged while increasingly slowing the later ratio
 motion, allowing engine speed to rise relative to the secondary. Changing the
 ramp can alter the same balance nonlinearly and only over the portions of
-travel where the new geometry is encountered. Those different states are then
-carried directly into the first severe climb, where the question changes from
-how the hardware shapes the upshift to what limits the transmission when the
-road demands a large backshift.
+travel where the new geometry is encountered. Those different states are carried directly into the first severe
+climb. There, the hardware must provide both a useful backshift and
+sufficient belt traction under a much larger road load.
 
 \subsection{A Severe Climb Separates Poor Shifting from Loss of Traction}
 \label{sec:results_backshift}
