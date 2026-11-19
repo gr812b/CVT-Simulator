@@ -11492,32 +11492,55 @@ essential evidence alongside controlled shaft-speed histories.
 \section{Dynamic Mechanics Retained in the Formulation}
 \label{sec:results_dynamic_mechanics}
 
-The benchmark shows why the force required to produce a motion must be
-examined alongside the motion itself. We next isolate the dynamic
-contributions retained in CINDER's primary actuator, secondary helix
-and reduced belt, examining when each contributes appreciably to
-the force balances and how the predicted motion responds.
+Several of the mechanically actuated CVT models reviewed in
+\Cref{sec:lit-actuation} calculate closing force from equilibrium at the
+current sheave position. During a shift, however, the flyweights swing on
+the primary and the movable sheave turns along the helix on the secondary.
+Accelerating these parts changes the force each actuator delivers. The belt
+also accelerates as its circulation speed and its running radii change.
+One contribution of CINDER, identified in \Cref{sec:contributions}, is to
+retain these motions in the coupled calculation of clamping, belt tension
+and shift. The comparisons below establish when the added terms carry
+appreciable force and, for the reductions tested, how much they change
+the predicted motion.
 
-Three measures must be kept distinct. An inertia coefficient describes
-how strongly the mechanism resists a specified acceleration. The
-corresponding force depends on the acceleration that actually occurs.
-A change in force, in turn, need not produce an equally large change in
-the independently calculated shift history. We therefore examine
-contributions along the full-model motion and, where an omission is
-tested, integrate the reduced model separately. This lets the results
-distinguish a large coefficient, an appreciable force correction, and
-a resolved trajectory effect rather than treating them as interchangeable.
+An inertia coefficient describes how strongly a mechanism resists a
+specified acceleration. The corresponding force depends on the acceleration
+that actually occurs. Even an appreciable change in one force may produce
+only a small change in shift as the other forces respond. We therefore
+evaluate the actuator forces at the same state on the full-model trajectory,
+then let each model evolve under the same applied loading to find the
+difference in shift and shaft speed. For the belt, we first identify the
+contribution of each term to the tension balance. We then compare the shift
+histories obtained with and without two of those terms.
 
 \subsection{Primary Actuation Dynamics}
 \label{sec:results_primary_actuator_dynamics}
 
-The primary study isolates how the flyweights' pivot motion changes
-the closing force and the resulting shift. The quasi-static flyweight force,
-denoted \(F_{\mathrm{fw},x_p}^{\mathrm{QS}}\), is the centrifugal closing
-force at a given shaft speed and sheave position. As the sheave moves, the
-flyweights also swing about their pivots, and accelerating this motion changes
-the force delivered to the sheave. With \(x_p=s\),
-\Cref{eq:primary_flyweight_axial_force} separates into
+As the primary turns, centrifugal loading tends to swing the flyweights
+outward about their pivots. Their rollers press against an inclined ramp
+on the movable sheave, pushing it toward the belt. As the sheave advances,
+the ramp allows each flyweight to swing farther out. While the swing is
+speeding up, part of the centrifugal torque accelerates the flyweight
+itself, leaving less force at the roller. When the sheave slows against
+the belt, the flyweights slow with it and can add to the closing force.
+
+A single launch lets us compare this rapid approach to contact with the
+gentler shift that follows, using the same flyweights, ramp and spring.
+We use the Baja reference assembly of \Cref{app:common_physical_configuration}
+on level ground at full throttle. The primary starts at \SI{1800}{rpm}
+with the vehicle and belt at rest. The engine and vehicle loading are
+specified in \Cref{app:results_boundary_models}. The secondary and belt
+comparisons later in this section follow the same launch.
+
+For this mechanism the ramp fixes the flyweight angle \(q_f\) at each
+primary position \(x_p=s\). Let \(J_{f,p}\) denote the flyweights'
+inertia about the shaft and \(I_f\) their combined inertia about their
+pivots. The quasi-static closing force \(F_{\mathrm{fw},x_p}^{\mathrm{QS}}\)
+is the centrifugal force transmitted through the ramp at the current
+shaft speed and sheave position. Separating it from the force associated with the
+flyweights' swing in \Cref{eq:primary_flyweight_axial_force} gives
+
 \begin{equation}
 \begin{aligned}
  F_{\mathrm{fw},x_p}
@@ -11530,33 +11553,43 @@ the force delivered to the sheave. With \(x_p=s\),
 \end{aligned}
 \label{eq:results_primary_dynamic_decomposition}
 \end{equation}
-The first correction opposes shift acceleration. Its coefficient
-\(I_f(dq_f/ds)^2\) is the flyweight pivot inertia expressed as a mass acting
-on the shift coordinate; it ranges from \SI{0.519}{kg} to \SI{0.572}{kg}
-over the reference mechanism's engaged travel. The second correction arises
-because the flyweight rotation per unit sheave travel changes along the ramp.
 
-The comparison retains the same flyweights, ramp and spring. The quasi-static
-primary omits these two force corrections and holds its shaft-axis inertia
-at the initial value, while the secondary remains dynamic. It therefore also
-omits the changing angular-momentum contribution derived in
-\Cref{sec:primary_pulley_rotational_dynamics}. The exact reduction and study settings are given
-in \Cref{app:results_quasistatic_actuators,app:study_primary_dynamics}.
+The first term in \(\Delta F_{\mathrm{fw},x_p}\) opposes acceleration of
+the sheave. A ramp that turns a flyweight farther for the same sheave
+travel requires more angular acceleration and transmits the resulting
+pivot torque back to the sheave with greater mechanical advantage. This
+accounts for the square of \(dq_f/ds\). On the reference ramp,
+\(I_f(dq_f/ds)^2\) ranges from \SI{0.519}{kg} to \SI{0.572}{kg} over
+engaged travel. For a given sheave acceleration, this term therefore
+requires as much force as accelerating that much additional mass along
+the shaft.
+The second term arises because the rotation per unit travel varies along
+the ramp. Even at constant sheave speed, the flyweights can therefore
+speed up or slow down about their pivots.
 
-A first measure of these effects comes from the reference level-ground
-acceleration. It starts with the vehicle and
-belt at rest and the primary at \SI{1800}{rpm}, under the full-throttle engine
-and vehicle boundaries of \Cref{app:results_boundary_models}. In
-\Cref{fig:results_primary_dynamics}(a), retaining the primary dynamics lowers
-the closing speed at first belt contact from about \SI{673}{mm/s} to
-\SI{565}{mm/s}, and delays that contact by \SI{1.93}{ms}.
-Immediately afterward, the flyweights decelerate and their inertial
-contribution adds \SI{74.8}{N} to the closing action. Panel (b) shows why this
-is appreciable: the spring opposes most of the \SI{1404}{N} centrifugal
-force. The flyweight and spring contributions then sum to \SI{244.5}{N},
-compared with \SI{169.7}{N} when evaluated without the pivot terms at the
-same state. These are the actuator forces before the belt reaction, not the
-impulse at capture.
+For a force comparison at a given state, the quasi-static law simply
+drops the two pivot terms in \Cref{eq:results_primary_dynamic_decomposition}.
+For a comparison of motion, the quasi-static primary also holds its
+shaft-axis inertia at the initial value. In the full model that inertia
+changes as the flyweights move relative to the shaft axis
+(\Cref{sec:primary_pulley_rotational_dynamics}). Differences between their calculated motions
+therefore include the effects of both changes. They use the same
+flyweights, ramp, spring and dynamic secondary
+(\Cref{app:results_quasistatic_actuators,app:study_primary_dynamics}).
+
+The first difference appears before the belt carries load.
+\Cref{fig:results_primary_dynamics}(a) shows that the movable sheave reaches
+the belt at about \SI{565}{mm/s} in the full model and \SI{673}{mm/s} in
+the quasi-static model. First contact comes \SI{1.93}{ms} later in the full
+model. Immediately after capture, the flyweights are decelerating and
+their inertia adds \SI{74.8}{N} to the closing force. Its importance is
+easiest to see after accounting for the spring in panel~(b).
+Of the \SI{1404}{N} centrifugal contribution, only \SI{169.7}{N} remains
+after the opposing spring force is subtracted. The pivot contribution
+brings that net actuator force to \SI{244.5}{N} at the same state.
+These forces act before subtraction of the belt reaction and describe the
+continuous motion just after capture. The impulse at contact is accounted
+for separately.
 
 \begin{figure}[H]
   \centering
@@ -11571,45 +11604,43 @@ impulse at capture.
   \label{fig:results_primary_dynamics}
 \end{figure}
 
-The later shifting is much gentler. From \SI{0.1}{s} to \SI{10}{s},
-the largest sampled pivot-force correction is only \SI{0.045}{N}, or at
-most \num{0.00147}\% of the simultaneous centrifugal force. The
-flyweight inertia has not disappeared. Instead, the much smaller
-accelerations and motion-ratio changes produce little additional
-axial force. The same mechanism can therefore alter engagement without
-materially changing the quasi-static closing force during the subsequent
-smooth shift.
+The first-contact time and approach speed are stable at the reported
+precision. The small subsequent seating events are more sensitive to
+numerical refinement, so the comparison concerns the first approach and
+capture (\Cref{app:study_primary_dynamics}). Once the initial engagement
+has passed, the flyweights swing much more gently. Between \SI{0.1}{s}
+and \SI{10}{s}, the largest sampled pivot-force correction is
+\SI{0.045}{N}, and its largest magnitude relative to the simultaneous
+centrifugal force is \num{0.00147}\%.
 
-Changing the applied torque tests whether this remains true away from that
-smooth drive. The primary torque is increased or decreased by
-\SI{5}{N.m}, \SI{10}{N.m} or \SI{20}{N.m}, with rise times of
-\SI{5}{ms}, \SI{20}{ms}, \SI{100}{ms} and \SI{250}{ms}, starting near
-20\%, 50\% and 80\% of engaged travel. All these cases remain in free
-shifting with both contacts sticking. \Cref{fig:results_primary_ramps}(a)
-shows that faster changes increase the force correction, but it remains
-small throughout this tested range. In the selected \SI{-20}{N.m},
-\SI{5}{ms} case at mid travel, the resolved peak is \SI{-1.83}{N}, or
-\num{0.0510}\% of the centrifugal force. The acceleration term accounts
-for almost all of it; the motion-ratio term is below \SI{0.001}{N} at that
-instant. Even this rapid torque change produces far less flyweight
-acceleration than engagement does.
+To see whether a rapid change in engine torque can excite the same
+flyweight motion while the belt is already engaged, we increase or
+decrease the applied primary torque by \SI{5}{N.m}, \SI{10}{N.m} or
+\SI{20}{N.m}. The changes begin near 20\%, 50\% or 80\% of engaged
+travel and take \SI{5}{ms}, \SI{20}{ms}, \SI{100}{ms} or \SI{250}{ms}.
+Both contacts stick and the sheaves shift freely in every case.
+\Cref{fig:results_primary_ramps}(a) shows that shorter rises generally
+give larger pivot corrections. In the selected mid-travel reduction of
+\SI{20}{N.m} over \SI{5}{ms}, the resolved peak is \SI{-1.83}{N}, or
+\num{0.0510}\% of the simultaneous centrifugal force. Almost all of
+it comes from shift acceleration. The term due to the changing ramp
+motion ratio is below \SI{0.001}{N} at that instant. Even this short
+torque rise accelerates the flyweights far less than engagement does.
 
-Because both models are already shifting when the torque ramp begins, their
-absolute motions include the response already underway as well as the
-response to the added load. Each loaded run is therefore compared with that
-model's own continuation under the original engine boundary and no torque
-increment. Subtracting the continuation isolates the additional shift caused
-by the torque ramp.
+The primary is already closing when the torque changes. To isolate the
+extra shift caused by that change, each model is continued twice from
+its starting state, once with the torque change and once under the
+original engine torque. Panel~(b) shows the difference between those
+two continuations for each model.
 
-The torque reduction initially lowers the belt's opening reaction more than
-the actuator's closing force, so the primary closes further than it would
-without the added torque.
-Panel (b) shows a shift response of about \SI{0.82}{mm}, with a maximum
-full--quasi-static difference of \SI{2.53}{\micro\metre}. The corresponding
-primary-speed difference is \SI{0.670}{rpm}. These response differences
-remain stable when both integration tolerances are tightened tenfold
-(\Cref{app:study_primary_dynamics}). The small force correction is therefore
-accompanied by a small, numerically resolved change in the motion.
+In the selected case the torque reduction initially relieves the belt's
+opening force more than it reduces the actuator's closing force. The
+primary consequently closes farther than it would have under the original
+torque. Against this additional shift of about \SI{0.82}{mm}, the largest
+difference between the full and quasi-static shift responses is
+\SI{2.53}{\micro\metre}. The primary-speed responses differ by up to
+\SI{0.670}{rpm}. Tightening both integration tolerances tenfold leaves
+these differences stable (\Cref{app:study_primary_dynamics}).
 
 \begin{figure}[H]
   \centering
@@ -11626,30 +11657,39 @@ accompanied by a small, numerically resolved change in the motion.
   \label{fig:results_primary_ramps}
 \end{figure}
 
-The primary comparison therefore has a clear division. During
-engagement, rapid flyweight motion changes both the approach to contact
-and the closing force immediately afterward. In the smooth shift and
-engaged torque changes examined here, the additional force is small and
-the independently integrated quasi-static response stays close.
-The centrifugal approximation is useful in the latter conditions, but
-the agreement there does not justify applying it to the rapid motion
-at engagement. Retaining the dynamics lets the same formulation cover
-both without choosing that reduction in advance.
+For this primary, retaining the flyweight dynamics matters most in the
+short interval when the sheave closes the gap and begins to load the
+belt. It changes the speed at which the sheave arrives and the closing
+force available as the sheave decelerates. Once the belt is engaged
+and shifting freely, even the fastest torque change examined here
+produces little additional pivot force. In the independently integrated
+mid-travel comparison, the centrifugal approximation then gives nearly
+the same additional shift.
 \FloatBarrier
 
 \subsection{Secondary Helix Dynamics and Transient Sensitivity}
 \label{sec:results_secondary_helix}
 
-The secondary also has a rotational contribution to its shift inertia.
-The primary flyweights swing about their pivots, whereas the helix makes
-the movable secondary sheave turn about the shaft axis as it moves axially.
-This relative rotation adds to the shaft rotation, so the movable assembly's
-torque balance depends on both shaft acceleration and shift motion.
+On the secondary, the part that must turn during a shift is the movable
+sheave itself. The belt and the torsional spring apply torque to it, and
+the helix carries the reaction that pushes it closed. If the sheave
+accelerates in rotation, part of the applied torque changes its angular
+momentum. The torque carried by the helix, and hence its closing force,
+changes accordingly.
 
-The quasi-static relation established in
-\Cref{sec:secondary_classical_limit} converts the belt torque and
-torsional spring loading directly into closing force. With the symmetric
-face-torque share used here, this force is
+Two motions can produce this angular acceleration. The shaft may speed
+up or slow down, carrying the movable sheave with it. The sheave may also
+turn relative to the shaft as it travels along the helix. For the helix
+orientation used here, accelerating the forward-rotating shaft reduces
+the closing force and decelerating it increases the force. Relative
+sheave acceleration can reinforce or offset the shaft contribution,
+depending on its direction.
+
+With half the belt torque assigned to each face, the quasi-static helix
+of \Cref{sec:secondary_classical_limit} converts the movable face's share
+of belt torque and the torsional spring torque into closing force through
+the motion ratio \(d\theta_s/dx_s\),
+
 \begin{equation}
  F_{\mathrm{helix},x_s}^{\mathrm{QS}}
  =\frac{d\theta_s}{dx_s}
@@ -11657,7 +11697,13 @@ face-torque share used here, this force is
        +k_{s,\theta}(\theta_{s,\mathrm{pre}}-\theta_s)\right].
  \label{eq:results_secondary_qs_torque_recalled}
 \end{equation}
-The full relation from \Cref{eq:secondary_helix_closing_force} is
+
+In the full relation, \Cref{eq:secondary_helix_closing_force}, the
+accelerating assembly requires a torque equal to its rotational inertia
+\(I_{s,M}\) times the sum of the shaft and relative angular
+accelerations. Converting the remaining torque through the same helix
+gives
+
 \begin{equation}
 \begin{aligned}
  F_{\mathrm{helix},x_s}
@@ -11669,52 +11715,51 @@ The full relation from \Cref{eq:secondary_helix_closing_force} is
 \end{aligned}
  \label{eq:results_secondary_dynamic_decomposition}
 \end{equation}
-The \(\ddot\theta_s\) contribution comes from shifting along the helix.
-For a straight helix, \(\ddot\theta_s=(d\theta_s/dx_s)\ddot x_s\), giving
-a force correction \(-I_{s,M}(d\theta_s/dx_s)^2\ddot x_s\) that opposes
-axial acceleration. Expressed in the shared shift coordinate, it
-adds \(I_{s,M}(d\theta_s/ds)^2\) to the coefficient multiplying
-\(\ddot s\), just as the pivot inertia does for the primary.
 
-The \(\dot\omega_s\) contribution comes from accelerating the movable
-assembly with the shaft, even when its axial position is fixed. For the
-positive motion ratio used here, slowing the forward-rotating shaft
-increases the helix closing force, while speeding it up reduces that force.
-The shaft and shift contributions can reinforce or partly cancel,
-depending on the signs of the two accelerations.
+For a straight helix, travel produces relative angular acceleration
+\(\ddot\theta_s=(d\theta_s/dx_s)\ddot x_s\). Substitution into
+\Cref{eq:results_secondary_dynamic_decomposition} gives a local force
+\(-I_{s,M}(d\theta_s/dx_s)^2\ddot x_s\) opposing axial acceleration.
+In the common shift coordinate the corresponding addition to the
+coefficient of \(\ddot s\) is \(I_{s,M}(d\theta_s/ds)^2\).
+The shaft-acceleration term can act even when the sheave is held at a
+fixed axial position.
 
-The quasi-static comparison omits the entire correction in
-\Cref{eq:results_secondary_dynamic_decomposition}. In the separately
-integrated reduced model, the movable rotational inertia is assigned to the
-fixed secondary shaft, retaining the same total inertia for rigid shaft
-rotation. Axial sheave motion, translating mass, geometry and springs
-remain. Both models retain the full primary dynamics and the same bilateral
-helix slot. The reduction and exact study inputs are given in
-\Cref{app:results_quasistatic_actuators,app:study_secondary_dynamics}.
+For the independent motion comparison, the quasi-static model assigns
+the movable assembly's rotational inertia to the fixed secondary shaft.
+This preserves the inertia seen in rigid shaft rotation while removing
+the axial--rotational coupling. Both models retain the axial motion and
+translating mass of the sheave, the same springs and bilateral helix slot,
+and the full primary dynamics
+(\Cref{app:results_quasistatic_actuators,app:study_secondary_dynamics}).
 
 \subsubsection{Engagement and subsequent shifting}
 \label{sec:results_secondary_hybrid_response}
 
-The reference level-ground acceleration used for the primary provides the
-same contrast between engagement and the later shift. Immediately after
-first belt contact, the quasi-static helix force evaluated at the full
-model's state is \SI{2206}{N}. Rapid relative sheave acceleration reduces
-this by \SI{989}{N}, while shaft acceleration subtracts a further
-\SI{6.67}{N}. The resulting helix force is \SI{1210}{N}, a reduction of
-\num{45.1}\%, as shown in \Cref{fig:results_secondary_launch}(a).
-Most of the reduction comes from torque needed to accelerate the movable
-sheave's rotation relative to the shaft. That torque is unavailable to the
-helix reaction, leaving less force to close the sheave.
-This is the finite force in the outgoing engaged motion, not the capture
-impulse.
+At first belt contact in the reference drive, the helix contributes
+\SI{4.89}{kg} of the \SI{6.83}{kg} coefficient multiplying shift
+acceleration in the coupled balance. Its share ranges from
+\num{71.5}\% to \num{81.7}\% over the sampled engaged geometry.
+These figures express rotational inertia in the shift coordinate.
+To see what that inertia contributes to closing force, consider the
+motion immediately after contact. The sheave accelerates rapidly along
+the helix. The torque required for its rotation relative to the shaft
+takes \SI{989}{N} off the quasi-static closing force, while shaft
+acceleration takes off another \SI{6.67}{N}. The helix consequently
+delivers \SI{1210}{N}, a \num{45.1}\% reduction from the
+\SI{2206}{N} quasi-static value evaluated at the same state
+(\Cref{fig:results_secondary_launch}(a)). These are the finite forces as
+engaged motion begins.
 
-The later motion produces much smaller corrections. Between \SI{0.1}{s}
-and \SI{10}{s}, their largest sampled magnitude is \SI{25.4}{N}, and the
-largest fraction of the simultaneous quasi-static helix force is
-\num{0.751}\%. Panel~(b) shows that shaft acceleration supplies almost all
-of this later correction. The force remains close to its quasi-static
-value over this part of the drive, despite the substantial effect at
-engagement.
+During the gentler motion from \SI{0.1}{s} to \SI{10}{s}, the sheave
+has little angular acceleration relative to the shaft. Panel~(b) shows
+that accelerating it with the shaft now accounts for almost all of the
+force correction. The largest sampled magnitude of the combined correction is
+\SI{25.4}{N}, and its largest fraction of the simultaneous
+quasi-static helix force is \num{0.751}\%. The same helix supplies most of
+the direct resistance to shift acceleration throughout these sampled
+positions. It produces a large force from that resistance only when the
+sheave actually accelerates appreciably along the helix.
 
 \begin{figure}[H]
  \centering
@@ -11730,59 +11775,42 @@ engagement.
  \label{fig:results_secondary_launch}
 \end{figure}
 
-A small force correction during gentle shifting does not imply a small
-inertia contribution. At first engagement, the helix contributes
-\SI{4.89}{kg} of the \SI{6.83}{kg} coefficient multiplying shift
-acceleration in the coupled balance. Its share ranges from
-\num{71.5}\% to \num{81.7}\% over the sampled engaged geometry.
-These are inertias expressed in the shift coordinate, not physical sheave
-masses. The helix supplies the majority of this direct resistance to shift
-acceleration, but the associated force still depends on how rapidly the
-motion accelerates. The launch can therefore have both a large helix
-contribution to shift inertia and a small force correction over most of
-its duration.
-
 \subsubsection{Clamping during load-induced backshift}
 \label{sec:results_secondary_backshift}
 
-A load increase can decelerate the secondary much more strongly than the
-reference drive does. It also drives backshift, bringing both acceleration
-terms into the response. To examine this motion, additional resisting
-torques of \SI{120}{N.m}, \SI{240}{N.m} and \SI{480}{N.m} are applied at
-the secondary shaft from the same state near the middle of engaged travel.
-Each rises smoothly over \SI{10}{ms} and is then held. These are imposed
-load tests; the largest torque is deliberately severe.
+Loading the secondary shaft gives a way to test the other source of helix
+force. An added resisting torque slows the shaft while the belt remains
+engaged, and also drives the sheaves toward backshift. Starting from the
+same state near mid travel, we apply \SI{120}{N.m}, \SI{240}{N.m} or
+\SI{480}{N.m} of additional resisting torque. Each load rises over
+\SI{10}{ms} and is then held. The largest is deliberately severe.
 
-In \Cref{fig:results_secondary_backshift}(a), the peak force correction
-increases from \SI{32.6}{N} to \SI{75.5}{N} and \SI{160.6}{N}.
-At these respective peaks, the corrections are \num{1.50}\%,
-\num{3.50}\% and \num{7.57}\% of the simultaneous quasi-static helix
-force. The largest peak occurs while the mechanism is backshifting through
-\num{45.3}\%
-of engaged travel, and its correction remains above \SI{113}{N}
-throughout the plotted interval after the ramp. This is a sustained
-mid-shift contribution, rather than another engagement force.
+As the imposed torque increases, the peak correction grows from
+\SI{32.6}{N} to \SI{75.5}{N} and \SI{160.6}{N}
+(\Cref{fig:results_secondary_backshift}(a)). At these respective peaks
+the extra closing force is \num{1.50}\%, \num{3.50}\% and
+\num{7.57}\% of the simultaneous quasi-static helix force. Under the
+largest load, the peak occurs as the mechanism backshifts through
+\num{45.3}\% of engaged travel, and the correction stays above
+\SI{113}{N} for the plotted interval after the ramp.
 
-Shaft deceleration accounts for almost all of the largest peak:
-its contribution is \(+\SI{161.2}{N}\), while relative sheave acceleration
-contributes \(\SI{-0.54}{N}\). The full helix force is then
-\SI{2282}{N}, compared with the \SI{2121}{N} quasi-static force at that
-state. The extra closing action follows from the torque needed to decelerate
-the movable assembly; it does not require slip, a stop impact or a reversal
-of helix reaction.
+In that largest-load case, decelerating the shaft makes the helix carry
+more torque. At the peak this adds \SI{161.2}{N} to the closing force.
+Relative sheave acceleration contributes only \SI{-0.54}{N}, in the
+opposite direction. The helix then delivers \SI{2282}{N}, compared with
+the same-state quasi-static value of \SI{2121}{N}. Both contacts stick
+throughout this backshift, so the change in helix force develops during
+continuous torque transmission.
 
-Because the mechanism is already shifting when the load is applied, the
-motion comparison uses the same baseline subtraction as on the primary to
-isolate the load-induced response from the motion already underway. Each
-model is continued without the added torque, and that continuation is
-subtracted from its loaded motion. Panel~(b) shows the difference between
-these load-induced shift responses. The full model backshifts further in
-all three cases. At \SI{100}{ms} after load onset, the largest load has
-produced \SI{8.14}{mm} of backshift relative to the unforced motion in
-the full model and \SI{7.96}{mm} in the quasi-static model. Their
-\SI{0.176}{mm} separation is small beside the total response, but shows
-the effect of retaining the secondary dynamics on the motion. The force
-and motion differences persist under tighter integration
+For panel~(b), each load-induced shift is measured from that model's own
+continuation without the added torque. The panel shows the difference
+between the two load-induced shifts. The full model
+backshifts farther for all three loads. At \SI{100}{ms} after the
+largest load begins, the full model has backshifted an additional
+\SI{8.14}{mm} and the quasi-static model \SI{7.96}{mm}. Thus a force
+correction that reaches \SI{160.6}{N} is accompanied by a
+\SI{0.176}{mm} difference in the load-induced backshift at this time.
+Both results persist under tighter integration
 (\Cref{app:study_secondary_dynamics}).
 
 \begin{figure}[H]
@@ -11803,25 +11831,24 @@ and motion differences persist under tighter integration
 \label{sec:results_secondary_dynamic_terms}
 \label{sec:results_secondary_continuous}
 
-The reference Baja secondary is relatively small compared with some
-commercial rubber-belt CVT assemblies. Changing its hardware can increase
-the dynamic correction without imposing an equally severe external
-load. But inertia alone does not determine the change. The helix motion
-ratio governs how much relative rotation accompanies axial motion and
-how torque is converted to closing force. It enters once in the
-shaft-acceleration force coefficient and twice in the axial-acceleration
-coefficient. The two effects therefore need not scale together when
-both inertia and geometry change.
+The torque needed to slow the movable sheave also depends on the
+hardware. A heavier rotational inertia requires more torque for the same
+shaft deceleration. A helix that turns through a smaller angle per unit
+travel converts that torque into less axial force. During axial
+acceleration the motion ratio enters twice, first in the rotation
+demanded of the sheave and again in converting its reaction torque back
+to force. Changing the same component can therefore affect the two
+acceleration terms by different amounts.
 
-\Cref{tab:secondary_hardware_scale} compares the reference with an
+To examine the size of this effect with a larger secondary,
+\Cref{tab:secondary_hardware_scale} compares the Baja assembly with an
 engineering estimate based on a Yamaha Sidewinder secondary and a Dalton
-\ang{31} helix. The estimated rotational inertia is \num{5.12} times
-as large, but the smaller motion ratio partly offsets it. The coefficient
-multiplying shaft acceleration grows by \num{2.76}, while that
-multiplying local axial acceleration grows by \num{1.49}. The mass
-distribution and effective helix radius are estimates, not measured
-manufacturer inertia data; their sources and construction are recorded in
-\Cref{app:study_secondary_dynamics}.
+\ang{31} helix. The estimated movable inertia is \num{5.12} times the
+reference value. The smaller motion ratio partly offsets that increase,
+giving factors of \num{2.76} for the shaft-acceleration coefficient and
+\num{1.49} for the local axial-acceleration coefficient. The assumed mass
+distribution and effective helix radius underlying the estimate are given
+in \Cref{app:study_secondary_dynamics}.
 
 \begin{table}[H]
  \centering\small
@@ -11842,20 +11869,19 @@ manufacturer inertia data; their sources and construction are recorded in
  \label{tab:secondary_hardware_scale}
 \end{table}
 
-The estimated helix geometry and movable inertia are inserted into the
-otherwise reference system. An added resisting secondary-shaft torque of
-\SI{120}{N.m} is applied over \SI{25}{ms}, starting near mid travel.
-This tests the component within the reference vehicle model; it does not
-reconstruct a complete commercial vehicle. The motion comparison again
-subtracts each model's continuation without the added torque, leaving its
-response to the load.
+We substitute the estimated helix geometry and movable inertia into the
+reference vehicle. To test the substituted component under load, we
+apply \SI{120}{N.m} of additional resisting torque at the secondary shaft
+over \SI{25}{ms} near mid travel. The engine, vehicle and remaining CVT
+components are those of the reference system.
 
-As the load slows the shaft, its acceleration contribution changes sign
-and increases the closing force.
-\Cref{fig:results_secondary_continuous_response}(a) shows that it
-supplies almost all of the correction after the ramp. The correction
-reaches \SI{89.3}{N}, with a largest fraction of \num{7.87}\% of the
-simultaneous quasi-static helix force. The resulting additional closing action is accompanied by more backshift in the full model, shown in panel~(b). Panel~(c) shows the corresponding change in the primary-speed response.
+As the shaft begins to decelerate, its contribution to the helix force
+changes sign. It adds to closing force and accounts for nearly all of the
+correction after the ramp, as \Cref{fig:results_secondary_continuous_response}(a)
+shows. The correction reaches \SI{89.3}{N}. Evaluated relative to the
+quasi-static force at each instant, its largest fraction is
+\num{7.87}\%. Panels~(b,c) follow the resulting changes in backshift and
+primary speed, measured from each model's continuation without the load.
 
 \begin{figure}[H]
  \centering
@@ -11873,85 +11899,92 @@ At the largest shift-response separation, the extra backshift is
 model, a difference of \SI{0.274}{mm}. The primary-speed responses differ
 by up to \SI{40.4}{rpm}. Both differences are resolved under tighter integration and develop during continuous sticking with positive local wrap loading.
 
-The low and high component estimates give peak force corrections of
-\num{3.15}\% and \num{13.6}\% under the same load. Their inertia and
-helix radius vary together, so this range describes the component estimate
-as a whole, rather than an inertia-only change.
+Under the same load, the low and high component estimates give maximum
+force corrections of \num{3.15}\% and \num{13.6}\% of the simultaneous
+quasi-static helix force. These are two hardware estimates in which both
+the inertia and the effective helix radius vary.
 \Cref{tab:secondary_estimate_range} gives the corresponding inputs and
 motion differences.
 
-The secondary results illustrate why these measures must stay separate.
-The helix supplies a large share of the reflected shift inertia, yet
-gentle motion produces little force correction. Sustained shaft
-deceleration under added load makes the movable sheave's angular
-momentum contribute appreciably to closing thrust. Independent
-integration of the reduced model then reveals a smaller, but
-numerically resolved, change in backshift and shaft speed. The size
-depends jointly on inertia, helix geometry and the accelerations the
-hardware produces. A static torque-to-clamp law cannot recover that
-transient force, and a large inertia share is not itself a prediction
-of a large trajectory change.
+The two sources of helix force matter at different times. At engagement
+the rapid rotation imposed by axial travel accounts for most of the
+reduction in closing force. During loaded backshift it is the slowing
+shaft that matters, even as the sheave keeps moving along the helix.
+A static torque-to-clamp relation can consequently follow the helix
+force closely during gentle shifting and underestimate it while the
+secondary shaft decelerates under load.
+The independently calculated backshifts show how much of that force
+difference carries through to the motion for each set of hardware.
 \FloatBarrier
 
 \subsection{Reduced-Belt Transient Mechanics}
 \label{sec:results_reduced_belt_mechanics}
 
-The actuator comparisons examined the forces that squeeze and shift
-the belt. For the belt itself, the key transient balance joins the two
-pulley wraps through tension while the belt circulates and moves
-between radii. The relevant balance is a
-\emph{difference} between contributions from the wraps, not a
-comparison of each inertial term with a gross clamping load.
+A belt element can accelerate in two ways during a shift. It can speed up
+as it travels around the loop, and its path can change as it moves to a
+different radius on each pulley. Both motions enter the tensions at the
+ends of the pulley wraps. The straight spans join those ends, requiring
+the entrance and exit tensions on the primary wrap to have the same sum
+as those on the secondary wrap
+(\Cref{eq:closed_loop_tension_compatibility}). Any difference between the normal-load contributions to those sums must
+therefore be balanced by the contributions from belt motion.
 
-An existing reference free-shift state shows the scale. At \SI{1.5}{s},
-the normal-load contributions to the two wrap-boundary tension sums
-are \SI{785.721}{N} and \SI{785.536}{N}. Their difference is only
-\SI{0.185}{N}, almost balanced by the \SI{-0.186}{N} contribution
-from changing circulation speed
-(\Cref{app:study_belt_dynamics}). A term small beside either
-gross loading contribution can therefore supply the leading
-inertial adjustment to their difference.
+For example, \SI{1.5}{s} into the reference drive the belt is shifting
+freely. The normal load on the primary contributes \SI{785.721}{N} to
+its wrap-boundary tension sum. The corresponding secondary contribution
+is \SI{785.536}{N}. Subtracting the second from the first leaves
+\SI{0.185}{N}. The contribution from accelerating belt circulation is
+\SI{-0.186}{N}, which accounts for nearly the entire adjustment needed
+to bring the two sums into agreement (\Cref{app:study_belt_dynamics}).
+Thus even a force well below a newton can be the leading inertial term
+at this point in the drive.
 
-We now separate the exact closed-loop relation into its contact-loading
-and acceleration contributions, identify which motions make them
-important, and test the consequences of omitting the terms that
-remain small.
+The same comparison can be made throughout the drive by collecting the
+terms in \Cref{eq:closed_loop_tension_compatibility} according to the
+motion that produces them. At steady speed and fixed radii the belt
+already requires tension to turn around each pulley, as in the
+centrifugal-corrected capstan relation of
+\Cref{eq:gerbert_inertia_corrected_relation}. The corresponding
+term \(2\rho_bA_bv_b^2\), with \(\rho_bA_b\) the belt mass per unit
+length, is common to both wrap-boundary tension sums and cancels in
+their difference. Centrifugal loading remains in the local tension and
+contact equations on each wrap.
 
-The centrifugal-corrected capstan limit of the wrap solution,
-\Cref{eq:gerbert_inertia_corrected_relation}, accounts for the tension needed
-to turn a belt moving steadily at a fixed radius. The full derivation also
-retained the accelerations associated with changing belt speed and radius,
-then carried them through the wrap and straight-span balances into the
-closed-loop tension relation, \Cref{eq:closed_loop_tension_compatibility}.
-These dynamics therefore remain coupled to the pulley loads and motion
-within the reduced belt description.
+Four contributions remain alongside the normal loading when the drive
+is shifting. One comes from a change in belt circulation speed. A
+second tangential contribution arises because the circulating belt
+follows a changing-radius path. The remaining two come from radial
+motion. A change in shift speed accelerates the belt radially, and even
+at constant shift speed its radial speed can vary if the radius gained
+per unit sheave travel changes along the shift.
 
-The closed-loop relation requires the sum of the tensions at the entrance
-and exit of the primary wrap to equal the corresponding sum on the secondary.
-Subtracting the secondary sum from the primary separates the relation into
-a contact-loading contribution and four acceleration contributions.
+Writing the derivatives of the belt centreline radius on pulley \(j\)
+with respect to the common shift coordinate as
 
-Two of these arise from radial belt acceleration. Writing the radius
-derivatives with respect to the shared shift coordinate as
 \begin{equation}
  r'_j=\frac{dr_{j,\mathrm{cm}}}{ds},
  \qquad
  r''_j=\frac{d^2r_{j,\mathrm{cm}}}{ds^2},
  \label{eq:results_belt_radius_derivatives}
 \end{equation}
-gives
+
+separates these last two contributions by the chain rule,
+
 \begin{equation}
  \ddot r_{j,\mathrm{cm}}=r'_j\ddot s+r''_j\dot s^2.
  \label{eq:results_belt_radial_acceleration_split}
 \end{equation}
-The first term follows changes in shift speed. The second arises because
-the change in radius per unit shift can vary with position, so radial
-acceleration can remain even when the shift speed is constant.
 
-The analytical wrap solution supplies two dimensionless factors,
-\(\mathcal G_j\) and \(\mathcal H_j\), which weight the normal-load and
-tangential-acceleration contributions, respectively. For nonzero traction
-utilization,
+Here \(r'_j\ddot s\) follows shift acceleration, while
+\(r''_j\dot s^2\) depends on the shift speed attained at that position.
+
+To compare the two wraps, we also need the weights with which normal
+loading and tangential acceleration enter each tension sum. The analytical
+wrap solution gives these dimensionless factors, \(\mathcal G_j\) and
+\(\mathcal H_j\), in terms of traction utilization \(\lambda_j\), wrap
+angle \(\phi_j\) and groove half-angle \(\beta\). For nonzero
+\(\lambda_j\) they are
+
 \begin{equation}
 \begin{aligned}
  \mathcal G_j
@@ -11963,13 +11996,14 @@ utilization,
 \end{aligned}
 \label{eq:results_belt_contact_factors}
 \end{equation}
-They depend on the traction utilization \(\lambda_j\), wrap angle
-\(\phi_j\) and groove half-angle \(\beta\). At \(\lambda_j=0\), their
-continuous limits are \(\mathcal G_j=2\sin\beta/\phi_j\) and
-\(\mathcal H_j=0\).
 
-The five contributions are listed in \Cref{tab:results_belt_terms}. Each has
-units of force, with \(\rho_bA_b\) giving the belt mass per unit length.
+At zero utilization, the continuous limits are
+\(\mathcal G_j=2\sin\beta/\phi_j\) and \(\mathcal H_j=0\).
+
+\Cref{tab:results_belt_terms} gives the resulting primary-minus-secondary
+difference for each contribution. In particular,
+\(F_N=\mathcal G_pN_p-\mathcal G_sN_s\) is the difference of the two
+weighted normal loads illustrated above.
 
 \begin{table}[H]
  \centering\small
@@ -12024,41 +12058,32 @@ units of force, with \(\rho_bA_b\) giving the belt mass per unit length.
  \label{tab:results_belt_terms}
 \end{table}
 
-These are five signed contributions to one wrap-boundary tension
-balance, not five independent fractions of pulley clamping force.
-Their sum vanishes:
+Collecting these terms in \Cref{eq:closed_loop_tension_compatibility}
+gives the balance examined below,
+
 \begin{equation}
  F_N+F_{\dot v_b}+F_{\ddot s}+F_{\dot s^2}+F_{\dot s v_b}=0.
  \label{eq:results_belt_term_balance}
 \end{equation}
-The signs show how the contact-loading difference and the acceleration
-contributions balance. In particular, \(F_N\) is a weighted difference
-involving both pulley loads; its magnitude does not represent either
-pulley's total clamping force.
 
-The common centrifugal contribution \(2\rho_bA_bv_b^2\) cancels between
-the two wrap-boundary tension sums, although centrifugal loading remains
-in the local tension and contact equations. In the steady, fixed-radius
-limit, the four acceleration contributions vanish and the relation reduces
-to \(F_N=0\).
+At steady speed and fixed radii all four acceleration terms vanish.
+The two weighted normal loads then agree, giving \(F_N=0\).
 
 \subsubsection{The balance during engagement and free shifting}
 \label{sec:results_belt_hierarchy}
 
-The reference level-ground acceleration provides both a gentle shift and a
-rapid engagement in the same drive. It uses the reference tune and the
-full-throttle engine and vehicle boundaries of the preceding actuator
-comparisons, starting with the vehicle and belt at rest and the primary at
-\SI{1800}{rpm}. To compare the five contributions over a period of this
-motion, each term's magnitude is integrated over that period and divided by
-the sum of the five magnitude integrals. The shares sum to 100\%. Because the signed terms add to zero
-at every instant, one magnitude cannot exceed the sum of
-the other four. No one term can exceed 50\% under this
-integrated absolute-magnitude normalization. A contribution near
-50\% balances almost all the others together; it is not
-half of either pulley's clamping load.
-\Cref{tab:results_belt_hierarchy} gives these shares alongside the largest
-force magnitude reached by each term during the same period.
+The reference drive lets us compare two periods with markedly different
+belt motion. The first spans the continuous engaged intervals from first
+contact through the last early return to the low-ratio seat. The second
+follows the gentler motion after the seat releases. To compare a term
+that can change sign within either period, we integrate its absolute
+magnitude and divide by the sum of the five magnitude integrals. The
+shares add to 100\%. Since the signed forces in
+\Cref{eq:results_belt_term_balance} sum to zero at each instant, one
+term's magnitude cannot exceed the sum of the other four. Its share can
+therefore reach at most 50\%. A share near that limit means that the
+term opposes almost all the others combined. \Cref{tab:results_belt_hierarchy}
+gives these shares alongside the peak force magnitudes.
 
 \begin{table}[H]
  \centering\small
@@ -12087,37 +12112,32 @@ force magnitude reached by each term during the same period.
  \label{tab:results_belt_hierarchy}
 \end{table}
 
-During free shifting, \(F_N\) and \(F_{\dot v_b}\) supply 49.8\%
-and 49.7\%, respectively. The three contributions associated with the
-changing belt path together supply only 0.56\%. The leading balance is
-consequently \(F_N+F_{\dot v_b}\simeq0\): the difference between
-the weighted contact loads chiefly balances the contribution from
-accelerating belt circulation. The belt is moving between radii, but that
-motion requires comparatively little additional tension adjustment during
-this part of the drive.
+During free shifting the normal-load difference and the acceleration of
+belt circulation account for 49.8\% and 49.7\% of the integrated
+balance, respectively. Their peaks are about \SI{0.31}{N}. The three
+terms due to the changing belt path together account for only 0.56\%.
+The balance seen at \SI{1.5}{s}, \(F_N+F_{\dot v_b}\simeq0\), is
+therefore characteristic of this part of the drive.
 
-Engagement gives a different balance. As the sheaves and belt radii change
-speed sharply, the contribution proportional to \(\ddot s\) supplies
-almost 50\%, compared with 39.3\% from changing belt speed and 10.7\%
-from contact loading. The two remaining terms together supply less than
-0.03\%. The shift-acceleration contribution reaches \SI{22.4}{N} in
-the continuous engaged motion adjoining the captures. Radial acceleration
-is therefore a leading part of the belt's tension balance during
-engagement, even though its contribution is small in the later shift.
-The instantaneous capture impulses are described by the separate momentum
-equations; they are not included in these force comparisons.
+At engagement, the shift speed changes sharply as the sheaves begin to
+move together through the belt. The radial force proportional to
+\(\ddot s\) reaches \SI{22.4}{N} and accounts for nearly 50\% of the
+balance. Changing circulation speed and normal loading supply 39.3\%
+and 10.7\%, respectively. The two terms proportional to shift speed or
+its square together supply less than 0.03\%. These force integrals cover
+the continuous engaged motion on either side of captures. The momentum
+balance accounts separately for the impulse at each capture.
 
 \subsubsection{Radial inertia during changes in road load}
 \label{sec:results_belt_load_rate}
 
-A rapid change in road load can also change shift speed sharply, without
-requiring a new engagement. To separate the effect of the loading rate from
-its final magnitude, the road-grade input to the vehicle boundary rises
-from level ground to \(18^\circ\) at \SI{1.5}{s}, over \SI{800}{ms},
-\SI{200}{ms} or \SI{50}{ms}. The tune, starting state and final grade are
-the same in all three runs. Both belt contacts remain sticking and the
-sheaves remain free throughout the interval in
-\Cref{fig:results_belt_load_rate}.
+Engagement changes the belt's radial speed very quickly. To see whether
+radial acceleration also matters during an uninterrupted shift, we vary
+how quickly road resistance builds while holding its final value fixed.
+At \SI{1.5}{s} the road grade rises from level to \(18^\circ\) over
+\SI{800}{ms}, \SI{200}{ms} or \SI{50}{ms}. All three runs use the same
+tune and starting state. The sheaves remain free and both contacts stick
+throughout the comparison in \Cref{fig:results_belt_load_rate}.
 
 \begin{figure}[H]
  \centering
@@ -12133,54 +12153,52 @@ sheaves remain free throughout the interval in
  \label{fig:results_belt_load_rate}
 \end{figure}
 
-The increased road resistance slows the upshift. Applying it faster makes
-shift speed fall more abruptly, as panel~(b) shows. The contribution
-proportional to \(\ddot s\) consequently becomes larger in panel~(c),
-with a peak force about 14 times larger for the fastest rise than for the
-slowest. Its share over the load rise also grows, from 1.25\% to 10.5\%.
-The larger share therefore accompanies a larger radial-acceleration force,
-although these forces remain much smaller than those during engagement.
+The increased resistance slows the upshift. Panel~(b) shows a more abrupt fall in shift speed when the
+same final grade is reached in less time. The radial force due to shift
+acceleration grows accordingly in panel~(c). Its peak is
+about 14 times as large for the fastest rise as for the slowest, though
+still well below the engagement peak. Over the complete rise its share
+increases from 1.25\% to 3.28\% and then 10.5\% as the rise time
+shortens.
 
-Panel~(d) shows how this force enters the balance during the
-\SI{50}{ms} rise. Each signed term is divided by the sum of all five
-magnitudes at that instant. The shift-acceleration contribution rises to
-about 25\% as the contact-loading contribution falls to about 25\%;
-together they oppose the belt-speed acceleration contribution near
-\(-50\%\). Thus \(F_{\ddot s}\) temporarily supplies an appreciable
-part of the balance previously carried by \(F_N\), while the terms
-proportional to \(\dot s^2\) and \(\dot s v_b\) remain small.
+Panel~(d) follows the balance \emph{within} the \SI{50}{ms} rise. Here
+each signed force is divided by the sum of the five absolute forces at
+that instant. As the upshift slows, the shift-acceleration term rises
+to about 25\% and the normal-load difference falls to about 25\%.
+Together they balance the changing-circulation term near \(-50\%\).
+Radial acceleration therefore supplies part of the tension adjustment
+previously supplied by the difference in weighted normal loads.
 
-Radial inertia is also appreciable when a load rise reverses the
-shift. A separate case beginning near 59\% of engaged travel
-reverses the upshift and gives \(F_{\ddot s}\) a 21.2\% share during
-the rise (\Cref{fig:results_belt_shift_transient}). These comparisons
-show when radial acceleration is appreciable \emph{in the tension
-balance}. They do not independently integrate a model omitting
-that term, so a 21.2\% balance share is not a measured trajectory
-error from its omission.
+A separate load rise starting near 59\% of engaged travel actually
+reverses the upshift. The radial term supplies 21.2\% of the balance
+over that rise (\Cref{fig:results_belt_shift_transient}). Both this
+case and the matched grade rises quantify the force carried by radial
+acceleration along the full-model motion. The independent omission
+comparisons below concern the other two terms associated with the
+changing belt path.
 
 \subsubsection{The two contributions that depend on shift speed}
 \label{sec:results_belt_velocity_terms}
 
-A sharp change in shift speed need not produce a large shift speed itself.
-This distinction matters because \(F_{\dot s^2}\) follows the square of
-shift speed, whereas \(F_{\dot s v_b}\) follows its product with belt
-speed. The latter also depends on traction through \(\mathcal H_p\) and
-\(\mathcal H_s\). Faster upshift, backshift under reduced clamping and
-reversed power transfer therefore provide further comparisons of these
-terms while the belt radii are moving.
+Shift acceleration can be large during a brief slowdown or reversal
+while shift speed itself stays modest. This matters for the two
+remaining terms in \Cref{tab:results_belt_terms}. The curvature term
+\(F_{\dot s^2}\) depends on the square of shift speed. The moving-radius
+term \(F_{\dot s v_b}\) depends on the product of shift and belt speeds
+and on the traction carried at each wrap. We therefore examine motions
+with faster upshift, with backshift under reduced clamping, and with
+power passing back through the transmission.
 
-Rapid unloading lowers the grade to \(-20^\circ\) over \SI{50}{ms},
-allowing the upshift to accelerate. The altered-tune comparison reduces
-the primary flyweight mass and all its moments to 40\% of their reference
-values, and both secondary spring stiffnesses to 20\%. A rise to
-\(30^\circ\) over \SI{100}{ms} then reverses its shift under the reduced
-clamping. Mild and strong downhill cases lower the grade to \(-20^\circ\)
-while blending the primary boundary torque to \SI{-5}{N.m} and
-\SI{-12}{N.m}, respectively, over \SI{200}{ms}. The friction coefficients
-are unchanged.
-\Cref{tab:results_belt_moving_terms} compares the load changes and the
-subsequent moving intervals in which power transfer has reversed.
+To increase upshift speed, the road is unloaded to \(-20^\circ\) over
+\SI{50}{ms}. To produce a backshift with less clamping, the primary
+flyweight mass and all its moments are reduced to 40\% of their reference
+values and both secondary spring stiffnesses to 20\%. A rise to
+\(30^\circ\) over \SI{100}{ms} then reverses the shift. In the two
+downhill cases the grade falls to \(-20^\circ\) and the primary torque
+changes to \SI{-5}{N.m} or \SI{-12}{N.m} over \SI{200}{ms}, reversing
+power transfer. The friction coefficients are common to the cases.
+\Cref{tab:results_belt_moving_terms} separates the load rises from the
+intervals of established reverse power.
 
 \begin{table}[H]
  \centering\small
@@ -12208,79 +12226,78 @@ subsequent moving intervals in which power transfer has reversed.
  \label{tab:results_belt_moving_terms}
 \end{table}
 
-The two interval shares remain below 0.49\% and 0.18\%, respectively,
-despite the nonzero shift speeds and the changes in traction.
-Their small contributions have different causes. For \(F_{\dot s^2}\),
-the radius--shift geometry multiplies the square of the actual shift speed.
-At the largest speed in the table, \SI{19.37}{mm/s} during the strong
-torque ramp, the coefficient multiplying \(\dot s^2\) is
-\SI{-2.55}{kg/m}.
-The resulting force is only \SI{-0.957}{mN}. Thus the attained shift
-speeds produce little curvature-related radial force, even though rapid
-changes in those speeds can make \(F_{\ddot s}\) appreciable.
+Across the moving intervals in \Cref{tab:results_belt_moving_terms},
+the curvature and moving-radius terms contribute less than 0.49\% and
+0.18\%, respectively. For the curvature term the small force follows
+directly from the speeds attained. During the strong resisting-torque
+ramp, even the highest shift speed in the table, \SI{19.37}{mm/s}, is
+only about \SI{0.0194}{m/s}. Multiplying its square by the local
+coefficient of \SI{-2.55}{kg/m} gives just \SI{-0.957}{mN}. A shift
+can reach this speed quickly enough for \(F_{\ddot s}\) to matter while
+the square of the speed still contributes very little.
 
-The moving-radius term has a further cancellation between the two wraps.
-The primary radius increases with \(s\), while the secondary radius
-decreases. When the two traction utilizations have opposite signs,
-\(\mathcal H_p\) and \(\mathcal H_s\) also have opposite signs, so
-\(\mathcal H_pr'_p\) and \(\mathcal H_sr'_s\) have the same sign.
-Their difference in \(F_{\dot s v_b}\) can therefore be much smaller
-than either part. This occurs in the moving comparisons: at the largest
-moving-radius force during rapid unloading, the signed primary and
-secondary contributions are \SI{-114.867}{mN} and \SI{113.931}{mN}
-at the same instant, leaving only \SI{-0.936}{mN} in the loop relation.
-The small net force reflects the close cancellation of the two wrap
-contributions while the belt circulates and shifts.
+For the moving-radius term, it matters that the primary radius grows as
+the secondary radius falls. When the traction utilizations have opposite
+signs, \(\mathcal H_p\) and \(\mathcal H_s\) also have opposite signs.
+The two products \(\mathcal H_pr'_p\) and \(\mathcal H_sr'_s\) then have
+the same sign and are subtracted in \(F_{\dot s v_b}\).
+At the instant of largest moving-radius force during rapid unloading,
+the primary and secondary contributions enter the loop balance as
+\SI{-114.867}{mN} and \SI{+113.931}{mN}. Together they leave just
+\SI{-0.936}{mN}. Changes in traction or geometry can change the degree
+of cancellation.
 
-Both mechanisms depend on the state of the drive: higher shift speeds
-enlarge the curvature force, and changes in traction or geometry can weaken
-the wrap cancellation. The interval shares also allow brief larger
-instantaneous percentages when the rest of the balance becomes small.
+The percentages in the table describe whole intervals. An individual
+instant can give a larger percentage when the other forces in the
+balance have fallen, even if the dimensional force remains small.
 
-Small shares in the tension balance do not by themselves
-show that terms can safely be deleted from the equations. The
-moving-radius term, in particular, is a small difference between
-larger local contributions. Its effect on the calculated motion
-must therefore be checked separately. Seven full-model cases
-were paired with independent integrations omitting both terms. At the tighter numerical
-settings, the largest shift-position difference is less than
-\SI{0.017}{\micro\metre}; in every pair it is smaller than the change
-caused by tightening the numerical settings. All seven pairs preserve the
-same ordered contact and support changes. The complete comparisons are
-reported in \Cref{tab:belt_omission_results}.
+This cancellation gives a particular reason to check the motion when
+the terms are omitted. A small difference between the wraps can conceal
+larger local contributions on the individual wraps. In seven cases the equations
+were therefore integrated again with both shift-speed terms omitted
+from the local wrap balances. At the tighter numerical settings the
+largest difference in shift position was below
+\SI{0.017}{\micro\metre}. In every pair it was smaller than the change
+produced by tightening the numerical settings. The same contact and
+support changes occurred in the same order in all seven pairs
+(\Cref{tab:belt_omission_results}).
 
-These omission results concern two specific shift-speed terms; reducing the
-belt inertia more broadly is not equivalent to suppressing one equation term.
-In the archived transport comparisons, scaling only the complete-belt
-transport term while leaving the local wrap inertia unchanged causes the
-implemented contact search to fail during the common early engagement.
-Reducing belt density consistently across the corresponding global and local
-inertia terms instead allows those continuations to complete, although the
-finite-density runs modify the early engagement sequence. This comparison
-establishes a difference between these reductions, not the exact massless-belt
-limit. The archived comparisons are documented in
-\Cref{app:study_belt_dynamics}.
+A broader reduction changes the inertia of the belt itself. Its density
+appears both in the equation for circulation of the whole belt and in
+the local wrap balances. When only the complete-belt transport term was
+scaled down, the contact search failed during the common early
+engagement. Reducing density consistently in the global and local
+terms allowed the finite-density runs to complete, with changes to
+the early engagement sequence. These tests establish that the two
+reductions behave differently. The zero-density limit remains unresolved
+(\Cref{app:study_belt_dynamics}).
 
-The belt comparisons establish a hierarchy that depends on the motion.
-During gentle shifting, changing circulation speed supplies the leading
-inertial adjustment between nearly balancing wrap loads. Engagement and
-rapid load changes bring radial acceleration into that balance. The
-curvature and moving-radius contributions remain small in the tested
-conditions for identifiable reasons: the actual shift speeds are small,
-and contributions from the two wraps nearly cancel. Independently
-omitting those two terms together also changes the computed shift
-histories by less than the numerical refinement differences in the
-seven examined cases, without altering their ordered contact and
-support changes.
+In the one-dimensional shift formulation of \citet{Sorge2008}, inertial
+forces associated with shifting were taken to be negligible relative to
+the other belt forces. The present belt reduction groups those forces differently, but their
+importance can be assessed here for the motions that produce them. During gentle upshift the
+principal inertial adjustment is the acceleration of belt circulation.
+At engagement, and when a road-load increase slows or reverses an
+upshift, radial acceleration can carry an appreciable part of the
+tension balance. Of the three terms arising from the changing belt
+path, the evidence for omission is strongest for the two that depend on
+shift speed. The attained shift speeds give little curvature force, and the two
+wraps largely cancel in the moving-radius term. Omitting both terms
+changes shift position by less than numerical refinement in each of
+the seven comparisons.
 
-This places a specific limit on the neglect of shift-associated belt
-inertia discussed by \citet{Sorge2008}. The two models are not identical,
-and the load-rate studies do not quantify the trajectory error from
-omitting the shift-acceleration contribution. They do establish that
-its participation in the present tension balance is not uniformly
-negligible. The separate transport experiment demonstrates another
-distinction: removing one occurrence of belt inertia is not equivalent
-to reducing the belt density consistently throughout the formulation.
+The primary, secondary and belt comparisons give different answers even
+for the same launch. A centrifugal primary brings the sheave to the belt
+sooner and faster, yet closely reproduces the additional shift in the
+mid-travel torque test. At the secondary, a quasi-static helix misses
+part of the closing force during loaded backshift even when the two
+calculated backshifts remain close. For the belt, the rapid change of
+shift speed at engagement brings radial acceleration into the tension
+balance, while two other contributions from the same changing belt path
+can be omitted with little effect on the calculated shift in the cases
+tested. The appropriate simplification depends on which part of the
+drive is to be predicted and whether the quantity of interest is the
+force transmitted there or the motion that follows.
 \FloatBarrier
 
 \section{Coupled Operation and Tuning on a Common Off-Road Course}
